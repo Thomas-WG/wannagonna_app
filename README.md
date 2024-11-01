@@ -1,5 +1,5 @@
 
-# Project Name
+# Wanna Gonna App
 
 A Next.js application leveraging Firebase as the backend and styled with Tailwind CSS. This README provides guidelines for development practices, including branch naming conventions, installed tools, and setup instructions.
 
