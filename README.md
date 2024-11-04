@@ -45,6 +45,7 @@ This project was initialized with Next.js, Tailwind CSS, and Firebase. Here’s 
 - **App Router**: Yes (uses the latest Next.js routing mechanism within the `app` folder instead of the `pages` folder).
 - **Turbopack**: No (opted out as it’s currently optimized for development mode, and might introduce complexity).
 - **Import Alias**: Yes (using `@/*` for cleaner import paths).
+- **Flowbite**: over 600+ UI components, sections, and pages built with the utility classes from Tailwind CSS
 
 ---
 
@@ -135,6 +136,7 @@ src/
 ├── components/           # Reusable UI components
 ├── lib/                  # Firebase configuration and utility functions
 ├── styles/               # Global styles and Tailwind configuration
+├── constant/             # hold constants and configurations that are used throughout the app
 └── ...                   # Other folders and files as needed
 ```
 

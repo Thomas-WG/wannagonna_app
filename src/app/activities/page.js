@@ -16,7 +16,6 @@ export default function ActivitiesPage() {
 
   return (
     <div className="p-4">
-      <h1 className="text-3xl font-bold text-orange-600 mb-4">Explore Activities</h1>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {activities.map((activity, index) => (
           <ActivityCard
@@ -27,6 +26,7 @@ export default function ActivitiesPage() {
             location={activity.location}
             applicants={activity.applicants}
             points={activity.points}
+            description={activity.description}
           />
         ))}
       </div>
