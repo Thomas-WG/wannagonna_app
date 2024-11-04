@@ -10,6 +10,13 @@ export default function Navbar() {
 
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
 
+   // Close sidebar when clicking on a link in mobile view
+   const handleLinkClick = () => {
+    if (window.innerWidth < 640) { // 640px is typically the breakpoint for 'sm' screens
+      setIsSidebarOpen(false);
+    }
+  };
+
   useEffect(() => {
     function handleClickOutside(event) {
       if (isSidebarOpen && sidebarRef.current && !sidebarRef.current.contains(event.target)) {
@@ -42,7 +49,7 @@ export default function Navbar() {
         aria-controls='logo-sidebar'
         type='button'
         onClick={toggleSidebar}
-        className='absolute top-4 left-4 z-50 inline-flex items-center p-2 mt-2 ms-3 text-sm text-orange-500 hover:text-gray-100 rounded-lg sm:hidden hover:bg-orange-500 focus:outline-none focus:ring-2 focus:ring-gray-200'
+        className='absolute top-4 left-4 z-50 inline-flex items-center p-2 mr-6 mt-2 ms-3 text-sm text-orange-500 hover:text-gray-100 rounded-lg sm:hidden hover:bg-orange-500 focus:outline-none focus:ring-2 focus:ring-gray-200'
       >
         <span className='sr-only'>Open sidebar</span>
         <svg
@@ -73,6 +80,7 @@ export default function Navbar() {
           <Link
             href='https://www.wannagonna.org'
             className='flex items-center ps-2.5 mb-5'
+            onClick={handleLinkClick}
           >
             <Image
               src='/logo/2 - Color on Black - RGB.png'
@@ -88,7 +96,8 @@ export default function Navbar() {
               <Link
                 href='#'
                 className='flex items-center p-2 text-white hover:text-orange-500 rounded-lg dark:text-white hover:bg-gray-100 group'
-              >
+                onClick={handleLinkClick}
+                >
                 <svg
                   className='w-5 h-5 text-white transition duration-75 group-hover:text-orange-500'
                   aria-hidden='true'
@@ -106,7 +115,8 @@ export default function Navbar() {
               <Link
                 href='activities'
                 className='flex items-center p-2 text-white hover:text-orange-500 rounded-lg dark:text-white hover:bg-gray-100 group'
-              >
+                onClick={handleLinkClick}
+                >
                 <svg
                   xmlns='http://www.w3.org/2000/svg'
                   viewBox='0 0 24 24'
@@ -127,7 +137,8 @@ export default function Navbar() {
               <Link
                 href='#'
                 className='flex items-center p-2 text-white hover:text-orange-500 rounded-lg dark:text-white hover:bg-gray-100 group'
-              >
+                onClick={handleLinkClick}
+                >
                 <svg
                   xmlns='http://www.w3.org/2000/svg'
                   viewBox='0 0 24 24'
@@ -148,7 +159,8 @@ export default function Navbar() {
               <Link
                 href='#'
                 className='flex items-center p-2 text-white hover:text-orange-500 rounded-lg dark:text-white hover:bg-gray-100 group'
-              >
+                onClick={handleLinkClick}
+                >
                 <svg
                   xmlns='http://www.w3.org/2000/svg'
                   viewBox='0 0 24 24'
@@ -169,7 +181,8 @@ export default function Navbar() {
               <Link
                 href='#'
                 className='flex items-center p-2 text-white hover:text-orange-500 rounded-lg dark:text-white hover:bg-gray-100 group'
-              >
+                onClick={handleLinkClick}
+                >
                 <svg
                   xmlns='http://www.w3.org/2000/svg'
                   viewBox='0 0 24 24'
@@ -191,7 +204,8 @@ export default function Navbar() {
               <Link
                 href='#'
                 className='flex items-center p-2 text-white hover:text-orange-500 rounded-lg dark:text-white hover:bg-gray-100 group'
-              >
+                onClick={handleLinkClick}
+                >
                 <svg
                   xmlns='http://www.w3.org/2000/svg'
                   viewBox='0 0 24 24'
@@ -213,7 +227,8 @@ export default function Navbar() {
               <Link
                 href='#'
                 className='flex items-center p-2 text-white hover:text-orange-500 rounded-lg dark:text-white hover:bg-gray-100 group'
-              >
+                onClick={handleLinkClick}
+                >
                 <svg
                   xmlns='http://www.w3.org/2000/svg'
                   viewBox='0 0 24 24'
@@ -231,7 +246,8 @@ export default function Navbar() {
               <Link
                 href='#'
                 className='flex items-center p-2 text-white hover:text-orange-500 rounded-lg dark:text-white hover:bg-gray-100 group'
-              >
+                onClick={handleLinkClick}
+                >
                 <svg
                   xmlns='http://www.w3.org/2000/svg'
                   viewBox='0 0 24 24'
@@ -252,7 +268,8 @@ export default function Navbar() {
               <Link
                 href='#'
                 className='flex items-center p-2 text-white hover:text-orange-500 rounded-lg dark:text-white hover:bg-gray-100 group'
-              >
+                onClick={handleLinkClick}
+                >
                 <svg
                   xmlns='http://www.w3.org/2000/svg'
                   viewBox='0 0 24 24'
