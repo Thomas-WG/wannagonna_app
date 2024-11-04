@@ -17,7 +17,7 @@ export default function ActivityCard({
   return (
     <div
       onClick={toggleExpand}
-      className='cursor-pointer block max-w-sm p-6 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700 transition-all duration-300'
+      className='cursor-pointer block max-w-sm p-6 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-50 transition-all duration-300'
     >
       <div className='flex items-center'>
         <Image
