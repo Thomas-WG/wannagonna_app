@@ -3,23 +3,31 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
+import { useAuth } from '@/hooks/useAuth';
+
 
 export default function Navbar() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const sidebarRef = useRef(null);
+  const { user, logout } = useAuth();
 
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
 
-   // Close sidebar when clicking on a link in mobile view
-   const handleLinkClick = () => {
-    if (window.innerWidth < 640) { // 640px is typically the breakpoint for 'sm' screens
+  // Close sidebar when clicking on a link in mobile view
+  const handleLinkClick = () => {
+    if (window.innerWidth < 640) {
+      // 640px is typically the breakpoint for 'sm' screens
       setIsSidebarOpen(false);
     }
   };
 
   useEffect(() => {
     function handleClickOutside(event) {
-      if (isSidebarOpen && sidebarRef.current && !sidebarRef.current.contains(event.target)) {
+      if (
+        isSidebarOpen &&
+        sidebarRef.current &&
+        !sidebarRef.current.contains(event.target)
+      ) {
         setIsSidebarOpen(false);
       }
     }
@@ -40,41 +48,41 @@ export default function Navbar() {
   }, [isSidebarOpen]);
 
   return (
-<div className="relative min-h-screen grid grid-cols-[auto,1fr]">
-        {/* Navbar button to toggle the sidebar */}
+    <div className='relative min-h-screen grid grid-cols-[auto,1fr]'>
+      {/* Navbar button to toggle the sidebar */}
       {!isSidebarOpen && (
-      <button
-        data-drawer-target='logo-sidebar'
-        data-drawer-toggle='logo-sidebar'
-        aria-controls='logo-sidebar'
-        type='button'
-        onClick={toggleSidebar}
-        className='absolute top-4 left-4 z-50 inline-flex items-center p-2 mr-6 mt-2 ms-3 text-sm text-orange-500 hover:text-gray-100 rounded-lg sm:hidden hover:bg-orange-500 focus:outline-none focus:ring-2 focus:ring-gray-200'
-      >
-        <span className='sr-only'>Open sidebar</span>
-        <svg
-          className='w-6 h-6'
-          aria-hidden='true'
-          fill='currentColor'
-          viewBox='0 0 20 20'
-          xmlns='http://www.w3.org/2000/svg'
+        <button
+          data-drawer-target='logo-sidebar'
+          data-drawer-toggle='logo-sidebar'
+          aria-controls='logo-sidebar'
+          type='button'
+          onClick={toggleSidebar}
+          className='absolute top-4 left-4 z-50 inline-flex items-center p-2 mr-6 mt-2 ms-3 text-sm text-orange-500 hover:text-gray-100 rounded-lg sm:hidden hover:bg-orange-500 focus:outline-none focus:ring-2 focus:ring-gray-200'
         >
-          <path
-            clipRule='evenodd'
-            fillRule='evenodd'
-            d='M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zm0 10.5a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5a.75.75 0 01-.75-.75zM2 10a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 10z'
-          ></path>
-        </svg>
-      </button>
-)}
+          <span className='sr-only'>Open sidebar</span>
+          <svg
+            className='w-6 h-6'
+            aria-hidden='true'
+            fill='currentColor'
+            viewBox='0 0 20 20'
+            xmlns='http://www.w3.org/2000/svg'
+          >
+            <path
+              clipRule='evenodd'
+              fillRule='evenodd'
+              d='M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zm0 10.5a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5a.75.75 0 01-.75-.75zM2 10a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 10z'
+            ></path>
+          </svg>
+        </button>
+      )}
       {/* Sidebar */}
       <aside
-      ref={sidebarRef}
+        ref={sidebarRef}
         id='logo-sidebar'
         className={`fixed top-0 left-0 z-40 w-64 h-screen transition-transform ${
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         } sm:static sm:translate-x-0`}
-        aria-label="Sidebar"
+        aria-label='Sidebar'
       >
         <div className='h-full px-3 py-4 overflow-y-auto bg-orange-400'>
           <Link
@@ -97,7 +105,7 @@ export default function Navbar() {
                 href='#'
                 className='flex items-center p-2 text-white hover:text-orange-500 rounded-lg dark:text-white hover:bg-gray-100 group'
                 onClick={handleLinkClick}
-                >
+              >
                 <svg
                   className='w-5 h-5 text-white transition duration-75 group-hover:text-orange-500'
                   aria-hidden='true'
@@ -116,7 +124,7 @@ export default function Navbar() {
                 href='activities'
                 className='flex items-center p-2 text-white hover:text-orange-500 rounded-lg dark:text-white hover:bg-gray-100 group'
                 onClick={handleLinkClick}
-                >
+              >
                 <svg
                   xmlns='http://www.w3.org/2000/svg'
                   viewBox='0 0 24 24'
@@ -138,7 +146,7 @@ export default function Navbar() {
                 href='#'
                 className='flex items-center p-2 text-white hover:text-orange-500 rounded-lg dark:text-white hover:bg-gray-100 group'
                 onClick={handleLinkClick}
-                >
+              >
                 <svg
                   xmlns='http://www.w3.org/2000/svg'
                   viewBox='0 0 24 24'
@@ -160,7 +168,7 @@ export default function Navbar() {
                 href='#'
                 className='flex items-center p-2 text-white hover:text-orange-500 rounded-lg dark:text-white hover:bg-gray-100 group'
                 onClick={handleLinkClick}
-                >
+              >
                 <svg
                   xmlns='http://www.w3.org/2000/svg'
                   viewBox='0 0 24 24'
@@ -182,7 +190,7 @@ export default function Navbar() {
                 href='#'
                 className='flex items-center p-2 text-white hover:text-orange-500 rounded-lg dark:text-white hover:bg-gray-100 group'
                 onClick={handleLinkClick}
-                >
+              >
                 <svg
                   xmlns='http://www.w3.org/2000/svg'
                   viewBox='0 0 24 24'
@@ -205,7 +213,7 @@ export default function Navbar() {
                 href='#'
                 className='flex items-center p-2 text-white hover:text-orange-500 rounded-lg dark:text-white hover:bg-gray-100 group'
                 onClick={handleLinkClick}
-                >
+              >
                 <svg
                   xmlns='http://www.w3.org/2000/svg'
                   viewBox='0 0 24 24'
@@ -228,7 +236,7 @@ export default function Navbar() {
                 href='#'
                 className='flex items-center p-2 text-white hover:text-orange-500 rounded-lg dark:text-white hover:bg-gray-100 group'
                 onClick={handleLinkClick}
-                >
+              >
                 <svg
                   xmlns='http://www.w3.org/2000/svg'
                   viewBox='0 0 24 24'
@@ -247,7 +255,7 @@ export default function Navbar() {
                 href='#'
                 className='flex items-center p-2 text-white hover:text-orange-500 rounded-lg dark:text-white hover:bg-gray-100 group'
                 onClick={handleLinkClick}
-                >
+              >
                 <svg
                   xmlns='http://www.w3.org/2000/svg'
                   viewBox='0 0 24 24'
@@ -269,7 +277,7 @@ export default function Navbar() {
                 href='#'
                 className='flex items-center p-2 text-white hover:text-orange-500 rounded-lg dark:text-white hover:bg-gray-100 group'
                 onClick={handleLinkClick}
-                >
+              >
                 <svg
                   xmlns='http://www.w3.org/2000/svg'
                   viewBox='0 0 24 24'
@@ -286,12 +294,39 @@ export default function Navbar() {
                 <span className='ms-3'>Settings</span>
               </Link>
             </li>
+            <li>
+              <Link
+                href='#'
+                className='flex items-center p-2 text-white hover:text-orange-500 rounded-lg dark:text-white hover:bg-gray-100 group'
+                onClick={(e) => {
+                  e.preventDefault(); // Prevents default anchor behavior
+                  logout(); // Calls the logout function
+                }}
+              >
+                <svg
+                  xmlns='http://www.w3.org/2000/svg'
+                  viewBox='0 0 24 24'
+                  fill='currentColor'
+                  className='size-6'
+                >
+                  <path
+                    fillRule='evenodd'
+                    d='M16.5 3.75a1.5 1.5 0 0 1 1.5 1.5v13.5a1.5 1.5 0 0 1-1.5 1.5h-6a1.5 1.5 0 0 1-1.5-1.5V15a.75.75 0 0 0-1.5 0v3.75a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V5.25a3 3 0 0 0-3-3h-6a3 3 0 0 0-3 3V9A.75.75 0 1 0 9 9V5.25a1.5 1.5 0 0 1 1.5-1.5h6ZM5.78 8.47a.75.75 0 0 0-1.06 0l-3 3a.75.75 0 0 0 0 1.06l3 3a.75.75 0 0 0 1.06-1.06l-1.72-1.72H15a.75.75 0 0 0 0-1.5H4.06l1.72-1.72a.75.75 0 0 0 0-1.06Z'
+                    clipRule='evenodd'
+                  />
+                </svg>
+
+                <span className='ms-3'>Logout</span>
+              </Link>
+            </li>
           </ul>
         </div>
       </aside>
 
       {/* Main content area */}
-      <div className={`p-4 transition-all duration-300 ${isSidebarOpen ? 'ml-64' : 'ml-0'} sm:ml-64`}>
+      <div
+        className={`p-4 transition-all duration-300 ${isSidebarOpen ? 'ml-64' : 'ml-0'} sm:ml-64`}
+      >
         {/* Main content goes here, e.g., activity cards */}
       </div>
     </div>
