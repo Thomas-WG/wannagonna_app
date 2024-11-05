@@ -1,51 +1,78 @@
-'use client';
+/*
+ * Sidebar.js
+ *
+ * Purpose:
+ * This file defines a responsive sidebar navigation component that provides links to different pages of the application.
+ * It includes toggling functionality to show/hide the sidebar on mobile and uses Firebase authentication to manage user login and logout.
+ *
+ * Key Features:
+ * - Toggling sidebar visibility on mobile screens.
+ * - Handles clicking outside the sidebar and pressing 'Escape' to close the sidebar.
+ * - Dynamically renders links, including a logout link that triggers user sign-out.
+ *
+ * Usage:
+ * - Import this component in your main layout to provide navigation throughout the app.
+ */
+
+'use client'; // Enable client-side rendering for this component
 
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/useAuth'; // Custom hook for Firebase authentication
 
-
+// Main Sidebar component
 export default function Navbar() {
+  // State for managing sidebar visibility (open/closed)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const sidebarRef = useRef(null);
-  const { user, logout } = useAuth();
+  const sidebarRef = useRef(null); // Reference to sidebar element for detecting outside clicks
+  const { user, logout } = useAuth(); // Destructures user and logout function from useAuth hook
 
+  // Function to toggle sidebar open/closed
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
 
-  // Close sidebar when clicking on a link in mobile view
+  /*
+   * Handles closing the sidebar when a link is clicked (only on mobile screens).
+   * This checks window width to determine if the screen size is below 'sm' breakpoint (typically 640px).
+   */
   const handleLinkClick = () => {
     if (window.innerWidth < 640) {
-      // 640px is typically the breakpoint for 'sm' screens
-      setIsSidebarOpen(false);
+      setIsSidebarOpen(false); // Close sidebar for mobile view
     }
   };
 
+  /*
+   * Sets up listeners for clicks outside of the sidebar and for the 'Escape' key to close it.
+   * - Closes the sidebar if a click occurs outside of it or if 'Escape' is pressed.
+   */
   useEffect(() => {
     function handleClickOutside(event) {
+      // Checks if click was outside sidebar when it's open
       if (
         isSidebarOpen &&
         sidebarRef.current &&
         !sidebarRef.current.contains(event.target)
       ) {
-        setIsSidebarOpen(false);
+        setIsSidebarOpen(false); // Close sidebar
       }
     }
 
     function handleKeyDown(event) {
       if (isSidebarOpen && event.key === 'Escape') {
-        setIsSidebarOpen(false);
+        setIsSidebarOpen(false); // Close sidebar on Escape key press
       }
     }
 
+    // Register event listeners
     document.addEventListener('mousedown', handleClickOutside);
     document.addEventListener('keydown', handleKeyDown);
 
+    // Clean up listeners on component unmount
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isSidebarOpen]);
+  }, [isSidebarOpen]); // Re-run effect if `isSidebarOpen` changes
 
   return (
     <div className='relative min-h-screen grid grid-cols-[auto,1fr]'>
