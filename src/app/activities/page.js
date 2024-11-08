@@ -23,6 +23,7 @@ import { useEffect, useState } from 'react';
 import { fetchActivities } from '@/utils/fetchActivities'; // Utility function to fetch activities data
 import ActivityCard from '@/components/ActivityCard'; // Component to display each activity's data in card format
 import { useAuth } from '@/hooks/useAuth'; // Hook for accessing user authentication status
+import LoadingSpinner from '@/components/LoadingSpinner'; // Component to show the loading spinner
 
 // Main component to display activities
 export default function ActivitiesPage() {
@@ -48,12 +49,16 @@ export default function ActivitiesPage() {
     getData();
   }, [user]); // Re-run the effect when `user` changes (e.g., when logging in or out)
 
-  // Display loading message while user authentication status is being determined
-  if (loading) return <p>Loading...</p>;
+  // Display loading spinner while user authentication status is being determined
+  if (loading)
+    return (
+      <div className='min-h-screen flex items-center justify-center'>
+        <LoadingSpinner />
+      </div>
+    );
 
   // If there is no authenticated user, return null (no content rendered)
   if (!user) return null;
-
   return (
     <div className='p-4'>
       {/* Responsive grid layout for displaying activity cards */}
