@@ -75,7 +75,7 @@ export default function Navbar() {
   }, [isSidebarOpen]); // Re-run effect if `isSidebarOpen` changes
 
   return (
-    <div className='relative min-h-screen grid grid-cols-[auto,1fr]'>
+    <div className='relative min-h-screen grid'>
       {/* Navbar button to toggle the sidebar */}
       {!isSidebarOpen && (
         <button
@@ -352,7 +352,7 @@ export default function Navbar() {
 
       {/* Main content area */}
       <div
-        className={`p-4 transition-all duration-300 ${isSidebarOpen ? 'ml-64' : 'ml-0'} sm:ml-64`}
+        className={`p-4 transition-all duration-300 ${isSidebarOpen ? 'ml-52' : 'ml-0'} sm:ml-52`}
       >
         {/* Main content goes here, e.g., activity cards */}
       </div>
