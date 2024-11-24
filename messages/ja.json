@@ -1,0 +1,20 @@
+{
+    "Homepage": {
+        "title": "Bienvenue"
+    },
+    "Sidebar":{
+        "dashboard": "ダッシュボード",
+        "explore": "探す",
+        "badges": "バッジ",
+        "leaderboard": "リーダーボード",
+        "myteam": "私のチーム",
+        "mynonprofit": "私の非営利団体",
+        "members": "メンバー",
+        "donate": "寄付",
+        "settings": "設定",
+        "logout": "ログアウト"
+    },
+    "Settings":{
+        "language": "言語を変更する"
+    }
+}
