@@ -21,11 +21,9 @@
  * - To exclude Navbar on specific pages, add those routes to the `noNavbarRoutes` array.
  */
 
-
 import Navbar from '@/components/Sidebar'; // Navbar component for sidebar navigation
 import '@/styles/globals.css'; // Global styles for the entire application
 import { AuthProvider } from '@/app/context/AuthContext'; // Authentication context provider
-//import { usePathname } from 'next/navigation'; // Hook to get the current path
 import { Roboto } from 'next/font/google'; // Roboto font from Google Fonts
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
@@ -40,22 +38,17 @@ const roboto = Roboto({
  * RootLayout - Main layout component for the app
  */
 export default async function RootLayout({ children }) {
-  //const pathname = usePathname(); // Retrieve the current URL path
-
-  // Define an array of routes where the Navbar should not be displayed
-  const noNavbarRoutes = ['/login'];
-
+  //Get locale value and load the translations files
   const locale = await getLocale();
   const messages = await getMessages();
 
   return (
     <html lang={locale} className={roboto.className}>
       <body className='h-screen flex overflow-hidden'>
+      {/* Wrap the entire app in NextIntlClientProvider for access to internationalization services */}
         <NextIntlClientProvider messages={messages}>
           {/* Wrap the entire app in AuthProvider for access to authentication context */}
           <AuthProvider>
-            {/* Conditionally render the Navbar based on the current route */}
-            {/*!noNavbarRoutes.includes(pathname) && <Navbar />*/}
             <Navbar />
             {/* Main content area, which displays the child components */}
             <main className='flex-1 overflow-y-auto p-4'>{children}</main>

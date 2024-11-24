@@ -1,24 +1,45 @@
-'use client';
+// This code defines the settings page for language selection in a Next.js application
+
+'use client'; // Enable client-side rendering for this component
 
 import React, { useState } from 'react';
-import { useTranslations } from "next-intl";
-import { setUserLocale } from '@/utils/locale';
+import { useTranslations } from "next-intl"; // Import hook to handle translations
+import { setUserLocale } from '@/utils/locale'; // Import function to set the user's preferred locale
+import { useAuth } from '@/hooks/useAuth'; // Hook for accessing user authentication status
+import LoadingSpinner from '@/components/LoadingSpinner'; // Component to show the loading spinner
 
-export default function SettingsPage(){
+// Main component for the Settings Page
+export default function SettingsPage() {
+  // State to manage the visibility of the language dropdown
   const [dropdownVisible, setDropdownVisible] = useState(false);
-  const t = useTranslations("Settings");
+  const t = useTranslations("Settings"); // Hook to handle translations for the Settings page
 
+    // Destructure `user` and `loading` state from `useAuth` to manage access control
+    const { user, loading } = useAuth();
+
+  // Function to toggle the visibility of the dropdown menu
   const toggleDropdown = () => {
     setDropdownVisible(!dropdownVisible);
   };
 
+  // Function to handle changing the language and updating the locale in cookies
   const handleLanguageChange = async (locale) => {
-    setUserLocale(locale);
-    setDropdownVisible(false);
+    setUserLocale(locale); // Set the new locale using the setUserLocale utility
+    setDropdownVisible(false); // Close the dropdown menu after selecting a language
   };
+// Display loading spinner while user authentication status is being determined
+if (loading)
+    return (
+      <div className='min-h-screen flex items-center justify-center'>
+        <LoadingSpinner />
+      </div>
+    );
 
+  // If there is no authenticated user, return null (no content rendered)
+  if (!user) return null;
   return (
     <div className="relative inline-block text-left">
+      {/* Button to open/close the language dropdown menu */}
       <button
         id="dropdownDefaultButton"
         onClick={toggleDropdown}
@@ -33,6 +54,7 @@ export default function SettingsPage(){
           fill="none"
           viewBox="0 0 10 6"
         >
+          {/* SVG icon for dropdown indicator */}
           <path
             stroke="currentColor"
             strokeLinecap="round"
@@ -43,13 +65,14 @@ export default function SettingsPage(){
         </svg>
       </button>
 
-      {/* Dropdown menu */}
+      {/* Dropdown menu for language selection */}
       {dropdownVisible && (
         <div
           id="languageDropdown"
           className="z-10 absolute bg-white divide-y divide-gray-100 rounded-lg shadow w-44 dark:bg-gray-700 mt-2"
         >
           <ul className="py-2 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="dropdownDefaultButton">
+            {/* Language options */}
             <li>
               <a
                 href="#"
@@ -83,4 +106,3 @@ export default function SettingsPage(){
     </div>
   );
 };
-
