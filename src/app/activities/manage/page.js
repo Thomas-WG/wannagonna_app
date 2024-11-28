@@ -13,6 +13,7 @@ import Image from 'next/image';
 import { Dropdown, Label, TextInput, Textarea, Radio, FloatingLabel } from 'flowbite-react';
 import LoadingSpinner from '@/components/LoadingSpinner'; // Component to show the loading spinner
 import { useAuth } from '@/hooks/useAuth'; // Hook for accessing user authentication status
+import { useTranslations } from "use-intl";
 
 export default function CreateUpdateActivityPage() {
   const searchParams = useSearchParams();
@@ -20,6 +21,7 @@ export default function CreateUpdateActivityPage() {
   const activityId = searchParams.get('activityId');
   const isEditMode = Boolean(activityId);
   const { user, loading } = useAuth();
+  const t = useTranslations("ManageActivities");
 
   const [formData, setFormData] = useState({
     type: '',
@@ -96,7 +98,7 @@ export default function CreateUpdateActivityPage() {
   return (
     <div className='p-4 max-w-full mx-auto'>
       <h1 className='text-2xl font-bold mb-4 text-center' >
-        {isEditMode ? 'Edit Activity' : 'Create Activity'}
+        {isEditMode ? t("update-activity") : t("create-activity")}
       </h1>
       {loading && <p>Loading...</p>}
       <div className='max-w-full'>
@@ -108,72 +110,72 @@ export default function CreateUpdateActivityPage() {
           <>
             <div>
               <label className='block font-medium mb-1'>
-                What kind of activity ?
+              {t("type-label")}
               </label>
               <Dropdown
-                label={formData.type ? formData.type : 'Activity type'}
+                label={formData.type ? t(`type-${formData.type}`) : t("type-title")}
                 dismissOnClick={true}
                 style={{ backgroundColor: 'rgb(255 138 76)' }}
               >
                 <Dropdown.Item
                   onClick={() =>
-                    setFormData((prev) => ({ ...prev, type: 'Online' }))
+                    setFormData((prev) => ({ ...prev, type: 'online' }))
                   }
                 >
-                  Online
+                  {t("type-online")}
                 </Dropdown.Item>
                 <Dropdown.Item
                   onClick={() =>
-                    setFormData((prev) => ({ ...prev, type: 'Local' }))
+                    setFormData((prev) => ({ ...prev, type: 'local' }))
                   }
                 >
-                  Local
+                  {t("type-local")}
                 </Dropdown.Item>
                 <Dropdown.Item
                   onClick={() =>
-                    setFormData((prev) => ({ ...prev, type: 'Event' }))
+                    setFormData((prev) => ({ ...prev, type: 'event' }))
                   }
                 >
-                  Event
+                  {t("type-event")}
                 </Dropdown.Item>
               </Dropdown>
             </div>
             <div>
               <label className='block font-medium mb-2'>
-                Select a Category
+              {t("category-label")}
               </label>
               <ul className='grid grid-cols-3 sm:grid-cols-3 md:grid-cols-5 gap-4'>
                 {[
-                  { id: 'website', name: 'Website' },
-                  { id: 'logo', name: 'Logo Design' },
-                  { id: 'translation', name: 'Translation' },
-                  { id: 'flyer', name: 'Flyer / Brochure' },
-                  { id: 'consulting', name: 'Consulting' },
-                  { id: 'architecture', name: 'Architecture' },
-                  { id: 'dataentry', name: 'Data Entry' },
-                  { id: 'photovideo', name: 'Photo Video Editing' },
-                  { id: 'sns', name: 'Social Network' },
-                  { id: 'onlinesupport', name: 'Online Support' },
-                  { id: 'education', name: 'Education' },
-                  { id: 'fundraising', name: 'Fundraising' },
-                  { id: 'longtermrole', name: 'Long Term Role' },
-                  { id: 'explainer', name: 'Explainer / Whiteboard' },
-                  { id: 'other', name: 'Other' },
+                  { id: 'website', name: t("website") },
+                  { id: 'logo', name: t("logo") },
+                  { id: 'translation', name: t('translation') },
+                  { id: 'flyer', name: t("flyer") },
+                  { id: 'consulting', name: t("consulting") },
+                  { id: 'architecture', name: t("architecture") },
+                  { id: 'dataentry', name: t("dataentry") },
+                  { id: 'photovideo', name: t("photovideo") },
+                  { id: 'sns', name: t("sns") },
+                  { id: 'onlinesupport', name: t("onlinesupport") },
+                  { id: 'education', name: t("education") },
+                  { id: 'fundraising', name: t("fundraising") },
+                  { id: 'longtermrole', name: t("longtermrole") },
+                  { id: 'explainer', name: t("explainer") },
+                  { id: 'other', name: t("other") },
                 ].map(({ id, name }) => (
                   <li
                     key={id}
                     className={`flex flex-col items-center justify-center p-1 border rounded-lg cursor-pointer ${
-                      formData.category === name
+                      formData.category === id
                         ? 'border-orange-400 bg-orange-400 text-white'
                         : 'border-white bg-white'
                     }`}
                     onClick={() =>
-                      setFormData((prev) => ({ ...prev, category: name }))
+                      setFormData((prev) => ({ ...prev, category: id }))
                     }
                   >
                     <Image
                       src={
-                        formData.category === name
+                        formData.category === id
                           ? `/icons/activities/w_${id}.png`
                           : `/icons/activities/o_${id}.png`
                       }
@@ -199,8 +201,8 @@ export default function CreateUpdateActivityPage() {
               <div>
               <FloatingLabel
       variant="filled"
-      label="Activity Title"
-      helperText="Write a short and meaningful title"
+      label={t("activity-title-label")}
+      helperText={t("activity-title-helper")}
       name='title'
                   value={formData.title}
                   onChange={handleChange}
@@ -210,17 +212,17 @@ export default function CreateUpdateActivityPage() {
               <div>
                 <Textarea
                   id='activityDescription'
-                  placeholder='Activity Description'
+                  placeholder={t("activity-description-label")}
                   required
                   rows={4}
                   name='description'
                   value={formData.description}
                   onChange={handleChange}
-                  helperText="Explain about the need, when do you need it, why... More details is always better !"
+                  helperText={t("activity-description-helper")}
                 />
               </div>
               <fieldset className='flex max-w-md flex-col gap-4'>
-                <Label htmlFor='frequency'>Is it..</Label>
+                <Label htmlFor='frequency'>{t("frequency-label")}</Label>
                 <div className='flex items-center gap-2'>
                   <Radio
                     id='once'
@@ -229,7 +231,7 @@ export default function CreateUpdateActivityPage() {
                     checked={formData.frequency === 'once'}
                     onChange={handleChange}
                   />
-                  <Label htmlFor='onetime'>Just once</Label>
+                  <Label htmlFor='once' name='frequency' value='once' onClick={handleChange}>{t("frequency-once")}</Label>
                 </div>
                 <div className='flex items-center gap-2'>
                   <Radio
@@ -239,7 +241,7 @@ export default function CreateUpdateActivityPage() {
                     checked={formData.frequency === 'regular'}
                     onChange={handleChange}
                   />
-                  <Label htmlFor='regular'>Regular activities</Label>
+                  <Label htmlFor='regular' name='frequency' value='regular' onClick={handleChange}>{t("frequency-regular")}</Label>
                 </div>
               </fieldset>
             </div>
@@ -252,9 +254,9 @@ export default function CreateUpdateActivityPage() {
           <>
             <div>
             <label className='block font-medium mb-2'>
-                Select a SDG which match the activity (only one)
+            {t("sdg-label")}
               </label>
-              <p>It will be used to earn badges for the volunteers</p>
+              <p>{t("sdg-helper")}</p>
               <ul className='grid grid-cols-3 sm:grid-cols-3 md:grid-cols-5 gap-4'>
                 {[
                   { id: '1', name: 1 },
@@ -309,7 +311,7 @@ export default function CreateUpdateActivityPage() {
               onClick={prevStep}
               className='px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300'
             >
-              Previous
+              {t("previous")}
             </button>
           )}
           {currentStep < 3 && (
@@ -318,7 +320,7 @@ export default function CreateUpdateActivityPage() {
               onClick={nextStep}
               className='px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 ml-auto'
             >
-              Next
+              {t("next")}
             </button>
           )}
           {currentStep === 3 && (
@@ -326,7 +328,7 @@ export default function CreateUpdateActivityPage() {
               type='submit'
               className='px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 ml-auto'
             >
-              {isEditMode ? 'Update' : 'Create'}
+              {isEditMode ? t("update") : t("create")}
             </button>
           )}
         </div>

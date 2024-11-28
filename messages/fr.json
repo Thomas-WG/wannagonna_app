@@ -2,7 +2,7 @@
     "Homepage": {
         "title": "Bienvenue"
     },
-    "Sidebar":{
+    "Sidebar": {
         "dashboard": "Tableau de bord",
         "explore": "Explorer",
         "badges": "Badges",
@@ -14,7 +14,45 @@
         "settings": "Paramètres",
         "logout": "Déconnexion"
     },
-    "Settings":{
+    "Settings": {
         "language": "Changer la langue"
+    },
+    "ManageActivities": {
+        "create-activity": "Créer une activité",
+        "update-activity": "Mettre à jour l'activité",
+        "type-label": "Quel type d'activité ?",
+        "type-title": "Type d'activité",
+        "type-online": "En ligne",
+        "type-local": "Locale",
+        "type-event": "Événement",
+        "category-label": "Sélectionnez une catégorie",
+        "website": "Site web",
+        "logo": "Conception de logo",
+        "translation": "Traduction",
+        "flyer": "Flyer / Brochure",
+        "consulting": "Consultation",
+        "architecture": "Architecture",
+        "dataentry": "Saisie de données",
+        "photovideo": "Édition photo vidéo",
+        "sns": "Réseaux sociaux",
+        "onlinesupport": "Support en ligne",
+        "education": "Éducation",
+        "fundraising": "Collecte de fonds",
+        "longtermrole": "Rôle à long terme",
+        "explainer": "Vidéo explicative / Whiteboard",
+        "other": "Autre",
+        "activity-title-label": "Titre de l'activité",
+        "activity-title-helper": "Rédigez un titre court et significatif",
+        "activity-description-label": "Description de l'activité",
+        "activity-description-helper": "Expliquez le besoin, quand vous en avez besoin, pourquoi... Plus de détails est toujours mieux !",
+        "frequency-label": "Est-ce...",
+        "frequency-once": "Une seule fois",
+        "frequency-regular": "Activités régulières",
+        "sdg-label": "Sélectionnez un Objectif de Developpement Durable qui correspond à l'activité (un seul)",
+        "sdg-helper": "Il sera utilisé pour gagner des badges pour les bénévoles",
+        "previous": "Précédent",
+        "next": "Suivant",
+        "update": "Mettre à jour",
+        "create": "Créer"
     }
 }

@@ -2,7 +2,7 @@
     "Homepage": {
         "title": "ようこそ"
     },
-    "Sidebar":{
+    "Sidebar": {
         "dashboard": "ダッシュボード",
         "explore": "探す",
         "badges": "バッジ",
@@ -14,7 +14,45 @@
         "settings": "設定",
         "logout": "ログアウト"
     },
-    "Settings":{
+    "Settings": {
         "language": "言語を変更する"
+    },
+    "ManageActivities": {
+        "create-activity": "活動を作成する",
+        "update-activity": "活動を更新する",
+        "type-label": "どの種類の活動ですか？",
+        "type-title": "活動の種類",
+        "type-online": "オンライン",
+        "type-local": "ローカル",
+        "type-event": "イベント",
+        "category-label": "カテゴリを選択してください",
+        "website": "ウェブサイト",
+        "logo": "ロゴデザイン",
+        "translation": "翻訳",
+        "flyer": "チラシ / パンフレット",
+        "consulting": "コンサルティング",
+        "architecture": "建築",
+        "dataentry": "データ入力",
+        "photovideo": "写真・動画編集",
+        "sns": "ソーシャルネットワーク",
+        "onlinesupport": "オンラインサポート",
+        "education": "教育",
+        "fundraising": "資金調達",
+        "longtermrole": "長期の役割",
+        "explainer": "説明 / ホワイトボード",
+        "other": "その他",
+        "activity-title-label": "活動のタイトル",
+        "activity-title-helper": "短くて意味のあるタイトルを書いてください",
+        "activity-description-label": "活動の説明",
+        "activity-description-helper": "必要なこと、いつ必要か、なぜ必要かを説明してください。詳細が多いほど良いです！",
+        "frequency-label": "これは...",
+        "frequency-once": "一度だけ",
+        "frequency-regular": "定期的な活動",
+        "sdg-label": "活動に一致するSDGを選択してください（1つだけ）",
+        "sdg-helper": "ボランティアがバッジを獲得するために使用されます",
+        "previous": "前へ",
+        "next": "次へ",
+        "update": "更新する",
+        "create": "作成する"
     }
 }
