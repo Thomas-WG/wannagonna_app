@@ -1,0 +1,20 @@
+{
+    "Homepage": {
+        "title": "Bienvenue"
+    },
+    "Sidebar":{
+        "dashboard": "Tableau de bord",
+        "explore": "Explorer",
+        "badges": "Badges",
+        "leaderboard": "Classement",
+        "myteam": "Mon Équipe",
+        "mynonprofit": "Mon Association",
+        "members": "Membres",
+        "donate": "Donation",
+        "settings": "Paramètres",
+        "logout": "Déconnexion"
+    },
+    "Settings":{
+        "language": "Changer la langue"
+    }
+}
