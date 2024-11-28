@@ -352,7 +352,7 @@ export default function Navbar() {
 
       {/* Main content area */}
       <div
-        className={`p-4 transition-all duration-300 ${isSidebarOpen ? 'ml-52' : 'ml-0'} sm:ml-52`}
+        className={`p-4 transition-all duration-300 ${isSidebarOpen ? 'ml-30' : 'ml-0'} sm:ml-52`}
       >
         {/* Main content goes here, e.g., activity cards */}
       </div>
