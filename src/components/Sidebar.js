@@ -20,6 +20,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth'; // Custom hook for Firebase authentication
+import { useTranslations } from "use-intl";
 
 // Main Sidebar component
 export default function Navbar() {
@@ -28,6 +29,7 @@ export default function Navbar() {
   const sidebarRef = useRef(null); // Reference to sidebar element for detecting outside clicks
   const { user, logout } = useAuth(); // Destructures user and logout function from useAuth hook
 
+  const t = useTranslations("Sidebar");
   // Function to toggle sidebar open/closed
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
 
@@ -143,7 +145,7 @@ export default function Navbar() {
                   <path d='M16.975 11H10V4.025a1 1 0 0 0-1.066-.998 8.5 8.5 0 1 0 9.039 9.039.999.999 0 0 0-1-1.066h.002Z' />
                   <path d='M12.5 0c-.157 0-.311.01-.565.027A1 1 0 0 0 11 1.02V10h8.975a1 1 0 0 0 1-.935c.013-.188.028-.374.028-.565A8.51 8.51 0 0 0 12.5 0Z' />
                 </svg>
-                <span className='ms-3'>Dashboard</span>
+                <span className='ms-3'>{t("dashboard")}</span>
               </Link>
             </li>
             <li>
@@ -165,7 +167,7 @@ export default function Navbar() {
                   />
                 </svg>
 
-                <span className='ms-3'>Explore</span>
+                <span className='ms-3'>{t("explore")}</span>
               </Link>
             </li>
             <li>
@@ -187,7 +189,7 @@ export default function Navbar() {
                   />
                 </svg>
 
-                <span className='ms-3'>Achievement</span>
+                <span className='ms-3'>{t("badges")}</span>
               </Link>
             </li>
             <li>
@@ -209,7 +211,7 @@ export default function Navbar() {
                   />
                 </svg>
 
-                <span className='ms-3'>Leaderboard</span>
+                <span className='ms-3'>{t("leaderboard")}</span>
               </Link>
             </li>
             <li>
@@ -232,7 +234,7 @@ export default function Navbar() {
                   <path d='M5.082 14.254a8.287 8.287 0 0 0-1.308 5.135 9.687 9.687 0 0 1-1.764-.44l-.115-.04a.563.563 0 0 1-.373-.487l-.01-.121a3.75 3.75 0 0 1 3.57-4.047ZM20.226 19.389a8.287 8.287 0 0 0-1.308-5.135 3.75 3.75 0 0 1 3.57 4.047l-.01.121a.563.563 0 0 1-.373.486l-.115.04c-.567.2-1.156.349-1.764.441Z' />
                 </svg>
 
-                <span className='ms-3'>My Team</span>
+                <span className='ms-3'>{t("myteam")}</span>
               </Link>
             </li>
             <li>
@@ -255,7 +257,7 @@ export default function Navbar() {
                   />
                 </svg>
 
-                <span className='ms-3'>My Non-Profit</span>
+                <span className='ms-3'>{t("mynonprofit")}</span>
               </Link>
             </li>
             <li>
@@ -272,7 +274,7 @@ export default function Navbar() {
                 >
                   <path d='M4.5 6.375a4.125 4.125 0 1 1 8.25 0 4.125 4.125 0 0 1-8.25 0ZM14.25 8.625a3.375 3.375 0 1 1 6.75 0 3.375 3.375 0 0 1-6.75 0ZM1.5 19.125a7.125 7.125 0 0 1 14.25 0v.003l-.001.119a.75.75 0 0 1-.363.63 13.067 13.067 0 0 1-6.761 1.873c-2.472 0-4.786-.684-6.76-1.873a.75.75 0 0 1-.364-.63l-.001-.122ZM17.25 19.128l-.001.144a2.25 2.25 0 0 1-.233.96 10.088 10.088 0 0 0 5.06-1.01.75.75 0 0 0 .42-.643 4.875 4.875 0 0 0-6.957-4.611 8.586 8.586 0 0 1 1.71 5.157v.003Z' />
                 </svg>
-                <span className='ms-3'>Members</span>
+                <span className='ms-3'>{t("members")}</span>
               </Link>
             </li>
           </ul>
@@ -296,12 +298,12 @@ export default function Navbar() {
                   />
                 </svg>
 
-                <span className='ms-3'>Donate</span>
+                <span className='ms-3'>{t("donate")}</span>
               </Link>
             </li>
             <li>
               <Link
-                href='#'
+                href='settings'
                 className='flex items-center p-2 text-white hover:text-orange-500 rounded-lg dark:text-white hover:bg-gray-100 group'
                 onClick={handleLinkClick}
               >
@@ -318,7 +320,7 @@ export default function Navbar() {
                   />
                 </svg>
 
-                <span className='ms-3'>Settings</span>
+                <span className='ms-3'>{t("settings")}</span>
               </Link>
             </li>
             <li>
@@ -343,7 +345,7 @@ export default function Navbar() {
                   />
                 </svg>
 
-                <span className='ms-3'>Logout</span>
+                <span className='ms-3'>{t("logout")}</span>
               </Link>
             </li>
           </ul>

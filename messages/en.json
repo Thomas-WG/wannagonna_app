@@ -1,0 +1,20 @@
+{
+    "Homepage": {
+        "title": "Welcome"
+    },
+    "Sidebar":{
+        "dashboard": "Dashboard",
+        "explore": "Explore",
+        "badges": "Badges",
+        "leaderboard": "Leaderboard",
+        "myteam": "My Team",
+        "mynonprofit": "My Non-Profit",
+        "members": "Members",
+        "donate": "Donate",
+        "settings": "Settings",
+        "logout": "Logout"
+    },
+    "Settings":{
+        "language": "Change the language"
+    }
+}
