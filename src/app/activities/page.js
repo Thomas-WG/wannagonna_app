@@ -24,6 +24,7 @@ import { fetchActivities } from '@/utils/fetchActivities'; // Utility function t
 import ActivityCard from '@/components/ActivityCard'; // Component to display each activity's data in card format
 import { useAuth } from '@/hooks/useAuth'; // Hook for accessing user authentication status
 import LoadingSpinner from '@/components/LoadingSpinner'; // Component to show the loading spinner
+import { useRouter } from 'next/navigation';
 
 // Main component to display activities
 export default function ActivitiesPage() {
@@ -32,6 +33,12 @@ export default function ActivitiesPage() {
 
   // State variable to store the list of fetched activities
   const [activities, setActivities] = useState([]);
+
+  const router = useRouter();
+
+  const goToManage = () => {
+    router.push('/activities/manage'); 
+  };
 
   /*
    * useEffect to fetch activities data
@@ -66,16 +73,20 @@ export default function ActivitiesPage() {
         {activities.map((activity, index) => (
           <ActivityCard
             key={index} // Unique key for each card
-            npoName={activity.npoName} // Non-profit organization name
-            npoLogo={activity.npoLogo} // Logo URL of the non-profit
+            organization_name={activity.organization_name} // Non-profit organization name
+            organization_logo={activity.organization_logo} // Logo URL of the non-profit
             title={activity.title} // Title of the activity
             location={activity.location} // Location of the activity
             applicants={activity.applicants} // Number of applicants
-            points={activity.points} // Points awarded for participation
+            xp_reward={activity.xp_reward} // Points awarded for participation
             description={activity.description} // Description of the activity
           />
         ))}
       </div>
+      <button onClick={goToManage} className="fixed bottom-4 right-4 bg-orange-500 text-white text-2xl w-12 h-12 rounded-full shadow-lg hover:bg-orange-600">
+        +
+      </button>
     </div>
+
   );
 }

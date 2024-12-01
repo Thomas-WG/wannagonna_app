@@ -1,4 +1,6 @@
 'use client';
+// Page Component: CreateUpdateActivityPage
+// Description: This Next.js page component is used for creating or updating an activity. It has a form divided into three steps, allowing users to select the activity type, input activity details, and select relevant SDGs (Sustainable Development Goals). The page can handle both creation and editing of activities, depending on the presence of an activity ID. The data is managed via the useState hook and includes support for categories based on activity type, form validation, and step-by-step navigation.
 
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
@@ -10,35 +12,104 @@ import {
 } from '@/utils/fetchActivities';
 import ProgressStepper from '@/components/ProgressStepper';
 import Image from 'next/image';
-import { Dropdown, Label, TextInput, Textarea, Radio, FloatingLabel } from 'flowbite-react';
+import {
+  Label,
+  Textarea,
+  Radio,
+  FloatingLabel,
+  Datepicker,
+  Button
+} from 'flowbite-react';
+import { HiOutlineArrowLeft, HiOutlineArrowRight } from "react-icons/hi";
 import LoadingSpinner from '@/components/LoadingSpinner'; // Component to show the loading spinner
 import { useAuth } from '@/hooks/useAuth'; // Hook for accessing user authentication status
-import { useTranslations } from "use-intl";
+import { useTranslations } from 'use-intl';
+
 
 export default function CreateUpdateActivityPage() {
+  // Retrieve query parameters from URL
   const searchParams = useSearchParams();
-  const router = useRouter();
-  const activityId = searchParams.get('activityId');
-  const isEditMode = Boolean(activityId);
-  const { user, loading } = useAuth();
-  const t = useTranslations("ManageActivities");
+  const router = useRouter(); //for changing page
+  const activityId = searchParams.get('activityId'); // Retrieve activity ID if present (edit mode)
+  const isEditMode = Boolean(activityId); // Determine if the page is in edit mode
+  const { user, loading } = useAuth(); // Get authenticated user information and loading status
+  const t = useTranslations('ManageActivities'); // Internationalization function for translations
 
+  // State to manage form data
   const [formData, setFormData] = useState({
-    type: '',
-    title: '',
-    category: '',
+    type: 'online', // Default activity type is 'online'
+    title: '', 
+    category: '', 
     description: '',
-    skills: [],
-    frequency: '',
-    country: '',
-    sdg: '',
-    languages: [],
-    otherComments: '',
-    npoLogo: '/logo/Favicon.png',
-    applicants: 0
+    skills: [], //skills (to be implemented)
+    frequency: '',// once or regular activity
+    country: 'Japan', // Default country
+    xp_reward: 20, // Default XP points
+    sdg: '', // Sustainable Development Goal
+    languages: ['English', 'Japanese'],
+    organization_logo: '/logo/Favicon.png', // Default NPO logo path
+    organization_name: 'Wanna Gonna',
+    applicants: 0, //initialized to 0 applicants
+    creation_date: new Date(),  // Current date and time as default
+    start_date: new Date(),     // Default start date
+    end_date: new Date(),        // Default end date
+    status: 'created'
   });
 
   const [currentStep, setCurrentStep] = useState(1); // Track the current step
+
+  // Categories for different types of activities
+  const categories = {
+  online: [
+    { id: 'website', name: t('website') },
+    { id: 'logo', name: t('logo') },
+    { id: 'translation', name: t('translation') },
+    { id: 'flyer', name: t('flyer') },
+    { id: 'consulting', name: t('consulting') },
+    { id: 'architecture', name: t('architecture') },
+    { id: 'dataentry', name: t('dataentry') },
+    { id: 'photovideo', name: t('photovideo') },
+    { id: 'sns', name: t('sns') },
+    { id: 'onlinesupport', name: t('onlinesupport') },
+    { id: 'education', name: t('education') },
+    { id: 'fundraising', name: t('fundraising') },
+    { id: 'longtermrole', name: t('longtermrole') },
+    { id: 'explainer', name: t('explainer') },
+    { id: 'other', name: t('other') },
+  ],
+  local: [
+    { id: 'cleaning', name: t('cleaning') },
+    { id: 'teaching', name: t('teaching') },
+    { id: 'food_distribution', name: t('food_distribution') },
+    { id: 'elderly_support', name: t('elderly_support') },
+    { id: 'animal_care', name: t('animal_care') },
+    { id: 'environment', name: t('environment') },
+    { id: 'community_events', name: t('community_events') },
+    { id: 'childcare', name: t('childcare') },
+    { id: 'manual_labor', name: t('manual_labor') },
+    { id: 'administrative', name: t('administrative') },
+    { id: 'other', name: t('other') }
+  ],
+  event: [
+    { id: 'fundraising_event', name: t('fundraising_event') },
+    { id: 'awareness_campaign', name: t('awareness_campaign') },
+    { id: 'workshop', name: t('workshop') },
+    { id: 'seminar_conference', name: t('seminar') },
+    { id: 'charity_walk', name: t('charity_walk') },
+    { id: 'networking', name: t('networking') },
+    { id: 'arts_and_crafts', name: t('arts_and_crafts') },
+    { id: 'food_fair', name: t('food_fair') },
+    { id: 'other', name: t('other') }
+  ],
+};
+
+  // Handle type change and reset category
+const handleTypeChange = (type) => {
+  setFormData((prev) => ({ ...prev, type, category: '' }));
+};
+
+// Render categories based on selected type
+const availableCategories = formData.type ? categories[formData.type] : [];
 
   // Fetch existing activity for editing
   useEffect(() => {
@@ -62,6 +133,11 @@ export default function CreateUpdateActivityPage() {
     setFormData((prev) => ({ ...prev, skills: selectedSkills }));
   };
 
+  // Handle date changes separately from other form inputs
+const handleDateChange = (name, date) => {
+  setFormData((prev) => ({ ...prev, [name]: date }));
+};
+
   // Navigation between steps
   const nextStep = () => setCurrentStep((prev) => Math.min(prev + 1, 3));
   const prevStep = () => setCurrentStep((prev) => Math.max(prev - 1, 1));
@@ -69,19 +145,21 @@ export default function CreateUpdateActivityPage() {
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (formData.creation_date.getTime() === formData.end_date.getTime()){formData.end_date = null}
 
     const dataToSave = {
       ...formData,
       // Add automatic attributes here if needed (e.g., organizationId, creatorId)
     };
-
+    
+      // Update or create activity based on the mode
     if (isEditMode) {
       await updateActivity(activityId, dataToSave);
     } else {
       await createActivity(dataToSave);
     }
 
-    router.push('/activities');
+    router.push('/activities');// Redirect to activities page after submission
   };
 
   // Display loading spinner while user authentication status is being determined
@@ -97,8 +175,8 @@ export default function CreateUpdateActivityPage() {
 
   return (
     <div className='p-4 max-w-full mx-auto'>
-      <h1 className='text-2xl font-bold mb-4 text-center' >
-        {isEditMode ? t("update-activity") : t("create-activity")}
+      <h1 className='text-2xl font-bold mb-4 text-center'>
+        {isEditMode ? t('update-activity') : t('create-activity')}
       </h1>
       {loading && <p>Loading...</p>}
       <div className='max-w-full'>
@@ -109,59 +187,50 @@ export default function CreateUpdateActivityPage() {
         {currentStep === 1 && (
           <>
             <div>
-              <label className='block font-medium mb-1'>
-              {t("type-label")}
+            <fieldset className='flex max-w-md flex-col gap-2'>
+            <label className='block font-medium mb-1'>
+                {t('type-label')}
               </label>
-              <Dropdown
-                label={formData.type ? t(`type-${formData.type}`) : t("type-title")}
-                dismissOnClick={true}
-                style={{ backgroundColor: 'rgb(255 138 76)' }}
-              >
-                <Dropdown.Item
-                  onClick={() =>
-                    setFormData((prev) => ({ ...prev, type: 'online' }))
-                  }
-                >
-                  {t("type-online")}
-                </Dropdown.Item>
-                <Dropdown.Item
-                  onClick={() =>
-                    setFormData((prev) => ({ ...prev, type: 'local' }))
-                  }
-                >
-                  {t("type-local")}
-                </Dropdown.Item>
-                <Dropdown.Item
-                  onClick={() =>
-                    setFormData((prev) => ({ ...prev, type: 'event' }))
-                  }
-                >
-                  {t("type-event")}
-                </Dropdown.Item>
-              </Dropdown>
+              <div className='grid grid-cols-3'>
+                <div className='flex items-center gap-2'>
+                  <Radio
+                    id='online'
+                    name='activityType'
+                    value='online'
+                    checked={formData.type === 'online'}
+                    onChange={() => handleTypeChange('online')}
+                  />
+                  <Label htmlFor='online'>{t('type-online')}</Label>
+                </div>
+                <div className='flex items-center gap-2'>
+                  <Radio
+                    id='local'
+                    name='activityType'
+                    value='local'
+                    checked={formData.type === 'local'}
+                    onChange={() => handleTypeChange('local')}
+                  />
+                  <Label htmlFor='local'>{t('type-local')}</Label>
+                </div>
+                <div className='flex items-center gap-2'>
+                  <Radio
+                    id='event'
+                    name='activityType'
+                    value='event'
+                    checked={formData.type === 'event'}
+                    onChange={() => handleTypeChange('event')}
+                  />
+                  <Label htmlFor='event'>{t('type-event')}</Label>
+                </div>
+                </div>
+              </fieldset>
             </div>
             <div>
               <label className='block font-medium mb-2'>
-              {t("category-label")}
+                {t('category-label')}
               </label>
-              <ul className='grid grid-cols-3 sm:grid-cols-3 md:grid-cols-5 gap-4'>
-                {[
-                  { id: 'website', name: t("website") },
-                  { id: 'logo', name: t("logo") },
-                  { id: 'translation', name: t('translation') },
-                  { id: 'flyer', name: t("flyer") },
-                  { id: 'consulting', name: t("consulting") },
-                  { id: 'architecture', name: t("architecture") },
-                  { id: 'dataentry', name: t("dataentry") },
-                  { id: 'photovideo', name: t("photovideo") },
-                  { id: 'sns', name: t("sns") },
-                  { id: 'onlinesupport', name: t("onlinesupport") },
-                  { id: 'education', name: t("education") },
-                  { id: 'fundraising', name: t("fundraising") },
-                  { id: 'longtermrole', name: t("longtermrole") },
-                  { id: 'explainer', name: t("explainer") },
-                  { id: 'other', name: t("other") },
-                ].map(({ id, name }) => (
+              <ul className='grid grid-cols-3 sm:grid-cols-3 md:grid-cols-5 gap-1'>
+                {availableCategories.map(({ id, name }) => (
                   <li
                     key={id}
                     className={`flex flex-col items-center justify-center p-1 border rounded-lg cursor-pointer ${
@@ -169,9 +238,11 @@ export default function CreateUpdateActivityPage() {
                         ? 'border-orange-400 bg-orange-400 text-white'
                         : 'border-white bg-white'
                     }`}
-                    onClick={() =>
-                      setFormData((prev) => ({ ...prev, category: id }))
-                    }
+                    onClick={() => {
+                      setFormData((prev) => ({ ...prev, category: id }));
+                      nextStep();
+                    }}
+                    
                   >
                     <Image
                       src={
@@ -180,9 +251,10 @@ export default function CreateUpdateActivityPage() {
                           : `/icons/activities/o_${id}.png`
                       }
                       alt={name}
-                      width={40} // Same as w-6
-                      height={40} // Same as h-6
-                      priority={true} // Optional for improved performance
+                      style={{ width: '40%', height: 'auto' }}
+                      width={40} 
+                      height={40} 
+                      priority={true} 
                     />
                     <span className='mt-2 text-sm text-center font-medium'>
                       {name}
@@ -198,31 +270,33 @@ export default function CreateUpdateActivityPage() {
         {currentStep === 2 && (
           <>
             <div className='flex max-w-md flex-col gap-4'>
+            <label className='block font-medium mb-1'>
+            {`${t('info-label')} ${formData.category ? `(${availableCategories.find(category => category.id === formData.category)?.name || ''})` : ''}`}
+              </label>
               <div>
-              <FloatingLabel
-      variant="filled"
-      label={t("activity-title-label")}
-      helperText={t("activity-title-helper")}
-      name='title'
+                <FloatingLabel
+                  variant='filled'
+                  label={t('activity-title-label')}
+                  helperText={t('activity-title-helper')}
+                  name='title'
                   value={formData.title}
                   onChange={handleChange}
-    />
-              
+                />
               </div>
               <div>
                 <Textarea
                   id='activityDescription'
-                  placeholder={t("activity-description-label")}
+                  placeholder={t('activity-description-label')}
                   required
                   rows={4}
                   name='description'
                   value={formData.description}
                   onChange={handleChange}
-                  helperText={t("activity-description-helper")}
+                  helperText={t('activity-description-helper')}
                 />
               </div>
               <fieldset className='flex max-w-md flex-col gap-4'>
-                <Label htmlFor='frequency'>{t("frequency-label")}</Label>
+                <Label htmlFor='frequency'>{t('frequency-label')}</Label>
                 <div className='flex items-center gap-2'>
                   <Radio
                     id='once'
@@ -231,7 +305,7 @@ export default function CreateUpdateActivityPage() {
                     checked={formData.frequency === 'once'}
                     onChange={handleChange}
                   />
-                  <Label htmlFor='once' name='frequency' value='once' onClick={handleChange}>{t("frequency-once")}</Label>
+                  <Label htmlFor='once'>{t('frequency-once')}</Label>
                 </div>
                 <div className='flex items-center gap-2'>
                   <Radio
@@ -241,11 +315,30 @@ export default function CreateUpdateActivityPage() {
                     checked={formData.frequency === 'regular'}
                     onChange={handleChange}
                   />
-                  <Label htmlFor='regular' name='frequency' value='regular' onClick={handleChange}>{t("frequency-regular")}</Label>
+                  <Label htmlFor='regular'>{t('frequency-regular')}</Label>
                 </div>
               </fieldset>
+              <div>
+              <Label htmlFor='start_date'>{t('start_date')}</Label>
+                <Datepicker 
+              weekStart={1}
+              value={formData.start_date}
+              name='start_date'
+              onChange={(date) => handleDateChange('start_date', date)}
+            />
+              </div>
+              <div>
+              <Label htmlFor='end_date'>{t('end_date')}</Label>
+                <Datepicker 
+              weekStart={1}
+              name='end_date'
+              value={formData.end_date}
+              onChange={(date) => handleDateChange('end_date', date)}
+            />
+              </div>
+            
             </div>
-            {/* Add other information fields as needed */}
+            
           </>
         )}
 
@@ -253,11 +346,9 @@ export default function CreateUpdateActivityPage() {
         {currentStep === 3 && (
           <>
             <div>
-            <label className='block font-medium mb-2'>
-            {t("sdg-label")}
-              </label>
-              <p>{t("sdg-helper")}</p>
-              <ul className='grid grid-cols-3 sm:grid-cols-3 md:grid-cols-5 gap-4'>
+              <label className='block font-medium mb-2'>{t('sdg-label')}</label>
+              <p>{t('sdg-helper')}</p>
+              <ul className='grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-1'>
                 {[
                   { id: '1', name: 1 },
                   { id: '2', name: 2 },
@@ -279,7 +370,7 @@ export default function CreateUpdateActivityPage() {
                 ].map(({ id, name }) => (
                   <li
                     key={id}
-                    className={`flex flex-col items-center justify-center p-1 cursor-pointer `}
+                    className={`flex flex-col items-center justify-center p-1 cursor-pointer`}
                     onClick={() =>
                       setFormData((prev) => ({ ...prev, sdg: name }))
                     }
@@ -291,50 +382,42 @@ export default function CreateUpdateActivityPage() {
                           : `/icons/sdgs/w-${id}.png`
                       }
                       alt={name}
-                      width={80} // Same as w-6
-                      height={80} // Same as h-6
+                      style={{ width: '80%', height: 'auto', maxWidth: '90px', maxHeight: '90px' }}
+                      width={80} 
+                      height={80} 
                       priority={true} // Optional for improved performance
                     />
                   </li>
                 ))}
               </ul>
             </div>
-            {/* Add any additional attributes */}
+           
           </>
         )}
 
         {/* Navigation Buttons */}
         <div className='flex justify-between mt-4'>
           {currentStep > 1 && (
-            <button
-              type='button'
-              onClick={prevStep}
-              className='px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300'
-            >
-              {t("previous")}
-            </button>
+            <Button outline type='button' onClick={prevStep} pill>
+            <HiOutlineArrowLeft className="h-6 w-6" />
+          </Button>
           )}
           {currentStep < 3 && (
-            <button
-              type='button'
-              onClick={nextStep}
-              className='px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 ml-auto'
-            >
-              {t("next")}
-            </button>
+            <Button type='button' onClick={nextStep} pill className='ml-auto' disabled={
+              (currentStep === 1 && !formData.category) || // Step 1: Category must be selected
+              (currentStep === 2 && (!formData.title || !formData.description || !formData.frequency)) // Step 2: Title, Description, Frequency required
+            }>
+              <HiOutlineArrowRight className="h-6 w-6" />
+            </Button>
+
           )}
           {currentStep === 3 && (
-            <button
-              type='submit'
-              className='px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 ml-auto'
-            >
-              {isEditMode ? t("update") : t("create")}
-            </button>
+            <Button type='submit' pill className='ml-auto' disabled={!formData.sdg}>
+            {isEditMode ? t('update') : t('create')}
+            </Button>
           )}
         </div>
       </form>
     </div>
   );
 }
-
-const skillsOptions = ['Skill 1', 'Skill 2', 'Skill 3']; // Define your skills options
