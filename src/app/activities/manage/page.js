@@ -3,8 +3,8 @@
 // Description: This Next.js page component is used for creating or updating an activity. It has a form divided into three steps, allowing users to select the activity type, input activity details, and select relevant SDGs (Sustainable Development Goals). The page can handle both creation and editing of activities, depending on the presence of an activity ID. The data is managed via the useState hook and includes support for categories based on activity type, form validation, and step-by-step navigation.
 
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { useRouter } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
+import categories from '@/constant/categories';
 import {
   createActivity,
   updateActivity,
@@ -58,55 +58,7 @@ export default function CreateUpdateActivityPage() {
 
   const [currentStep, setCurrentStep] = useState(1); // Track the current step
 
-  // Categories for different types of activities
-  const categories = {
-  online: [
-    { id: 'website', name: t('website') },
-    { id: 'logo', name: t('logo') },
-    { id: 'translation', name: t('translation') },
-    { id: 'flyer', name: t('flyer') },
-    { id: 'consulting', name: t('consulting') },
-    { id: 'architecture', name: t('architecture') },
-    { id: 'dataentry', name: t('dataentry') },
-    { id: 'photovideo', name: t('photovideo') },
-    { id: 'sns', name: t('sns') },
-    { id: 'onlinesupport', name: t('onlinesupport') },
-    { id: 'education', name: t('education') },
-    { id: 'fundraising', name: t('fundraising') },
-    { id: 'longtermrole', name: t('longtermrole') },
-    { id: 'explainer', name: t('explainer') },
-    { id: 'other', name: t('other') },
-  ],
-  local: [
-    { id: 'cleaning', name: t('cleaning') },
-    { id: 'teaching', name: t('teaching') },
-    { id: 'food_distribution', name: t('food_distribution') },
-    { id: 'elderly_support', name: t('elderly_support') },
-    { id: 'animal_care', name: t('animal_care') },
-    { id: 'environment', name: t('environment') },
-    { id: 'community_events', name: t('community_events') },
-    { id: 'childcare', name: t('childcare') },
-    { id: 'manual_labor', name: t('manual_labor') },
-    { id: 'administrative', name: t('administrative') },
-    { id: 'other', name: t('other') }
-  ],
-  event: [
-    { id: 'fundraising_event', name: t('fundraising_event') },
-    { id: 'awareness_campaign', name: t('awareness_campaign') },
-    { id: 'workshop', name: t('workshop') },
-    { id: 'seminar_conference', name: t('seminar') },
-    { id: 'charity_walk', name: t('charity_walk') },
-    { id: 'networking', name: t('networking') },
-    { id: 'arts_and_crafts', name: t('arts_and_crafts') },
-    { id: 'food_fair', name: t('food_fair') },
-    { id: 'other', name: t('other') }
-  ],
-};
-
-  // Handle type change and reset category
-const handleTypeChange = (type) => {
-  setFormData((prev) => ({ ...prev, type, category: '' }));
-};
+  
 
 // Render categories based on selected type
 const availableCategories = formData.type ? categories[formData.type] : [];
@@ -116,7 +68,9 @@ const availableCategories = formData.type ? categories[formData.type] : [];
     if (isEditMode) {
       async function fetchData() {
         const data = await fetchActivityById(activityId);
-        if (data) setFormData(data);
+        if (data) setFormData({
+          ...data,
+        });
       }
       fetchData();
     }
@@ -128,15 +82,6 @@ const availableCategories = formData.type ? categories[formData.type] : [];
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Handle skills multi-select (assuming it's an array)
-  const handleSkillsChange = (selectedSkills) => {
-    setFormData((prev) => ({ ...prev, skills: selectedSkills }));
-  };
-
-  // Handle date changes separately from other form inputs
-const handleDateChange = (name, date) => {
-  setFormData((prev) => ({ ...prev, [name]: date }));
-};
 
   // Navigation between steps
   const nextStep = () => setCurrentStep((prev) => Math.min(prev + 1, 3));
@@ -195,30 +140,30 @@ const handleDateChange = (name, date) => {
                 <div className='flex items-center gap-2'>
                   <Radio
                     id='online'
-                    name='activityType'
+                    name='type'
                     value='online'
                     checked={formData.type === 'online'}
-                    onChange={() => handleTypeChange('online')}
+                    onChange={handleChange}
                   />
                   <Label htmlFor='online'>{t('type-online')}</Label>
                 </div>
                 <div className='flex items-center gap-2'>
                   <Radio
                     id='local'
-                    name='activityType'
+                    name='type'
                     value='local'
                     checked={formData.type === 'local'}
-                    onChange={() => handleTypeChange('local')}
+                    onChange={handleChange}
                   />
                   <Label htmlFor='local'>{t('type-local')}</Label>
                 </div>
                 <div className='flex items-center gap-2'>
                   <Radio
                     id='event'
-                    name='activityType'
+                    name='type'
                     value='event'
                     checked={formData.type === 'event'}
-                    onChange={() => handleTypeChange('event')}
+                    onChange={handleChange}
                   />
                   <Label htmlFor='event'>{t('type-event')}</Label>
                 </div>
@@ -230,7 +175,7 @@ const handleDateChange = (name, date) => {
                 {t('category-label')}
               </label>
               <ul className='grid grid-cols-3 sm:grid-cols-3 md:grid-cols-5 gap-1'>
-                {availableCategories.map(({ id, name }) => (
+                {availableCategories.map(({ id }) => (
                   <li
                     key={id}
                     className={`flex flex-col items-center justify-center p-1 border rounded-lg cursor-pointer ${
@@ -250,14 +195,14 @@ const handleDateChange = (name, date) => {
                           ? `/icons/activities/w_${id}.png`
                           : `/icons/activities/o_${id}.png`
                       }
-                      alt={name}
+                      alt={t(`${id}`)}
                       style={{ width: '40%', height: 'auto' }}
                       width={40} 
                       height={40} 
                       priority={true} 
                     />
                     <span className='mt-2 text-sm text-center font-medium'>
-                      {name}
+                      {t(`${id}`)}
                     </span>
                   </li>
                 ))}
@@ -322,9 +267,9 @@ const handleDateChange = (name, date) => {
               <Label htmlFor='start_date'>{t('start_date')}</Label>
                 <Datepicker 
               weekStart={1}
-              value={formData.start_date}
+              value={formData.start_date ? new Date(formData.start_date) : new Date()}
               name='start_date'
-              onChange={(date) => handleDateChange('start_date', date)}
+              onChange={(date) => setFormData((prev) => ({ ...prev, start_date: date }))}
             />
               </div>
               <div>
@@ -332,8 +277,8 @@ const handleDateChange = (name, date) => {
                 <Datepicker 
               weekStart={1}
               name='end_date'
-              value={formData.end_date}
-              onChange={(date) => handleDateChange('end_date', date)}
+              value={formData.end_date ? new Date(formData.end_date) : new Date()}
+              onChange={(date) => setFormData((prev) => ({ ...prev, end_date: date }))}
             />
               </div>
             

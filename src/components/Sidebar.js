@@ -21,7 +21,6 @@ import { useAuth } from '@/hooks/useAuth'; // Custom hook for Firebase authentic
 import { useTranslations } from 'use-intl';
 import { Sidebar } from 'flowbite-react';
 import { HiChartPie } from 'react-icons/hi';
-import { IoMdAdd } from 'react-icons/io';
 import { MdOutlineExplore, MdOutlineLeaderboard } from 'react-icons/md';
 import { RiTeamLine } from 'react-icons/ri';
 import { BiDonateHeart } from 'react-icons/bi';
