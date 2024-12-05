@@ -2,7 +2,7 @@
     "Homepage": {
         "title": "ようこそ"
     },
-    "Sidebar":{
+    "Sidebar": {
         "dashboard": "ダッシュボード",
         "explore": "探す",
         "badges": "バッジ",
@@ -14,10 +14,76 @@
         "settings": "設定",
         "logout": "ログアウト"
     },
-    "Settings":{
+    "Settings": {
         "language": "言語を変更する"
     },
-"ActivityCard":{
+    "ActivityCard": {
         "points": "点"
+    },
+    "ManageActivities": {
+        "create-activity": "活動を作成する",
+        "update-activity": "活動を更新する",
+        "type-label": "どの種類の活動ですか？",
+        "type-title": "活動の種類",
+        "type-online": "オンライン",
+        "type-local": "ローカル",
+        "type-event": "イベント",
+        "category-label": "カテゴリを選択してください",
+        "info-label": "アクティビティについて説明してください",
+        "activity-title-label": "活動のタイトル",
+        "activity-title-helper": "短くて意味のあるタイトルを書いてください",
+        "activity-description-label": "活動の説明",
+        "activity-description-helper": "必要なこと、いつ必要か、なぜ必要かを説明してください。詳細が多いほど良いです！",
+        "frequency-label": "これは...",
+        "frequency-once": "一度だけ",
+        "frequency-regular": "定期的な活動",
+        "start_date": "希望開始日",
+        "end_date": "目標終了日 (オプション)",
+        "sdg-label": "活動に一致するSDGを選択してください（1つだけ）",
+        "sdg-helper": "ボランティアがバッジを獲得するために使用されます",
+        "previous": "前へ",
+        "next": "次へ",
+        "update": "更新する",
+        "create": "作成する",
+        "website": "ウェブサイト",
+        "logo": "ロゴデザイン",
+        "translation": "翻訳",
+        "flyer": "チラシ / パンフレット",
+        "consulting": "コンサルティング",
+        "architecture": "建築",
+        "dataentry": "データ入力",
+        "photovideo": "写真・ビデオ編集",
+        "sns": "ソーシャルネットワーク",
+        "onlinesupport": "オンラインサポート",
+        "education": "教育",
+        "fundraising": "資金調達",
+        "longtermrole": "長期役割",
+        "explainer": "解説ビデオ / ホワイトボード",
+        "other": "その他",
+        "cleaning": "清掃",
+        "teaching": "教育",
+        "food_distribution": "食品配布",
+        "elderly_support": "高齢者支援",
+        "animal_care": "動物のケア",
+        "environment": "環境保護",
+        "community_events": "コミュニティイベント",
+        "childcare": "子どもの世話",
+        "healthcare": "医療支援",
+        "manual_labor": "手作業",
+        "administrative": "管理支援",
+        "fundraising_event": "資金調達イベント",
+        "awareness_campaign": "啓発キャンペーン",
+        "community_cleanup": "地域清掃",
+        "workshop": "ワークショップ",
+        "seminar_conference": "セミナー / 会議",
+        "charity_walk": "チャリティウォーク / ラン",
+        "networking": "ネットワーキングイベント",
+        "volunteer_drive": "ボランティア募集活動",
+        "arts_and_crafts": "アートとクラフトフェア",
+        "environmental_education": "環境教育",
+        "health_screening": "健康診断",
+        "blood_drive": "献血活動",
+        "food_fair": "フードフェア",
+        "animal_adoption": "動物譲渡イベント"
     }
 }

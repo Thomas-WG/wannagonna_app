@@ -3,18 +3,18 @@ import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 
 export default function ActivityCard({
-  npoName,
-  npoLogo,
+  organization_name,
+  organization_logo,
   title,
   location,
   applicants,
-  points,
+  xp_reward,
   description,
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
   // Toggle function for expanding/collapsing
   const toggleExpand = () => setIsExpanded(!isExpanded);
-  const t=useTranslations('ActivityCard');
+  const t = useTranslations('ActivityCard');
   return (
     <div
       onClick={toggleExpand}
@@ -22,8 +22,8 @@ export default function ActivityCard({
     >
       <div className='flex items-center'>
         <Image
-          src={npoLogo}
-          alt={`${npoName} Logo`}
+          src={organization_logo}
+          alt={`${organization_name} Logo`}
           width={50}
           height={50}
           className='rounded-full'
@@ -32,7 +32,7 @@ export default function ActivityCard({
           <h5 className='text-lg font-semibold text-gray-900 dark:text-white'>
             {title}
           </h5>
-          <p className='text-sm text-gray-500'>{npoName}</p>
+          <p className='text-sm text-gray-500'>{organization_name}</p>
           <p className='text-sm text-gray-500'>{location}</p>
         </div>
       </div>
@@ -41,7 +41,7 @@ export default function ActivityCard({
           {applicants} applied
         </span>
         <span className='px-2 py-1 text-sm font-medium text-white bg-orange-500 rounded-full'>
-          {points} {t('points')}
+          {xp_reward} {t('points')}
         </span>
       </div>
       {isExpanded && (
