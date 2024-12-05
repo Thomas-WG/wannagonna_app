@@ -16,5 +16,8 @@
     },
     "Settings":{
         "language": "言語を変更する"
+    },
+"ActivityCard":{
+        "points": "点"
     }
 }

@@ -16,5 +16,8 @@
     },
     "Settings":{
         "language": "Change the language"
+    }, 
+    "ActivityCard":{
+        "points": "points"
     }
 }
