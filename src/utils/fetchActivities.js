@@ -1,4 +1,4 @@
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, addDoc, getDoc, updateDoc, doc} from 'firebase/firestore';
 import { db } from 'firebaseConfig';
 
 export async function fetchActivities() {
@@ -19,5 +19,40 @@ export async function fetchActivities() {
     return activities;
   } catch (error) {
     console.error('Error fetching activities:', error);
+  }
+}
+
+export async function createActivity(data) {
+  try {
+    const activitiesCollection = collection(db, 'activities');
+    const docRef = await addDoc(activitiesCollection, data);
+    console.log('Activity created with ID:', docRef.id);
+  } catch (error) {
+    console.error('Error creating activity:', error);
+  }
+}
+
+export async function updateActivity(id, data) {
+  try {
+    const activityDoc = doc(db, 'activities', id);
+    await updateDoc(activityDoc, data);
+    console.log('Activity updated:', id);
+  } catch (error) {
+    console.error('Error updating activity:', error);
+  }
+}
+
+export async function fetchActivityById(id) {
+  try {
+    const activityDoc = doc(db, 'activities', id);
+    const snapshot = await getDoc(activityDoc);
+    if (snapshot.exists()) {
+      return snapshot.data();
+    } else {
+      console.log('No such activity!');
+      return null;
+    }
+  } catch (error) {
+    console.error('Error fetching activity:', error);
   }
 }
