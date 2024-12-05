@@ -17,6 +17,9 @@
     "Settings": {
         "language": "Changer la langue"
     },
+    "ActivityCard": {
+        "points": "points"
+    },
     "ManageActivities": {
         "create-activity": "Créer une activité",
         "update-activity": "Mettre à jour l'activité",
@@ -26,11 +29,11 @@
         "type-local": "Locale",
         "type-event": "Événement",
         "category-label": "Sélectionnez une catégorie",
-        "info-label":"Dites nous un peu plus sur l'activité",
+        "info-label": "Dites nous un peu plus sur l'activité",
         "activity-title-label": "Titre de l'activité",
         "activity-title-helper": "Rédigez un titre court et significatif",
         "activity-description-label": "Description de l'activité",
-        "activity-description-helper": "Expliquez le besoin, quand vous en avez besoin, pourquoi... Plus de détails est toujours mieux !",
+        "activity-description-helper": "Aidez-nous à vous aider ! Décrivez votre besoin le plus précisément possible",
         "frequency-label": "Est-ce...",
         "frequency-once": "Une seule fois",
         "frequency-regular": "Activités régulières",

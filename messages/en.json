@@ -17,6 +17,9 @@
     "Settings": {
         "language": "Change the language"
     },
+    "ActivityCard": {
+        "points": "points"
+    },
     "ManageActivities": {
         "create-activity": "Create Activity",
         "update-activity": "Update Activity",
@@ -26,7 +29,7 @@
         "type-local": "Local",
         "type-event": "Event",
         "category-label": "Select a Category",
-        "info-label":"Tell more about your activity",
+        "info-label": "Tell more about your activity",
         "activity-title-label": "Activity Title",
         "activity-title-helper": "Write a short and meaningful title",
         "activity-description-label": "Activity Description",

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import Image from 'next/image';
+import { useTranslations } from 'next-intl';
 
 export default function ActivityCard({
   organization_name,
@@ -13,7 +14,7 @@ export default function ActivityCard({
   const [isExpanded, setIsExpanded] = useState(false);
   // Toggle function for expanding/collapsing
   const toggleExpand = () => setIsExpanded(!isExpanded);
-
+  const t = useTranslations('ActivityCard');
   return (
     <div
       onClick={toggleExpand}
@@ -40,7 +41,7 @@ export default function ActivityCard({
           {applicants} applied
         </span>
         <span className='px-2 py-1 text-sm font-medium text-white bg-orange-500 rounded-full'>
-          {xp_reward} points
+          {xp_reward} {t('points')}
         </span>
       </div>
       {isExpanded && (

@@ -17,6 +17,9 @@
     "Settings": {
         "language": "言語を変更する"
     },
+    "ActivityCard": {
+        "points": "点"
+    },
     "ManageActivities": {
         "create-activity": "活動を作成する",
         "update-activity": "活動を更新する",
@@ -26,7 +29,7 @@
         "type-local": "ローカル",
         "type-event": "イベント",
         "category-label": "カテゴリを選択してください",
-        "info-label":"アクティビティについて説明してください",
+        "info-label": "アクティビティについて説明してください",
         "activity-title-label": "活動のタイトル",
         "activity-title-helper": "短くて意味のあるタイトルを書いてください",
         "activity-description-label": "活動の説明",
