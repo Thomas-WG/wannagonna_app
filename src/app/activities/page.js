@@ -34,6 +34,9 @@ export default function ActivitiesPage() {
   // State variable to store the list of fetched activities
   const [activities, setActivities] = useState([]);
 
+  // Track which activity is expanded
+  const [expandedActivity, setExpandedActivity] = useState(null);
+
   const router = useRouter();
 
   const goToManage = () => {
@@ -66,13 +69,21 @@ export default function ActivitiesPage() {
 
   // If there is no authenticated user, return null (no content rendered)
   if (!user) return null;
+
+  // Toggle between expanded and collapsed
+  const toggleExpand = (id) => {
+    console.log(`Toggling expand for id: ${id}`);
+    setExpandedActivity((prevId) => (prevId === id ? null : id)); // Toggle the state only for the clicked card
+  };
+  
+
   return (
     <div className='p-4'>
       {/* Responsive grid layout for displaying activity cards */}
-      <div className='grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
-        {activities.map((activity, index) => (
+      <div className='grid gap-6 md:grid-cols-1 lg:grid-cols-2'>
+        {activities.map((activity) => (
           <ActivityCard
-            key={index} // Unique key for each card
+            key={activity.id} //Use `activity.id` for the unique key
             organization_name={activity.organization_name} // Non-profit organization name
             organization_logo={activity.organization_logo} // Logo URL of the non-profit
             title={activity.title} // Title of the activity

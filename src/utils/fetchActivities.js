@@ -12,8 +12,8 @@ export async function fetchActivities() {
     // Map over the documents and log each activity's data
     const activities = snapshot.docs.map((doc) => {
       const data = doc.data();
-      console.log('Fetched activity data:', data);
-      return data;
+      console.log('Fetched activity data:', {id:doc.id,...data});
+      return {id:doc.id,...data};
     });
 
     return activities;
