@@ -1,7 +1,8 @@
 // firebase.js
 import { initializeApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
-import { getAuth, GoogleAuthProvider } from 'firebase/auth';
+import { getFunctions, connectFunctionsEmulator } from "firebase/functions";
+import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
+import { getAuth, GoogleAuthProvider, connectAuthEmulator } from 'firebase/auth';
 
 // Your Firebase config
 const firebaseConfig = {
@@ -19,9 +20,27 @@ const app = initializeApp(firebaseConfig);
 
 // Initialize Firestore
 const db = getFirestore(app);
+
+// Connect to Firestore emulator
+if (process.env.NODE_ENV === 'development') {
+  connectFirestoreEmulator(db, 'localhost', 8080);
+}
 export { db };
 
 //initialize google authentication
 const auth = getAuth(app);
+
+// Connect to Auth emulator
+if (process.env.NODE_ENV === 'development') {
+  connectAuthEmulator(auth, 'http://localhost:9099');
+}
+
 const googleProvider = new GoogleAuthProvider();
 export { auth, googleProvider };
+
+// Initialize Cloud Functions
+const functions = getFunctions(app);
+if (process.env.NODE_ENV === 'development') {
+  connectFunctionsEmulator(functions, "localhost", 5001);
+}
+export { functions };

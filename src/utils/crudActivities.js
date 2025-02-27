@@ -1,4 +1,4 @@
-import { collection, getDocs, addDoc, getDoc, updateDoc, doc} from 'firebase/firestore';
+import { collection, getDocs, addDoc, getDoc, updateDoc, doc, onSnapshot} from 'firebase/firestore';
 import { db } from 'firebaseConfig';
 
 export async function fetchActivities() {
@@ -12,14 +12,28 @@ export async function fetchActivities() {
     // Map over the documents and log each activity's data
     const activities = snapshot.docs.map((doc) => {
       const data = doc.data();
-      console.log('Fetched activity data:', data);
-      return data;
+      return {id: doc.id, ...data};
     });
 
     return activities;
   } catch (error) {
     console.error('Error fetching activities:', error);
   }
+}
+
+export function subscribeToActivities(callback) {
+  const activitiesCollection = collection(db, 'activities');
+  
+  // Return the unsubscribe function
+  return onSnapshot(activitiesCollection, (snapshot) => {
+    const activities = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    callback(activities);
+  }, (error) => {
+    console.error('Error listening to activities:', error);
+  });
 }
 
 export async function createActivity(data) {

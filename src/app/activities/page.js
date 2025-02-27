@@ -19,8 +19,9 @@
 
 'use client'; // Enable client-side rendering for this page
 
+import { subscribeToActivities } from '@/utils/crudActivities';
 import { useEffect, useState } from 'react';
-import { fetchActivities } from '@/utils/fetchActivities'; // Utility function to fetch activities data
+import { fetchActivities } from '@/utils/crudActivities'; // Utility function to fetch activities data
 import ActivityCard from '@/components/ActivityCard'; // Component to display each activity's data in card format
 import { useAuth } from '@/hooks/useAuth'; // Hook for accessing user authentication status
 import LoadingSpinner from '@/components/LoadingSpinner'; // Component to show the loading spinner
@@ -35,6 +36,21 @@ export default function ActivitiesPage() {
   const [activities, setActivities] = useState([]);
 
   const router = useRouter();
+
+  useEffect(() => {
+    let unsubscribe;
+    if (user) {
+      unsubscribe = subscribeToActivities((updatedActivities) => {
+        setActivities(updatedActivities);
+      });
+    }
+     // Cleanup subscription when component unmounts or user changes
+     return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
+  }, [user]);
 
   const goToManage = () => {
     router.push('/activities/manage'); 
@@ -51,6 +67,7 @@ export default function ActivitiesPage() {
         // Ensure data fetching only happens if a user is authenticated
         const data = await fetchActivities(); // Fetch data from Firestore
         setActivities(data); // Set the fetched data to `activities` state
+        console.log(data);
       }
     }
     getData();
@@ -73,6 +90,7 @@ export default function ActivitiesPage() {
         {activities.map((activity, index) => (
           <ActivityCard
             key={index} // Unique key for each card
+            id = {activity.id}
             organization_name={activity.organization_name} // Non-profit organization name
             organization_logo={activity.organization_logo} // Logo URL of the non-profit
             title={activity.title} // Title of the activity
