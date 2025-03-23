@@ -37,6 +37,7 @@ export default function ActivitiesPage() {
 
   const router = useRouter();
 
+  //This listens to live changes in the activities collection
   useEffect(() => {
     let unsubscribe;
     if (user) {
@@ -67,7 +68,6 @@ export default function ActivitiesPage() {
         // Ensure data fetching only happens if a user is authenticated
         const data = await fetchActivities(); // Fetch data from Firestore
         setActivities(data); // Set the fetched data to `activities` state
-        console.log(data);
       }
     }
     getData();
