@@ -9,7 +9,7 @@ import {
   createActivity,
   updateActivity,
   fetchActivityById,
-} from '@/utils/fetchActivities';
+} from '@/utils/crudActivities';
 import ProgressStepper from '@/components/ProgressStepper';
 import Image from 'next/image';
 import {
