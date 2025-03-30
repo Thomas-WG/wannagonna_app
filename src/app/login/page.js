@@ -95,14 +95,13 @@ export default function LoginPage() {
       } else {
         // New user - Save user data to Firestore
         await setDoc(userDocRef, {
-          uid: user.uid,
           displayName: user.displayName,
           email: user.email,
           photoURL: user.photoURL,
           createdAt: new Date().toISOString(),
         });
         // Redirect to profile completion page for new users
-        router.push('/complete-profile');
+        router.push('/main/complete-profile');
       }
     } catch (error) {
       // Log any errors that occur during the sign-in process
@@ -116,7 +115,7 @@ export default function LoginPage() {
     setLoginErrorMessage(''); // Clear previous login error messages
     try {
       await signInWithEmailAndPassword(auth, email, password); // Sign in with email and password
-      router.push('/dashboard'); // Redirect to dashboard on successful login
+      router.push('/main/dashboard'); // Redirect to dashboard on successful login
     } catch (error) {
       // Set error message based on the error code
       if (error.code === 'auth/wrong-password') {
@@ -145,7 +144,9 @@ export default function LoginPage() {
 
     try {
         // Create a new user with Firebase
-        await createUserWithEmailAndPassword(auth, newEmail, newPassword);
+        const userCredential = await createUserWithEmailAndPassword(auth, newEmail, newPassword);
+        const user = userCredential.user; // Get the user object
+        
         
         // Log the user in with the newly created credentials
         await signInWithEmailAndPassword(auth, newEmail, newPassword);
@@ -153,14 +154,17 @@ export default function LoginPage() {
         // After successful account creation and login, close the modal
         setModalOpen(false);
         
-        // Redirect the user to the dashboard
-        router.push('/app/dashboard'); // Redirect to dashboard after login
+        // New user - Save user data to Firestore
+        await setDoc(doc(db, 'members', user.uid), {
+            email: user.email, // Store user email
+            createdAt: new Date().toISOString(),
+        });
+        router.push('/main/complete-profile'); // Redirect to dashboard after login
     } catch (error) {
         // Handle errors (e.g., email already in use)
         if (error.code === 'auth/email-already-in-use') {
             setCreateErrorMessage(t('emailused')); // Set specific error message
-        }
-        else if (error.code === 'auth/weak-password') {
+        } else if (error.code === 'auth/weak-password') {
             setCreateErrorMessage(t('weakpwd')); // Set specific error message
         } else {
             setCreateErrorMessage(error.message); // Set error message based on Firebase error

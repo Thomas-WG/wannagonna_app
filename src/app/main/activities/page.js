@@ -54,7 +54,7 @@ export default function ActivitiesPage() {
   }, [user]);
 
   const goToManage = () => {
-    router.push('/activities/manage'); 
+    router.push('/main/activities/manage'); 
   };
 
   /*

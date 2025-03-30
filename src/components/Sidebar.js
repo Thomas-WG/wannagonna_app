@@ -132,7 +132,7 @@ export default function Navbar() {
         aria-label='Sidebar'
       >
         <Sidebar aria-label='Sidebar' className='bg-orange-100'>
-          <Sidebar.Logo href='#' img='/logo/favicon.png' imgAlt='Flowbite logo' className='text-gray-900'> 
+          <Sidebar.Logo img='/logo/favicon.png' imgAlt='WannaGonna logo' className='text-gray-900'> 
             Wanna Gonna
           </Sidebar.Logo>
           <Sidebar.Items >
@@ -206,8 +206,8 @@ export default function Navbar() {
             <Sidebar.ItemGroup>
             <Sidebar.Item
                 onClick={() => {
-                  logout(); // Call logout function
                   handleNavigation('/login'); // Navigate to the login page
+                  logout(); // Call logout function
                 }}
                 icon={IoLogOut}
                 className='cursor-pointer'
