@@ -103,7 +103,8 @@ export default function Navbar() {
           aria-controls='logo-sidebar'
           type='button'
           onClick={toggleSidebar}
-          className='absolute top-4 left-4 z-50 inline-flex items-center p-2 mr-6 mt-2 ms-3 text-sm text-orange-500 hover:text-gray-100 rounded-lg sm:hidden hover:bg-orange-500 focus:outline-none focus:ring-2 focus:ring-gray-200'
+          className='absolute top-4 left-4 z-50 inline-flex items-center p-2 text-sm text-orange-500 hover:text-gray-100 rounded-lg sm:hidden hover:bg-orange-500 focus:outline-none focus:ring-2 focus:ring-gray-200'
+          style={{ marginLeft: '0' }}
         >
           <span className='sr-only'>Open sidebar</span>
           <svg
@@ -137,48 +138,48 @@ export default function Navbar() {
           <Sidebar.Items >
             <Sidebar.ItemGroup>
               <Sidebar.Item 
-                onClick={() => handleLinkClick('/dashboard')} 
+                onClick={() => handleLinkClick('/main/dashboard')} 
                 icon={HiChartPie}
                 className='cursor-pointer'>
                 {t('dashboard')}
               </Sidebar.Item>
               <Sidebar.Item
-                onClick={() => handleLinkClick('/activities')}
+                onClick={() => handleLinkClick('/main/activities')}
                 icon={MdOutlineExplore}
                 className='cursor-pointer'
               >
                 {t('explore')}
               </Sidebar.Item>
               <Sidebar.Item
-                onClick={() => handleLinkClick('/badges')}
+                onClick={() => handleLinkClick('/main/badges')}
                 icon={LuFileBadge2}
                 className='cursor-pointer'
               >
                 {t('badges')}
               </Sidebar.Item>
               <Sidebar.Item
-                onClick={() => handleLinkClick('/leaderboard')}
+                onClick={() => handleLinkClick('/main/leaderboard')}
                 icon={MdOutlineLeaderboard }
                 className='cursor-pointer'
               >
                 {t('leaderboard')}
               </Sidebar.Item>
               <Sidebar.Item
-                onClick={() => handleLinkClick('/myteam')}
+                onClick={() => handleLinkClick('/main/myteam')}
                 icon={FaPeopleCarryBox}
                 className='cursor-pointer'
               >
                 {t('myteam')}
               </Sidebar.Item>
               <Sidebar.Item
-                onClick={() => handleLinkClick('/mynonprofit')}
+                onClick={() => handleLinkClick('/main/mynonprofit')}
                 icon={GoOrganization}
                 className='cursor-pointer'
               >
                 {t('mynonprofit')}
               </Sidebar.Item>
               <Sidebar.Item
-                onClick={() => handleLinkClick('/members')}
+                onClick={() => handleLinkClick('/main/members')}
                 icon={RiTeamLine}
                 className='cursor-pointer'
               >
@@ -187,7 +188,7 @@ export default function Navbar() {
               </Sidebar.ItemGroup>
               <Sidebar.ItemGroup>
               <Sidebar.Item
-                onClick={() => handleLinkClick('/donate')}
+                onClick={() => handleLinkClick('/main/donate')}
                 icon={BiDonateHeart}
                 className='cursor-pointer'
               >
@@ -195,7 +196,7 @@ export default function Navbar() {
               </Sidebar.Item>
 
               <Sidebar.Item
-                onClick={() => handleLinkClick('/settings')}
+                onClick={() => handleLinkClick('/main/settings')}
                 icon={IoSettingsOutline}
                 className='cursor-pointer'
               >

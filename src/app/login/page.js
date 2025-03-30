@@ -91,7 +91,7 @@ export default function LoginPage() {
 
       if (userDocSnap.exists()) {
         // User exists - Redirect to dashboard for returning users
-        router.push('/dashboard');
+        router.push('/main/dashboard');
       } else {
         // New user - Save user data to Firestore
         await setDoc(userDocRef, {
@@ -139,27 +139,33 @@ export default function LoginPage() {
 
     // Check if passwords match
     if (newPassword !== confirmPassword) {
-      setCreateErrorMessage(t('passwordmatch')); // Set error message
-      return; // Exit the function
+        setCreateErrorMessage(t('passwordmatch')); // Set error message
+        return; // Exit the function
     }
 
     try {
-      // Create a new user with Firebase
-      await createUserWithEmailAndPassword(auth, newEmail, newPassword);
-      // After successful account creation, close the modal
-      setModalOpen(false);
-      // Optionally, redirect the user or show a success message
+        // Create a new user with Firebase
+        await createUserWithEmailAndPassword(auth, newEmail, newPassword);
+        
+        // Log the user in with the newly created credentials
+        await signInWithEmailAndPassword(auth, newEmail, newPassword);
+        
+        // After successful account creation and login, close the modal
+        setModalOpen(false);
+        
+        // Redirect the user to the dashboard
+        router.push('/app/dashboard'); // Redirect to dashboard after login
     } catch (error) {
-      // Handle errors (e.g., email already in use)
-      if (error.code === 'auth/email-already-in-use') {
-        setCreateErrorMessage(t('emailused')); // Set specific error message
-      }
-      else if (error.code === 'auth/weak-password') {
-        setCreateErrorMessage(t('weakpwd')); // Set specific error message
-      } else {
-        setCreateErrorMessage(error.message); // Set error message based on Firebase error
-      }
-      console.error('Error creating account:', error); // Log any errors
+        // Handle errors (e.g., email already in use)
+        if (error.code === 'auth/email-already-in-use') {
+            setCreateErrorMessage(t('emailused')); // Set specific error message
+        }
+        else if (error.code === 'auth/weak-password') {
+            setCreateErrorMessage(t('weakpwd')); // Set specific error message
+        } else {
+            setCreateErrorMessage(error.message); // Set error message based on Firebase error
+        }
+        console.error('Error creating account:', error); // Log any errors
     }
   };
 
