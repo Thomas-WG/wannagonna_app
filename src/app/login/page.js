@@ -28,13 +28,13 @@
 
 'use client'; // Marks this module for client-side rendering
 
-import { signInWithPopup, signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth, googleProvider, db } from 'firebaseConfig';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { FcGoogle } from "react-icons/fc";
-import { Button, Checkbox, Label, TextInput } from "flowbite-react";
+import { Button, Checkbox, Label, TextInput, Modal } from "flowbite-react";
 import { useState } from 'react';
 
 
@@ -48,6 +48,10 @@ export default function LoginPage() {
   const [email, setEmail] = useState(''); // State for email
   const [password, setPassword] = useState(''); // State for password
   const [errorMessage, setErrorMessage] = useState(''); // State for error message
+  const [modalOpen, setModalOpen] = useState(false); // State for modal visibility
+  const [newEmail, setNewEmail] = useState(''); // State for new email
+  const [newPassword, setNewPassword] = useState(''); // State for new password
+  const [confirmPassword, setConfirmPassword] = useState(''); // State for confirm password
 
   /**
    * handleGoogleSignIn - Initiates Google sign-in and manages user data in Firestore.
@@ -108,20 +112,33 @@ export default function LoginPage() {
     }
   };
 
+  // Function to handle account creation
+  const handleCreateAccount = async (event) => {
+    event.preventDefault(); // Prevent default form submission
+    setErrorMessage(''); // Clear previous error messages
+
+    // Check if passwords match
+    if (newPassword !== confirmPassword) {
+      setErrorMessage('Passwords do not match. Please try again.'); // Set error message
+      return; // Exit the function
+    }
+
+    try {
+      // Create a new user with Firebase
+      await createUserWithEmailAndPassword(auth, newEmail, newPassword);
+      // After successful account creation, close the modal
+      setModalOpen(false);
+      // Optionally, redirect the user or show a success message
+    } catch (error) {
+      // Handle errors (e.g., email already in use)
+      setErrorMessage(error.message); // Set error message based on Firebase error
+      console.error('Error creating account:', error); // Log any errors
+    }
+  };
+
   // Render the login UI
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100">
-      {/* Main Logo - Centered at the top */}
-      <div className="mb-8">
-        <Image
-          src="/logo/Favicon.png" // Path to logo image in public folder
-          alt="Main Logo"
-          width={150} // Adjust size as needed
-          height={150} // Adjust size as needed
-          className="mx-auto"
-        />
-      </div>
-
       <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
         <h2 className="text-2xl font-semibold text-center mb-6">Log In</h2>
         <form className="flex max-w-md flex-col gap-4" onSubmit={handleEmailLogin}>
@@ -132,7 +149,7 @@ export default function LoginPage() {
         <TextInput 
           id="email1" 
           type="email" 
-          placeholder="name@flowbite.com" 
+          placeholder="name@wannagonna.org" 
           required 
           value={email} // Bind email state
           onChange={(e) => setEmail(e.target.value)} // Update email state on change
@@ -175,13 +192,57 @@ export default function LoginPage() {
         <div className="text-center mt-6"> {/* Added margin for spacing */}
           <span className="text-gray-500">Don't have an account? </span>
           <button 
-            onClick={() => router.push('/signup')} // Redirect to signup page
+            onClick={() => setModalOpen(true)} // Open modal on click
             className="text-blue-500 hover:underline"
           >
             Register here!
           </button>
         </div>
       </div>
+
+      {/* Modal for account creation */}
+      <Modal show={modalOpen} onClose={() => setModalOpen(false)}>
+        <Modal.Header>Create an Account</Modal.Header>
+        <Modal.Body>
+          <form onSubmit={handleCreateAccount}>
+            <div>
+              <Label htmlFor="newEmail">Email</Label>
+              <TextInput 
+                id="newEmail" 
+                type="email" 
+                required 
+                value={newEmail} // Bind newEmail state
+                onChange={(e) => setNewEmail(e.target.value)} // Update newEmail state on change
+              />
+            </div>
+            <div>
+              <Label htmlFor="newPassword">Password</Label>
+              <TextInput 
+                id="newPassword" 
+                type="password" 
+                required 
+                value={newPassword} // Bind newPassword state
+                onChange={(e) => setNewPassword(e.target.value)} // Update newPassword state on change
+              />
+            </div>
+            <div>
+              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <TextInput 
+                id="confirmPassword" 
+                type="password" 
+                required 
+                value={confirmPassword} // Bind confirmPassword state
+                onChange={(e) => setConfirmPassword(e.target.value)} // Update confirmPassword state on change
+              />
+            </div>
+            {/* Display error message if exists */}
+            {errorMessage && (
+              <div className="text-red-500 text-center mb-4">{errorMessage}</div>
+            )}
+            <Button type="submit">Create Account</Button>
+          </form>
+        </Modal.Body>
+      </Modal>
     </div>
   );
 }
