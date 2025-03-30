@@ -103,25 +103,25 @@ export default function ActivityCard({
           />
           <div className='ml-3'>
             <h5 className='text-lg font-semibold text-gray-900 dark:text-white'>
-              {title} // Activity title
+              {title} {/* Activity title */}
             </h5>
-            <p className='text-sm text-gray-500'>{organization_name}</p> // Organization name
-            <p className='text-sm text-gray-500'>{location}</p> // Activity location
+            <p className='text-sm text-gray-500'>{organization_name}</p> {/* Organization name */}
+            <p className='text-sm text-gray-500'>{location}</p> {/* Activity location */}
           </div>
         </div>
         <div className='flex items-center justify-between mt-3'>
           <span className='text-gray-600 dark:text-gray-400'>
-            {applicants} applied // Number of applicants
+            {applicants} applied {/* Number of applicants */}
           </span>
           <span className='px-2 py-1 text-sm font-medium text-white bg-orange-500 rounded-full'>
-            {xp_reward} {t('points')} // XP reward points
+            {xp_reward} {t('points')} {/* XP reward points */}
           </span>
         </div>
         {isExpanded && (
           <div className='mt-4'>
             <div className='font-semibold'>Description:</div>
             <p className='text-sm text-gray-900'>
-              {description || 'No description available'} // Activity description
+              {description || 'No description available'} {/* Activity description */}
             </p>
             <Button
               onClick={(e) => {
@@ -130,7 +130,7 @@ export default function ActivityCard({
               }}
               className='mt-4'
             >
-              Apply Now // Button to apply for the activity
+              Apply Now {/* Button to apply for the activity */}
             </Button>
           </div>
         )}
@@ -143,63 +143,63 @@ export default function ActivityCard({
           >
             {toastMessage.type === 'success' && (
               <div className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-green-100 text-green-500">
-                <HiCheck className="h-5 w-5" /> // Success icon
+                <HiCheck className="h-5 w-5" /> {/* Success icon */}
               </div>
             )}
             {toastMessage.type === 'warning' && (
               <div className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-orange-100 text-orange-500">
-                <HiExclamation className="h-5 w-5" /> // Warning icon
+                <HiExclamation className="h-5 w-5" /> {/* Warning icon */}
               </div>
             )}
             {toastMessage.type === 'error' && (
               <div className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-100 text-red-500">
-                <HiExclamation className="h-5 w-5" /> // Error icon
+                <HiExclamation className="h-5 w-5" /> {/* Error icon */}
               </div>
             )}
             <div className="ml-3 text-sm font-normal">
-              {toastMessage.message} // Toast message content
+              {toastMessage.message} {/* Toast message content */}
             </div>
-            <Toast.Toggle onClose={() => setShowToast(false)} /> // Button to close toast
+            <Toast.Toggle onClose={() => setShowToast(false)} /> {/* Button to close toast */}
           </Toast>
         </div>
       )}
       <Modal 
-        show={openModal} // Show modal based on state
-        onClose={() => setOpenModal(false)} // Close modal action
-        onClick={handleModalClick} // Prevent event bubbling in modal
+        show={openModal}
+        onClose={() => setOpenModal(false)} 
+        onClick={handleModalClick} 
         className="z-50"
       >
-        <Modal.Header>Apply for {title}</Modal.Header> // Modal header
+        <Modal.Header>Apply for {title}</Modal.Header> {/* Modal header */}
         <Modal.Body>
           <div className="space-y-6">
             <div>
               <div className="mb-2 block">
-                <Label htmlFor="message" value="Why do you want to help?" /> // Label for textarea
+                <Label htmlFor="message" value="Why do you want to help?" /> 
               </div>
               <Textarea
                 id="message"
-                placeholder="Tell us why you're interested in this opportunity..." // Placeholder text
+                placeholder="Tell us why you're interested in this opportunity..."
                 required
                 rows={4}
-                value={message} // Bind message state to textarea
-                onChange={(e) => setMessage(e.target.value)} // Update message state on change
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
               />
             </div>
           </div>
         </Modal.Body>
         <Modal.Footer>
           <Button 
-            onClick={handleSubmitApplication} // Submit application on click
-            disabled={isSubmitting} // Disable button while submitting
+            onClick={handleSubmitApplication} 
+            disabled={isSubmitting}
           >
-            {isSubmitting ? 'Submitting...' : 'I want to help'} // Button text based on state
+            {isSubmitting ? 'Submitting...' : 'I want to help'} {/* Button text based on state */}
           </Button>
           <Button 
             color="gray" 
-            onClick={() => setOpenModal(false)} // Close modal on click
-            disabled={isSubmitting} // Disable button while submitting
+            onClick={() => setOpenModal(false)}
+            disabled={isSubmitting} 
           >
-            Cancel // Cancel button
+            Cancel {/* Cancel button */}
           </Button>
         </Modal.Footer>
       </Modal>
