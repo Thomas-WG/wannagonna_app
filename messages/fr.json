@@ -2,6 +2,26 @@
     "Homepage": {
         "title": "Bienvenue"
     },
+    "Login": {
+        "select": "Choisir la langue",
+        "login": "Se connecter",
+        "email": "Votre adresse e-mail",
+        "password": "Votre mot de passe",
+        "or": "ou",
+        "google": "Continuer avec Google",
+        "noaccount": "Vous n'avez pas de compte ?",
+        "register": "Inscrivez-vous ici !",
+        "createtitle": "Créer un compte",
+        "confirmpassword": "Confirmez votre mot de passe",
+        "create": "Inscription !",
+        "incorrectpwd": "Mot de passe incorrect. Veuillez réessayer.",
+        "nouserfound": "Aucun utilisateur trouvé avec cet e-mail. Veuillez vérifier votre e-mail ou vous inscrire.",
+        "invalidcredential": "Identifiants incorrects. Veuillez vérifier votre e-mail ou vous inscrire.",
+        "errordefault": "Une erreur est survenue. Veuillez réessayer plus tard.",
+        "passwordmatch": "Les mots de passe ne correspondent pas. Veuillez réessayer.",
+        "emailused": "Cet e-mail est déjà utilisé. Veuillez vous connecter à la place.",
+        "weakpwd": "Le mot de passe doit contenir au moins 6 caractères."
+    },
     "Sidebar": {
         "dashboard": "Tableau de bord",
         "explore": "Explorer",

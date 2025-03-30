@@ -36,6 +36,10 @@ import Image from 'next/image';
 import { FcGoogle } from "react-icons/fc";
 import { Button, Checkbox, Label, TextInput, Modal } from "flowbite-react";
 import { useState } from 'react';
+import { Dropdown, DropdownItem } from "flowbite-react";
+import { useTranslations } from "use-intl"; // Import hook to handle translations
+import { setUserLocale } from '@/utils/locale'; // Import function to set the user's preferred locale
+
 
 
 /**
@@ -47,12 +51,28 @@ export default function LoginPage() {
   const router = useRouter(); // Initialize router for navigation
   const [email, setEmail] = useState(''); // State for email
   const [password, setPassword] = useState(''); // State for password
-  const [errorMessage, setErrorMessage] = useState(''); // State for error message
+  const [loginErrorMessage, setLoginErrorMessage] = useState(''); // State for login error message
+  const [createErrorMessage, setCreateErrorMessage] = useState(''); // State for account creation error message
   const [modalOpen, setModalOpen] = useState(false); // State for modal visibility
   const [newEmail, setNewEmail] = useState(''); // State for new email
   const [newPassword, setNewPassword] = useState(''); // State for new password
   const [confirmPassword, setConfirmPassword] = useState(''); // State for confirm password
 
+  const t = useTranslations('Login');
+
+  const languageOptions = [
+  { label: 'English', value: 'en' },
+  { label: 'Español', value: 'es' },
+  { label: 'Français', value: 'fr' },
+  { label: '日本語', value: 'ja' },
+];
+
+  // Function to handle language change
+  const handleLanguageChange = (locale) => {
+    setUserLocale(locale); // Set the new locale using the setUserLocale utility
+    console.log(`Language changed to: ${locale}`);
+    // You might want to store the selected language in local storage or context
+  };
   /**
    * handleGoogleSignIn - Initiates Google sign-in and manages user data in Firestore.
    *
@@ -93,20 +113,20 @@ export default function LoginPage() {
   // Function to handle email/password login
   const handleEmailLogin = async (event) => {
     event.preventDefault(); // Prevent default form submission
-    setErrorMessage(''); // Clear previous error messages
+    setLoginErrorMessage(''); // Clear previous login error messages
     try {
       await signInWithEmailAndPassword(auth, email, password); // Sign in with email and password
       router.push('/dashboard'); // Redirect to dashboard on successful login
     } catch (error) {
       // Set error message based on the error code
       if (error.code === 'auth/wrong-password') {
-        setErrorMessage('Incorrect password. Please try again.');
+        setLoginErrorMessage(t('incorrectpwd'));
       } else if (error.code === 'auth/user-not-found') {
-        setErrorMessage('No user found with this email. Please check your email or sign up.');
+        setLoginErrorMessage(t('nouserfound'));
       } else if (error.code === 'auth/invalid-credential') {
-        setErrorMessage('Incorrect credential. Please check your email or sign up.');
+        setLoginErrorMessage(t('invalidcredential'));
       } else {
-        setErrorMessage('An error occurred. Please try again later.');
+        setLoginErrorMessage(t('errordefault'));
       }
       console.error('Error logging in with email and password:', error); // Log any errors
     }
@@ -115,11 +135,11 @@ export default function LoginPage() {
   // Function to handle account creation
   const handleCreateAccount = async (event) => {
     event.preventDefault(); // Prevent default form submission
-    setErrorMessage(''); // Clear previous error messages
+    setCreateErrorMessage(''); // Clear previous creation error messages
 
     // Check if passwords match
     if (newPassword !== confirmPassword) {
-      setErrorMessage('Passwords do not match. Please try again.'); // Set error message
+      setCreateErrorMessage(t('passwordmatch')); // Set error message
       return; // Exit the function
     }
 
@@ -131,7 +151,14 @@ export default function LoginPage() {
       // Optionally, redirect the user or show a success message
     } catch (error) {
       // Handle errors (e.g., email already in use)
-      setErrorMessage(error.message); // Set error message based on Firebase error
+      if (error.code === 'auth/email-already-in-use') {
+        setCreateErrorMessage(t('emailused')); // Set specific error message
+      }
+      else if (error.code === 'auth/weak-password') {
+        setCreateErrorMessage(t('weakpwd')); // Set specific error message
+      } else {
+        setCreateErrorMessage(error.message); // Set error message based on Firebase error
+      }
       console.error('Error creating account:', error); // Log any errors
     }
   };
@@ -139,74 +166,85 @@ export default function LoginPage() {
   // Render the login UI
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100">
+      <div className="absolute top-4 right-4"> {/* Positioning the dropdown */}
+        <Dropdown label={t('select')} inline={true}>
+          {languageOptions.map((option) => (
+            <Dropdown.Item key={option.value} onClick={() => handleLanguageChange(option.value)}>
+              {option.label}
+            </Dropdown.Item>
+          ))}
+        </Dropdown>
+      </div>
       <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
-        <h2 className="text-2xl font-semibold text-center mb-6">Log In</h2>
+        <h2 className="text-2xl font-semibold text-center mb-6">{t('login')}</h2>
         <form className="flex max-w-md flex-col gap-4" onSubmit={handleEmailLogin}>
-      <div>
-        <div className="mb-2 block">
-          <Label htmlFor="email1">Your email</Label>
-        </div>
-        <TextInput 
-          id="email1" 
-          type="email" 
-          placeholder="name@wannagonna.org" 
-          required 
-          value={email} // Bind email state
-          onChange={(e) => setEmail(e.target.value)} // Update email state on change
-        />
-      </div>
-      <div>
-        <div className="mb-2 block">
-          <Label htmlFor="password1">Your password</Label>
-        </div>
-        <TextInput 
-          id="password1" 
-          type="password" 
-          required 
-          value={password} // Bind password state
-          onChange={(e) => setPassword(e.target.value)} // Update password state on change
-        />
-      </div>
-      <Button type="submit" className="mb-4">Login</Button> {/* Submit button for email login */}
-    </form>
-    
-    {/* Display error message if exists */}
-    {errorMessage && (
-      <div className="text-red-500 text-center mb-4">{errorMessage}</div>
-    )}
+          <div>
+            <div className="mb-2 block">
+              <Label htmlFor="email1">{t('email')}</Label>
+            </div>
+            <TextInput 
+              id="email1" 
+              type="email" 
+              placeholder="name@wannagonna.org" 
+              required 
+              value={email} // Bind email state
+              onChange={(e) => setEmail(e.target.value)} // Update email state on change
+              autoComplete="username" // Added autocomplete attribute
+            />
+          </div>
+          <div>
+            <div className="mb-2 block">
+              <Label htmlFor="password1">{t('password')}</Label>
+            </div>
+            <TextInput 
+              id="password1" 
+              type="password" 
+              required 
+              value={password} // Bind password state
+              onChange={(e) => setPassword(e.target.value)} // Update password state on change
+              autoComplete="current-password" // Added autocomplete attribute
+            />
+          </div>
+          <Button type="submit" className="mb-4">{t('login')}</Button> {/* Submit button for email login */}
+        </form>
+        
+        {/* Display login error message if exists */}
+        {loginErrorMessage && (
+          <div className="text-red-500 text-center mb-4">{loginErrorMessage}</div>
+        )}
 
-    {/* Separator with "or" */}
-    <div className="text-center my-4"> {/* Added margin for spacing */}
-      <span className="text-gray-500">or</span>
-    </div>
+        {/* Separator with "or" */}
+        <div className="text-center my-4"> {/* Added margin for spacing */}
+          <span className="text-gray-500">{t('or')}</span>
+        </div>
 
         <button
           onClick={handleGoogleSignIn}
           className="w-full max-w-xs mx-auto py-3 px-6 bg-white border border-gray-300 rounded-lg flex items-center justify-center gap-3 hover:bg-gray-50 transition-colors duration-200 text-gray-700 text-lg font-medium"
         >
           <FcGoogle className="text-2xl" />
-          <span>Continue with Google</span>
+          <span>{t('google')}</span>
         </button>
 
         {/* Registration prompt */}
         <div className="text-center mt-6"> {/* Added margin for spacing */}
-          <span className="text-gray-500">Don't have an account? </span>
+          <span className="text-gray-500">{t('noaccount')} </span>
           <button 
             onClick={() => setModalOpen(true)} // Open modal on click
             className="text-blue-500 hover:underline"
           >
-            Register here!
+            {t('register')}
           </button>
         </div>
       </div>
 
       {/* Modal for account creation */}
-      <Modal show={modalOpen} onClose={() => setModalOpen(false)}>
-        <Modal.Header>Create an Account</Modal.Header>
+      <Modal show={modalOpen} onClose={() => setModalOpen(false)} size="md" className="flex items-center justify-center h-full">
+        <Modal.Header>{t('createtitle')}</Modal.Header>
         <Modal.Body>
-          <form onSubmit={handleCreateAccount}>
+          <form className="flex flex-col gap-4 w-full max-w-sm mx-auto" onSubmit={handleCreateAccount}>
             <div>
-              <Label htmlFor="newEmail">Email</Label>
+              <Label htmlFor="newEmail">{t('email')}</Label>
               <TextInput 
                 id="newEmail" 
                 type="email" 
@@ -216,30 +254,32 @@ export default function LoginPage() {
               />
             </div>
             <div>
-              <Label htmlFor="newPassword">Password</Label>
+              <Label htmlFor="newPassword">{t('password')}</Label>
               <TextInput 
                 id="newPassword" 
                 type="password" 
                 required 
                 value={newPassword} // Bind newPassword state
                 onChange={(e) => setNewPassword(e.target.value)} // Update newPassword state on change
+                autoComplete="new-password" // Added autocomplete attribute
               />
             </div>
             <div>
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <Label htmlFor="confirmPassword">{t('confirmpassword')}</Label>
               <TextInput 
                 id="confirmPassword" 
                 type="password" 
                 required 
                 value={confirmPassword} // Bind confirmPassword state
                 onChange={(e) => setConfirmPassword(e.target.value)} // Update confirmPassword state on change
+                autoComplete="new-password" // Added autocomplete attribute
               />
             </div>
-            {/* Display error message if exists */}
-            {errorMessage && (
-              <div className="text-red-500 text-center mb-4">{errorMessage}</div>
+            {/* Display creation error message if exists */}
+            {createErrorMessage && (
+              <div className="text-red-500 text-center mb-4">{createErrorMessage}</div>
             )}
-            <Button type="submit">Create Account</Button>
+            <Button type="submit">{t('create')}</Button>
           </form>
         </Modal.Body>
       </Modal>
