@@ -28,11 +28,15 @@
 
 'use client'; // Marks this module for client-side rendering
 
-import { signInWithPopup } from 'firebase/auth';
+import { signInWithPopup, signInWithEmailAndPassword } from 'firebase/auth';
 import { auth, googleProvider, db } from 'firebaseConfig';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image'; // Import for displaying logo
+import Image from 'next/image';
+import { FcGoogle } from "react-icons/fc";
+import { Button, Checkbox, Label, TextInput } from "flowbite-react";
+import { useState } from 'react';
+
 
 /**
  * LoginPage - Renders the login UI, with logo and Google sign-in functionality.
@@ -41,6 +45,9 @@ import Image from 'next/image'; // Import for displaying logo
  */
 export default function LoginPage() {
   const router = useRouter(); // Initialize router for navigation
+  const [email, setEmail] = useState(''); // State for email
+  const [password, setPassword] = useState(''); // State for password
+  const [errorMessage, setErrorMessage] = useState(''); // State for error message
 
   /**
    * handleGoogleSignIn - Initiates Google sign-in and manages user data in Firestore.
@@ -79,6 +86,28 @@ export default function LoginPage() {
     }
   };
 
+  // Function to handle email/password login
+  const handleEmailLogin = async (event) => {
+    event.preventDefault(); // Prevent default form submission
+    setErrorMessage(''); // Clear previous error messages
+    try {
+      await signInWithEmailAndPassword(auth, email, password); // Sign in with email and password
+      router.push('/dashboard'); // Redirect to dashboard on successful login
+    } catch (error) {
+      // Set error message based on the error code
+      if (error.code === 'auth/wrong-password') {
+        setErrorMessage('Incorrect password. Please try again.');
+      } else if (error.code === 'auth/user-not-found') {
+        setErrorMessage('No user found with this email. Please check your email or sign up.');
+      } else if (error.code === 'auth/invalid-credential') {
+        setErrorMessage('Incorrect credential. Please check your email or sign up.');
+      } else {
+        setErrorMessage('An error occurred. Please try again later.');
+      }
+      console.error('Error logging in with email and password:', error); // Log any errors
+    }
+  };
+
   // Render the login UI
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100">
@@ -94,13 +123,64 @@ export default function LoginPage() {
       </div>
 
       <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
-        <h2 className="text-2xl font-semibold text-center mb-4">Sign In</h2>
+        <h2 className="text-2xl font-semibold text-center mb-6">Log In</h2>
+        <form className="flex max-w-md flex-col gap-4" onSubmit={handleEmailLogin}>
+      <div>
+        <div className="mb-2 block">
+          <Label htmlFor="email1">Your email</Label>
+        </div>
+        <TextInput 
+          id="email1" 
+          type="email" 
+          placeholder="name@flowbite.com" 
+          required 
+          value={email} // Bind email state
+          onChange={(e) => setEmail(e.target.value)} // Update email state on change
+        />
+      </div>
+      <div>
+        <div className="mb-2 block">
+          <Label htmlFor="password1">Your password</Label>
+        </div>
+        <TextInput 
+          id="password1" 
+          type="password" 
+          required 
+          value={password} // Bind password state
+          onChange={(e) => setPassword(e.target.value)} // Update password state on change
+        />
+      </div>
+      <Button type="submit" className="mb-4">Login</Button> {/* Submit button for email login */}
+    </form>
+    
+    {/* Display error message if exists */}
+    {errorMessage && (
+      <div className="text-red-500 text-center mb-4">{errorMessage}</div>
+    )}
+
+    {/* Separator with "or" */}
+    <div className="text-center my-4"> {/* Added margin for spacing */}
+      <span className="text-gray-500">or</span>
+    </div>
+
         <button
-          onClick={handleGoogleSignIn} // Call handleGoogleSignIn on button click
-          className="w-full py-2 bg-orange-500 text-white rounded-lg flex items-center justify-center hover:bg-orange-400"
+          onClick={handleGoogleSignIn}
+          className="w-full max-w-xs mx-auto py-3 px-6 bg-white border border-gray-300 rounded-lg flex items-center justify-center gap-3 hover:bg-gray-50 transition-colors duration-200 text-gray-700 text-lg font-medium"
         >
-          <span>Sign in with Google</span>
+          <FcGoogle className="text-2xl" />
+          <span>Continue with Google</span>
         </button>
+
+        {/* Registration prompt */}
+        <div className="text-center mt-6"> {/* Added margin for spacing */}
+          <span className="text-gray-500">Don't have an account? </span>
+          <button 
+            onClick={() => router.push('/signup')} // Redirect to signup page
+            className="text-blue-500 hover:underline"
+          >
+            Register here!
+          </button>
+        </div>
       </div>
     </div>
   );

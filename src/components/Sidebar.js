@@ -29,6 +29,7 @@ import { IoSettingsOutline } from 'react-icons/io5';
 import { LuFileBadge2 } from 'react-icons/lu';
 import { useRouter } from 'next/navigation';
 import { GoOrganization } from "react-icons/go";
+import { IoLogOut } from "react-icons/io5";
 
 // Main Sidebar component
 export default function Navbar() {
@@ -199,6 +200,18 @@ export default function Navbar() {
                 className='cursor-pointer'
               >
                 {t('settings')}
+              </Sidebar.Item>
+            </Sidebar.ItemGroup>
+            <Sidebar.ItemGroup>
+            <Sidebar.Item
+                onClick={() => {
+                  logout(); // Call logout function
+                  handleNavigation('/login'); // Navigate to the login page
+                }}
+                icon={IoLogOut}
+                className='cursor-pointer'
+              >
+                {t('logout')}
               </Sidebar.Item>
             </Sidebar.ItemGroup>
           </Sidebar.Items>
