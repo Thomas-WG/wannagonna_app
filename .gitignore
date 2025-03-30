@@ -43,6 +43,7 @@ next-env.d.ts
 
 # firebase
 firestore-debug.log
+firebase-debug.log
 
 # sample data
 sample-data/*
