@@ -2,6 +2,26 @@
     "Homepage": {
         "title": "Welcome"
     },
+    "Login": {
+        "select": "Select language",
+        "login": "Log In",
+        "email": "Your Email",
+        "password": "Your Password",
+        "or": "or",
+        "google": "Continue with Google",
+        "noaccount": "Don't have an account ?",
+        "register": "Register here!",
+        "createtitle": "Create an account",
+        "confirmpassword": "Confirm your password",
+        "create":"Register !",
+        "incorrectpwd": "Incorrect password. Please try again.",
+        "nouserfound": "No user found with this email. Please check your email or sign up.",
+        "invalidcredential": "Incorrect credential. Please check your email or sign up.",
+        "errordefault": "An error occurred. Please try again later.",
+        "passwordmatch": "Passwords do not match. Please try again.",
+        "emailused": "This email is already in use. Please log in instead.",
+        "weakpwd": "Password should be at least 6 characters"
+    },
     "Sidebar": {
         "dashboard": "Dashboard",
         "explore": "Explore",

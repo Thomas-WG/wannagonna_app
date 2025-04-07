@@ -2,6 +2,26 @@
     "Homepage": {
         "title": "ようこそ"
     },
+    "Login": {
+        "select": "言語を選択",
+        "login": "ログイン",
+        "email": "メールアドレス",
+        "password": "パスワード",
+        "or": "または",
+        "google": "Googleで続行",
+        "noaccount": "アカウントをお持ちでない方",
+        "register": "こちらで登録！",
+        "createtitle": "アカウントを作成",
+        "confirmpassword": "パスワードを確認",
+        "create": "登録！",
+        "incorrectpwd": "パスワードが正しくありません。もう一度お試しください。",
+        "nouserfound": "このメールアドレスのユーザーが見つかりません。メールを確認するか、新規登録してください。",
+        "invalidcredential": "認証情報が正しくありません。メールアドレスを確認するか、新規登録してください。",
+        "errordefault": "エラーが発生しました。後でもう一度お試しください。",
+        "passwordmatch": "パスワードが一致しません。もう一度お試しください。",
+        "emailused": "このメールアドレスはすでに使用されています。ログインしてください。",
+        "weakpwd": "パスワードは6文字以上である必要があります。"
+    },
     "Sidebar": {
         "dashboard": "ダッシュボード",
         "explore": "探す",
