@@ -84,7 +84,7 @@ export default function ActivitiesPage() {
   // If there is no authenticated user, return null (no content rendered)
   if (!user) return null;
   return (
-    <div className='p-4'>
+    <div className='flex flex-col items-center bg-gray-100 p-6'>
       {/* Responsive grid layout for displaying activity cards */}
       <div className='grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
         {activities.map((activity, index) => (

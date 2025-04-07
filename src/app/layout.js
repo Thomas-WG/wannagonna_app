@@ -49,7 +49,7 @@ export default async function RootLayout({ children }) {
           {/* Wrap the entire app in AuthProvider for access to authentication context */}
           <AuthProvider>
             {/* Main content area, which displays the child components */}
-            <main className='flex-1 overflow-y-auto'>{children}</main>
+            <main className='flex-1'>{children}</main>
           </AuthProvider>
         </NextIntlClientProvider>
       </body>

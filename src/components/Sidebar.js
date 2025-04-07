@@ -103,7 +103,7 @@ export default function Navbar() {
           aria-controls='logo-sidebar'
           type='button'
           onClick={toggleSidebar}
-          className='absolute top-4 left-4 z-50 inline-flex items-center p-2 text-sm text-orange-500 hover:text-gray-100 rounded-lg sm:hidden hover:bg-orange-500 focus:outline-none focus:ring-2 focus:ring-gray-200'
+          className='fixed top-4 left-4 z-50 inline-flex items-center p-2 text-sm text-orange-500 hover:text-gray-100 rounded-lg sm:hidden hover:bg-orange-500 focus:outline-none focus:ring-2 focus:ring-gray-200'
           style={{ marginLeft: '0' }}
         >
           <span className='sr-only'>Open sidebar</span>
@@ -126,7 +126,7 @@ export default function Navbar() {
       <aside
         ref={sidebarRef}
         id='logo-sidebar'
-        className={`fixed top-0 left-0 z-40 w-64 h-screen transition-transform ${
+        className={`fixed top-0 left-0 sm:z-10 z-40 w-64 h-screen transition-transform ${
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         } sm:static sm:translate-x-0`}
         aria-label='Sidebar'
@@ -220,7 +220,7 @@ export default function Navbar() {
       </aside>
 
       <div
-        className={`p-4 transition-all duration-300 ${isSidebarOpen ? 'ml-30' : 'ml-0'} sm:ml-52`}
+        className={`z-100 transition-all duration-300 ${isSidebarOpen ? 'ml-30' : 'ml-0'} sm:ml-52`}
       >
       </div>
     </div>
