@@ -23,9 +23,8 @@ import { subscribeToActivities } from '@/utils/crudActivities';
 import { useEffect, useState } from 'react';
 import { fetchActivities } from '@/utils/crudActivities'; // Utility function to fetch activities data
 import ActivityCard from '@/components/ActivityCard'; // Component to display each activity's data in card format
-import { useAuth } from '@/hooks/useAuth'; // Hook for accessing user authentication status
-import LoadingSpinner from '@/components/LoadingSpinner'; // Component to show the loading spinner
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/useAuth';
 
 // Main component to display activities
 export default function ActivitiesPage() {
@@ -73,18 +72,11 @@ export default function ActivitiesPage() {
     getData();
   }, [user]); // Re-run the effect when `user` changes (e.g., when logging in or out)
 
-  // Display loading spinner while user authentication status is being determined
-  if (loading)
-    return (
-      <div className='min-h-screen flex items-center justify-center'>
-        <LoadingSpinner />
-      </div>
-    );
 
   // If there is no authenticated user, return null (no content rendered)
   if (!user) return null;
   return (
-    <div className='p-4'>
+    <div className='flex flex-col items-center bg-gray-100 p-6'>
       {/* Responsive grid layout for displaying activity cards */}
       <div className='grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
         {activities.map((activity, index) => (

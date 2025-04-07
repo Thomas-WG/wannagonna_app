@@ -214,11 +214,12 @@ const availableCategories = formData.type ? categories[formData.type] : [];
         {/* Step 2 */}
         {currentStep === 2 && (
           <>
-            <div className='flex max-w-md flex-col gap-4'>
-            <label className='block font-medium mb-1'>
+          <label className='block font-medium mb-1'>
             {`${t('info-label')} ${formData.category ? `(${availableCategories.find(category => category.id === formData.category)?.name || ''})` : ''}`}
               </label>
-              <div>
+            <div className='flex flex-wrap max-w-4xl gap-4'>
+            
+              <div className="w-96">
                 <FloatingLabel
                   variant='filled'
                   label={t('activity-title-label')}
@@ -228,7 +229,7 @@ const availableCategories = formData.type ? categories[formData.type] : [];
                   onChange={handleChange}
                 />
               </div>
-              <div>
+              <div className="w-96">
                 <Textarea
                   id='activityDescription'
                   placeholder={t('activity-description-label')}
@@ -240,7 +241,7 @@ const availableCategories = formData.type ? categories[formData.type] : [];
                   helperText={t('activity-description-helper')}
                 />
               </div>
-              <fieldset className='flex max-w-md flex-col gap-4'>
+              <fieldset className='flex max-w-md flex-col gap-4 w-96'>
                 <Label htmlFor='frequency'>{t('frequency-label')}</Label>
                 <div className='flex items-center gap-2'>
                   <Radio
@@ -263,7 +264,7 @@ const availableCategories = formData.type ? categories[formData.type] : [];
                   <Label htmlFor='regular'>{t('frequency-regular')}</Label>
                 </div>
               </fieldset>
-              <div>
+              <div className="w-96">
               <Label htmlFor='start_date'>{t('start_date')}</Label>
                 <Datepicker 
               weekStart={1}
@@ -272,7 +273,7 @@ const availableCategories = formData.type ? categories[formData.type] : [];
               onChange={(date) => setFormData((prev) => ({ ...prev, start_date: date }))}
             />
               </div>
-              <div>
+              <div className="w-96">
               <Label htmlFor='end_date'>{t('end_date')}</Label>
                 <Datepicker 
               weekStart={1}
