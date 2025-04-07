@@ -18,8 +18,7 @@ import Image from 'next/image'; // Import Next.js Image component for optimized 
 const LoadingSpinner = () => {
   return (
     <div
-      className='absolute top-0 left-0 w-full h-full flex items-center justify-center bg-transparent z-50 
-                 md:ml-[250px] md:w-[calc(100%-250px)]'
+      className='absolute top-0 left-0 w-full h-full flex items-center justify-center bg-transparent z-50'
     >
       {/* Centered spinning logo */}
       <div className='animate-spin-slow'>
