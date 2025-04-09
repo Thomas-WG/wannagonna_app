@@ -1,9 +1,9 @@
 'use client';
 
-import Navbar from '@/components/Sidebar'; // Navbar component for sidebar navigation
-import Header from '@/components/Header'; // Header component for header navigation
+import Navbar from '@/components/layout/Sidebar'; // Navbar component for sidebar navigation
+import Header from '@/components/layout/Header'; // Header component for header navigation
 import { useAuth } from '@/hooks/useAuth'; // Hook for accessing user authentication status
-import LoadingSpinner from '@/components/LoadingSpinner'; // Component to show the loading spinner
+import LoadingSpinner from '@/components/layout/LoadingSpinner'; // Component to show the loading spinner
 
 const Layout = ({ children, isNavbarExpanded }) => {
 

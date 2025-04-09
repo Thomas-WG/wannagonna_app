@@ -1,64 +1,173 @@
 // app/complete-profile/page.js
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { doc, setDoc } from 'firebase/firestore';
 import { auth } from 'firebaseConfig';
 import { useRouter } from 'next/navigation';
+import { Button } from 'flowbite-react';
+import { useAuth } from '@/hooks/useAuth';
+import { countries } from 'countries-list';
+import languages from '@cospired/i18n-iso-languages';
+import { useTranslations } from 'next-intl';
+import { updateMember, fetchMemberById } from '@/utils/crudMemberProfile';
+import ProfileInformation from '@/components/profile/ProfileInformation';
+import SkillsAndAvailability from '@/components/profile/SkillsAndAvailability';
+
+// Register the languages you want to use
+languages.registerLocale(require("@cospired/i18n-iso-languages/langs/en.json"));
+
+// Convert languages to array format needed for Select
+const languageOptions = Object.entries(languages.getNames('en')).map(([code, name]) => ({
+  value: code,
+  label: name
+})).sort((a, b) => a.label.localeCompare(b.label));
+
+// Convert countries object to array format needed for Select
+const countryOptions = Object.entries(countries).map(([code, country]) => ({
+  value: code,
+  label: country.name
+})).sort((a, b) => a.label.localeCompare(b.label));
+
+function cleanData(obj) {
+  if (typeof obj !== 'object' || obj === null) {
+    return obj;
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map(cleanData);
+  }
+
+  return Object.keys(obj).reduce((acc, key) => {
+    if (!key.startsWith('__') && !key.endsWith('__')) {
+      acc[key] = cleanData(obj[key]);
+    }
+    return acc;
+  }, {});
+}
 
 export default function CompleteProfilePage() {
-  const [profileData, setProfileData] = useState({
-    displayName: auth.currentUser.displayName || '',
-    bio: '',
-  });
   const router = useRouter();
+  const { user } = useAuth();
+
+
+  const [profileData, setProfileData] = useState({
+    displayName: auth.currentUser?.displayName || '',
+    email: auth.currentUser?.email || '',
+    bio: '',
+    country: '',
+    languages: [], // This will now store an array of { value, label } objects
+    skills: [],
+    profilePicture: auth.currentUser?.photoURL || '',
+    timeCommitment: {
+      daily: false,
+      weekly: false,
+      biweekly: false,
+      monthly: false,
+      occasional: false,
+      flexible: false
+    },
+    availabilities: {
+      weekdays: false,
+      weekends: false,
+      mornings: false,
+      afternoons: false,
+      evenings: false,
+      flexible: false
+    }
+  });
+
+  useEffect(() => {
+    if (user?.uid) {
+      fetchMemberById(user.uid, setProfileData);
+    }
+  }, [user?.uid]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setProfileData((prev) => ({ ...prev, [name]: value }));
+    if (name === 'languages') {
+      // Handle multiple selections for languages
+      const selectedOptions = Array.from(e.target.selectedOptions).map(option => option.value);
+      setProfileData(prev => ({ ...prev, languages: selectedOptions }));
+    } else {
+      setProfileData(prev => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const handleMultiSelectChange = (field) => (newValue) => {
+    setProfileData(prev => ({
+      ...prev,
+      [field]: newValue || []
+    }));
+  };
+
+  const handleCheckboxChange = (field) => (e) => {
+    const { name, checked } = e.target;
+    setProfileData(prev => ({
+      ...prev,
+      [field]: {
+        ...prev[field],
+        [name]: checked
+      }
+    }));
+  };
+
+  const handleProfilePictureChange = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      try {
+        // Here you would typically upload the file to your storage (e.g., Firebase Storage)
+        // For now, we'll just create a local URL
+        const imageUrl = URL.createObjectURL(file);
+        
+        // Update the profile data with the new image URL
+        setProfileData(prev => ({
+          ...prev,
+          profilePicture: imageUrl
+        }));
+      } catch (error) {
+        console.error("Error uploading profile picture:", error);
+      }
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log(profileData);
 
     try {
-      const userDoc = doc(db, 'users', auth.currentUser.uid);
-      await setDoc(userDoc, profileData);
+      const cleanedProfileData = cleanData(profileData);
+      await updateMember(user.uid, cleanedProfileData);
       console.log("Profile updated!");
-      router.push('/'); // Redirect to home or dashboard after saving profile
     } catch (error) {
       console.error("Error updating profile:", error);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
-        <h2 className="text-2xl font-semibold text-center mb-4">Complete Profile</h2>
-        <form onSubmit={handleSubmit}>
-          <input
-            type="text"
-            name="displayName"
-            placeholder="Display Name"
-            value={profileData.displayName}
-            onChange={handleInputChange}
-            className="w-full p-2 border rounded mb-4"
+    <div className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <ProfileInformation
+            profileData={profileData}
+            handleProfilePictureChange={handleProfilePictureChange}
+            handleInputChange={handleInputChange}
+            handleMultiSelectChange={handleMultiSelectChange}
+            countryOptions={countryOptions}
+            languageOptions={languageOptions}
           />
-          <textarea
-            name="bio"
-            placeholder="Short Bio"
-            value={profileData.bio}
-            onChange={handleInputChange}
-            className="w-full p-2 border rounded mb-4"
+          <SkillsAndAvailability
+            profileData={profileData}
+            handleMultiSelectChange={handleMultiSelectChange}
+            handleCheckboxChange={handleCheckboxChange}
           />
-          <button
-            type="submit"
-            className="w-full py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          >
+        </div>
+        <div className="flex justify-center pb-6">
+          <Button type="submit" className="w-full md:w-auto md:min-w-[200px]">
             Save Profile
-          </button>
-        </form>
-      </div>
+          </Button>
+        </div>
+      </form>
     </div>
   );
 }
