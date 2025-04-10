@@ -1,9 +1,9 @@
 import { Avatar } from 'flowbite-react';
+import { useTranslations } from 'next-intl';
 
-export default function ProfilePicture({
-  profileData,
-  handleProfilePictureChange,
-}) {
+export default function ProfilePicture({profileData, handleProfilePictureChange}) {
+  const t = useTranslations('CompleteProfile');
+
   return (
     <div className='flex flex-col items-center mb-6'>
       <div className='relative'>
@@ -47,7 +47,7 @@ export default function ProfilePicture({
         </label>
       </div>
       <p className='mt-2 text-sm text-gray-500'>
-        Click to change profile picture
+        {t('profilePictureHelper')}
       </p>
     </div>
   );

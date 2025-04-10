@@ -9,8 +9,8 @@ import { Button } from 'flowbite-react';
 import { useAuth } from '@/hooks/useAuth';
 import { countries } from 'countries-list';
 import languages from '@cospired/i18n-iso-languages';
-import { useTranslations } from 'next-intl';
 import { updateMember, fetchMemberById } from '@/utils/crudMemberProfile';
+import { uploadProfilePicture } from '@/utils/storage';
 import ProfileInformation from '@/components/profile/ProfileInformation';
 import SkillsAndAvailability from '@/components/profile/SkillsAndAvailability';
 
@@ -50,7 +50,6 @@ export default function CompleteProfilePage() {
   const router = useRouter();
   const { user } = useAuth();
 
-
   const [profileData, setProfileData] = useState({
     displayName: auth.currentUser?.displayName || '',
     email: auth.currentUser?.email || '',
@@ -76,6 +75,9 @@ export default function CompleteProfilePage() {
       flexible: false
     }
   });
+  
+  // Add state to store the selected file
+  const [selectedFile, setSelectedFile] = useState(null);
 
   useEffect(() => {
     if (user?.uid) {
@@ -111,22 +113,23 @@ export default function CompleteProfilePage() {
       }
     }));
   };
-
   const handleProfilePictureChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
       try {
-        // Here you would typically upload the file to your storage (e.g., Firebase Storage)
-        // For now, we'll just create a local URL
+        // Store the file for later upload
+        setSelectedFile(file);
+        
+        // Create a temporary URL for preview
         const imageUrl = URL.createObjectURL(file);
         
-        // Update the profile data with the new image URL
+        // Update the profile data with the temporary image URL
         setProfileData(prev => ({
           ...prev,
           profilePicture: imageUrl
         }));
       } catch (error) {
-        console.error("Error uploading profile picture:", error);
+        console.error("Error handling profile picture:", error);
       }
     }
   };
@@ -136,7 +139,20 @@ export default function CompleteProfilePage() {
     console.log(profileData);
 
     try {
-      const cleanedProfileData = cleanData(profileData);
+      let finalProfileData = { ...profileData };
+      
+      // Upload profile picture if a new one was selected
+      if (selectedFile && user?.uid) {
+        try {
+          const downloadURL = await uploadProfilePicture(selectedFile, user.uid);
+          finalProfileData.profilePicture = downloadURL;
+        } catch (error) {
+          console.error("Error uploading profile picture:", error);
+          // Continue with form submission even if picture upload fails
+        }
+      }
+      
+      const cleanedProfileData = cleanData(finalProfileData);
       await updateMember(user.uid, cleanedProfileData);
       console.log("Profile updated!");
     } catch (error) {

@@ -105,5 +105,33 @@
         "blood_drive": "Blood Donation Drive",
         "food_fair": "Food Fair",
         "animal_adoption": "Animal Adoption Event"
+    },
+    "CompleteProfile": {
+        "profile": "Profile information",
+        "email": "Your Email",
+        "emailHelper": "This can not be changed as it is your login. Please contact us if you need to change it (support@wannagona.org).",
+        "bio": "Your Bio",
+        "country": "Your Country",
+        "languages": "Languages you speak",
+        "languagesHelper": "You can select from the list or type new languages",
+        "timeCommitment": "Your Time Commitment",
+        "save": "Save Profile",
+        "profilePictureHelper":"Click to change profile picture",
+        "displayName": "Your Display Name",
+        "skillsAvailable": "Skills & Availability",
+        "skills":"Your skills",
+        "frequency": "How often can you help ?",
+        "availabilities":"When are you usually available?",
+        "weekdays": "Weekdays",
+        "weekends": "Weekends",
+        "mornings": "Mornings",
+        "afternoons": "Afternoons",
+        "evenings": "Evenings",
+        "flexible": "Flexible",
+        "daily": "Daily",
+        "weekly": "Weekly",
+        "biweekly": "Every two weeks",
+        "monthly": "Monthly",
+        "occasionally": "Occasionally"        
     }
 }

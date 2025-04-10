@@ -1,17 +1,19 @@
 import { Card, Label, Checkbox } from 'flowbite-react';
 import CreatableSelect from 'react-select/creatable';
-
+import { useTranslations } from 'next-intl';
 export default function SkillsAndAvailability({ profileData, handleMultiSelectChange, handleCheckboxChange }) {
+  const t = useTranslations('CompleteProfile');
+
   return (
     <Card className="w-full h-fit">
               <div className="p-4">
                 <h5 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white mb-4">
-                  Skills & Availability
+                    {t('skillsAvailable')}
                 </h5>
                 <div className="space-y-4">
                   <div>
                     <div className="mb-2 block">
-                      <Label htmlFor="skills">Your skills</Label>
+                      <Label htmlFor="skills">{t('skills')}</Label>
                     </div>
                     <CreatableSelect
                       id="skills"
@@ -20,7 +22,7 @@ export default function SkillsAndAvailability({ profileData, handleMultiSelectCh
                       options={[]} // You'll need to define skill options
                       value={profileData.skills}
                       onChange={handleMultiSelectChange('skills')}
-                      placeholder="Select or type your skills..."
+                      placeholder={t('skillsPlaceholder')}
                       className="basic-multi-select"
                       classNamePrefix="select"
                     />
@@ -28,7 +30,7 @@ export default function SkillsAndAvailability({ profileData, handleMultiSelectCh
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div>
                       <div className="mb-2 block">
-                        <Label>How often do you want to volunteer?</Label>
+                        <Label>{t('frequency')}</Label>
                       </div>
                       <div className="space-y-2">
                         <div className="flex items-center">
@@ -39,7 +41,7 @@ export default function SkillsAndAvailability({ profileData, handleMultiSelectCh
                             onChange={handleCheckboxChange('timeCommitment')}
                             className="mr-2"
                           />
-                          <Label htmlFor="daily">Daily</Label>
+                          <Label htmlFor="daily">{t('daily')}</Label>
                         </div>
                         <div className="flex items-center">
                           <Checkbox
@@ -49,7 +51,7 @@ export default function SkillsAndAvailability({ profileData, handleMultiSelectCh
                             onChange={handleCheckboxChange('timeCommitment')}
                             className="mr-2"
                           />
-                          <Label htmlFor="weekly">Weekly</Label>
+                          <Label htmlFor="weekly">{t('weekly')}</Label>
                         </div>
                         <div className="flex items-center">
                           <Checkbox
@@ -59,7 +61,7 @@ export default function SkillsAndAvailability({ profileData, handleMultiSelectCh
                             onChange={handleCheckboxChange('timeCommitment')}
                             className="mr-2"
                           />
-                          <Label htmlFor="biweekly">Every two weeks</Label>
+                          <Label htmlFor="biweekly">{t('biweekly')}</Label>
                         </div>
                         <div className="flex items-center">
                           <Checkbox
@@ -69,7 +71,7 @@ export default function SkillsAndAvailability({ profileData, handleMultiSelectCh
                             onChange={handleCheckboxChange('timeCommitment')}
                             className="mr-2"
                           />
-                          <Label htmlFor="monthly">Monthly</Label>
+                          <Label htmlFor="monthly">{t('monthly')}</Label>
                         </div>
                         <div className="flex items-center">
                           <Checkbox
@@ -79,7 +81,7 @@ export default function SkillsAndAvailability({ profileData, handleMultiSelectCh
                             onChange={handleCheckboxChange('timeCommitment')}
                             className="mr-2"
                           />
-                          <Label htmlFor="occasional">Occasionally</Label>
+                          <Label htmlFor="occasional">{t('occasionally')}</Label>
                         </div>
                         <div className="flex items-center">
                           <Checkbox
@@ -89,13 +91,13 @@ export default function SkillsAndAvailability({ profileData, handleMultiSelectCh
                             onChange={handleCheckboxChange('timeCommitment')}
                             className="mr-2"
                           />
-                          <Label htmlFor="flexible">Flexible</Label>
+                          <Label htmlFor="flexible">{t('flexible')}</Label>
                         </div>
                       </div>
                     </div>
                     <div>
                       <div className="mb-2 block">
-                        <Label>When are you usually available?</Label>
+                        <Label>{t('availabilities')}</Label>
                       </div>
                       <div className="space-y-2">
                         <div className="flex items-center">
@@ -106,7 +108,7 @@ export default function SkillsAndAvailability({ profileData, handleMultiSelectCh
                             onChange={handleCheckboxChange('availabilities')}
                             className="mr-2"
                           />
-                          <Label htmlFor="weekdays">Weekdays</Label>
+                          <Label htmlFor="weekdays">{t('weekdays')}</Label>
                         </div>
                         <div className="flex items-center">
                           <Checkbox
@@ -116,7 +118,7 @@ export default function SkillsAndAvailability({ profileData, handleMultiSelectCh
                             onChange={handleCheckboxChange('availabilities')}
                             className="mr-2"
                           />
-                          <Label htmlFor="weekends">Weekends</Label>
+                          <Label htmlFor="weekends">{t('weekends')}</Label>
                         </div>
                         <div className="flex items-center">
                           <Checkbox
@@ -126,7 +128,7 @@ export default function SkillsAndAvailability({ profileData, handleMultiSelectCh
                             onChange={handleCheckboxChange('availabilities')}
                             className="mr-2"
                           />
-                          <Label htmlFor="mornings">Mornings</Label>
+                          <Label htmlFor="mornings">{t('mornings')}</Label>
                         </div>
                         <div className="flex items-center">
                           <Checkbox
@@ -136,7 +138,7 @@ export default function SkillsAndAvailability({ profileData, handleMultiSelectCh
                             onChange={handleCheckboxChange('availabilities')}
                             className="mr-2"
                           />
-                          <Label htmlFor="afternoons">Afternoons</Label>
+                          <Label htmlFor="afternoons">{t('afternoons')}</Label>
                         </div>
                         <div className="flex items-center">
                           <Checkbox
@@ -146,7 +148,7 @@ export default function SkillsAndAvailability({ profileData, handleMultiSelectCh
                             onChange={handleCheckboxChange('availabilities')}
                             className="mr-2"
                           />
-                          <Label htmlFor="evenings">Evenings</Label>
+                          <Label htmlFor="evenings">{t('evenings')}</Label>
                         </div>
                         <div className="flex items-center">
                           <Checkbox
@@ -156,7 +158,7 @@ export default function SkillsAndAvailability({ profileData, handleMultiSelectCh
                             onChange={handleCheckboxChange('availabilities')}
                             className="mr-2"
                           />
-                          <Label htmlFor="flexible2">Flexible</Label>
+                          <Label htmlFor="flexible2">{t('flexible')}</Label>
                         </div>
                       </div>
                     </div>

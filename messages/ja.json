@@ -105,5 +105,33 @@
         "blood_drive": "献血活動",
         "food_fair": "フードフェア",
         "animal_adoption": "動物譲渡イベント"
+    },
+    "CompleteProfile": {
+      "profile": "プロフィール情報",
+      "email": "あなたのメール",
+      "emailHelper": "これはログイン用のメールアドレスです。変更する場合はサポートにお問い合わせください（support@wannagona.org）。",
+      "bio": "あなたの自己紹介",
+      "country": "あなたの国",
+      "languages": "あなたが話す言語",
+      "languagesHelper": "リストから選択するか、新しい言語を入力してください",
+      "timeCommitment": "あなたの時間のコミットメント",
+      "save": "プロフィールを保存",
+      "profilePictureHelper": "プロフィール画像を変更するにはクリックしてください",
+      "displayName": "あなたの表示名",
+      "skillsAvailable": "スキルと利用可能時間",
+      "skills": "あなたのスキル",
+      "frequency": "どのくらいの頻度でお手伝いできますか？",
+      "availabilities": "普段はいつ利用可能ですか？",
+      "weekdays": "平日",
+      "weekends": "週末",
+      "mornings": "朝",
+      "afternoons": "昼",
+      "evenings": "夜",
+      "flexible": "柔軟",
+      "daily": "毎日",
+      "weekly": "毎週",
+      "biweekly": "毎週2回",
+      "monthly": "毎月",
+      "occasionally": "時々"
     }
 }

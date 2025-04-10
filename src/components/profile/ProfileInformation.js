@@ -1,19 +1,22 @@
 import { Card, Label, TextInput, Textarea, Select } from 'flowbite-react';
 import ProfilePicture from './ProfilePicture';
 import CreatableSelect from 'react-select/creatable';
+import { useTranslations } from 'next-intl';
 
 export default function ProfileInformation({ profileData, handleInputChange, handleMultiSelectChange, countryOptions, languageOptions, handleProfilePictureChange }) {
+  const t = useTranslations('CompleteProfile');
+
   return (
     <Card className="w-full h-fit">
               <div className="p-4">
                 <ProfilePicture profileData={profileData} handleProfilePictureChange={handleProfilePictureChange} />
                 <h5 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white mb-4">
-                  Profile Information
+                  {t('profile')}
                 </h5>
                 <div className="space-y-4">
                 <div>
                     <div className="mb-2 block">
-                      <Label htmlFor="email">Your email</Label>
+                      <Label htmlFor="email">{t('email')}</Label>
                     </div>
                     <TextInput 
                       id="email" 
@@ -23,12 +26,12 @@ export default function ProfileInformation({ profileData, handleInputChange, han
                       disabled
                     />
                     <p className="mt-1 text-sm text-gray-500">
-                      This can not be changed as it is your login. Please contact us if you need to change it (support@wannagona.org).
+                      {t('emailHelper')}
                     </p>
                   </div>
                   <div>
                     <div className="mb-2 block">
-                      <Label htmlFor="displayname">Your display name</Label>
+                      <Label htmlFor="displayname">{t('displayName')}</Label>
                     </div>
                     <TextInput 
                       id="displayname" 
@@ -41,7 +44,7 @@ export default function ProfileInformation({ profileData, handleInputChange, han
                   </div>
                   <div>
                     <div className="mb-2 block">
-                      <Label htmlFor="bio">Your bio</Label>
+                      <Label htmlFor="bio">{t('bio')}</Label>
                     </div>
                     <Textarea 
                       id="bio" 
@@ -53,7 +56,7 @@ export default function ProfileInformation({ profileData, handleInputChange, han
                   </div>
                   <div>
                     <div className="mb-2 block">
-                      <Label htmlFor="country">Your country</Label>
+                      <Label htmlFor="country">{t('country')}</Label>
                     </div>
                     <Select
                       id="country"
@@ -72,7 +75,7 @@ export default function ProfileInformation({ profileData, handleInputChange, han
                   </div>
                   <div>
                     <div className="mb-2 block">
-                      <Label htmlFor="languages">Languages you speak</Label>
+                      <Label htmlFor="languages">{t('languages')}</Label>
                     </div>
                     <CreatableSelect
                       id="languages"
@@ -86,7 +89,7 @@ export default function ProfileInformation({ profileData, handleInputChange, han
                       classNamePrefix="select"
                     />
                     <p className="mt-1 text-sm text-gray-500">
-                      You can select from the list or type new languages
+                      {t('languagesHelper')}
                     </p>
                   </div>
                 </div>
