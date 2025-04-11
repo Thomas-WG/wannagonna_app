@@ -9,11 +9,23 @@ import { storage } from 'firebaseConfig';
  */
 export const uploadFile = async (file, path) => {
   try {
+    if (!file) {
+      throw new Error('No file provided');
+    }
+
     // Create a storage reference
     const storageRef = ref(storage, path);
     
-    // Upload the file
-    const snapshot = await uploadBytes(storageRef, file);
+    // Set custom metadata to handle CORS
+    const metadata = {
+      contentType: file.type,
+      customMetadata: {
+        'Access-Control-Allow-Origin': '*'
+      }
+    };
+    
+    // Upload the file with metadata
+    const snapshot = await uploadBytes(storageRef, file, metadata);
     
     // Get the download URL
     const downloadURL = await getDownloadURL(snapshot.ref);
@@ -32,6 +44,10 @@ export const uploadFile = async (file, path) => {
  * @returns {Promise<string>} - The download URL of the uploaded profile picture
  */
 export const uploadProfilePicture = async (file, userId) => {
+  if (!file || !userId) {
+    throw new Error('File and userId are required');
+  }
+
   // Create a path for the profile picture in the members folder
   const path = `members/${userId}`;
   return uploadFile(file, path);

@@ -37,6 +37,9 @@
     "Settings": {
         "language": "Cambiar el idioma"
     },
+    "ActivityCard": {
+        "points": "puntos"
+    },
     "ManageActivities": {
         "create-activity": "Crear actividad",
         "update-activity": "Actualizar actividad",
@@ -142,6 +145,8 @@
       "editCategory": "Editar categoría",
       "addSkill": "Añadir habilidad",
       "editSkill": "Editar habilidad",
+      "deleteCategory": "Eliminar categoría",
+      "deleteSkill": "Eliminar habilidad",
       "nameEn": "Nombre (Inglés)",
       "nameFr": "Nombre (Francés)",
       "nameEs": "Nombre (Español)",
@@ -152,13 +157,20 @@
       "cancel": "Cancelar",
       "update": "Actualizar",
       "add": "Añadir",
+      "delete": "Eliminar",
       "selectCategory": "Seleccionar una categoría",
       "categoryAdded": "Categoría añadida con éxito",
       "categoryUpdated": "Categoría actualizada con éxito",
+      "categoryDeleted": "Categoría eliminada con éxito",
       "skillAdded": "Habilidad añadida con éxito",
       "skillUpdated": "Habilidad actualizada con éxito",
+      "skillDeleted": "Habilidad eliminada con éxito",
       "errorLoading": "Error al cargar los datos",
       "errorSavingCategory": "Error al guardar la categoría",
-      "errorSavingSkill": "Error al guardar la habilidad"
+      "errorSavingSkill": "Error al guardar la habilidad",
+      "errorDeletingCategory": "Error al eliminar la categoría",
+      "errorDeletingSkill": "Error al eliminar la habilidad",
+      "confirmDeleteCategory": "¿Estás seguro de querer eliminar esta categoría? Esto también eliminará todas las habilidades en esta categoría.",
+      "confirmDeleteSkill": "¿Estás seguro de querer eliminar esta habilidad?"
     }
 }

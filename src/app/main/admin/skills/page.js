@@ -10,7 +10,9 @@ import {
   addSkillCategory, 
   addSkill, 
   updateSkillCategory, 
-  updateSkill 
+  updateSkill,
+  deleteSkillCategory,
+  deleteSkill
 } from '@/utils/crudSkills';
 
 export default function SkillsManagementPage() {
@@ -21,7 +23,10 @@ export default function SkillsManagementPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [showSkillModal, setShowSkillModal] = useState(false);
+  const [showDeleteCategoryModal, setShowDeleteCategoryModal] = useState(false);
+  const [showDeleteSkillModal, setShowDeleteSkillModal] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [selectedSkill, setSelectedSkill] = useState(null);
   const [categoryForm, setCategoryForm] = useState({
     name: { en: '', fr: '', es: '', ja: '' },
     order: 0
@@ -131,6 +136,32 @@ export default function SkillsManagementPage() {
     setTimeout(() => setToast({ show: false, message: '', type: 'success' }), 3000);
   };
 
+  const handleDeleteCategory = async () => {
+    try {
+      await deleteSkillCategory(selectedCategory.id);
+      showToast(t('categoryDeleted'), 'success');
+      setShowDeleteCategoryModal(false);
+      setSelectedCategory(null);
+      loadData();
+    } catch (error) {
+      console.error('Error deleting category:', error);
+      showToast(t('errorDeletingCategory'), 'error');
+    }
+  };
+
+  const handleDeleteSkill = async () => {
+    try {
+      await deleteSkill(selectedSkill.id);
+      showToast(t('skillDeleted'), 'success');
+      setShowDeleteSkillModal(false);
+      setSelectedSkill(null);
+      loadData();
+    } catch (error) {
+      console.error('Error deleting skill:', error);
+      showToast(t('errorDeletingSkill'), 'error');
+    }
+  };
+
   return (
     <div className="container mx-auto p-4 space-y-6">
       <h1 className="text-2xl font-bold">{t('skillsManagement')}</h1>
@@ -159,9 +190,17 @@ export default function SkillsManagementPage() {
                 <Table.Cell>{category.name.en}</Table.Cell>
                 <Table.Cell>{category.order}</Table.Cell>
                 <Table.Cell>
-                  <Button size="xs" onClick={() => editCategory(category)}>
-                    {t('editCategory')}
-                  </Button>
+                  <div className="flex space-x-2">
+                    <Button size="xs" onClick={() => editCategory(category)}>
+                      {t('editCategory')}
+                    </Button>
+                    <Button size="xs" color="failure" onClick={() => {
+                      setSelectedCategory(category);
+                      setShowDeleteCategoryModal(true);
+                    }}>
+                      {t('deleteCategory')}
+                    </Button>
+                  </div>
                 </Table.Cell>
               </Table.Row>
             ))}
@@ -197,9 +236,17 @@ export default function SkillsManagementPage() {
                   <Table.Cell>{category ? category.name.en : 'N/A'}</Table.Cell>
                   <Table.Cell>{skill.order}</Table.Cell>
                   <Table.Cell>
-                    <Button size="xs" onClick={() => editSkill(skill)}>
-                      {t('editSkill')}
-                    </Button>
+                    <div className="flex space-x-2">
+                      <Button size="xs" onClick={() => editSkill(skill)}>
+                        {t('editSkill')}
+                      </Button>
+                      <Button size="xs" color="failure" onClick={() => {
+                        setSelectedSkill(skill);
+                        setShowDeleteSkillModal(true);
+                      }}>
+                        {t('deleteSkill')}
+                      </Button>
+                    </div>
                   </Table.Cell>
                 </Table.Row>
               );
@@ -385,6 +432,38 @@ export default function SkillsManagementPage() {
             </div>
           </form>
         </Modal.Body>
+      </Modal>
+      
+      {/* Delete Category Confirmation Modal */}
+      <Modal show={showDeleteCategoryModal} onClose={() => setShowDeleteCategoryModal(false)}>
+        <Modal.Header>{t('deleteCategory')}</Modal.Header>
+        <Modal.Body>
+          <p>{t('confirmDeleteCategory')}</p>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button color="gray" onClick={() => setShowDeleteCategoryModal(false)}>
+            {t('cancel')}
+          </Button>
+          <Button color="failure" onClick={handleDeleteCategory}>
+            {t('delete')}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Delete Skill Confirmation Modal */}
+      <Modal show={showDeleteSkillModal} onClose={() => setShowDeleteSkillModal(false)}>
+        <Modal.Header>{t('deleteSkill')}</Modal.Header>
+        <Modal.Body>
+          <p>{t('confirmDeleteSkill')}</p>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button color="gray" onClick={() => setShowDeleteSkillModal(false)}>
+            {t('cancel')}
+          </Button>
+          <Button color="failure" onClick={handleDeleteSkill}>
+            {t('delete')}
+          </Button>
+        </Modal.Footer>
       </Modal>
       
       {/* Toast Notification */}

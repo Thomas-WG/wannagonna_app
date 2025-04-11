@@ -145,6 +145,8 @@
       "editCategory": "カテゴリーを編集",
       "addSkill": "スキルを追加",
       "editSkill": "スキルを編集",
+      "deleteCategory": "カテゴリーを削除",
+      "deleteSkill": "スキルを削除",
       "nameEn": "名前（英語）",
       "nameFr": "名前（フランス語）",
       "nameEs": "名前（スペイン語）",
@@ -155,13 +157,20 @@
       "cancel": "キャンセル",
       "update": "更新",
       "add": "追加",
+      "delete": "削除",
       "selectCategory": "カテゴリーを選択",
       "categoryAdded": "カテゴリーが追加されました",
       "categoryUpdated": "カテゴリーが更新されました",
+      "categoryDeleted": "カテゴリーが削除されました",
       "skillAdded": "スキルが追加されました",
       "skillUpdated": "スキルが更新されました",
+      "skillDeleted": "スキルが削除されました",
       "errorLoading": "データの読み込み中にエラーが発生しました",
       "errorSavingCategory": "カテゴリーの保存中にエラーが発生しました",
-      "errorSavingSkill": "スキルの保存中にエラーが発生しました"
+      "errorSavingSkill": "スキルの保存中にエラーが発生しました",
+      "errorDeletingCategory": "カテゴリーの削除中にエラーが発生しました",
+      "errorDeletingSkill": "スキルの削除中にエラーが発生しました",
+      "confirmDeleteCategory": "このカテゴリーを削除してもよろしいですか？これにより、このカテゴリーに含まれるすべてのスキルも削除されます。",
+      "confirmDeleteSkill": "このスキルを削除してもよろしいですか？"
     }
 }

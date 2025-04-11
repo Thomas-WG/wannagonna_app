@@ -1,4 +1,4 @@
-import { collection, getDocs, addDoc, getDoc, updateDoc, doc, query, where, orderBy } from 'firebase/firestore';
+import { collection, getDocs, addDoc, getDoc, updateDoc, doc, query, where, orderBy, deleteDoc } from 'firebase/firestore';
 import { db } from 'firebaseConfig';
 
 // Fetch all skill categories
@@ -112,5 +112,27 @@ export async function getSkillsForSelect(locale = 'en') {
   } catch (error) {
     console.error('Error getting skills for select:', error);
     return [];
+  }
+}
+
+// Delete a skill category
+export async function deleteSkillCategory(categoryId) {
+  try {
+    const categoryDoc = doc(db, 'skillCategories', categoryId);
+    await deleteDoc(categoryDoc);
+  } catch (error) {
+    console.error('Error deleting skill category:', error);
+    throw error;
+  }
+}
+
+// Delete a skill
+export async function deleteSkill(skillId) {
+  try {
+    const skillDoc = doc(db, 'skills', skillId);
+    await deleteDoc(skillDoc);
+  } catch (error) {
+    console.error('Error deleting skill:', error);
+    throw error;
   }
 } 

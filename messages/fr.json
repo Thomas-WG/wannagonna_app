@@ -144,7 +144,10 @@
       "addCategory": "Ajouter une catégorie",
       "editCategory": "Modifier la catégorie",
       "addSkill": "Ajouter une compétence",
+      "delete": "Supprimer",
       "editSkill": "Modifier la compétence",
+      "deleteCategory": "Supprimer la catégorie",
+      "deleteSkill": "Supprimer la compétence",
       "nameEn": "Nom (Anglais)",
       "nameFr": "Nom (Français)",
       "nameEs": "Nom (Espagnol)",
@@ -158,10 +161,16 @@
       "selectCategory": "Sélectionner une catégorie",
       "categoryAdded": "Catégorie ajoutée avec succès",
       "categoryUpdated": "Catégorie mise à jour avec succès",
+      "categoryDeleted": "Catégorie supprimée avec succès",
       "skillAdded": "Compétence ajoutée avec succès",
       "skillUpdated": "Compétence mise à jour avec succès",
+      "skillDeleted": "Compétence supprimée avec succès",
       "errorLoading": "Erreur lors du chargement des données",
       "errorSavingCategory": "Erreur lors de l'enregistrement de la catégorie",
-      "errorSavingSkill": "Erreur lors de l'enregistrement de la compétence"
+      "errorSavingSkill": "Erreur lors de l'enregistrement de la compétence",
+      "errorDeletingCategory": "Erreur lors de la suppression de la catégorie",
+      "errorDeletingSkill": "Erreur lors de la suppression de la compétence",
+      "confirmDeleteCategory": "Êtes-vous sûr de vouloir supprimer cette catégorie ? Cela supprimera également toutes les compétences dans cette catégorie.",
+      "confirmDeleteSkill": "Êtes-vous sûr de vouloir supprimer cette compétence ?"
     }
 }
