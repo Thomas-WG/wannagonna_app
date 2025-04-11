@@ -1,7 +1,8 @@
-import { Card, Label, TextInput, Textarea, Select } from 'flowbite-react';
+import { Card, Label, TextInput, Textarea, Select as FlowbiteSelect } from 'flowbite-react';
 import ProfilePicture from './ProfilePicture';
 import CreatableSelect from 'react-select/creatable';
 import { useTranslations } from 'next-intl';
+import Select from 'react-select';
 
 export default function ProfileInformation({ profileData, handleInputChange, handleMultiSelectChange, countryOptions, languageOptions, handleProfilePictureChange }) {
   const t = useTranslations('CompleteProfile');
@@ -58,7 +59,7 @@ export default function ProfileInformation({ profileData, handleInputChange, han
                     <div className="mb-2 block">
                       <Label htmlFor="country">{t('country')}</Label>
                     </div>
-                    <Select
+                    <FlowbiteSelect
                       id="country"
                       name="country"
                       value={profileData.country}
@@ -71,13 +72,13 @@ export default function ProfileInformation({ profileData, handleInputChange, han
                           {label}
                         </option>
                       ))}
-                    </Select>
+                    </FlowbiteSelect>
                   </div>
                   <div>
                     <div className="mb-2 block">
                       <Label htmlFor="languages">{t('languages')}</Label>
                     </div>
-                    <CreatableSelect
+                    <Select
                       id="languages"
                       name="languages"
                       isMulti
@@ -89,7 +90,7 @@ export default function ProfileInformation({ profileData, handleInputChange, han
                       classNamePrefix="select"
                     />
                     <p className="mt-1 text-sm text-gray-500">
-                      {t('languagesHelper')}
+                      You can select from the list or type new languages
                     </p>
                   </div>
                 </div>

@@ -35,7 +35,9 @@
     "ui": {
       "enabled": true,
       "port": 4000
-    }
+    },
+    "exportOnExit": ".firebase/emulator-data",
+    "importOnStart": ".firebase/emulator-data"
   },
   "storage": {
     "rules": "storage.rules"

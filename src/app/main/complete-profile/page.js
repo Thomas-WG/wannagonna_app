@@ -2,10 +2,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { doc, setDoc } from 'firebase/firestore';
 import { auth } from 'firebaseConfig';
 import { useRouter } from 'next/navigation';
-import { Button } from 'flowbite-react';
+import { Button, Toast } from 'flowbite-react';
 import { useAuth } from '@/hooks/useAuth';
 import { countries } from 'countries-list';
 import languages from '@cospired/i18n-iso-languages';
@@ -78,6 +77,11 @@ export default function CompleteProfilePage() {
   
   // Add state to store the selected file
   const [selectedFile, setSelectedFile] = useState(null);
+  
+  // Add state for toast notifications
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState('success'); // 'success' or 'error'
 
   useEffect(() => {
     if (user?.uid) {
@@ -155,8 +159,29 @@ export default function CompleteProfilePage() {
       const cleanedProfileData = cleanData(finalProfileData);
       await updateMember(user.uid, cleanedProfileData);
       console.log("Profile updated!");
+      
+      // Show success toast
+      setToastMessage('Profile updated successfully!');
+      setToastType('success');
+      setShowToast(true);
+      
+      // Hide toast after 3 seconds
+      setTimeout(() => {
+        setShowToast(false);
+      }, 3000);
+      
     } catch (error) {
       console.error("Error updating profile:", error);
+      
+      // Show error toast
+      setToastMessage('Failed to update profile. Please try again.');
+      setToastType('error');
+      setShowToast(true);
+      
+      // Hide toast after 3 seconds
+      setTimeout(() => {
+        setShowToast(false);
+      }, 3000);
     }
   };
 
@@ -184,6 +209,30 @@ export default function CompleteProfilePage() {
           </Button>
         </div>
       </form>
+      
+      {/* Toast Notification */}
+      {showToast && (
+        <div className="fixed bottom-5 right-5 z-50">
+          <Toast>
+            <div className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
+              toastType === 'success' ? 'bg-green-100 text-green-500' : 'bg-red-100 text-red-500'
+            }`}>
+              {toastType === 'success' ? (
+                <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path>
+                </svg>
+              ) : (
+                <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"></path>
+                </svg>
+              )}
+            </div>
+            <div className="ml-3 text-sm font-normal">
+              {toastMessage}
+            </div>
+          </Toast>
+        </div>
+      )}
     </div>
   );
 }

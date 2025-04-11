@@ -1,8 +1,118 @@
 import { Card, Label, Checkbox } from 'flowbite-react';
-import CreatableSelect from 'react-select/creatable';
+import Select from 'react-select';
 import { useTranslations } from 'next-intl';
+import { useState, useEffect } from 'react';
+import { getSkillsForSelect } from '@/utils/crudSkills';
+import { useLocale } from 'next-intl';
+
 export default function SkillsAndAvailability({ profileData, handleMultiSelectChange, handleCheckboxChange }) {
   const t = useTranslations('CompleteProfile');
+  const locale = useLocale();
+  const [skillOptions, setSkillOptions] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedSkills, setSelectedSkills] = useState([]);
+
+  // Define category colors
+  const categoryColors = [
+    { bg: '#e6f7ff', text: '#0066cc' }, // Light blue
+    { bg: '#f0fff4', text: '#2e7d32' }, // Light green
+    { bg: '#fff8e1', text: '#ff8f00' }, // Light amber
+    { bg: '#fce4ec', text: '#c2185b' }, // Light pink
+    { bg: '#f3e5f5', text: '#7b1fa2' }, // Light purple
+    { bg: '#e8f5e9', text: '#388e3c' }, // Another green
+    { bg: '#fff3e0', text: '#e65100' }, // Another amber
+    { bg: '#e0f7fa', text: '#0097a7' }, // Another blue
+  ];
+
+  // Load skills from Firestore
+  useEffect(() => {
+    const loadSkills = async () => {
+      try {
+        setIsLoading(true);
+        const options = await getSkillsForSelect(locale);
+        setSkillOptions(options);
+        
+        // Create a flat map of all skills for easy lookup
+        const allSkills = options.reduce((acc, group) => {
+          return [...acc, ...group.options];
+        }, []);
+        
+        // Update selected skills with current language labels
+        if (profileData.skills && profileData.skills.length > 0) {
+          const updatedSelectedSkills = profileData.skills.map(skill => {
+            // Find the skill in our options
+            const foundSkill = allSkills.find(s => s.value === skill.value);
+            return foundSkill || skill; // Use found skill or keep original if not found
+          });
+          setSelectedSkills(updatedSelectedSkills);
+        } else {
+          setSelectedSkills([]);
+        }
+      } catch (error) {
+        console.error('Error loading skills:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadSkills();
+  }, [locale, profileData.skills]);
+
+  // Custom styles for the Select component
+  const customStyles = {
+    groupHeading: (base, { group }) => {
+      // Default colors in case group is not found
+      let colors = categoryColors[0];
+      
+      // Only try to find the group if it exists and skillOptions is not empty
+      if (group && group.label && skillOptions && skillOptions.length > 0) {
+        try {
+          const groupIndex = skillOptions.findIndex(g => g.label === group.label);
+          if (groupIndex !== -1) {
+            const colorIndex = groupIndex % categoryColors.length;
+            colors = categoryColors[colorIndex];
+          }
+        } catch (error) {
+          console.error('Error styling group heading:', error);
+        }
+      }
+      
+      return {
+        ...base,
+        backgroundColor: colors.bg,
+        color: colors.text,
+        fontWeight: 'bold',
+        padding: '8px 12px',
+        borderRadius: '4px',
+        marginBottom: '4px',
+      };
+    },
+    option: (base, state) => ({
+      ...base,
+      backgroundColor: state.isSelected ? '#e6f7ff' : state.isFocused ? '#f5f5f5' : 'white',
+      color: state.isSelected ? '#0066cc' : '#333',
+      '&:active': {
+        backgroundColor: '#e6f7ff',
+      },
+    }),
+    multiValue: (base) => ({
+      ...base,
+      backgroundColor: '#e6f7ff',
+      borderRadius: '4px',
+    }),
+    multiValueLabel: (base) => ({
+      ...base,
+      color: '#0066cc',
+    }),
+    multiValueRemove: (base) => ({
+      ...base,
+      color: '#0066cc',
+      '&:hover': {
+        backgroundColor: '#cce6ff',
+        color: '#003366',
+      },
+    }),
+  };
 
   return (
     <Card className="w-full h-fit">
@@ -15,16 +125,26 @@ export default function SkillsAndAvailability({ profileData, handleMultiSelectCh
                     <div className="mb-2 block">
                       <Label htmlFor="skills">{t('skills')}</Label>
                     </div>
-                    <CreatableSelect
+                    <Select
                       id="skills"
                       name="skills"
                       isMulti
-                      options={[]} // You'll need to define skill options
-                      value={profileData.skills}
+                      options={skillOptions}
+                      value={selectedSkills}
                       onChange={handleMultiSelectChange('skills')}
                       placeholder={t('skillsPlaceholder')}
                       className="basic-multi-select"
                       classNamePrefix="select"
+                      isLoading={isLoading}
+                      isSearchable={true}
+                      isClearable={true}
+                      closeMenuOnSelect={false}
+                      styles={customStyles}
+                      formatGroupLabel={data => (
+                        <div className="flex items-center">
+                          <span>{data.label}</span>
+                        </div>
+                      )}
                     />
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">

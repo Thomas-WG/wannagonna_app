@@ -1,0 +1,410 @@
+{
+  "categories": [
+    {
+      "name": {
+        "en": "Digital Skills",
+        "fr": "Compétences Numériques",
+        "es": "Habilidades Digitales",
+        "ja": "デジタルスキル"
+      },
+      "order": 1
+    },
+    {
+      "name": {
+        "en": "Education & Training",
+        "fr": "Éducation et Formation",
+        "es": "Educación y Capacitación",
+        "ja": "教育とトレーニング"
+      },
+      "order": 2
+    },
+    {
+      "name": {
+        "en": "Community Service",
+        "fr": "Service Communautaire",
+        "es": "Servicio Comunitario",
+        "ja": "コミュニティサービス"
+      },
+      "order": 3
+    },
+    {
+      "name": {
+        "en": "Event Management",
+        "fr": "Gestion d'Événements",
+        "es": "Gestión de Eventos",
+        "ja": "イベント管理"
+      },
+      "order": 4
+    },
+    {
+      "name": {
+        "en": "Healthcare & Wellness",
+        "fr": "Santé et Bien-être",
+        "es": "Salud y Bienestar",
+        "ja": "ヘルスケアとウェルネス"
+      },
+      "order": 5
+    },
+    {
+      "name": {
+        "en": "Writing & Content",
+        "fr": "Rédaction et Contenu",
+        "es": "Redacción y Contenido",
+        "ja": "執筆とコンテンツ"
+      },
+      "order": 6
+    }
+  ],
+  "skills": [
+    {
+      "name": {
+        "en": "Website Development",
+        "fr": "Développement Web",
+        "es": "Desarrollo Web",
+        "ja": "ウェブ開発"
+      },
+      "categoryId": "digital-skills",
+      "order": 1
+    },
+    {
+      "name": {
+        "en": "Logo Design",
+        "fr": "Création de Logo",
+        "es": "Diseño de Logo",
+        "ja": "ロゴデザイン"
+      },
+      "categoryId": "digital-skills",
+      "order": 2
+    },
+    {
+      "name": {
+        "en": "Social Media Management",
+        "fr": "Gestion des Réseaux Sociaux",
+        "es": "Gestión de Redes Sociales",
+        "ja": "ソーシャルメディア管理"
+      },
+      "categoryId": "digital-skills",
+      "order": 3
+    },
+    {
+      "name": {
+        "en": "Content Creation",
+        "fr": "Création de Contenu",
+        "es": "Creación de Contenido",
+        "ja": "コンテンツ制作"
+      },
+      "categoryId": "digital-skills",
+      "order": 4
+    },
+    {
+      "name": {
+        "en": "Video Editing",
+        "fr": "Montage Vidéo",
+        "es": "Edición de Video",
+        "ja": "動画編集"
+      },
+      "categoryId": "digital-skills",
+      "order": 5
+    },
+    {
+      "name": {
+        "en": "Photography",
+        "fr": "Photographie",
+        "es": "Fotografía",
+        "ja": "写真撮影"
+      },
+      "categoryId": "digital-skills",
+      "order": 6
+    },
+    {
+      "name": {
+        "en": "Data Analysis",
+        "fr": "Analyse de Données",
+        "es": "Análisis de Datos",
+        "ja": "データ分析"
+      },
+      "categoryId": "digital-skills",
+      "order": 7
+    },
+    {
+      "name": {
+        "en": "Teaching",
+        "fr": "Enseignement",
+        "es": "Enseñanza",
+        "ja": "教育"
+      },
+      "categoryId": "education-training",
+      "order": 1
+    },
+    {
+      "name": {
+        "en": "Tutoring",
+        "fr": "Tutorat",
+        "es": "Tutoría",
+        "ja": "個別指導"
+      },
+      "categoryId": "education-training",
+      "order": 2
+    },
+    {
+      "name": {
+        "en": "Workshop Facilitation",
+        "fr": "Animation d'Ateliers",
+        "es": "Facilitación de Talleres",
+        "ja": "ワークショップ進行"
+      },
+      "categoryId": "education-training",
+      "order": 3
+    },
+    {
+      "name": {
+        "en": "Curriculum Development",
+        "fr": "Développement de Programmes",
+        "es": "Desarrollo de Programas",
+        "ja": "カリキュラム開発"
+      },
+      "categoryId": "education-training",
+      "order": 4
+    },
+    {
+      "name": {
+        "en": "Language Teaching",
+        "fr": "Enseignement des Langues",
+        "es": "Enseñanza de Idiomas",
+        "ja": "語学教育"
+      },
+      "categoryId": "education-training",
+      "order": 5
+    },
+    {
+      "name": {
+        "en": "Food Distribution",
+        "fr": "Distribution de Nourriture",
+        "es": "Distribución de Alimentos",
+        "ja": "食料配布"
+      },
+      "categoryId": "community-service",
+      "order": 1
+    },
+    {
+      "name": {
+        "en": "Elderly Care",
+        "fr": "Soins aux Personnes Âgées",
+        "es": "Cuidado de Ancianos",
+        "ja": "高齢者介護"
+      },
+      "categoryId": "community-service",
+      "order": 2
+    },
+    {
+      "name": {
+        "en": "Childcare",
+        "fr": "Garde d'Enfants",
+        "es": "Cuidado de Niños",
+        "ja": "子育て支援"
+      },
+      "categoryId": "community-service",
+      "order": 3
+    },
+    {
+      "name": {
+        "en": "Environmental Conservation",
+        "fr": "Conservation de l'Environnement",
+        "es": "Conservación Ambiental",
+        "ja": "環境保護"
+      },
+      "categoryId": "community-service",
+      "order": 4
+    },
+    {
+      "name": {
+        "en": "Animal Care",
+        "fr": "Soins aux Animaux",
+        "es": "Cuidado de Animales",
+        "ja": "動物ケア"
+      },
+      "categoryId": "community-service",
+      "order": 5
+    },
+    {
+      "name": {
+        "en": "Homeless Support",
+        "fr": "Soutien aux Sans-Abri",
+        "es": "Apoyo a Personas sin Hogar",
+        "ja": "ホームレス支援"
+      },
+      "categoryId": "community-service",
+      "order": 6
+    },
+    {
+      "name": {
+        "en": "Event Planning",
+        "fr": "Planification d'Événements",
+        "es": "Planificación de Eventos",
+        "ja": "イベント企画"
+      },
+      "categoryId": "event-management",
+      "order": 1
+    },
+    {
+      "name": {
+        "en": "Fundraising",
+        "fr": "Collecte de Fonds",
+        "es": "Recaudación de Fondos",
+        "ja": "資金調達"
+      },
+      "categoryId": "event-management",
+      "order": 2
+    },
+    {
+      "name": {
+        "en": "Volunteer Coordination",
+        "fr": "Coordination des Bénévoles",
+        "es": "Coordinación de Voluntarios",
+        "ja": "ボランティア調整"
+      },
+      "categoryId": "event-management",
+      "order": 3
+    },
+    {
+      "name": {
+        "en": "Logistics Management",
+        "fr": "Gestion Logistique",
+        "es": "Gestión Logística",
+        "ja": "物流管理"
+      },
+      "categoryId": "event-management",
+      "order": 4
+    },
+    {
+      "name": {
+        "en": "Healthcare Assistance",
+        "fr": "Assistance Médicale",
+        "es": "Asistencia Sanitaria",
+        "ja": "医療支援"
+      },
+      "categoryId": "healthcare-wellness",
+      "order": 1
+    },
+    {
+      "name": {
+        "en": "Mental Health Support",
+        "fr": "Soutien en Santé Mentale",
+        "es": "Apoyo en Salud Mental",
+        "ja": "メンタルヘルス支援"
+      },
+      "categoryId": "healthcare-wellness",
+      "order": 2
+    },
+    {
+      "name": {
+        "en": "First Aid",
+        "fr": "Premiers Secours",
+        "es": "Primeros Auxilios",
+        "ja": "救急救命"
+      },
+      "categoryId": "healthcare-wellness",
+      "order": 3
+    },
+    {
+      "name": {
+        "en": "Health Education",
+        "fr": "Éducation à la Santé",
+        "es": "Educación para la Salud",
+        "ja": "健康教育"
+      },
+      "categoryId": "healthcare-wellness",
+      "order": 4
+    },
+    {
+      "name": {
+        "en": "Nutrition Support",
+        "fr": "Support Nutritionnel",
+        "es": "Apoyo Nutricional",
+        "ja": "栄養支援"
+      },
+      "categoryId": "healthcare-wellness",
+      "order": 5
+    },
+    {
+      "name": {
+        "en": "Physical Therapy Assistance",
+        "fr": "Assistance en Physiothérapie",
+        "es": "Asistencia en Fisioterapia",
+        "ja": "理学療法支援"
+      },
+      "categoryId": "healthcare-wellness",
+      "order": 6
+    },
+    {
+      "name": {
+        "en": "Translation",
+        "fr": "Traduction",
+        "es": "Traducción",
+        "ja": "翻訳"
+      },
+      "categoryId": "writing-content",
+      "order": 1
+    },
+    {
+      "name": {
+        "en": "Proofreading",
+        "fr": "Correction",
+        "es": "Corrección",
+        "ja": "校正"
+      },
+      "categoryId": "writing-content",
+      "order": 2
+    },
+    {
+      "name": {
+        "en": "Blog Writing",
+        "fr": "Rédaction de Blog",
+        "es": "Redacción de Blog",
+        "ja": "ブログ執筆"
+      },
+      "categoryId": "writing-content",
+      "order": 3
+    },
+    {
+      "name": {
+        "en": "Technical Writing",
+        "fr": "Rédaction Technique",
+        "es": "Redacción Técnica",
+        "ja": "技術文書作成"
+      },
+      "categoryId": "writing-content",
+      "order": 4
+    },
+    {
+      "name": {
+        "en": "Copywriting",
+        "fr": "Rédaction Publicitaire",
+        "es": "Redacción Publicitaria",
+        "ja": "コピーライティング"
+      },
+      "categoryId": "writing-content",
+      "order": 5
+    },
+    {
+      "name": {
+        "en": "Content Editing",
+        "fr": "Édition de Contenu",
+        "es": "Edición de Contenido",
+        "ja": "コンテンツ編集"
+      },
+      "categoryId": "writing-content",
+      "order": 6
+    },
+    {
+      "name": {
+        "en": "Creative Writing",
+        "fr": "Écriture Créative",
+        "es": "Escritura Creativa",
+        "ja": "クリエイティブライティング"
+      },
+      "categoryId": "writing-content",
+      "order": 7
+    }
+  ]
+} 
