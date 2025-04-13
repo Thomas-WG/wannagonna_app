@@ -52,3 +52,19 @@ export const uploadProfilePicture = async (file, userId) => {
   const path = `members/${userId}`;
   return uploadFile(file, path);
 }; 
+
+/**
+ * Uploads a org picture to Firebase Storage
+ * @param {File} file - The picture file
+ * @param {string} orgId - The org's ID
+ * @returns {Promise<string>} - The download URL of the uploaded org picture
+ */
+export const uploadOrgPicture = async (file, orgId) => {
+  if (!file || !orgId) {
+    throw new Error('File and orgId are required');
+  }
+
+  // Create a path for the profile picture in the members folder
+  const path = `organizations/${orgId}`;
+  return uploadFile(file, path);
+}; 
