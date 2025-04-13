@@ -1,5 +1,12 @@
 'use client';
 
+/**
+ * Organizations Management Page
+ * 
+ * This component provides a complete CRUD interface for managing organizations.
+ * It allows administrators to view, add, edit, and delete organizations with their details.
+ */
+
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useLocale } from 'next-intl';
@@ -18,13 +25,22 @@ import Select from 'react-select';
 // Register the languages you want to use
 languages.registerLocale(require("@cospired/i18n-iso-languages/langs/en.json"));
 
+/**
+ * OrganizationsManagementPage Component
+ * 
+ * Main component for managing organizations in the admin interface.
+ * Provides functionality to view, add, edit, and delete organizations.
+ */
 export default function OrganizationsManagementPage() {
+  // Translation hook for internationalization
   const t = useTranslations('Admin');
-  const [organizations, setOrganizations] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [selectedOrganization, setSelectedOrganization] = useState(null);
+  
+  // State management
+  const [organizations, setOrganizations] = useState([]); // List of all organizations
+  const [isLoading, setIsLoading] = useState(true); // Loading state indicator
+  const [showModal, setShowModal] = useState(false); // Controls visibility of add/edit modal
+  const [showDeleteModal, setShowDeleteModal] = useState(false); // Controls visibility of delete confirmation modal
+  const [selectedOrganization, setSelectedOrganization] = useState(null); // Currently selected organization for edit/delete
   const [organizationForm, setOrganizationForm] = useState({
     name: '',
     logo: '',
@@ -38,15 +54,19 @@ export default function OrganizationsManagementPage() {
     members: [],
     registrationNumber: '',
     createdAt: ''
-  });
-  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
-  const [logoFile, setLogoFile] = useState(null);
+  }); // Form data for adding/editing organizations
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' }); // Toast notification state
+  const [logoFile, setLogoFile] = useState(null); // File object for logo upload
 
-  // Load data on component mount
+  // Load organizations data when component mounts
   useEffect(() => {
     loadData();
   }, []);
 
+  /**
+   * Fetches organizations data from the backend
+   * Updates the organizations state and handles loading states
+   */
   const loadData = async () => {
     try {
       setIsLoading(true);
@@ -60,15 +80,21 @@ export default function OrganizationsManagementPage() {
     }
   };
 
+  /**
+   * Handles form submission for adding or updating an organization
+   * @param {Event} e - Form submission event
+   */
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       let organizationId;
       if (selectedOrganization) {
+        // Update existing organization
         organizationId = selectedOrganization.id;
         await updateOrganization(selectedOrganization.id, organizationForm);
         showToast(t('organizationUpdated'), 'success');
       } else {
+        // Create new organization
         const organizationWithCreatedAt = {
           ...organizationForm,
           createdAt: new Date().toISOString()
@@ -78,6 +104,7 @@ export default function OrganizationsManagementPage() {
         showToast(t('organizationAdded'), 'success');
       }
 
+      // Handle logo upload if a new logo file was selected
       if (logoFile && organizationId) {
         try {
           const url = await uploadOrgPicture(logoFile, organizationId);
@@ -89,6 +116,7 @@ export default function OrganizationsManagementPage() {
         }
       }
 
+      // Reset UI state after successful operation
       setShowModal(false);
       resetForm();
       loadData();
@@ -98,6 +126,10 @@ export default function OrganizationsManagementPage() {
     }
   };
 
+  /**
+   * Handles organization deletion
+   * Deletes the selected organization and updates the UI
+   */
   const handleDelete = async () => {
     try {
       await deleteOrganization(selectedOrganization.id);
@@ -111,12 +143,19 @@ export default function OrganizationsManagementPage() {
     }
   };
 
+  /**
+   * Sets up the form for editing an existing organization
+   * @param {Object} organization - The organization to edit
+   */
   const editOrganization = (organization) => {
     setSelectedOrganization(organization);
     setOrganizationForm(organization);
     setShowModal(true);
   };
 
+  /**
+   * Resets the form and related state to default values
+   */
   const resetForm = () => {
     setSelectedOrganization(null);
     setOrganizationForm({
@@ -136,11 +175,21 @@ export default function OrganizationsManagementPage() {
     setLogoFile(null);
   };
 
+  /**
+   * Displays a toast notification
+   * @param {string} message - The message to display
+   * @param {string} type - The type of toast ('success' or 'error')
+   */
   const showToast = (message, type = 'success') => {
     setToast({ show: true, message, type });
     setTimeout(() => setToast({ show: false, message: '', type: 'success' }), 3000);
   };
 
+  /**
+   * Handles logo file upload
+   * Creates a preview URL and updates the form state
+   * @param {Event} e - File input change event
+   */
   const handleLogoUpload = async (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -158,19 +207,21 @@ export default function OrganizationsManagementPage() {
     }
   };
 
-  // Get country options
+  // Prepare options for dropdown selectors
+  
+  // Get country options from countries-list library
   const countryOptions = Object.entries(countries).map(([code, country]) => ({
     value: code,
     label: country.name
   }));
 
-  // Get language options
+  // Get language options from i18n-iso-languages library
   const languageOptions = Object.entries(languages.getNames('en')).map(([code, name]) => ({
     value: code,
     label: name
   }));
 
-  // Get SDG options (1-17)
+  // Get SDG options (1-17) for Sustainable Development Goals
   const sdgOptions = Array.from({ length: 17 }, (_, i) => ({
     value: `Goal-${String(i + 1).padStart(2, '0')}`,
     label: `Goal-${String(i + 1).padStart(2, '0')}`
@@ -178,11 +229,14 @@ export default function OrganizationsManagementPage() {
 
   return (
     <div className="container mx-auto p-4 space-y-6">
+      {/* Page Header */}
       <h1 className="text-2xl font-bold">{t('organizationsManagement')}</h1>
       
+      {/* Organizations Table Card */}
       <Card>
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold">{t('organizations')}</h2>
+          {/* Add Organization Button */}
           <Button onClick={() => {
             resetForm();
             setShowModal(true);
@@ -191,6 +245,7 @@ export default function OrganizationsManagementPage() {
           </Button>
         </div>
         
+        {/* Organizations Table */}
         <Table>
           <Table.Head>
             <Table.HeadCell>{t('logo')}</Table.HeadCell>
@@ -200,9 +255,11 @@ export default function OrganizationsManagementPage() {
             <Table.HeadCell>{t('actions')}</Table.HeadCell>
           </Table.Head>
           <Table.Body>
+            {/* Organization Rows */}
             {organizations.map(org => (
               <Table.Row key={org.id}>
                 <Table.Cell>
+                  {/* Organization Logo */}
                   {org.logo && (
                     <img 
                       src={org.logo} 
@@ -215,6 +272,7 @@ export default function OrganizationsManagementPage() {
                 <Table.Cell>{countries[org.country]?.name || org.country}</Table.Cell>
                 <Table.Cell>{org.email}</Table.Cell>
                 <Table.Cell>
+                  {/* Action Buttons */}
                   <div className="flex space-x-2">
                     <Button size="xs" onClick={() => editOrganization(org)}>
                       {t('edit')}
@@ -237,14 +295,14 @@ export default function OrganizationsManagementPage() {
         </Table>
       </Card>
       
-      {/* Organization Modal */}
+      {/* Organization Add/Edit Modal */}
       <Modal show={showModal} onClose={() => setShowModal(false)} size="xl">
         <Modal.Header>
           {selectedOrganization ? t('editOrganization') : t('addOrganization')}
         </Modal.Header>
         <Modal.Body>
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Logo Upload */}
+            {/* Logo Upload Section */}
             <div>
               <Label htmlFor="logo">{t('logo')}</Label>
               <div className="flex items-center space-x-4">
@@ -270,7 +328,7 @@ export default function OrganizationsManagementPage() {
               </div>
             </div>
 
-            {/* Name  */}
+            {/* Organization Name Field */}
             <div>
               <Label htmlFor="name">{t('name')}</Label>
               <TextInput
@@ -283,7 +341,8 @@ export default function OrganizationsManagementPage() {
                 required
               />
             </div>
-            {/* Country */}
+            
+            {/* Country Selection Field */}
             <div>
               <Label htmlFor="country">{t('country')}</Label>
               <Select
@@ -302,7 +361,7 @@ export default function OrganizationsManagementPage() {
               />
             </div>
 
-            {/* Languages */}
+            {/* Languages Selection Field */}
             <div>
               <Label htmlFor="languages">{t('languages')}</Label>
               <Select
@@ -327,7 +386,7 @@ export default function OrganizationsManagementPage() {
               </p>
             </div>
 
-            {/* SDGs */}
+            {/* SDGs Selection Field */}
             <div>
               <Label htmlFor="sdgs">{t('sdgs')}</Label>
               <Select
@@ -346,7 +405,7 @@ export default function OrganizationsManagementPage() {
               />
             </div>
 
-            {/* Registration Number */}
+            {/* Registration Number Field */}
             <div>
               <Label htmlFor="registrationNumber">{t('registrationNumber')}</Label>
               <TextInput
@@ -359,7 +418,7 @@ export default function OrganizationsManagementPage() {
               />
             </div>
 
-            {/* Description */}
+            {/* Description Field */}
             <div>
               <Label htmlFor="description">{t('description')}</Label>
               <Textarea
@@ -371,7 +430,8 @@ export default function OrganizationsManagementPage() {
                 })}
               />
             </div>
-            {/* Address */}
+            
+            {/* Address Field */}
             <div>
               <Label htmlFor="address">{t('address')}</Label>
               <TextInput
@@ -384,7 +444,7 @@ export default function OrganizationsManagementPage() {
               />
             </div>
 
-            {/* Website */}
+            {/* Website Field */}
             <div>
               <Label htmlFor="website">{t('website')}</Label>
               <TextInput
@@ -398,7 +458,7 @@ export default function OrganizationsManagementPage() {
               />
             </div>
 
-            {/* Email */}
+            {/* Email Field */}
             <div>
               <Label htmlFor="email">{t('email')}</Label>
               <TextInput
@@ -412,6 +472,7 @@ export default function OrganizationsManagementPage() {
               />
             </div>
 
+            {/* Form Action Buttons */}
             <div className="flex justify-end space-x-2">
               <Button color="gray" onClick={() => setShowModal(false)}>
                 {t('cancel')}
@@ -440,7 +501,7 @@ export default function OrganizationsManagementPage() {
         </Modal.Footer>
       </Modal>
       
-      {/* Toast Notification */}
+      {/* Toast Notification Component */}
       {toast.show && (
         <Toast>
           <div className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
