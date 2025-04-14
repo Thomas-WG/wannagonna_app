@@ -1,6 +1,13 @@
-
+import { useRouter } from 'next/navigation';
 
 const Header = () => {
+    
+    const router = useRouter();
+    const handleMenuClick = (path) => {
+      router.push(path); // Navigate to the desired path
+    };
+
+
 
   return (
     <header className="w-full relative z-40 bg-gradient-to-b from-[rgb(243_244_246)] to-transparent">
@@ -23,7 +30,10 @@ const Header = () => {
             </button>
 
             {/* User menu */}
-            <button className="p-2 rounded-full hover:bg-gray-100 focus:outline-none">
+            <button 
+              onClick={() => handleMenuClick('/main/complete-profile')}
+              className="p-2 rounded-full hover:bg-gray-100 hover:scale-110 hover:shadow-md transition-all duration-200 focus:outline-none"
+            >
               <svg
                 className="h-6 w-6 text-gray-600"
                 fill="none"

@@ -5,7 +5,7 @@
  *
  * Key Features:
  * - Full-screen overlay to cover the entire viewport or designated area.
- * - Uses the application’s favicon as the spinning image.
+ * - Uses the application's favicon as the spinning image.
  * - Custom animation for smooth, slow spinning.
  *
  * Usage:
@@ -27,6 +27,7 @@ const LoadingSpinner = () => {
           alt='Loading...' // Accessible text for screen readers
           width={150} // Sets the width of the loading spinner image
           height={150} // Sets the height of the loading spinner image
+          priority // Add priority to optimize LCP
         />
       </div>
     </div>

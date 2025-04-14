@@ -10,7 +10,7 @@ import {
   updateActivity,
   fetchActivityById,
 } from '@/utils/crudActivities';
-import ProgressStepper from '@/components/ProgressStepper';
+import ProgressStepper from '@/components/layout/ProgressStepper';
 import Image from 'next/image';
 import {
   Label,
@@ -21,7 +21,6 @@ import {
   Button
 } from 'flowbite-react';
 import { HiOutlineArrowLeft, HiOutlineArrowRight } from "react-icons/hi";
-import LoadingSpinner from '@/components/LoadingSpinner'; // Component to show the loading spinner
 import { useAuth } from '@/hooks/useAuth'; // Hook for accessing user authentication status
 import { useTranslations } from 'use-intl';
 
@@ -107,13 +106,6 @@ const availableCategories = formData.type ? categories[formData.type] : [];
     router.push('/activities');// Redirect to activities page after submission
   };
 
-  // Display loading spinner while user authentication status is being determined
-  if (loading)
-    return (
-      <div className='min-h-screen flex items-center justify-center'>
-        <LoadingSpinner />
-      </div>
-    );
 
   // If there is no authenticated user, return null (no content rendered)
   if (!user) return null;

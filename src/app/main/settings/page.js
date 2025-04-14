@@ -6,7 +6,6 @@ import React, { useState } from 'react';
 import { useTranslations } from "next-intl"; // Import hook to handle translations
 import { setUserLocale } from '@/utils/locale'; // Import function to set the user's preferred locale
 import { useAuth } from '@/hooks/useAuth'; // Hook for accessing user authentication status
-import LoadingSpinner from '@/components/LoadingSpinner'; // Component to show the loading spinner
 import { Dropdown, DropdownItem } from "flowbite-react";
 
 // Main component for the Settings Page
@@ -30,13 +29,6 @@ export default function SettingsPage() {
     const { user, loading } = useAuth();
 
  
-// Display loading spinner while user authentication status is being determined
-if (loading)
-    return (
-      <div className='min-h-screen flex items-center justify-center'>
-        <LoadingSpinner />
-      </div>
-    );
 
   // If there is no authenticated user, return null (no content rendered)
   if (!user) return null;

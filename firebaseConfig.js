@@ -3,6 +3,7 @@ import { initializeApp } from "firebase/app";
 import { getFunctions, connectFunctionsEmulator } from "firebase/functions";
 import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
 import { getAuth, GoogleAuthProvider, connectAuthEmulator } from 'firebase/auth';
+import { getStorage, connectStorageEmulator } from 'firebase/storage';
 
 // Your Firebase config
 const firebaseConfig = {
@@ -44,3 +45,11 @@ if (process.env.NODE_ENV === 'development') {
   connectFunctionsEmulator(functions, "localhost", 5001);
 }
 export { functions };
+
+// Initialize Storage
+const storage = getStorage(app);
+// Connect to Storage emulator
+if (process.env.NODE_ENV === 'development') {
+  connectStorageEmulator(storage, 'localhost', 9199);
+}
+export { storage };

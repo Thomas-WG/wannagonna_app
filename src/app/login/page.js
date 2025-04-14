@@ -93,11 +93,31 @@ export default function LoginPage() {
         // User exists - Redirect to dashboard for returning users
         router.push('/main/dashboard');
       } else {
-        // New user - Save user data to Firestore
+        // New user - Save user data to Firestore with all fields from complete-profile
         await setDoc(userDocRef, {
-          displayName: user.displayName,
-          email: user.email,
-          photoURL: user.photoURL,
+          displayName: user.displayName || '',
+          email: user.email || '',
+          bio: '',
+          country: '',
+          languages: [],
+          skills: [],
+          profilePicture: user.photoURL || '',
+          timeCommitment: {
+            daily: false,
+            weekly: false,
+            biweekly: false,
+            monthly: false,
+            occasional: false,
+            flexible: false
+          },
+          availabilities: {
+            weekdays: false,
+            weekends: false,
+            mornings: false,
+            afternoons: false,
+            evenings: false,
+            flexible: false
+          },
           createdAt: new Date().toISOString(),
         });
         // Redirect to profile completion page for new users
@@ -147,19 +167,38 @@ export default function LoginPage() {
         const userCredential = await createUserWithEmailAndPassword(auth, newEmail, newPassword);
         const user = userCredential.user; // Get the user object
         
-        
         // Log the user in with the newly created credentials
         await signInWithEmailAndPassword(auth, newEmail, newPassword);
         
         // After successful account creation and login, close the modal
         setModalOpen(false);
         
-        // New user - Save user data to Firestore
+        // New user - Save user data to Firestore with all fields from complete-profile
         await setDoc(doc(db, 'members', user.uid), {
-            email: user.email, // Store user email
+            displayName: '',
+            email: user.email,
+            bio: '',
+            country: '',
+            languages: [],
+            skills: [],
+            profilePicture: '',
+            timeCommitment: {
+                daily: false,
+                weekly: false,
+                biweekly: false,
+                monthly: false,
+                occasional: false,
+                flexible: false
+            },
+            availabilities: {
+                weekdays: false,
+                weekends: false,
+                evenings: false,
+                flexible: false
+            },
             createdAt: new Date().toISOString(),
         });
-        router.push('/main/complete-profile'); // Redirect to dashboard after login
+        router.push('/main/complete-profile'); // Redirect to profile completion page
     } catch (error) {
         // Handle errors (e.g., email already in use)
         if (error.code === 'auth/email-already-in-use') {

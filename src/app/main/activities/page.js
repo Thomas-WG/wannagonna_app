@@ -22,7 +22,7 @@
 import { subscribeToActivities } from '@/utils/crudActivities';
 import { useEffect, useState } from 'react';
 import { fetchActivities } from '@/utils/crudActivities'; // Utility function to fetch activities data
-import ActivityCard from '@/components/ActivityCard'; // Component to display each activity's data in card format
+import ActivityCard from '@/components/activities/ActivityCard'; // Component to display each activity's data in card format
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 
