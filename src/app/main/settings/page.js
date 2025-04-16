@@ -5,7 +5,7 @@
 import React, { useState } from 'react';
 import { useTranslations } from "next-intl"; // Import hook to handle translations
 import { setUserLocale } from '@/utils/locale'; // Import function to set the user's preferred locale
-import { useAuth } from '@/hooks/useAuth'; // Hook for accessing user authentication status
+import { useAuth } from '@/utils/AuthContext'; // Hook for accessing user authentication status
 import { Dropdown, DropdownItem } from "flowbite-react";
 
 // Main component for the Settings Page

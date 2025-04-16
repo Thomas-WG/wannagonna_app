@@ -16,8 +16,8 @@
 'use client'; // Enable client-side rendering for this component
 
 
-import { useState, useEffect, useRef } from 'react';
-import { useAuth } from '@/hooks/useAuth'; // Custom hook for Firebase authentication
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { useAuth } from '@/utils/AuthContext'; // Custom hook for Firebase authentication
 import { useTranslations } from 'use-intl';
 import { Sidebar } from 'flowbite-react';
 import { HiChartPie } from 'react-icons/hi';
@@ -30,21 +30,86 @@ import { LuFileBadge2 } from 'react-icons/lu';
 import { useRouter } from 'next/navigation';
 import { GoOrganization } from "react-icons/go";
 import { IoLogOut } from "react-icons/io5";
+import { FaUserShield } from "react-icons/fa";
+import { getDownloadURL, ref } from 'firebase/storage';
+import { storage } from 'firebaseConfig';
 
 // Main Sidebar component
 export default function Navbar() {
   // State for managing sidebar visibility (open/closed)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [logoUrl, setLogoUrl] = useState('');
   const sidebarRef = useRef(null); // Reference to sidebar element for detecting outside clicks
-  const { user, logout } = useAuth(); // Destructures user and logout function from useAuth hook
+  const { user, claims, logout } = useAuth(); // Destructures user, claims, and logout function from useAuth hook
 
   const t = useTranslations('Sidebar');
+  // Memoize the isAdmin check to prevent unnecessary re-renders
+  const isAdmin = useMemo(() => {
+    return claims && claims.role === 'admin';
+  }, [claims]);
+
+  // Fetch logo URL from Firebase Storage
+  useEffect(() => {
+    const fetchLogoUrl = async () => {
+      try {
+        // Check if we have a cached URL
+        const cachedUrl = localStorage.getItem('wannagonnaLogoUrl');
+        const cachedTimestamp = localStorage.getItem('wannagonnaLogoTimestamp');
+        
+        // If we have a cached URL less than 24 hours old, use it
+        if (cachedUrl && cachedTimestamp && (Date.now() - parseInt(cachedTimestamp)) < 24 * 60 * 60 * 1000) {
+          setLogoUrl(cachedUrl);
+          return;
+        }
+
+        const logoRef = ref(storage, 'logo/Favicon.png');
+        const url = await getDownloadURL(logoRef);
+        
+        // Cache the URL and timestamp
+        localStorage.setItem('wannagonnaLogoUrl', url);
+        localStorage.setItem('wannagonnaLogoTimestamp', Date.now().toString());
+        
+        setLogoUrl(url);
+      } catch (error) {
+        console.error('Error fetching logo URL:', error);
+        // If there's an error, try to use cached URL even if it's old
+        const cachedUrl = localStorage.getItem('wannagonnaLogoUrl');
+        if (cachedUrl) {
+          setLogoUrl(cachedUrl);
+        }
+      }
+    };
+    fetchLogoUrl();
+  }, []);
+
   // Function to toggle sidebar open/closed
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
 
   const router = useRouter();
   const handleNavigation = (path) => {
     router.push(path); // Navigate to the desired path
+  };
+
+  // Enhanced logout handler with error handling
+  const handleLogout = async () => {
+    try {
+      // Close sidebar on mobile before logout
+      if (isSidebarOpen) {
+        setIsSidebarOpen(false);
+      }
+      
+      // Call the logout function from AuthContext
+      await logout();
+      
+      // No need to redirect here as the AuthContext will handle it
+    } catch (error) {
+      // Only log errors in development
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error during logout:', error);
+      }
+      
+      // You could add a toast notification here if you have one
+    }
   };
 
   /*
@@ -132,7 +197,7 @@ export default function Navbar() {
         aria-label='Sidebar'
       >
         <Sidebar aria-label='Sidebar' className='bg-orange-100'>
-          <Sidebar.Logo img='/logo/favicon.png' imgAlt='WannaGonna logo' className='text-gray-900'> 
+          <Sidebar.Logo img={logoUrl} imgAlt='WannaGonna logo' className='text-gray-900'> 
             Wanna Gonna
           </Sidebar.Logo>
           <Sidebar.Items >
@@ -202,12 +267,23 @@ export default function Navbar() {
               >
                 {t('settings')}
               </Sidebar.Item>
+              
+              {/* Only show Administration item if user has admin role */}
+              {isAdmin && (
+                <Sidebar.Item
+                  onClick={() => handleLinkClick('/main/admin')}
+                  icon={FaUserShield}
+                  className='cursor-pointer'
+                >
+                  Administration
+                </Sidebar.Item>
+              )}
             </Sidebar.ItemGroup>
             <Sidebar.ItemGroup>
             <Sidebar.Item
                 onClick={() => {
                   handleNavigation('/login'); // Navigate to the login page
-                  logout(); // Call logout function
+                  handleLogout(); // Call logout function
                 }}
                 icon={IoLogOut}
                 className='cursor-pointer'

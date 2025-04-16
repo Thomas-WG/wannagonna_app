@@ -24,7 +24,7 @@ import { useEffect, useState } from 'react';
 import { fetchActivities } from '@/utils/crudActivities'; // Utility function to fetch activities data
 import ActivityCard from '@/components/activities/ActivityCard'; // Component to display each activity's data in card format
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/utils/AuthContext';
 
 // Main component to display activities
 export default function ActivitiesPage() {

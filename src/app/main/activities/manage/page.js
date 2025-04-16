@@ -21,7 +21,7 @@ import {
   Button
 } from 'flowbite-react';
 import { HiOutlineArrowLeft, HiOutlineArrowRight } from "react-icons/hi";
-import { useAuth } from '@/hooks/useAuth'; // Hook for accessing user authentication status
+import { useAuth } from '@/utils/AuthContext'; // Hook for accessing user authentication status
 import { useTranslations } from 'use-intl';
 
 
@@ -64,7 +64,7 @@ const availableCategories = formData.type ? categories[formData.type] : [];
 
   // Fetch existing activity for editing
   useEffect(() => {
-    if (isEditMode) {
+    if (activityId) {
       async function fetchData() {
         const data = await fetchActivityById(activityId);
         if (data) setFormData({
@@ -73,7 +73,7 @@ const availableCategories = formData.type ? categories[formData.type] : [];
       }
       fetchData();
     }
-  }, [activityId]);
+  }, [activityId, isEditMode]);
 
   // Handle form input changes
   const handleChange = (e) => {

@@ -21,6 +21,7 @@ import { uploadOrgPicture } from '@/utils/storage';
 import { countries } from 'countries-list';
 import languages from '@cospired/i18n-iso-languages';
 import Select from 'react-select';
+import Image from 'next/image';
 
 // Register the languages you want to use
 languages.registerLocale(require("@cospired/i18n-iso-languages/langs/en.json"));
@@ -60,25 +61,21 @@ export default function OrganizationsManagementPage() {
 
   // Load organizations data when component mounts
   useEffect(() => {
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        const organizationsData = await fetchOrganizations();
+        setOrganizations(organizationsData);
+      } catch (error) {
+        console.error('Error loading data:', error);
+        showToast(t('errorLoading'), 'error');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
     loadData();
-  }, []);
-
-  /**
-   * Fetches organizations data from the backend
-   * Updates the organizations state and handles loading states
-   */
-  const loadData = async () => {
-    try {
-      setIsLoading(true);
-      const organizationsData = await fetchOrganizations();
-      setOrganizations(organizationsData);
-    } catch (error) {
-      console.error('Error loading data:', error);
-      showToast(t('errorLoading'), 'error');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  }, [t]);
 
   /**
    * Handles form submission for adding or updating an organization
@@ -261,9 +258,12 @@ export default function OrganizationsManagementPage() {
                 <Table.Cell>
                   {/* Organization Logo */}
                   {org.logo && (
-                    <img 
+                    <Image 
                       src={org.logo} 
                       alt={org.name} 
+                      width={40}
+                      height={40}
+                      priority={true}
                       className="w-10 h-10 rounded-full object-cover"
                     />
                   )}
@@ -307,9 +307,12 @@ export default function OrganizationsManagementPage() {
               <Label htmlFor="logo">{t('logo')}</Label>
               <div className="flex items-center space-x-4">
                 {organizationForm.logo && (
-                  <img 
+                  <Image 
                     src={organizationForm.logo} 
                     alt="Organization logo" 
+                    width={80}
+                    height={80}
+                    priority={true}
                     className="w-20 h-20 rounded-full object-cover"
                   />
                 )}
