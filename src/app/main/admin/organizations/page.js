@@ -59,21 +59,22 @@ export default function OrganizationsManagementPage() {
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' }); // Toast notification state
   const [logoFile, setLogoFile] = useState(null); // File object for logo upload
 
+  // Define loadData function outside of useEffect so it can be reused
+  const loadData = async () => {
+    try {
+      setIsLoading(true);
+      const organizationsData = await fetchOrganizations();
+      setOrganizations(organizationsData);
+    } catch (error) {
+      console.error('Error loading data:', error);
+      showToast(t('errorLoading'), 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Load organizations data when component mounts
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        setIsLoading(true);
-        const organizationsData = await fetchOrganizations();
-        setOrganizations(organizationsData);
-      } catch (error) {
-        console.error('Error loading data:', error);
-        showToast(t('errorLoading'), 'error');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
     loadData();
   }, [t]);
 

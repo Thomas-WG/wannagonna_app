@@ -197,9 +197,15 @@ export default function Navbar() {
         aria-label='Sidebar'
       >
         <Sidebar aria-label='Sidebar' className='bg-orange-100'>
-          <Sidebar.Logo img={logoUrl} imgAlt='WannaGonna logo' className='text-gray-900'> 
-            Wanna Gonna
-          </Sidebar.Logo>
+          {logoUrl ? (
+            <Sidebar.Logo img={logoUrl} imgAlt='WannaGonna logo' className='text-gray-900'> 
+              Wanna Gonna
+            </Sidebar.Logo>
+          ) : (
+            <Sidebar.Logo className='text-gray-900'> 
+              Wanna Gonna
+            </Sidebar.Logo>
+          )}
           <Sidebar.Items >
             <Sidebar.ItemGroup>
               <Sidebar.Item 

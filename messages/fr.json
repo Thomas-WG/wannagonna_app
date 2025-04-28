@@ -139,6 +139,10 @@
     },
     "Admin": {
         "skillsManagement": "Gestion des compétences",
+        "nameEn": "Nom en anglais",
+        "nameFr": "Nom en français",
+        "nameJa": "Nom en japonais",
+        "nameEs": "Nom en espagnol",
         "categories": "Catégories",
         "skills": "Compétences",
         "addCategory": "Ajouter une catégorie",
@@ -193,6 +197,21 @@
         "errorUploadingLogo": "Erreur lors du téléchargement du logo",
         "confirmDeleteOrganization": "Êtes-vous sûr de vouloir supprimer cette organisation ?",
         "selectLanguages": "Sélectionner les langues",
-        "languagesHelper": "Vous pouvez sélectionner dans la liste ou saisir de nouvelles langues"
+        "languagesHelper": "Vous pouvez sélectionner dans la liste ou saisir de nouvelles langues",
+        "membersManagement": "Gestion des membres",
+        "members": "Membres",
+        "profilePicture": "Photo de profil",
+        "displayName": "Nom d'affichage",
+        "role": "Rôle",
+        "organization": "Organisation",
+        "assignRole": "Attribuer un rôle",
+        "selectRole": "Sélectionner un rôle",
+        "roleAdmin": "Administrateur",
+        "roleAmbassador": "Ambassadeur",
+        "roleNpoStaff": "Personnel ONG",
+        "roleNone": "Aucun",
+        "selectOrganization": "Sélectionner une organisation",
+        "roleUpdated": "Rôle mis à jour avec succès",
+        "errorUpdatingRole": "Erreur lors de la mise à jour du rôle"
     }
 }

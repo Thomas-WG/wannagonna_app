@@ -139,6 +139,10 @@
     },
     "Admin": {
         "skillsManagement": "Skills Management",
+        "nameEn": "English Name",
+        "nameFr": "French Name",
+        "nameJa": "Japanese Name",
+        "nameEs": "Spanish Name",
         "categories": "Categories",
         "skills": "Skills",
         "addCategory": "Add Category",
@@ -193,6 +197,21 @@
         "errorSavingOrganization": "Error saving organization",
         "errorDeletingOrganization": "Error deleting organization",
         "errorUploadingLogo": "Error uploading logo",
-        "confirmDeleteOrganization": "Are you sure you want to delete this organization?"
+        "confirmDeleteOrganization": "Are you sure you want to delete this organization?",
+        "membersManagement": "Members Management",
+        "members": "Members",
+        "profilePicture": "Profile Picture",
+        "displayName": "Display Name",
+        "role": "Role",
+        "organization": "Organization",
+        "assignRole": "Assign Role",
+        "selectRole": "Select a role",
+        "roleAdmin": "Admin",
+        "roleAmbassador": "Ambassador",
+        "roleNpoStaff": "NPO Staff",
+        "roleNone": "None",
+        "selectOrganization": "Select an organization",
+        "roleUpdated": "Role updated successfully",
+        "errorUpdatingRole": "Error updating role"
     }
 }

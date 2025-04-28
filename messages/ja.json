@@ -139,6 +139,10 @@
     },
     "Admin": {
       "skillsManagement": "スキル管理",
+      "nameEn": "英語名",
+      "nameFr": "フランス語名",
+      "nameJa": "日本語名",
+      "nameEs": "スペイン語名",
       "categories": "カテゴリー",
       "skills": "スキル",
       "addCategory": "カテゴリーを追加",
@@ -193,6 +197,21 @@
       "errorUploadingLogo": "ロゴのアップロード中にエラーが発生しました",
       "confirmDeleteOrganization": "この組織を削除してもよろしいですか？",
       "selectLanguages": "言語を選択",
-      "languagesHelper": "リストから選択するか、新しい言語を入力してください"
+      "languagesHelper": "リストから選択するか、新しい言語を入力してください",
+      "membersManagement": "メンバー管理",
+      "members": "メンバー",
+      "profilePicture": "プロフィール画像",
+      "displayName": "表示名",
+      "role": "役割",
+      "organization": "組織",
+      "assignRole": "役割を割り当てる",
+      "selectRole": "役割を選択",
+      "roleAdmin": "管理者",
+      "roleAmbassador": "アンバサダー",
+      "roleNpoStaff": "NPOスタッフ",
+      "roleNone": "なし",
+      "selectOrganization": "組織を選択",
+      "roleUpdated": "役割が正常に更新されました",
+      "errorUpdatingRole": "役割の更新中にエラーが発生しました"
     }
 }
