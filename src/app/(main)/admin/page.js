@@ -18,7 +18,7 @@ export default function AdminDashboard() {
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Members Card */}
-        <Link href="/main/admin/members">
+        <Link href="/admin/members">
           <Card className="hover:shadow-lg transition-shadow cursor-pointer">
             <div className="flex flex-col items-center p-4">
               <div className="bg-blue-100 p-3 rounded-full mb-4">
@@ -31,7 +31,7 @@ export default function AdminDashboard() {
         </Link>
 
         {/* Organizations Card */}
-        <Link href="/main/admin/organizations">
+        <Link href="/admin/organizations">
           <Card className="hover:shadow-lg transition-shadow cursor-pointer">
             <div className="flex flex-col items-center p-4">
               <div className="bg-green-100 p-3 rounded-full mb-4">
@@ -44,7 +44,7 @@ export default function AdminDashboard() {
         </Link>
 
         {/* Skills Card */}
-        <Link href="/main/admin/skills">
+        <Link href="/admin/skills">
           <Card className="hover:shadow-lg transition-shadow cursor-pointer">
             <div className="flex flex-col items-center p-4">
               <div className="bg-purple-100 p-3 rounded-full mb-4">

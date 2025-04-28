@@ -28,13 +28,16 @@ import { useAuth } from '@/utils/auth/AuthContext';
 
 // Main component to display activities
 export default function ActivitiesPage() {
-  // Destructure `user` and `loading` state from `useAuth` to manage access control
-  const { user, loading } = useAuth();
+  // Destructure `user`, `claims`, and `loading` state from `useAuth` to manage access control
+  const { user, claims, loading } = useAuth();
 
   // State variable to store the list of fetched activities
   const [activities, setActivities] = useState([]);
 
   const router = useRouter();
+
+  // Check if user has permission to manage activities
+  const canManageActivities = claims && (claims.role === 'admin' || claims.role === 'npo-staff' || claims.role === 'ambassador');
 
   //This listens to live changes in the activities collection
   useEffect(() => {
@@ -53,7 +56,7 @@ export default function ActivitiesPage() {
   }, [user]);
 
   const goToManage = () => {
-    router.push('/main/activities/manage'); 
+    router.push('/activities/manage'); 
   };
 
   /*
@@ -93,9 +96,11 @@ export default function ActivitiesPage() {
           />
         ))}
       </div>
-      <button onClick={goToManage} className="fixed bottom-4 right-4 bg-orange-500 text-white text-2xl w-12 h-12 rounded-full shadow-lg hover:bg-orange-600">
-        +
-      </button>
+      {canManageActivities && (
+        <button onClick={goToManage} className="fixed bottom-4 right-4 bg-orange-500 text-white text-2xl w-12 h-12 rounded-full shadow-lg hover:bg-orange-600">
+          +
+        </button>
+      )}
     </div>
 
   );
