@@ -7,7 +7,7 @@
  * It allows administrators to view, add, edit, and delete organizations with their details.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { useLocale } from 'next-intl';
 import { Card, Button, Label, TextInput, Table, Modal, Toast, Textarea } from 'flowbite-react';
@@ -60,23 +60,34 @@ export default function OrganizationsManagementPage() {
   const [logoFile, setLogoFile] = useState(null); // File object for logo upload
 
   // Define loadData function outside of useEffect so it can be reused
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
       const organizationsData = await fetchOrganizations();
       setOrganizations(organizationsData);
     } catch (error) {
       console.error('Error loading data:', error);
-      showToast(t('errorLoading'), 'error');
+      setToast({ show: true, message: t('errorLoading'), type: 'error' });
+      setTimeout(() => setToast({ show: false, message: '', type: 'success' }), 3000);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [t]);
 
   // Load organizations data when component mounts
   useEffect(() => {
     loadData();
-  }, [t]);
+  }, [loadData]);
+
+  /**
+   * Displays a toast notification
+   * @param {string} message - The message to display
+   * @param {string} type - The type of toast ('success' or 'error')
+   */
+  const showToast = useCallback((message, type = 'success') => {
+    setToast({ show: true, message, type });
+    setTimeout(() => setToast({ show: false, message: '', type: 'success' }), 3000);
+  }, []);
 
   /**
    * Handles form submission for adding or updating an organization
@@ -171,16 +182,6 @@ export default function OrganizationsManagementPage() {
       createdAt: ''
     });
     setLogoFile(null);
-  };
-
-  /**
-   * Displays a toast notification
-   * @param {string} message - The message to display
-   * @param {string} type - The type of toast ('success' or 'error')
-   */
-  const showToast = (message, type = 'success') => {
-    setToast({ show: true, message, type });
-    setTimeout(() => setToast({ show: false, message: '', type: 'success' }), 3000);
   };
 
   /**

@@ -31,7 +31,7 @@ const Header = () => {
 
             {/* User menu */}
             <button 
-              onClick={() => handleMenuClick('/main/complete-profile')}
+              onClick={() => handleMenuClick('/complete-profile')}
               className="p-2 rounded-full hover:bg-gray-100 hover:scale-110 hover:shadow-md transition-all duration-200 focus:outline-none"
             >
               <svg

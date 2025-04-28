@@ -7,7 +7,7 @@
  * It allows administrators to view all members and assign roles to them.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { Card, Button, Label, Select, Table, Modal, Toast } from 'flowbite-react';
 import { fetchMembers, updateMember } from '@/utils/crudMemberProfile';
@@ -15,6 +15,7 @@ import { fetchOrganizations } from '@/utils/crudOrganizations';
 import { functions } from 'firebaseConfig';
 import { httpsCallable } from 'firebase/functions';
 import { useAuth } from '@/utils/auth/AuthContext';
+import Image from 'next/image';
 
 /**
  * MembersManagementPage Component
@@ -39,16 +40,8 @@ export default function MembersManagementPage() {
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' }); // Toast notification state
   const [organizations, setOrganizations] = useState([]); // List of organizations for npo-staff role
 
-  // Load members data when component mounts
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  /**
-   * Fetches members data from the backend
-   * Updates the members state and handles loading states
-   */
-  const loadData = async () => {
+  // Define loadData function outside of useEffect so it can be reused
+  const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
       const membersData = await fetchMembers();
@@ -59,11 +52,27 @@ export default function MembersManagementPage() {
       setOrganizations(orgsData);
     } catch (error) {
       console.error('Error loading data:', error);
-      showToast(t('errorLoading'), 'error');
+      setToast({ show: true, message: t('errorLoading'), type: 'error' });
+      setTimeout(() => setToast({ show: false, message: '', type: 'success' }), 3000);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [t]);
+
+  // Load members data when component mounts
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  /**
+   * Displays a toast notification
+   * @param {string} message - The message to display
+   * @param {string} type - The type of toast ('success' or 'error')
+   */
+  const showToast = useCallback((message, type = 'success') => {
+    setToast({ show: true, message, type });
+    setTimeout(() => setToast({ show: false, message: '', type: 'success' }), 3000);
+  }, []);
 
   /**
    * Opens the role assignment modal for a specific member
@@ -132,16 +141,6 @@ export default function MembersManagementPage() {
   };
 
   /**
-   * Displays a toast notification
-   * @param {string} message - The message to display
-   * @param {string} type - The type of toast ('success' or 'error')
-   */
-  const showToast = (message, type = 'success') => {
-    setToast({ show: true, message, type });
-    setTimeout(() => setToast({ show: false, message: '', type: 'success' }), 3000);
-  };
-
-  /**
    * Gets the display name for a role
    * @param {string} role - The role code
    * @returns {string} - The display name for the role
@@ -198,10 +197,12 @@ export default function MembersManagementPage() {
                 <Table.Cell>
                   {/* Member Profile Picture */}
                   {member.profilePicture && (
-                    <img 
+                    <Image 
                       src={member.profilePicture} 
                       alt={member.displayName} 
-                      className="w-10 h-10 rounded-full object-cover"
+                      width={40}
+                      height={40}
+                      className="rounded-full object-cover"
                     />
                   )}
                 </Table.Cell>
@@ -248,6 +249,7 @@ export default function MembersManagementPage() {
                 <option value="admin">{t('roleAdmin')}</option>
                 <option value="ambassador">{t('roleAmbassador')}</option>
                 <option value="npo-staff">{t('roleNpoStaff')}</option>
+                <option value="member">{t('roleNone')}</option>
               </Select>
             </div>
             

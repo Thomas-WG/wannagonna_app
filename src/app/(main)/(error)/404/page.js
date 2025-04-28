@@ -19,8 +19,8 @@ export default function NotFoundPage() {
             Looks like this page went on a vacation without leaving a forwarding address!
           </p>
           <p className="text-lg text-gray-700 mb-4">
-            Don't worry, even the best explorers get lost sometimes. 
-            (Though we're not saying you're lost...)
+            Don&apos;t worry, even the best explorers get lost sometimes. 
+            (Though we&apos;re not saying you&apos;re lost...)
           </p>
           <p className="text-lg text-gray-700">
             Maybe try using a map? 🗺️

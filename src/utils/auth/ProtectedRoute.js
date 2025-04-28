@@ -23,11 +23,25 @@ const ProtectedRoute = ({ children, requiredRole }) => {
   if (!user) return null;
 
   // Role-based protection
-  if (requiredRole && (!claims || claims.role !== requiredRole)) {
-    if (typeof window !== "undefined") {
-      router.replace("/403");
+  if (requiredRole) {
+    // Check if requiredRole is an array
+    if (Array.isArray(requiredRole)) {
+      // User must have at least one of the roles in the array
+      if (!claims || !requiredRole.includes(claims.role)) {
+        if (typeof window !== "undefined") {
+          router.replace("/403");
+        }
+        return null;
+      }
+    } else {
+      // Single role check (existing behavior)
+      if (!claims || claims.role !== requiredRole) {
+        if (typeof window !== "undefined") {
+          router.replace("/403");
+        }
+        return null;
+      }
     }
-    return null;
   }
 
   // If user exists, render children
