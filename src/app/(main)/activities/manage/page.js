@@ -21,7 +21,7 @@ import {
   Button
 } from 'flowbite-react';
 import { HiOutlineArrowLeft, HiOutlineArrowRight } from "react-icons/hi";
-import { useAuth } from '@/utils/AuthContext'; // Hook for accessing user authentication status
+import { useAuth } from '@/utils/auth/AuthContext'; // Hook for accessing user authentication status
 import { useTranslations } from 'use-intl';
 
 

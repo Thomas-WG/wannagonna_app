@@ -39,7 +39,7 @@ import { useState, useEffect } from 'react';
 import { Dropdown, DropdownItem } from "flowbite-react";
 import { useTranslations } from "use-intl"; // Import hook to handle translations
 import { setUserLocale } from '@/utils/locale'; // Import function to set the user's preferred locale
-import { useAuth } from '@/utils/AuthContext';
+import { useAuth } from '@/utils/auth/AuthContext';
 
 /**
  * LoginPage - Renders the login UI, with logo and Google sign-in functionality.
@@ -79,7 +79,7 @@ export default function LoginPage() {
   useEffect(() => {
     if (user && !loading) {
       console.log('Login page: User already authenticated, redirecting to dashboard');
-      router.push('/main/dashboard');
+      router.push('/dashboard');
     }
   }, [user, loading, router]);
 
@@ -104,7 +104,7 @@ export default function LoginPage() {
 
       if (userDocSnap.exists()) {
         // User exists - Redirect to dashboard for returning users
-        router.push('/main/dashboard');
+        router.push('/dashboard');
       } else {
         // New user - Save user data to Firestore with all fields from complete-profile
         const userData = {
@@ -138,7 +138,7 @@ export default function LoginPage() {
         await setDoc(userDocRef, userData, { merge: true });
         
         // Redirect to profile completion page for new users
-        router.push('/main/complete-profile');
+        router.push('/complete-profile');
       }
     } catch (error) {
       // Handle specific error types
@@ -173,7 +173,7 @@ export default function LoginPage() {
     setLoginErrorMessage(''); // Clear previous login error messages
     try {
       await signInWithEmailAndPassword(auth, email, password); // Sign in with email and password
-      router.push('/main/dashboard'); // Redirect to dashboard on successful login
+      router.push('/dashboard'); // Redirect to dashboard on successful login
     } catch (error) {
       // Set error message based on the error code
       if (error.code === 'auth/wrong-password') {
@@ -231,12 +231,14 @@ export default function LoginPage() {
             availabilities: {
                 weekdays: false,
                 weekends: false,
+                mornings: false,
+                afternoons: false,
                 evenings: false,
                 flexible: false
             },
             createdAt: new Date().toISOString(),
         });
-        router.push('/main/complete-profile'); // Redirect to profile completion page
+        router.push('/complete-profile'); // Redirect to profile completion page
     } catch (error) {
         // Handle errors (e.g., email already in use)
         if (error.code === 'auth/email-already-in-use') {

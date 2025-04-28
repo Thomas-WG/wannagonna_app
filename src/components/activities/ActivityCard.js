@@ -2,7 +2,7 @@ import { Modal, Button, Label, Textarea, Toast } from 'flowbite-react';
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
-import { useAuth } from '@/utils/AuthContext';
+import { useAuth } from '@/utils/auth/AuthContext';
 import { createApplication } from '@/utils/crudApplications';
 import { HiCheck, HiExclamation } from 'react-icons/hi';
 

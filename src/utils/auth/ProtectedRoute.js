@@ -1,14 +1,14 @@
 'use client';
 
-import { useAuth } from '@/utils/AuthContext';
-import { usePathname } from 'next/navigation';
+import { useAuth } from '@/utils/auth/AuthContext';
+import { useRouter } from 'next/navigation';
 import { useEffect, memo } from 'react';
 import LoadingSpinner from '@/components/layout/LoadingSpinner';
 
 // Using memo to prevent unnecessary re-renders
-const ProtectedRoute = ({ children }) => {
-  const { user, loading } = useAuth();
-  const pathname = usePathname();
+const ProtectedRoute = ({ children, requiredRole }) => {
+  const { user, claims, loading } = useAuth();
+  const router = useRouter();
 
   // Only show loading spinner when authentication is in progress
   if (loading) {
@@ -20,8 +20,18 @@ const ProtectedRoute = ({ children }) => {
   }
 
   // If not loading and no user, return null (AuthContext will handle redirect)
+  if (!user) return null;
+
+  // Role-based protection
+  if (requiredRole && (!claims || claims.role !== requiredRole)) {
+    if (typeof window !== "undefined") {
+      router.replace("/403");
+    }
+    return null;
+  }
+
   // If user exists, render children
-  return user ? children : null;
+  return children;
 };
 
 // Export the memoized component

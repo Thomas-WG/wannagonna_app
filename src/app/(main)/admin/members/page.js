@@ -14,7 +14,7 @@ import { fetchMembers, updateMember } from '@/utils/crudMemberProfile';
 import { fetchOrganizations } from '@/utils/crudOrganizations';
 import { functions } from 'firebaseConfig';
 import { httpsCallable } from 'firebase/functions';
-import { useAuth } from '@/utils/AuthContext';
+import { useAuth } from '@/utils/auth/AuthContext';
 
 /**
  * MembersManagementPage Component

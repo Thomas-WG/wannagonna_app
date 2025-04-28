@@ -2,7 +2,7 @@
 
 import Navbar from '@/components/layout/Sidebar'; // Navbar component for sidebar navigation
 import Header from '@/components/layout/Header'; // Header component for header navigation
-import ProtectedRoute from '@/components/auth/ProtectedRoute';
+import ProtectedRoute from '@/utils/auth/ProtectedRoute';
 
 const Layout = ({ children, isNavbarExpanded }) => {
     return (

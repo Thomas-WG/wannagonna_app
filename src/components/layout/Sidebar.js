@@ -17,7 +17,7 @@
 
 
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { useAuth } from '@/utils/AuthContext'; // Custom hook for Firebase authentication
+import { useAuth } from '@/utils/auth/AuthContext'; // Custom hook for Firebase authentication
 import { useTranslations } from 'use-intl';
 import { Sidebar } from 'flowbite-react';
 import { HiChartPie } from 'react-icons/hi';
