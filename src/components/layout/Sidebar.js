@@ -209,48 +209,48 @@ export default function Navbar() {
           <Sidebar.Items >
             <Sidebar.ItemGroup>
               <Sidebar.Item 
-                onClick={() => handleLinkClick('/main/dashboard')} 
+                onClick={() => handleLinkClick('/dashboard')} 
                 icon={HiChartPie}
                 className='cursor-pointer'>
                 {t('dashboard')}
               </Sidebar.Item>
               <Sidebar.Item
-                onClick={() => handleLinkClick('/main/activities')}
+                onClick={() => handleLinkClick('/activities')}
                 icon={MdOutlineExplore}
                 className='cursor-pointer'
               >
                 {t('explore')}
               </Sidebar.Item>
               <Sidebar.Item
-                onClick={() => handleLinkClick('/main/badges')}
+                onClick={() => handleLinkClick('/badges')}
                 icon={LuFileBadge2}
                 className='cursor-pointer'
               >
                 {t('badges')}
               </Sidebar.Item>
               <Sidebar.Item
-                onClick={() => handleLinkClick('/main/leaderboard')}
+                onClick={() => handleLinkClick('/leaderboard')}
                 icon={MdOutlineLeaderboard }
                 className='cursor-pointer'
               >
                 {t('leaderboard')}
               </Sidebar.Item>
               <Sidebar.Item
-                onClick={() => handleLinkClick('/main/myteam')}
+                onClick={() => handleLinkClick('/myteam')}
                 icon={FaPeopleCarryBox}
                 className='cursor-pointer'
               >
                 {t('myteam')}
               </Sidebar.Item>
               <Sidebar.Item
-                onClick={() => handleLinkClick('/main/mynonprofit')}
+                onClick={() => handleLinkClick('/mynonprofit')}
                 icon={GoOrganization}
                 className='cursor-pointer'
               >
                 {t('mynonprofit')}
               </Sidebar.Item>
               <Sidebar.Item
-                onClick={() => handleLinkClick('/main/members')}
+                onClick={() => handleLinkClick('/members')}
                 icon={RiTeamLine}
                 className='cursor-pointer'
               >
@@ -259,7 +259,7 @@ export default function Navbar() {
               </Sidebar.ItemGroup>
               <Sidebar.ItemGroup>
               <Sidebar.Item
-                onClick={() => handleLinkClick('/main/donate')}
+                onClick={() => handleLinkClick('/donate')}
                 icon={BiDonateHeart}
                 className='cursor-pointer'
               >
@@ -267,7 +267,7 @@ export default function Navbar() {
               </Sidebar.Item>
 
               <Sidebar.Item
-                onClick={() => handleLinkClick('/main/settings')}
+                onClick={() => handleLinkClick('/settings')}
                 icon={IoSettingsOutline}
                 className='cursor-pointer'
               >
@@ -277,7 +277,7 @@ export default function Navbar() {
               {/* Only show Administration item if user has admin role */}
               {isAdmin && (
                 <Sidebar.Item
-                  onClick={() => handleLinkClick('/main/admin')}
+                  onClick={() => handleLinkClick('/admin')}
                   icon={FaUserShield}
                   className='cursor-pointer'
                 >
