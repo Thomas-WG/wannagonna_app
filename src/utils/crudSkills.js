@@ -87,10 +87,10 @@ export async function updateSkill(skillId, skillData) {
 }
 
 // Get skills with their categories for the Select component
-export async function getSkillsForSelect(locale = 'en') {
+export async function getSkillsForSelect(locale = 'en', categoryId = null) {
   try {
     const categories = await fetchSkillCategories();
-    const skills = await fetchSkills();
+    const skills = await fetchSkills(categoryId);
     
     // Group skills by category
     const groupedSkills = categories.map(category => {

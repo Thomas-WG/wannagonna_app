@@ -38,7 +38,17 @@
         "language": "言語を変更する"
     },
     "ActivityCard": {
-        "points": "点"
+        "points": "点",
+        "apply": "応募する",
+        "applyFor": "応募する",
+        "whyHelp": "なぜ応募しますか？",
+        "interestPlaceholder": "この活動に応募する理由を教えてください。",
+        "submitting": "送信中...",
+        "wantToHelp": "応募する",
+        "applied": "応募済み",
+        "cancel": "キャンセル",
+        "noDescription": "説明が提供されていません",
+        "description": "説明"
     },
     "ManageActivities": {
         "create-activity": "活動を作成する",

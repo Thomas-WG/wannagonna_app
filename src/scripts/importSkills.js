@@ -3,6 +3,51 @@ const { initializeApp } = require('firebase/app');
 const { getFirestore, collection, addDoc, writeBatch, doc, connectFirestoreEmulator } = require('firebase/firestore');
 const skillsData = require('../data/skills.json');
 
+// Import categories data
+const categories = {
+  online: [
+    { id: 'website' },
+    { id: 'logo' },
+    { id: 'translation' },
+    { id: 'flyer' },
+    { id: 'consulting' },
+    { id: 'architecture' },
+    { id: 'dataentry' },
+    { id: 'photovideo' },
+    { id: 'sns' },
+    { id: 'onlinesupport' },
+    { id: 'education' },
+    { id: 'fundraising' },
+    { id: 'longtermrole' },
+    { id: 'explainer' },
+    { id: 'other' },
+  ],
+  local: [
+    { id: 'cleaning' },
+    { id: 'teaching' },
+    { id: 'food_distribution' },
+    { id: 'elderly_support' },
+    { id: 'animal_care' },
+    { id: 'environment' },
+    { id: 'community_events' },
+    { id: 'childcare' },
+    { id: 'manual_labor' },
+    { id: 'administrative' },
+    { id: 'other' },
+  ],
+  event: [
+    { id: 'fundraising_event' },
+    { id: 'awareness_campaign' },
+    { id: 'workshop' },
+    { id: 'seminar_conference' },
+    { id: 'charity_walk' },
+    { id: 'networking' },
+    { id: 'arts_and_crafts' },
+    { id: 'food_fair' },
+    { id: 'other' },
+  ],
+};
+
 // Your Firebase configuration
 const firebaseConfig = {
   // Add your Firebase config here
@@ -34,13 +79,13 @@ async function importSkills() {
     
     console.log('Importing categories...');
     for (const category of skillsData.categories) {
-      const categoryId = category.name.en.toLowerCase().replace(/[^a-z0-9]+/g, '-');
       const categoryRef = doc(categoriesCollection);
-      categoryMap.set(categoryId, categoryRef.id);
+      categoryMap.set(category.id, categoryRef.id);
       
       console.log(`Adding category: ${category.name.en}`);
       batch.set(categoryRef, {
         name: category.name,
+        id: category.id,
         order: category.order
       });
     }
@@ -51,17 +96,11 @@ async function importSkills() {
     console.log('Importing skills...');
     for (const skill of skillsData.skills) {
       const skillRef = doc(skillsCollection);
-      const categoryId = categoryMap.get(skill.categoryId);
       
-      if (!categoryId) {
-        console.warn(`Category not found for skill: ${skill.name.en}`);
-        continue;
-      }
-      
-      console.log(`Adding skill: ${skill.name.en}`);
+      console.log(`Adding skill: ${skill.name.en} (categoryId: ${skill.categoryId})`);
       batch.set(skillRef, {
         name: skill.name,
-        categoryId: categoryId,
+        categoryId: skill.categoryId,
         order: skill.order
       });
     }

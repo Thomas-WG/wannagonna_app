@@ -48,6 +48,19 @@ export default function Navbar() {
     return claims && claims.role === 'admin';
   }, [claims]);
 
+  // Memoize the isAdmin check to prevent unnecessary re-renders
+  const isNpoStaff = useMemo(() => {
+    return claims && claims.role === 'npo-staff';
+  }, [claims]);
+
+  const isAmbassador = useMemo(() => {
+    return claims && claims.role === 'ambassador';
+  }, [claims]);
+
+  const isMember = useMemo(() => {
+    return claims && claims.role === 'member';
+  }, [claims]);
+
   // Fetch logo URL from Firebase Storage
   useEffect(() => {
     const fetchLogoUrl = async () => {
@@ -235,20 +248,24 @@ export default function Navbar() {
               >
                 {t('leaderboard')}
               </Sidebar.Item>
-              <Sidebar.Item
-                onClick={() => handleLinkClick('/myteam')}
-                icon={FaPeopleCarryBox}
-                className='cursor-pointer'
+              {isAdmin && (
+                <Sidebar.Item
+                  onClick={() => handleLinkClick('/myteam')}
+                  icon={FaPeopleCarryBox}
+                  className='cursor-pointer'
               >
-                {t('myteam')}
-              </Sidebar.Item>
-              <Sidebar.Item
-                onClick={() => handleLinkClick('/mynonprofit')}
-                icon={GoOrganization}
-                className='cursor-pointer'
+                  {t('myteam')}
+                </Sidebar.Item>
+              )}
+              {isNpoStaff && (
+                <Sidebar.Item
+                  onClick={() => handleLinkClick('/mynonprofit')}
+                  icon={GoOrganization}
+                  className='cursor-pointer'
               >
                 {t('mynonprofit')}
               </Sidebar.Item>
+              )}
               <Sidebar.Item
                 onClick={() => handleLinkClick('/members')}
                 icon={RiTeamLine}
@@ -258,13 +275,15 @@ export default function Navbar() {
               </Sidebar.Item>
               </Sidebar.ItemGroup>
               <Sidebar.ItemGroup>
-              <Sidebar.Item
-                onClick={() => handleLinkClick('/donate')}
-                icon={BiDonateHeart}
-                className='cursor-pointer'
+              {isAdmin && (
+                <Sidebar.Item
+                  onClick={() => handleLinkClick('/donate')}
+                  icon={BiDonateHeart}
+                  className='cursor-pointer'
               >
                 {t('donate')}
               </Sidebar.Item>
+              )}
 
               <Sidebar.Item
                 onClick={() => handleLinkClick('/settings')}

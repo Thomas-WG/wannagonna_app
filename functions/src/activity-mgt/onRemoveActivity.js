@@ -1,7 +1,7 @@
 import {db} from "../init.js";
 
 
-export const updateApplicantsCountOnAdd = async (activityId) => {
+export const updateActivityCountOnRemove = async (activityId) => {
   return db.runTransaction(async (transaction) => {
     // Get activity document
     const activityRef = db.collection("activities").doc(activityId);
@@ -12,7 +12,6 @@ export const updateApplicantsCountOnAdd = async (activityId) => {
     }
 
     const activity = activitySnap.data();
-    const newApplicantCount = (activity.applicants || 0) + 1;
 
     // Get organization document
     const organizationId = activity.organizationId;
@@ -28,17 +27,27 @@ export const updateApplicantsCountOnAdd = async (activityId) => {
     }
 
     const organization = orgSnap.data();
-    const newApplicationCount = (organization.totalNewApplications || 0) + 1;
+    const type = activity.type;
+    if (type === "online") {
+      const totalOnlineActivities =
+        (organization.totalOnlineActivities || 0) - 1;
+      transaction.update(organizationRef, {
+        totalOnlineActivities: totalOnlineActivities,
+      });
+    } else if (type === "local") {
+      const totalLocalActivities =
+        (organization.totalLocalActivities || 0) - 1;
+      transaction.update(organizationRef, {
+        totalLocalActivities: totalLocalActivities,
+      });
+    } else if (type === "event") {
+      const totalEvents = (organization.totalEvents || 0) - 1;
+      transaction.update(organizationRef, {totalEvents: totalEvents});
+    }
 
-    // Update both documents
-    transaction.update(activityRef, {applicants: newApplicantCount});
-    transaction.update(organizationRef,
-        {totalNewApplications: newApplicationCount});
-
-    console.log("Updated applicants count:", newApplicantCount);
+    console.log("Updated activity count:");
     return {
-      activityApplicants: newApplicantCount,
-      orgApplications: newApplicationCount,
+      activity: activity,
     };
   });
 };

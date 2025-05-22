@@ -1,4 +1,4 @@
-import { collection, getDocs, addDoc, getDoc, updateDoc, doc, onSnapshot} from 'firebase/firestore';
+import { collection, getDocs, addDoc, getDoc, updateDoc, doc, onSnapshot, query, where } from 'firebase/firestore';
 import { db } from 'firebaseConfig';
 
 // Fetch all activities from the Firestore database
@@ -41,11 +41,19 @@ export function subscribeToActivities(callback) {
 // Create a new activity in the Firestore database
 export async function createActivity(data) {
   try {
+    // Validate that organizationId is present
+    if (!data.organizationId) {
+      console.error('Error creating activity: organizationId is required');
+      throw new Error('organizationId is required to create an activity');
+    }
+
     const activitiesCollection = collection(db, 'activities'); // Reference to the activities collection
     const docRef = await addDoc(activitiesCollection, data); // Add a new document with the provided data
     console.log('Activity created with ID:', docRef.id); // Log the ID of the created activity
+    return docRef.id; // Return the ID of the created activity
   } catch (error) {
     console.error('Error creating activity:', error); // Log any errors
+    throw error; // Re-throw the error to be handled by the caller
   }
 }
 
@@ -66,12 +74,46 @@ export async function fetchActivityById(id) {
     const activityDoc = doc(db, 'activities', id); // Reference to the specific activity document
     const snapshot = await getDoc(activityDoc); // Get the document snapshot
     if (snapshot.exists()) {
-      return snapshot.data(); // Return the data if the document exists
+      return {id: snapshot.id, ...snapshot.data()}; // Return the data if the document exists
     } else {
       console.log('No such activity!'); // Log if the document does not exist
       return null; // Return null if no document found
     }
   } catch (error) {
     console.error('Error fetching activity:', error); // Log any errors
+  }
+}
+
+// Fetch activities by organization ID, type and status
+export async function fetchActivitiesByCriteria(organizationId = 'any', type = 'any', status = 'any') {
+  try {
+    const activitiesCollection = collection(db, 'activities');
+    let conditions = [];
+    
+    // Add conditions only for non-'any' values
+    if (organizationId !== 'any') {
+      conditions.push(where('organizationId', '==', organizationId));
+    }
+    if (type !== 'any') {
+      conditions.push(where('type', '==', type));
+    }
+    if (status !== 'any') {
+      conditions.push(where('status', '==', status));
+    }
+
+    // Create query with all applicable conditions
+    const q = conditions.length > 0 
+      ? query(activitiesCollection, ...conditions)
+      : query(activitiesCollection);
+      
+    const snapshot = await getDocs(q);
+    
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+  } catch (error) {
+    console.error('Error fetching activities:', error);
+    return [];
   }
 }

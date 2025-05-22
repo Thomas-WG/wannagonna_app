@@ -38,7 +38,17 @@
         "language": "Cambiar el idioma"
     },
     "ActivityCard": {
-        "points": "puntos"
+        "points": "puntos",
+        "apply": "Aplicar",
+        "applyFor": "Aplicar para",
+        "whyHelp": "¿Por qué quieres ayudar?",
+        "interestPlaceholder": "Cuéntanos por qué estás interesado en esta oportunidad...",
+        "submitting": "Enviando...",
+        "wantToHelp": "Quiero ayudar",
+        "applied": "Aplicado",
+        "cancel": "Cancelar",
+        "noDescription": "No se proporcionó una descripción",
+        "description": "Descripción"
     },
     "ManageActivities": {
         "create-activity": "Crear actividad",

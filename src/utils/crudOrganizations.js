@@ -41,7 +41,14 @@ export async function fetchOrganizationById(id) {
 export async function addOrganization(data) {
   try {
     const organizationsCollection = collection(db, 'organizations');
-    const docRef = await addDoc(organizationsCollection, data);
+    const docRef = await addDoc(organizationsCollection, {
+      ...data,
+      totalOnlineActivities: 0,
+      totalLocalActivities: 0,
+      totalEvents: 0,
+      totalNewApplications: 0,
+      totalParticipants: 0
+    });
     return docRef.id;
   } catch (error) {
     console.error('Error adding organization:', error);

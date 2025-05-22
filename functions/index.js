@@ -4,8 +4,30 @@ import {updateApplicantsCountOnAdd} from
   "./src/activity-mgt/onAddApplication.js";
 import {updateApplicantsCountOnRemove} from
   "./src/activity-mgt/onRemoveApplication.js";
+import {updateActivityCountOnAdd} from
+  "./src/activity-mgt/onAddActivity.js";
+import {updateActivityCountOnRemove} from
+  "./src/activity-mgt/onRemoveActivity.js";
 import {onCall} from "firebase-functions/v2/https";
 import {setUserCustomClaims} from "./src/user-mgt/setCustomClaims.js";
+
+export const onActivityCreatedUpdateActivityCount = onDocumentCreated(
+    "activities/{activityId}",
+    async (event) => {
+      const activityId = event.params.activityId;
+      console.log("Activity ID:", activityId);
+      await updateActivityCountOnAdd(activityId);
+    },
+);
+
+export const onActivityDeletedUpdateActivityCount = onDocumentDeleted(
+    "activities/{activityId}",
+    async (event) => {
+      const activityId = event.params.activityId;
+      console.log("Activity ID:", activityId);
+      await updateActivityCountOnRemove(activityId);
+    },
+);
 
 export const onApplicationCreatedUpdateApplicantsCount = onDocumentCreated(
     "activities/{activityId}/applications/{applicationId}",
