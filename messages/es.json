@@ -61,7 +61,7 @@
         "category-label": "Seleccionar una categoría",
         "info-label": "Cuéntanos más sobre tu actividad",
         "activity-title-label": "Título de la actividad",
-        "activity-title-helper": "Escribe un título corto y significativo",
+        "activity-title-helper": "Escribe un título corto y significativo (máximo 50 caracteres)",
         "activity-description-label": "Descripción de la actividad",
         "activity-description-helper": "Explica la necesidad, cuándo la necesitas, por qué... ¡Más detalles siempre es mejor!",
         "frequency-label": "¿Es...",

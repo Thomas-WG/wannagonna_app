@@ -1,9 +1,15 @@
 import { FloatingLabel, Textarea, Radio, Label, Datepicker, Card } from 'flowbite-react';
+import { useState } from 'react';
 import { useTranslations } from 'use-intl';
+import Select from 'react-select';
+import { fetchSkills } from '@/utils/crudSkills';
 
-export default function ActivityDetailsForm({ formData, handleChange, setFormData, availableCategories }) {
+export default function ActivityDetailsForm({ formData, handleChange, setFormData }) {
   const t = useTranslations('ManageActivities');
-
+  const [skillOptions, setSkillOptions] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedSkills, setSelectedSkills] = useState([]);
+  
   return (
     <Card className="max-w-4xl w-full">
       <label className='block font-medium mb-1'>
@@ -17,7 +23,12 @@ export default function ActivityDetailsForm({ formData, handleChange, setFormDat
             helperText={t('activity-title-helper')}
             name='title'
             value={formData.title}
-            onChange={handleChange}
+            onChange={(e) => {
+              if (e.target.value.length <= 50) {
+                handleChange(e);
+              }
+            }}
+            maxLength={50}
           />
         </div>
         <div className="w-full md:w-96">

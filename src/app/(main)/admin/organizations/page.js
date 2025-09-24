@@ -464,6 +464,19 @@ export default function OrganizationsManagementPage() {
               />
             </div>
 
+            {/* City Field */}
+            <div>
+              <Label htmlFor="city">{t('city')}</Label>
+              <TextInput
+                id="city"
+                value={organizationForm.city}
+                onChange={(e) => setOrganizationForm({
+                  ...organizationForm,
+                  city: e.target.value
+              })}
+            />
+          </div>
+
             {/* Website Field */}
             <div>
               <Label htmlFor="website">{t('website')}</Label>

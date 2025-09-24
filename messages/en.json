@@ -61,7 +61,7 @@
         "category-label": "Select a Category",
         "info-label": "Tell more about your activity",
         "activity-title-label": "Activity Title",
-        "activity-title-helper": "Write a short and meaningful title",
+        "activity-title-helper": "Write a short and meaningful title (max 50 characters)",
         "activity-description-label": "Activity Description",
         "activity-description-helper": "Explain about the need, when do you need it, why... More details is always better !",
         "frequency-label": "Is it..",

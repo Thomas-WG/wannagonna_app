@@ -1,10 +1,13 @@
-import { Modal, Button, Label, Textarea, Toast, Badge } from 'flowbite-react';
-import { useState, useEffect } from 'react';
+import { Tooltip } from 'flowbite-react';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
-import { useAuth } from '@/utils/auth/AuthContext';
-import { createApplication } from '@/utils/crudApplications';
-import { HiCheck, HiExclamation, HiLocationMarker, HiUserGroup, HiStar } from 'react-icons/hi';
+import {
+  HiLocationMarker, HiUserGroup, HiStar,
+  HiQuestionMarkCircle,
+  HiCode, HiPencil, HiTranslate, HiDocumentText, HiLightBulb, HiDatabase, HiCamera, HiShare, HiSupport, HiAcademicCap, HiHeart, HiClock, HiPlay, HiSparkles, HiBookOpen, HiTruck, HiUsers, HiClipboardList, HiGift, HiPresentationChartLine, HiUserCircle, HiShoppingBag
+} from 'react-icons/hi';
+import { FaPaw, FaLeaf, FaChild, FaWrench, FaPaintBrush } from 'react-icons/fa';
+import { IoMegaphone } from 'react-icons/io5';
 
 // Main component for displaying an activity card
 export default function ActivityCard({
@@ -12,226 +15,198 @@ export default function ActivityCard({
   organization_name,
   organization_logo,
   title,
-  location,
   country,
   category,
   skills,
   applicants,
+  type,
   xp_reward,
+  city,
   description,
+  start_date,
+  end_date,
+  sdg,
+  onClick,
 }) {
-  // State variables for managing component behavior
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [openModal, setOpenModal] = useState(false);
-  const [message, setMessage] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showToast, setShowToast] = useState(false);
-  const [toastMessage, setToastMessage] = useState({ type: '', message: '' });
-  const { user } = useAuth();
   const t = useTranslations('ActivityCard');
+  const tManage = useTranslations('ManageActivities');
 
-  // Effect to handle toast visibility timeout
-  useEffect(() => {
-    let timeoutId;
-    if (showToast) {
-      timeoutId = setTimeout(() => {
-        setShowToast(false);
-      }, 5000);
-    }
-    return () => {
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
-    };
-  }, [showToast]);
+  // Category icon mapping (same as CategorySelector)
+  const categoryIcons = {
+    website: HiCode,
+    logo: HiPencil,
+    translation: HiTranslate,
+    flyer: HiDocumentText,
+    consulting: HiLightBulb,
+    architecture: HiSparkles,
+    dataentry: HiDatabase,
+    photovideo: HiCamera,
+    sns: HiShare,
+    onlinesupport: HiSupport,
+    education: HiAcademicCap,
+    fundraising: HiHeart,
+    longtermrole: HiClock,
+    explainer: HiPlay,
+    other: HiQuestionMarkCircle,
+    cleaning: HiSparkles,
+    teaching: HiBookOpen,
+    food_distribution: HiTruck,
+    elderly_support: HiUserGroup,
+    animal_care: FaPaw,
+    environment: FaLeaf,
+    community_events: HiUsers,
+    childcare: FaChild,
+    manual_labor: FaWrench,
+    administrative: HiClipboardList,
+    fundraising_event: HiGift,
+    awareness_campaign: IoMegaphone,
+    workshop: HiPresentationChartLine,
+    seminar_conference: HiUserCircle,
+    charity_walk: HiUsers,
+    networking: HiUserGroup,
+    arts_and_crafts: FaPaintBrush,
+    food_fair: HiShoppingBag
+  };
 
-  // Function to handle application submission
-  const handleSubmitApplication = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    
+  const formatDateTimeRange = (start, end) => {
+    if (!start) return null;
     try {
-      const result = await createApplication({
-        activityId: id,
-        userId: user.uid,
-        userEmail: user.email,
-        message,
+      const startDate = new Date(start);
+      const endDate = end ? new Date(end) : null;
+
+      const dateFormatter = new Intl.DateTimeFormat(undefined, {
+        month: 'short',
+        day: 'numeric'
       });
 
-      if (result.success) {
-        setToastMessage({
-          type: 'success',
-          message: 'Your application has been successfully submitted!'
-        });
-        setMessage('');
-        setOpenModal(false);
-      } else if (result.error === 'existing_application') {
-        setToastMessage({
-          type: 'warning',
-          message: 'You have already applied for this activity. Check your profile for the application status.'
-        });
-      }
-    } catch (error) {
-      setToastMessage({
-        type: 'error',
-        message: 'An error occurred while submitting your application. Please try again.'
+      const timeFormatter = new Intl.DateTimeFormat(undefined, {
+        hour: 'numeric',
+        minute: '2-digit'
       });
-    } finally {
-      setShowToast(true);
-      setIsSubmitting(false);
+
+      const datePart = dateFormatter.format(startDate);
+      const startTime = timeFormatter.format(startDate);
+      const endTime = endDate ? timeFormatter.format(endDate) : null;
+
+      return endTime ? `${datePart}, ${startTime} - ${endTime}` : `${datePart}, ${startTime}`;
+    } catch (e) {
+      return null;
     }
   };
 
-  const handleModalClick = (e) => {
-    e.stopPropagation();
-  };
+  const dateTimeLine = formatDateTimeRange(start_date, end_date);
+
+  // presentational component only; click handling provided by parent via onClick
 
   return (
     <>
       <div
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="cursor-pointer w-full max-w-2xl p-4 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-50 transition-all duration-300"
+        onClick={onClick}
+        className="cursor-pointer w-96 mx-auto p-4 bg-white border border-gray-200 rounded-xl shadow-md hover:bg-gray-50 transition-all duration-300"
+        role="button"
+        aria-label={title}
       >
-        {/* Header Section */}
-        <div className='flex items-start space-x-4'>
-          <div className='flex-shrink-0'>
+        {/* Header Section (Top) */}
+        <div className='flex items-start justify-between'>
+          <div className='flex items-center space-x-2'>
             <Image
               src={organization_logo}
-              alt={`${organization_name} Logo`}
-              width={50}
-              height={50}
+              alt={`${organization_name} logo`}
+              width={40}
+              height={40}
               className='rounded-full'
             />
+            <span className='text-xs text-gray-500 truncate max-w-[160px]' aria-label={organization_name}>{organization_name}</span>
           </div>
-          <div className='flex-1 min-w-0'>
-            <h5 className='text-lg font-semibold text-gray-900 dark:text-white truncate'>
-              {title}
-            </h5>
-            <p className='text-sm text-gray-500 truncate'>{organization_name}</p>
-            <div className='flex items-center mt-1 text-sm text-gray-500'>
-              <HiLocationMarker className='mr-1' />
-              <span className='truncate'>{location}, {country}</span>
-            </div>
+          <div className='flex items-center'>
+            {(() => {
+              const Icon = categoryIcons[category] || HiQuestionMarkCircle;
+              const label = (() => {
+                try { return tManage(category); } catch { return category; }
+              })();
+              return (
+                <Tooltip content={label} placement="top">
+                  <span aria-label={label} role="img" tabIndex={0} className='inline-flex'>
+                    <Icon aria-hidden className='text-grey-400' size={28} />
+                  </span>
+                </Tooltip>
+              );
+            })()}
+            <span className='sr-only'>{category}</span>
           </div>
-          <div className='flex items-center space-x-4'>
-            <div className='flex items-center text-sm text-gray-600'>
-              <HiUserGroup className='mr-1' />
-              <span>{applicants} {t('applied')}</span>
-            </div>
-            <div className='flex items-center text-sm text-gray-600'>
-              <HiStar className='mr-1' />
+        </div>
+
+        {/* Title */}
+        <div className='mt-3 h-14 flex items-start'>
+          <h2 className='text-xl font-bold text-gray-900 leading-tight break-words'>{title}</h2>
+        </div>
+
+        {/* Key Information Section (Middle) */}
+        <div className='mt-3 space-y-2'>
+          <div className='flex items-center justify-between'>
+            <div className='flex items-center text-base font-semibold text-indigo-600'>
+              <HiStar className='mr-1 text-indigo-500' />
               <span>{xp_reward} {t('points')}</span>
             </div>
-            <Button
-              onClick={(e) => {
-                e.stopPropagation();
-                setOpenModal(true);
-              }}
-              size="sm"
-            >
-              {t('apply')}
-            </Button>
+            <div className='flex items-center text-sm font-semibold text-gray-700'>
+              <HiUserGroup className='mr-1 text-gray-600' />
+              <span>{applicants} {t('applied')}</span>
+            </div>
           </div>
+
+          {skills?.length > 0 && (
+            <div className='flex flex-wrap gap-1' aria-label={t('skills')}>
+              {skills.map((skill, index) => (
+                <span key={index} className='px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-800'>
+                  {skill}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* Category and Skills Section */}
-        <div className='mt-3 flex items-center space-x-4'>
-          <div className='flex items-center space-x-2'>
-            <Badge color="info" size="sm">
-              {category}
-            </Badge>
+        {/* Footer Section (Bottom) */}
+        <div className='mt-3 pt-3 border-t border-gray-200'>
+          <div className='flex flex-col space-y-1'>
+            <div className='flex items-center justify-between'>
+              {/* SDG Icon on the left */}
+              {sdg && (
+                <div className='flex items-center'>
+                  <Image
+                    src={`/icons/sdgs/c-${sdg}.png`}
+                    alt={`SDG ${sdg}`}
+                    width={28}
+                    height={28}
+                  />
+                </div>
+              )}
+              
+              {/* Location on the right */}
+              <div className='flex items-center text-sm text-gray-700'>
+                <HiLocationMarker className='mr-1 text-gray-500' />
+                <span className='truncate'>
+                  {type === 'online' 
+                    ? `Online (${country})`
+                    : type === 'event'
+                      ? `Event - ${city}, ${country}`
+                      : type === 'local' 
+                        ? `Local - ${city}, ${country}`
+                        : ''}
+                </span>
+              </div>
+            </div>
+            {dateTimeLine && (
+              <div className='text-sm text-gray-700'>
+                {dateTimeLine}
+              </div>
+            )}
           </div>
-          <div className='flex flex-wrap gap-1 flex-1'>
-            {skills?.map((skill, index) => (
-              <Badge key={index} color="gray" size="sm">
-                {skill}
-              </Badge>
-            ))}
-          </div>
+
         </div>
 
-        {/* Description Section */}
-        {isExpanded && (
-          <div className='mt-3 pt-3 border-t border-gray-200'>
-            <div className='font-semibold text-sm text-gray-700 mb-1'>{t('description')}:</div>
-            <p className='text-sm text-gray-600 line-clamp-3'>
-              {description || t('noDescription')}
-            </p>
-          </div>
-        )}
       </div>
 
-      {/* Toast Notification */}
-      {showToast && (
-        <div className="fixed bottom-5 right-5 z-[60]">
-          <Toast
-            duration={5000}
-            onClose={() => setShowToast(false)}
-          >
-            {toastMessage.type === 'success' && (
-              <div className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-green-100 text-green-500">
-                <HiCheck className="h-5 w-5" />
-              </div>
-            )}
-            {toastMessage.type === 'warning' && (
-              <div className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-orange-100 text-orange-500">
-                <HiExclamation className="h-5 w-5" />
-              </div>
-            )}
-            {toastMessage.type === 'error' && (
-              <div className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-100 text-red-500">
-                <HiExclamation className="h-5 w-5" />
-              </div>
-            )}
-            <div className="ml-3 text-sm font-normal">
-              {toastMessage.message}
-            </div>
-            <Toast.Toggle onClose={() => setShowToast(false)} />
-          </Toast>
-        </div>
-      )}
-
-      {/* Application Modal */}
-      <Modal 
-        show={openModal}
-        onClose={() => setOpenModal(false)} 
-        onClick={handleModalClick} 
-        className="z-50"
-      >
-        <Modal.Header>{t('applyFor')} {title}</Modal.Header>
-        <Modal.Body>
-          <div className="space-y-6">
-            <div>
-              <div className="mb-2 block">
-                <Label htmlFor="message" value={t('whyHelp')} />
-              </div>
-              <Textarea
-                id="message"
-                placeholder={t('interestPlaceholder')}
-                required
-                rows={4}
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-              />
-            </div>
-          </div>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button 
-            onClick={handleSubmitApplication} 
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? t('submitting') : t('wantToHelp')}
-          </Button>
-          <Button 
-            color="gray" 
-            onClick={() => setOpenModal(false)}
-            disabled={isSubmitting} 
-          >
-            {t('cancel')}
-          </Button>
-        </Modal.Footer>
-      </Modal>
+      
     </>
   );
 }

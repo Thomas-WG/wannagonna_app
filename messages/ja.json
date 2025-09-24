@@ -61,7 +61,7 @@
         "category-label": "カテゴリを選択してください",
         "info-label": "アクティビティについて説明してください",
         "activity-title-label": "活動のタイトル",
-        "activity-title-helper": "短くて意味のあるタイトルを書いてください",
+        "activity-title-helper": "短くて意味のあるタイトルを書いてください (最大50文字)",
         "activity-description-label": "活動の説明",
         "activity-description-helper": "必要なこと、いつ必要か、なぜ必要かを説明してください。詳細が多いほど良いです！",
         "frequency-label": "これは...",

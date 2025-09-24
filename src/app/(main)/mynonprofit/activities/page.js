@@ -50,7 +50,7 @@ export default function MyNonprofitActivitiesPage() {
           <div className='animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500'></div>
         </div>
       ) : activities.length > 0 ? (
-        <div className='grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
+        <div className='flex flex-wrap justify-center gap-6 max-w-7xl'>
           {activities.map((activity, index) => (
             <ActivityCard
               key={index}
@@ -58,10 +58,16 @@ export default function MyNonprofitActivitiesPage() {
               organization_name={activity.organization_name}
               organization_logo={activity.organization_logo}
               title={activity.title}
-              location={activity.location}
+              type={activity.type}
+              country={activity.country}
+              start_date={activity.start_date}
+              end_date={activity.end_date}
+              sdg={activity.sdg}
               applicants={activity.applicants}
               xp_reward={activity.xp_reward}
               description={activity.description}
+              city={activity.city}
+              category={activity.category}
             />
           ))}
         </div>
