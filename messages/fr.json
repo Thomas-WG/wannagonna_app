@@ -48,7 +48,14 @@
         "applied": "Postulants",
         "cancel": "Annuler",
         "noDescription": "Aucune description fournie",
-        "description": "Description"
+        "description": "Description",
+        "status": {
+            "Draft": "Brouillon",
+            "Open": "Ouvert",
+            "InProgress": "En cours",
+            "Completed": "Terminé",
+            "Archived": "Archivé"
+        }
     },
     "ManageActivities": {
         "create-activity": "Créer une activité",
@@ -67,6 +74,14 @@
         "frequency-label": "Est-ce..",
         "frequency-once": "Une seule fois",
         "frequency-regular": "Activités régulières",
+        "frequency-longterm": "Rôle à long terme",
+        "recurrence-pattern": "Récurrence",
+        "repeat-on-days": "Répéter les jours:",
+        "end-recurrence": "Fin de récurrence:",
+        "after-occurrences": "Après",
+        "occurrences": "occurrences",
+        "until-date": "Jusqu'au",
+        "preview": "Aperçu:",
         "start_date": "Date de début souhaitée",
         "end_date": "Date de fin cible (optionnelle)",
         "sdg-label": "Sélectionnez un ODD qui correspond à l'activité (un seul)",
@@ -115,6 +130,22 @@
         "blood_drive": "Collecte de sang",
         "food_fair": "Foire alimentaire",
         "animal_adoption": "Événement d'adoption d'animaux"
+    },
+    "DeleteActivity": {
+        "delete-activity": "Supprimer l'activité",
+        "recurring-activity": "Il s'agit d'une activité récurrente. Choisissez ce que vous voulez supprimer :",
+        "delete-occurrence": "Supprimer cette occurrence uniquement",
+        "delete-occurrence-desc": "Seule cette activité spécifique sera supprimée. Les autres occurrences de la série resteront.",
+        "delete-series": "Supprimer toute la série",
+        "delete-series-desc": "Cela supprimera toutes les activités de cette série.",
+        "series-includes": "La série comprend :",
+        "other-occurrences": "autre(s) occurrence(s)",
+        "confirm-delete": "Êtes-vous sûr de vouloir supprimer cette activité ? Cette action ne peut pas être annulée.",
+        "deleting": "Suppression...",
+        "deleting-series": "Suppression de la série...",
+        "delete-button": "Supprimer l'activité",
+        "delete-series-button": "Supprimer la série",
+        "cancel": "Annuler"
     },
     "CompleteProfile": {
         "profile": "Informations du profil",
@@ -199,6 +230,7 @@
         "website": "Site web",
         "registrationNumber": "Numéro d'enregistrement",
         "selectCountry": "Sélectionner un pays",
+        "city": "Ville",
         "organizationAdded": "Organisation ajoutée avec succès",
         "organizationUpdated": "Organisation mise à jour avec succès",
         "organizationDeleted": "Organisation supprimée avec succès",
@@ -223,5 +255,20 @@
         "selectOrganization": "Sélectionner une organisation",
         "roleUpdated": "Rôle mis à jour avec succès",
         "errorUpdatingRole": "Erreur lors de la mise à jour du rôle"
+    },
+    "StatusUpdateModal": {
+        "title": "Mettre à jour le statut de l'activité",
+        "selectStatus": "Sélectionner le statut",
+        "preview": "Aperçu",
+        "cancel": "Annuler",
+        "save": "Enregistrer",
+        "saving": "Enregistrement...",
+        "status": {
+            "Draft": "Brouillon",
+            "Open": "Ouvert",
+            "InProgress": "En cours",
+            "Completed": "Terminé",
+            "Archived": "Archivé"
+        }
     }
 }

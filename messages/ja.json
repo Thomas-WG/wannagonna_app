@@ -48,7 +48,14 @@
         "applied": "応募済み",
         "cancel": "キャンセル",
         "noDescription": "説明が提供されていません",
-        "description": "説明"
+        "description": "説明",
+        "status": {
+            "Draft": "下書き",
+            "Open": "公開中",
+            "InProgress": "進行中",
+            "Completed": "完了",
+            "Archived": "アーカイブ"
+        }
     },
     "ManageActivities": {
         "create-activity": "活動を作成する",
@@ -67,6 +74,14 @@
         "frequency-label": "これは...",
         "frequency-once": "一度だけ",
         "frequency-regular": "定期的な活動",
+        "frequency-longterm": "長期役割",
+        "recurrence-pattern": "繰り返しパターン",
+        "repeat-on-days": "繰り返し曜日:",
+        "end-recurrence": "繰り返し終了:",
+        "after-occurrences": "回後",
+        "occurrences": "回",
+        "until-date": "まで",
+        "preview": "プレビュー:",
         "start_date": "希望開始日",
         "end_date": "目標終了日 (オプション)",
         "sdg-label": "活動に一致するSDGを選択してください（1つだけ）",
@@ -115,6 +130,22 @@
         "blood_drive": "献血活動",
         "food_fair": "フードフェア",
         "animal_adoption": "動物譲渡イベント"
+    },
+    "DeleteActivity": {
+        "delete-activity": "活動を削除",
+        "recurring-activity": "これは繰り返し活動です。削除するものを選択してください：",
+        "delete-occurrence": "この回のみを削除",
+        "delete-occurrence-desc": "この特定の活動のみが削除されます。シリーズの他の回は残ります。",
+        "delete-series": "シリーズ全体を削除",
+        "delete-series-desc": "これにより、このシリーズのすべての活動が削除されます。",
+        "series-includes": "シリーズには以下が含まれます：",
+        "other-occurrences": "他の回",
+        "confirm-delete": "この活動を削除してもよろしいですか？この操作は元に戻せません。",
+        "deleting": "削除中...",
+        "deleting-series": "シリーズを削除中...",
+        "delete-button": "活動を削除",
+        "delete-series-button": "シリーズを削除",
+        "cancel": "キャンセル"
     },
     "CompleteProfile": {
       "profile": "プロフィール情報",
@@ -199,6 +230,7 @@
       "website": "ウェブサイト",
       "registrationNumber": "登録番号",
       "selectCountry": "国を選択",
+      "selectCity": "都市を選択",
       "organizationAdded": "組織が正常に追加されました",
       "organizationUpdated": "組織が正常に更新されました",
       "organizationDeleted": "組織が正常に削除されました",
@@ -223,5 +255,20 @@
       "selectOrganization": "組織を選択",
       "roleUpdated": "役割が正常に更新されました",
       "errorUpdatingRole": "役割の更新中にエラーが発生しました"
+    },
+    "StatusUpdateModal": {
+        "title": "活動ステータスの更新",
+        "selectStatus": "ステータスを選択",
+        "preview": "プレビュー",
+        "cancel": "キャンセル",
+        "save": "保存",
+        "saving": "保存中...",
+        "status": {
+            "Draft": "下書き",
+            "Open": "公開中",
+            "InProgress": "進行中",
+            "Completed": "完了",
+            "Archived": "アーカイブ"
+        }
     }
 }

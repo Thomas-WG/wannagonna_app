@@ -1,5 +1,5 @@
 'use client';
-
+//Verify if this file can be deleted since it is not used
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/utils/auth/AuthContext';
 import { fetchActivitiesByCriteria } from '@/utils/crudActivities';
@@ -10,6 +10,17 @@ export default function MyNonprofitActivitiesPage() {
   const { user, claims, loading } = useAuth();
   const [activities, setActivities] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Handle status change from activity card
+  const handleStatusChange = (activityId, newStatus) => {
+    setActivities(prevActivities => 
+      prevActivities.map(activity => 
+        activity.id === activityId 
+          ? { ...activity, status: newStatus }
+          : activity
+      )
+    );
+  };
   const router = useRouter();
   const searchParams = useSearchParams();
   const type = searchParams.get('type');
@@ -68,6 +79,9 @@ export default function MyNonprofitActivitiesPage() {
               description={activity.description}
               city={activity.city}
               category={activity.category}
+              status={activity.status}
+              onStatusChange={handleStatusChange}
+              canEditStatus={true}
             />
           ))}
         </div>
@@ -82,13 +96,6 @@ export default function MyNonprofitActivitiesPage() {
           </button>
         </div>
       )}
-      
-      <button 
-        onClick={goToManage} 
-        className="fixed bottom-4 right-4 bg-orange-500 text-white text-2xl w-12 h-12 rounded-full shadow-lg hover:bg-orange-600"
-      >
-        +
-      </button>
     </div>
   );
 }

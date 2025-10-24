@@ -1,4 +1,4 @@
-import { collection, getDocs, addDoc, getDoc, updateDoc, doc, onSnapshot, query, where } from 'firebase/firestore';
+import { collection, getDocs, addDoc, getDoc, updateDoc, doc, onSnapshot, query, where, deleteDoc } from 'firebase/firestore';
 import { db } from 'firebaseConfig';
 
 // Fetch all activities from the Firestore database
@@ -115,5 +115,33 @@ export async function fetchActivitiesByCriteria(organizationId = 'any', type = '
   } catch (error) {
     console.error('Error fetching activities:', error);
     return [];
+  }
+}
+
+// Update activity status in the Firestore database
+export async function updateActivityStatus(id, status) {
+  try {
+    const activityDoc = doc(db, 'activities', id);
+    await updateDoc(activityDoc, {
+      status: status,
+      last_updated: new Date()
+    });
+    console.log('Activity status updated:', id, 'to', status);
+    return { success: true };
+  } catch (error) {
+    console.error('Error updating activity status:', error);
+    throw error;
+  }
+}
+
+// Delete an activity from the Firestore database
+export async function deleteActivity(id) {
+  try {
+    const activityDoc = doc(db, 'activities', id);
+    await deleteDoc(activityDoc);
+    console.log('Activity deleted:', id);
+  } catch (error) {
+    console.error('Error deleting activity:', error);
+    throw error;
   }
 }

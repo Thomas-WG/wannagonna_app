@@ -175,6 +175,7 @@ export default function OrganizationsManagementPage() {
       sdgs: [],
       description: '',
       address: '',
+      city: '',
       website: '',
       email: '',
       members: [],

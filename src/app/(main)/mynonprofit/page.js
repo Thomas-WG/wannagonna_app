@@ -1,12 +1,15 @@
 "use client";
 
-import { Card } from "flowbite-react";
-import Link from "next/link";
-import { HiUsers, HiOfficeBuilding, HiAcademicCap, HiCalendar, HiDocumentText } from "react-icons/hi";
+import { Card, Toast } from "flowbite-react";
+import { HiUsers, HiOfficeBuilding, HiCalendar, HiDocumentText, HiPencil, HiTrash, HiEye, HiUserGroup } from "react-icons/hi";
+import { MdOutlineSocialDistance } from "react-icons/md";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/utils/auth/AuthContext";
 import { fetchOrganizationById } from "@/utils/crudOrganizations";
 import { useRouter } from "next/navigation";
+import { fetchActivitiesByCriteria, deleteActivity } from "@/utils/crudActivities";
+import ActivityCard from "@/components/activities/ActivityCard";
+import DeleteActivityModal from "@/components/activities/DeleteActivityModal";
 
 export default function MyNonProfitDashboard() {
   const { claims } = useAuth();
@@ -19,10 +22,15 @@ export default function MyNonProfitDashboard() {
     totalParticipants: 0
   });
   const [loading, setLoading] = useState(true);
+  const [isFabOpen, setIsFabOpen] = useState(false);
+  const [orgActivities, setOrgActivities] = useState([]);
+  const [loadingActivities, setLoadingActivities] = useState(true);
+  const [selectedActivity, setSelectedActivity] = useState(null);
+  const [showActionModal, setShowActionModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState({ type: '', message: '' });
 
-  const handleActivityClick = (type) => {
-    router.push(`/mynonprofit/activities?type=${type}`);
-  };
 
   useEffect(() => {
     const fetchKpiData = async () => {
@@ -45,9 +53,83 @@ export default function MyNonProfitDashboard() {
     fetchKpiData();
   }, [claims]);
 
+  useEffect(() => {
+    const fetchActivities = async () => {
+      if (claims && claims.npoId) {
+        try {
+          const results = await fetchActivitiesByCriteria(claims.npoId, 'any', 'any');
+          setOrgActivities(results || []);
+        } catch (error) {
+          console.error("Error fetching organization activities:", error);
+          setOrgActivities([]);
+        } finally {
+          setLoadingActivities(false);
+        }
+      } else {
+        setLoadingActivities(false);
+      }
+    };
+    fetchActivities();
+  }, [claims]);
+
+  const handleActivityCardClick = (activity) => {
+    setSelectedActivity(activity);
+    setShowActionModal(true);
+  };
+
+  const handleEditActivity = () => {
+    setShowActionModal(false);
+    router.push(`/activities/manage?activityId=${selectedActivity.id}`);
+  };
+
+  const handleDeleteActivity = () => {
+    if (selectedActivity) {
+      setShowActionModal(false);
+      setShowDeleteModal(true);
+    }
+  };
+
+  const handleActivityDeleted = async (deletedCount) => {
+    try {
+      // Refresh activities list
+      const results = await fetchActivitiesByCriteria(claims.npoId, 'any', 'any');
+      setOrgActivities(results || []);
+      
+      // Refresh organization data to update activity counts
+      const orgData = await fetchOrganizationById(claims.npoId);
+      if (orgData) {
+        setOrgData(orgData);
+      }
+      
+      setShowDeleteModal(false);
+      setSelectedActivity(null);
+      
+      // Show success toast
+      const message = deletedCount > 1 
+        ? `Successfully deleted ${deletedCount} activities!`
+        : 'Activity deleted successfully!';
+      setToastMessage({ type: 'success', message });
+      setShowToast(true);
+    } catch (error) {
+      console.error("Error refreshing activities:", error);
+      // Show error toast
+      setToastMessage({ type: 'error', message: 'Error refreshing activities. Please try again.' });
+      setShowToast(true);
+    }
+  };
+
+  const handleReviewApplications = () => {
+    setShowActionModal(false);
+    router.push(`/mynonprofit/applications?activityId=${selectedActivity.id}`);
+  };
+
+  const handleViewActivity = () => {
+    setShowActionModal(false);
+    router.push(`/activities/${selectedActivity.id}`);
+  };
+
   return (
     <div className="container mx-auto px-4">
-      <h1 className="text-3xl font-bold mb-8">My Non-Profit Dashboard</h1>
       
       {loading ? (
         <div className="flex justify-center items-center h-64">
@@ -57,12 +139,11 @@ export default function MyNonProfitDashboard() {
         <div className="flex flex-wrap justify-center gap-4">
           {/* Online Activities Card */}
           <Card 
-            className="w-36 hover:shadow-lg transition-shadow cursor-pointer"
-            onClick={() => handleActivityClick('online')}
+            className="w-36 hover:shadow-lg transition-shadow"
           >
             <div className="flex flex-col items-center p-2">
               <div className="bg-blue-100 p-2 rounded-full mb-2">
-                <HiOfficeBuilding className="h-6 w-6 text-blue-600" />
+                <MdOutlineSocialDistance className="h-6 w-6 text-blue-600" />
               </div>
               <h2 className="text-sm font-semibold mb-1 text-center">Online Activities</h2>
               <p className="text-2xl font-bold text-blue-600 text-center">{orgData.totalOnlineActivities}</p>
@@ -71,8 +152,7 @@ export default function MyNonProfitDashboard() {
 
           {/* Local Activities Card */}
           <Card 
-            className="w-36 hover:shadow-lg transition-shadow cursor-pointer"
-            onClick={() => handleActivityClick('local')}
+            className="w-36 hover:shadow-lg transition-shadow"
           >
             <div className="flex flex-col items-center p-2">
               <div className="bg-green-100 p-2 rounded-full mb-2">
@@ -117,6 +197,189 @@ export default function MyNonProfitDashboard() {
           </Card>
         </div>
       )}
+
+      {/* Organization Activities */}
+      <div className="mt-10">
+        <h2 className="text-2xl font-semibold mb-4">Your Activities</h2>
+        {loadingActivities ? (
+          <div className="flex justify-center items-center h-32">
+            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
+          </div>
+        ) : orgActivities.length === 0 ? (
+          <p className="text-gray-600">No activities found for your organization.</p>
+        ) : (
+          <div className='flex flex-wrap justify-center gap-6'>
+            {orgActivities.map((activity) => (
+              <div key={activity.id} className="relative">
+                <ActivityCard
+                  id={activity.id}
+                  organization_name={activity.organization_name}
+                  organization_logo={activity.organization_logo}
+                  title={activity.title}
+                  type={activity.type}
+                  country={activity.country}
+                  start_date={activity.start_date}
+                  end_date={activity.end_date}
+                  sdg={activity.sdg}
+                  applicants={activity.applicants}
+                  xp_reward={activity.xp_reward}
+                  description={activity.description}
+                  status={activity.status}
+                  city={activity.city}
+                  category={activity.category}
+                  onClick={() => handleActivityCardClick(activity)}
+                />
+                
+                {/* Overlay with action buttons */}
+                {selectedActivity && selectedActivity.id === activity.id && showActionModal && (
+                  <div className="absolute inset-0 bg-black bg-opacity-60 rounded-lg flex items-center justify-center z-10">
+                    <div className="flex space-x-6">
+                      {/* Edit Button */}
+                      <div className="flex flex-col items-center">
+                        <button
+                          onClick={handleEditActivity}
+                          className="w-16 h-16 rounded-full bg-blue-500 text-white flex items-center justify-center shadow-lg hover:bg-blue-600 transition-colors"
+                          aria-label="Edit Activity"
+                        >
+                          <HiPencil className="h-8 w-8" />
+                        </button>
+                        <span className="mt-2 text-sm text-white font-medium">Edit</span>
+                      </div>
+
+                      {/* Delete Button */}
+                      <div className="flex flex-col items-center">
+                        <button
+                          onClick={handleDeleteActivity}
+                          className="w-16 h-16 rounded-full bg-red-500 text-white flex items-center justify-center shadow-lg hover:bg-red-600 transition-colors"
+                          aria-label="Delete Activity"
+                        >
+                          <HiTrash className="h-8 w-8" />
+                        </button>
+                        <span className="mt-2 text-sm text-white font-medium">Delete</span>
+                      </div>
+
+                      {/* View Activity Button */}
+                      <div className="flex flex-col items-center">
+                        <button
+                          onClick={handleViewActivity}
+                          className="w-16 h-16 rounded-full bg-purple-500 text-white flex items-center justify-center shadow-lg hover:bg-purple-600 transition-colors"
+                          aria-label="View Activity"
+                        >
+                          <HiEye className="h-8 w-8" />
+                        </button>
+                        <span className="mt-2 text-sm text-white font-medium">View</span>
+                      </div>
+
+                      {/* Review Applications Button */}
+                      <div className="flex flex-col items-center">
+                        <button
+                          onClick={handleReviewApplications}
+                          className="w-16 h-16 rounded-full bg-green-500 text-white flex items-center justify-center shadow-lg hover:bg-green-600 transition-colors"
+                          aria-label="Review Applications"
+                        >
+                          <HiUserGroup className="h-8 w-8" />
+                        </button>
+                        <span className="mt-2 text-sm text-white font-medium">Applications</span>
+                      </div>
+                    </div>
+                    
+                    {/* Close button */}
+                    <button
+                      onClick={() => setShowActionModal(false)}
+                      className="absolute top-2 right-2 w-8 h-8 rounded-full bg-gray-600 text-white flex items-center justify-center hover:bg-gray-700 transition-colors"
+                      aria-label="Close"
+                    >
+                      ×
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Floating Action Button with horizontal menu */}
+      <div className="fixed bottom-8 right-8 z-50">
+        {isFabOpen && (
+          <div className="absolute bottom-16 right-0 flex flex-col items-end space-y-3">
+            {/* Online */}
+            <div className="flex flex-col items-center">
+              <button
+                className="w-14 h-14 rounded-full bg-blue-500 text-white flex items-center justify-center shadow-lg hover:bg-blue-600"
+                aria-label="Online"
+                onClick={() => {
+                  setIsFabOpen(false);
+                  router.push('/mynonprofit/activities/manage?type=online');
+                }}
+              >
+                <MdOutlineSocialDistance className="h-7 w-7" />
+              </button>
+              <span className="mt-1 text-sm text-blue-600">Online</span>
+            </div>
+
+            {/* Local */}
+            <div className="flex flex-col items-center">
+              <button
+                className="w-14 h-14 rounded-full bg-green-500 text-white flex items-center justify-center shadow-lg hover:bg-green-600"
+                aria-label="Local"
+                onClick={() => {
+                  setIsFabOpen(false);
+                  router.push('/mynonprofit/activities/manage?type=local');
+                }}
+              >
+                <HiOfficeBuilding className="h-7 w-7" />
+              </button>
+              <span className="mt-1 text-sm text-green-600">Local</span>
+            </div>
+
+            {/* Event */}
+            <div className="flex flex-col items-center">
+              <button
+                className="w-14 h-14 rounded-full bg-purple-500 text-white flex items-center justify-center shadow-lg hover:bg-purple-600"
+                aria-label="Event"
+                onClick={() => {
+                  setIsFabOpen(false);
+                  router.push('/mynonprofit/activities/manage?type=event');
+                }}
+              >
+                <HiCalendar className="h-7 w-7" />
+              </button>
+              <span className="mt-1 text-sm text-purple-600">Event</span>
+            </div>
+          </div>
+        )}
+
+        <button
+          onClick={() => setIsFabOpen((prev) => !prev)}
+          className="bg-orange-500 text-white text-2xl w-12 h-12 rounded-full shadow-lg hover:bg-orange-600"
+          aria-label={isFabOpen ? 'Close menu' : 'Open menu'}
+        >
+          {isFabOpen ? '×' : '+'}
+        </button>
+      </div>
+
+      {/* Delete Activity Modal */}
+      <DeleteActivityModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        activity={selectedActivity}
+        onActivityDeleted={handleActivityDeleted}
+      />
+
+      {/* Toast Notification */}
+      {showToast && (
+        <div className="fixed bottom-5 right-5 z-[60]">
+          <Toast duration={5000} onClose={() => setShowToast(false)}>
+            {toastMessage.type === 'success' && <div className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-green-100 text-green-500">✓</div>}
+            {toastMessage.type === 'warning' && <div className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-orange-100 text-orange-500">!</div>}
+            {toastMessage.type === 'error' && <div className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-100 text-red-500">!</div>}
+            <div className="ml-3 text-sm font-normal">{toastMessage.message}</div>
+            <Toast.Toggle onClose={() => setShowToast(false)} />
+          </Toast>
+        </div>
+      )}
+
     </div>
   );
 }

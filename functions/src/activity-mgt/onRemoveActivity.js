@@ -1,17 +1,11 @@
 import {db} from "../init.js";
 
 
-export const updateActivityCountOnRemove = async (activityId) => {
+export const updateActivityCountOnRemove = async (activityId, activityData) => {
   return db.runTransaction(async (transaction) => {
-    // Get activity document
-    const activityRef = db.collection("activities").doc(activityId);
-    const activitySnap = await transaction.get(activityRef);
-
-    if (!activitySnap.exists) {
-      throw new Error("Activity document does not exist!");
-    }
-
-    const activity = activitySnap.data();
+    // Use the activity data passed from the event instead of trying to read the
+    // deleted document
+    const activity = activityData;
 
     // Get organization document
     const organizationId = activity.organizationId;

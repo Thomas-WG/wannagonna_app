@@ -20,12 +20,14 @@ import CategorySelector from '@/components/activities/CategorySelector';
 import ActivityDetailsForm from '@/components/activities/ActivityDetailsForm';
 import SDGSelector from '@/components/activities/SDGSelector';
 import FormNavigation from '@/components/activities/FormNavigation';
+import { createRecurringActivities, validateRecurrenceConfig } from '@/utils/recurrenceUtils';
 
 export default function CreateUpdateActivityPage() {
   // Retrieve query parameters from URL
   const searchParams = useSearchParams();
   const router = useRouter(); //for changing page
   const activityId = searchParams.get('activityId'); // Retrieve activity ID if present (edit mode)
+  const prefillType = searchParams.get('type'); // Prefill type when coming from NPO radial menu
   const isEditMode = Boolean(activityId); // Determine if the page is in edit mode
   const { user, claims, loading } = useAuth(); // Get authenticated user information and loading status
   const t = useTranslations('ManageActivities'); // Internationalization function for translations
@@ -90,13 +92,67 @@ export default function CreateUpdateActivityPage() {
     if (activityId) {
       async function fetchData() {
         const data = await fetchActivityById(activityId);
-        if (data) setFormData({
-          ...data,
-        });
+        if (data) {
+          // Convert Firestore timestamps to Date objects
+          const processedData = {
+            ...data,
+            start_date: data.start_date ? (() => {
+              try {
+                // Handle Firestore Timestamp objects
+                if (data.start_date && typeof data.start_date === 'object' && 'seconds' in data.start_date) {
+                  return new Date(data.start_date.seconds * 1000);
+                }
+                // Handle regular Date objects or strings
+                return new Date(data.start_date);
+              } catch (error) {
+                console.error('Error converting start_date:', error);
+                return new Date();
+              }
+            })() : new Date(),
+            end_date: data.end_date ? (() => {
+              try {
+                // Handle Firestore Timestamp objects
+                if (data.end_date && typeof data.end_date === 'object' && 'seconds' in data.end_date) {
+                  return new Date(data.end_date.seconds * 1000);
+                }
+                // Handle regular Date objects or strings
+                return new Date(data.end_date);
+              } catch (error) {
+                console.error('Error converting end_date:', error);
+                return new Date();
+              }
+            })() : new Date(),
+            creation_date: data.creation_date ? (() => {
+              try {
+                // Handle Firestore Timestamp objects
+                if (data.creation_date && typeof data.creation_date === 'object' && 'seconds' in data.creation_date) {
+                  return new Date(data.creation_date.seconds * 1000);
+                }
+                // Handle regular Date objects or strings
+                return new Date(data.creation_date);
+              } catch (error) {
+                console.error('Error converting creation_date:', error);
+                return new Date();
+              }
+            })() : new Date(),
+          };
+          setFormData(processedData);
+        }
       }
       fetchData();
     }
   }, [activityId, isEditMode]);
+
+  // Prefill activity type when not editing and type is provided in query
+  useEffect(() => {
+    if (!isEditMode && prefillType) {
+      const allowed = ['online', 'local', 'event'];
+      if (allowed.includes(prefillType)) {
+        setFormData((prev) => ({ ...prev, type: prefillType }));
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prefillType, isEditMode]);
 
   // Handle form input changes
   const handleChange = (e) => {
@@ -111,24 +167,64 @@ export default function CreateUpdateActivityPage() {
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (formData.creation_date.getTime() === formData.end_date.getTime()){formData.end_date = null}
+    
+    // Ensure dates are valid Date objects before comparing
+    const creationDate = formData.creation_date instanceof Date ? formData.creation_date : new Date(formData.creation_date);
+    const endDate = formData.end_date instanceof Date ? formData.end_date : new Date(formData.end_date);
+    
+    if (creationDate.getTime() === endDate.getTime()) {
+      formData.end_date = null;
+    }
 
-    const dataToSave = {
+    const baseDataToSave = {
       ...formData,
       // Add automatic attributes here if needed (e.g., organizationId, creatorId)
       organizationId: claims?.npoId || formData.organizationId, // Ensure organizationId is set
       creatorId: user?.uid // Add the creator's ID
     };
     
-    // Update or create activity based on the mode
-    if (isEditMode) {
-      await updateActivity(activityId, dataToSave);
-    } else {
-      await createActivity(dataToSave);
+    try {
+      // Handle recurring activities
+      if (formData.frequency === 'regular' && formData.recurrenceDays && formData.recurrenceDays.length > 0) {
+        // Validate recurrence configuration
+        const recurrenceConfig = {
+          startDate: formData.start_date,
+          recurrenceDays: formData.recurrenceDays,
+          endType: formData.recurrenceEndType,
+          occurrences: formData.recurrenceOccurrences,
+          endDate: formData.recurrenceEndDate
+        };
+        
+        const validation = validateRecurrenceConfig(recurrenceConfig);
+        if (!validation.isValid) {
+          alert(`Recurrence configuration error: ${validation.errors.join(', ')}`);
+          return;
+        }
+        
+        // Create recurring activities
+        const recurringActivities = createRecurringActivities(baseDataToSave, recurrenceConfig);
+        
+        // Create all occurrences
+        for (const activity of recurringActivities) {
+          await createActivity(activity);
+        }
+        
+        alert(`Successfully created ${recurringActivities.length} recurring activities!`);
+      } else {
+        // Handle single activity
+        if (isEditMode) {
+          await updateActivity(activityId, baseDataToSave);
+        } else {
+          await createActivity(baseDataToSave);
+        }
+      }
+      
+      // Use router.back() to go back to the previous page
+      router.back();
+    } catch (error) {
+      console.error('Error saving activity:', error);
+      alert('Error saving activity. Please try again.');
     }
-
-    // Use router.back() to go back to the previous page
-    router.back();
   };
 
   // If there is no authenticated user, return null (no content rendered)
@@ -171,6 +267,7 @@ export default function CreateUpdateActivityPage() {
           <SDGSelector 
             formData={formData}
             setFormData={setFormData}
+            organizationData={organizationData}
           />
         )}
 

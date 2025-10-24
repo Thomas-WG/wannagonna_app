@@ -48,7 +48,14 @@
         "applied": "Aplicado",
         "cancel": "Cancelar",
         "noDescription": "No se proporcionó una descripción",
-        "description": "Descripción"
+        "description": "Descripción",
+        "status": {
+            "Draft": "Borrador",
+            "Open": "Abierto",
+            "InProgress": "En progreso",
+            "Completed": "Completado",
+            "Archived": "Archivado"
+        }
     },
     "ManageActivities": {
         "create-activity": "Crear actividad",
@@ -67,7 +74,9 @@
         "frequency-label": "¿Es...",
         "frequency-once": "Solo una vez",
         "frequency-regular": "Actividades regulares",
+        "frequency-longterm": "Rol a largo plazo",
         "start_date": "Fecha de inicio deseada",
+        "recurrence-pattern": "Patrón de recurrencia",
         "end_date": "Fecha de finalización objetivo (opcional)",
         "sdg-label": "Selecciona un ODS que coincida con la actividad (solo uno)",
         "sdg-helper": "Se utilizará para ganar insignias para los voluntarios",
@@ -115,6 +124,22 @@
         "blood_drive": "Donación de sangre",
         "food_fair": "Feria de alimentos",
         "animal_adoption": "Evento de adopción de animales"
+    },
+    "DeleteActivity": {
+        "delete-activity": "Eliminar actividad",
+        "recurring-activity": "Esta es una actividad recurrente. Elige lo que quieres eliminar:",
+        "delete-occurrence": "Eliminar solo esta ocurrencia",
+        "delete-occurrence-desc": "Solo esta actividad específica será eliminada. Las otras ocurrencias de la serie permanecerán.",
+        "delete-series": "Eliminar toda la serie",
+        "delete-series-desc": "Esto eliminará todas las actividades de esta serie.",
+        "series-includes": "La serie incluye:",
+        "other-occurrences": "otra(s) ocurrencia(s)",
+        "confirm-delete": "¿Estás seguro de que quieres eliminar esta actividad? Esta acción no se puede deshacer.",
+        "deleting": "Eliminando...",
+        "deleting-series": "Eliminando serie...",
+        "delete-button": "Eliminar actividad",
+        "delete-series-button": "Eliminar serie",
+        "cancel": "Cancelar"
     },
     "CompleteProfile": {
         "profile": "Información del perfil",
@@ -199,6 +224,7 @@
         "website": "Sitio web",
         "registrationNumber": "Número de registro",
         "selectCountry": "Seleccionar un país",
+        "city": "Ciudad",
         "organizationAdded": "Organización añadida con éxito",
         "organizationUpdated": "Organización actualizada con éxito",
         "organizationDeleted": "Organización eliminada con éxito",
@@ -223,5 +249,20 @@
         "selectOrganization": "Seleccionar una organización",
         "roleUpdated": "Rol actualizado con éxito",
         "errorUpdatingRole": "Error al actualizar el rol"
+    },
+    "StatusUpdateModal": {
+        "title": "Actualizar estado de la actividad",
+        "selectStatus": "Seleccionar estado",
+        "preview": "Vista previa",
+        "cancel": "Cancelar",
+        "save": "Guardar",
+        "saving": "Guardando...",
+        "status": {
+            "Draft": "Borrador",
+            "Open": "Abierto",
+            "InProgress": "En progreso",
+            "Completed": "Completado",
+            "Archived": "Archivado"
+        }
     }
 }

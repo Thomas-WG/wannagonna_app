@@ -24,8 +24,10 @@ export const onActivityDeletedUpdateActivityCount = onDocumentDeleted(
     "activities/{activityId}",
     async (event) => {
       const activityId = event.params.activityId;
+      const activityData = event.data?.data();
       console.log("Activity ID:", activityId);
-      await updateActivityCountOnRemove(activityId);
+      console.log("Activity data:", activityData);
+      await updateActivityCountOnRemove(activityId, activityData);
     },
 );
 

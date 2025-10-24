@@ -1,13 +1,17 @@
 import { Tooltip } from 'flowbite-react';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
+import { useState, useEffect } from 'react';
 import {
   HiLocationMarker, HiUserGroup, HiStar,
   HiQuestionMarkCircle,
-  HiCode, HiPencil, HiTranslate, HiDocumentText, HiLightBulb, HiDatabase, HiCamera, HiShare, HiSupport, HiAcademicCap, HiHeart, HiClock, HiPlay, HiSparkles, HiBookOpen, HiTruck, HiUsers, HiClipboardList, HiGift, HiPresentationChartLine, HiUserCircle, HiShoppingBag
+  HiCode, HiPencil, HiTranslate, HiDocumentText, HiLightBulb, HiDatabase, HiCamera, HiShare, HiSupport, HiAcademicCap, HiHeart, HiClock, HiPlay, HiSparkles, HiBookOpen, HiTruck, HiUsers, HiClipboardList, HiGift, HiPresentationChartLine, HiUserCircle, HiShoppingBag,
+  HiDocument, HiCheckCircle, HiArchive
 } from 'react-icons/hi';
-import { FaPaw, FaLeaf, FaChild, FaWrench, FaPaintBrush } from 'react-icons/fa';
+import { FaPaw, FaLeaf, FaChild, FaWrench, FaPaintBrush,FaRegCircle } from 'react-icons/fa';
 import { IoMegaphone } from 'react-icons/io5';
+import StatusUpdateModal from './StatusUpdateModal';
+import { updateActivityStatus } from '@/utils/crudActivities';
 
 // Main component for displaying an activity card
 export default function ActivityCard({
@@ -26,10 +30,61 @@ export default function ActivityCard({
   start_date,
   end_date,
   sdg,
+  status,
   onClick,
+  onStatusChange,
+  canEditStatus = false,
 }) {
   const t = useTranslations('ActivityCard');
   const tManage = useTranslations('ManageActivities');
+  
+  // State for status update modal
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [localStatus, setLocalStatus] = useState(status);
+
+  // Sync local status with prop changes
+  useEffect(() => {
+    setLocalStatus(status);
+  }, [status]);
+
+  // Status configuration
+  const getStatusConfig = (status) => {
+    const statusConfigs = {
+      'Draft': {
+        icon: HiDocument,
+        color: 'bg-gray-100 text-gray-800',
+        borderColor: 'border-gray-300',
+        label: t('status.Draft')
+      },
+      'Open': {
+        icon: FaRegCircle,
+        color: 'bg-green-100 text-green-800',
+        borderColor: 'border-green-300',
+        label: t('status.Open')
+      },
+      'InProgress': {
+        icon: HiClock,
+        color: 'bg-blue-100 text-blue-800',
+        borderColor: 'border-blue-300',
+        label: t('status.InProgress')
+      },
+      'Completed': {
+        icon: HiCheckCircle,
+        color: 'bg-purple-100 text-purple-800',
+        borderColor: 'border-purple-300',
+        label: t('status.Completed')
+      },
+      'Archived': {
+        icon: HiArchive,
+        color: 'bg-gray-100 text-gray-600',
+        borderColor: 'border-gray-300',
+        label: t('status.Archived')
+      }
+    };
+    
+    return statusConfigs[status] || statusConfigs['Draft'];
+  };
 
   // Category icon mapping (same as CategorySelector)
   const categoryIcons = {
@@ -96,6 +151,39 @@ export default function ActivityCard({
 
   const dateTimeLine = formatDateTimeRange(start_date, end_date);
 
+  // Handle status update
+  const handleStatusUpdate = async (newStatus) => {
+    try {
+      setIsUpdatingStatus(true);
+      
+      // Update local state immediately for instant visual feedback
+      setLocalStatus(newStatus);
+      
+      // Update in database
+      await updateActivityStatus(id, newStatus);
+      
+      // Notify parent component of the change
+      if (onStatusChange) {
+        onStatusChange(id, newStatus);
+      }
+      
+      setShowStatusModal(false);
+    } catch (error) {
+      console.error('Error updating activity status:', error);
+      // Revert local state on error
+      setLocalStatus(status);
+      alert('Error updating activity status. Please try again.');
+    } finally {
+      setIsUpdatingStatus(false);
+    }
+  };
+
+  // Handle status badge click
+  const handleStatusClick = (e) => {
+    e.stopPropagation(); // Prevent card click
+    setShowStatusModal(true);
+  };
+
   // presentational component only; click handling provided by parent via onClick
 
   return (
@@ -118,7 +206,32 @@ export default function ActivityCard({
             />
             <span className='text-xs text-gray-500 truncate max-w-[160px]' aria-label={organization_name}>{organization_name}</span>
           </div>
-          <div className='flex items-center'>
+          <div className='flex items-center space-x-2'>
+            {/* Status Badge */}
+            {localStatus && (() => {
+              const statusConfig = getStatusConfig(localStatus);
+              const StatusIcon = statusConfig.icon;
+              const tooltipContent = canEditStatus 
+                ? `${statusConfig.label} - Click to change` 
+                : statusConfig.label;
+              const badgeClasses = canEditStatus
+                ? `inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${statusConfig.color} ${statusConfig.borderColor} border cursor-pointer hover:opacity-80 transition-opacity`
+                : `inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${statusConfig.color} ${statusConfig.borderColor} border`;
+              
+              return (
+                <Tooltip content={tooltipContent} placement="top">
+                  <div 
+                    className={badgeClasses}
+                    onClick={canEditStatus ? handleStatusClick : undefined}
+                  >
+                    <StatusIcon className='w-3 h-3 mr-1' />
+                    <span>{statusConfig.label}</span>
+                  </div>
+                </Tooltip>
+              );
+            })()}
+            
+            {/* Category Icon */}
             {(() => {
               const Icon = categoryIcons[category] || HiQuestionMarkCircle;
               const label = (() => {
@@ -206,7 +319,14 @@ export default function ActivityCard({
 
       </div>
 
-      
+      {/* Status Update Modal */}
+      <StatusUpdateModal
+        isOpen={showStatusModal}
+        onClose={() => setShowStatusModal(false)}
+        currentStatus={localStatus}
+        onStatusUpdate={handleStatusUpdate}
+        isUpdating={isUpdatingStatus}
+      />
     </>
   );
 }

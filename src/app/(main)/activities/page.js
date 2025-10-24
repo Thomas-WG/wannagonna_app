@@ -44,6 +44,17 @@ export default function ActivitiesPage() {
 
   const router = useRouter();
 
+  // Handle status change from activity card
+  const handleStatusChange = (activityId, newStatus) => {
+    setActivities(prevActivities => 
+      prevActivities.map(activity => 
+        activity.id === activityId 
+          ? { ...activity, status: newStatus }
+          : activity
+      )
+    );
+  };
+
   // Check if user has permission to manage activities
   const canManageActivities = claims && (claims.role === 'admin' || claims.role === 'npo-staff' || claims.role === 'ambassador');
 
@@ -139,6 +150,8 @@ export default function ActivitiesPage() {
             description={activity.description} // Description of the activity
             city={activity.city} // City of the activity
             category={activity.category} // Category of the activity
+            status={activity.status} // Status of the activity
+            onStatusChange={handleStatusChange}
             onClick={() => handleOpenApply(activity)}
           />
         ))}

@@ -48,7 +48,14 @@
         "applied": "Applied",
         "cancel": "Cancel",
         "noDescription": "No description provided",
-        "description": "Description"
+        "description": "Description",
+        "status": {
+            "Draft": "Draft",
+            "Open": "Open",
+            "InProgress": "In Progress",
+            "Completed": "Completed",
+            "Archived": "Archived"
+        }
     },
     "ManageActivities": {
         "create-activity": "Create Activity",
@@ -67,6 +74,14 @@
         "frequency-label": "Is it..",
         "frequency-once": "Just once",
         "frequency-regular": "Regular activities",
+        "frequency-longterm": "Long term role",
+        "repeat-on-days": "Repeat on days:",
+        "recurrence-pattern": "Recurrence Pattern",
+        "end-recurrence": "End recurrence:",
+        "after-occurrences": "After",
+        "occurrences": "occurrences",
+        "until-date": "Until",
+        "preview": "Preview:",
         "start_date": "Wished start date",
         "end_date": "Target end date (optional)",
         "sdg-label": "Select a SDG which match the activity (only one)",
@@ -115,6 +130,22 @@
         "blood_drive": "Blood Donation Drive",
         "food_fair": "Food Fair",
         "animal_adoption": "Animal Adoption Event"
+    },
+    "DeleteActivity": {
+        "delete-activity": "Delete Activity",
+        "recurring-activity": "This is a recurring activity. Choose what you want to delete:",
+        "delete-occurrence": "Delete this occurrence only",
+        "delete-occurrence-desc": "Only this specific activity will be deleted. Other occurrences in the series will remain.",
+        "delete-series": "Delete entire series",
+        "delete-series-desc": "This will delete all activities in this series.",
+        "series-includes": "The series includes:",
+        "other-occurrences": "other occurrence(s)",
+        "confirm-delete": "Are you sure you want to delete this activity? This action cannot be undone.",
+        "deleting": "Deleting...",
+        "deleting-series": "Deleting series...",
+        "delete-button": "Delete Activity",
+        "delete-series-button": "Delete Series",
+        "cancel": "Cancel"
     },
     "CompleteProfile": {
         "profile": "Profile information",
@@ -199,6 +230,7 @@
         "website": "Website",
         "registrationNumber": "Registration Number",
         "selectCountry": "Select a country",
+        "city": "City",
         "selectLanguages": "Select languages",
         "languagesHelper": "You can select from the list or type new languages",
         "organizationAdded": "Organization added successfully",
@@ -223,5 +255,20 @@
         "selectOrganization": "Select an organization",
         "roleUpdated": "Role updated successfully",
         "errorUpdatingRole": "Error updating role"
+    },
+    "StatusUpdateModal": {
+        "title": "Update Activity Status",
+        "selectStatus": "Select Status",
+        "preview": "Preview",
+        "cancel": "Cancel",
+        "save": "Save",
+        "saving": "Saving...",
+        "status": {
+            "Draft": "Draft",
+            "Open": "Open",
+            "InProgress": "In Progress",
+            "Completed": "Completed",
+            "Archived": "Archived"
+        }
     }
 }
