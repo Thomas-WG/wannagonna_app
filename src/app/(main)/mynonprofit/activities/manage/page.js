@@ -22,7 +22,6 @@ import ActivityDetailsForm from '@/components/activities/ActivityDetailsForm';
 import SDGSelector from '@/components/activities/SDGSelector';
 import FormNavigation from '@/components/activities/FormNavigation';
 import StatusUpdateModal from '@/components/activities/StatusUpdateModal';
-import { createRecurringActivities, validateRecurrenceConfig } from '@/utils/recurrenceUtils';
 
 export default function CreateUpdateActivityPage() {
   // Retrieve query parameters from URL

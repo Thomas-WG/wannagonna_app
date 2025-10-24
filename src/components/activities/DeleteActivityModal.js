@@ -5,7 +5,6 @@ import { HiExclamationTriangle } from 'react-icons/hi2';
 
 import { useTranslations } from 'next-intl';
 import { deleteActivity, fetchActivitiesByCriteria } from '@/utils/crudActivities';
-import { getActivitiesInSeries, isRecurringActivity } from '@/utils/recurrenceUtils';
 
 // Helper function to convert Firestore timestamps to readable dates
 const formatDateForDisplay = (dateValue) => {
@@ -32,56 +31,18 @@ export default function DeleteActivityModal({
 }) {
   const t = useTranslations('DeleteActivity');
   const [isDeleting, setIsDeleting] = useState(false);
-  const [deleteOption, setDeleteOption] = useState('single'); // 'single' or 'series'
-  const [seriesActivities, setSeriesActivities] = useState([]);
-  const [loadingSeries, setLoadingSeries] = useState(false);
 
-  // Fetch series activities when modal opens for recurring activities
-  useEffect(() => {
-    if (isOpen && isRecurringActivity(activity)) {
-      fetchSeriesActivities();
-    }
-  }, [isOpen, activity]);
 
-  const fetchSeriesActivities = async () => {
-    if (!activity?.organizationId) return;
-    
-    setLoadingSeries(true);
-    try {
-      // Fetch all activities for the organization
-      const allActivities = await fetchActivitiesByCriteria(activity.organizationId, 'any', 'any');
-      
-      // Filter activities with the same seriesId (excluding the current activity)
-      const series = getActivitiesInSeries(allActivities, activity.seriesId)
-        .filter(act => act.id !== activity.id);
-      
-      setSeriesActivities(series);
-    } catch (error) {
-      console.error('Error fetching series activities:', error);
-    } finally {
-      setLoadingSeries(false);
-    }
-  };
+ 
 
   const handleDelete = async () => {
     if (!activity) return;
 
     setIsDeleting(true);
     try {
-      if (deleteOption === 'series' && activity.isRecurring) {
-        // Delete the entire series
-        const allActivitiesToDelete = [activity, ...seriesActivities];
-        
-        for (const act of allActivitiesToDelete) {
-          await deleteActivity(act.id);
-        }
-        
-        onActivityDeleted?.(allActivitiesToDelete.length);
-      } else {
-        // Delete single activity
-        await deleteActivity(activity.id);
-        onActivityDeleted?.(1);
-      }
+      // Delete single activity
+      await deleteActivity(activity.id);
+      onActivityDeleted?.(1);
       
       onClose();
     } catch (error) {
@@ -92,21 +53,6 @@ export default function DeleteActivityModal({
     }
   };
 
-  const getDeleteButtonText = () => {
-    if (isDeleting) {
-      return deleteOption === 'series' ? t('deleting-series') : t('deleting');
-    }
-    
-    if (deleteOption === 'series') {
-      return `${t('delete-series-button')} (${seriesActivities.length + 1} activities)`;
-    }
-    
-    return t('delete-button');
-  };
-
-  const getDeleteButtonColor = () => {
-    return deleteOption === 'series' ? 'failure' : 'failure';
-  };
 
   if (!activity) return null;
 
@@ -142,13 +88,13 @@ export default function DeleteActivityModal({
             {t('cancel')}
           </Button>
           <Button 
-            color={getDeleteButtonColor()}
+            color="failure"
             onClick={handleDelete}
             disabled={isDeleting}
             className="flex items-center gap-2"
           >
             <HiTrash className="h-4 w-4" />
-            {getDeleteButtonText()}
+            {t('deleting')}
           </Button>
         </div>
       </div>
