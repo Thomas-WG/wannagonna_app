@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Modal, Button } from 'flowbite-react';
-import { HiTrash, HiRefresh } from 'react-icons/hi';
+import { HiTrash } from 'react-icons/hi';
 import { HiExclamationTriangle } from 'react-icons/hi2';
 
 import { useTranslations } from 'next-intl';
-import { deleteActivity, fetchActivitiesByCriteria } from '@/utils/crudActivities';
+import { deleteActivity } from '@/utils/crudActivities';
 
 // Helper function to convert Firestore timestamps to readable dates
 const formatDateForDisplay = (dateValue) => {

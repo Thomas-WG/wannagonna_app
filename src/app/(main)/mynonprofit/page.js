@@ -31,6 +31,17 @@ export default function MyNonProfitDashboard() {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState({ type: '', message: '' });
 
+  // Auto-dismiss toast after 5 seconds
+  useEffect(() => {
+    if (showToast) {
+      const timer = setTimeout(() => {
+        setShowToast(false);
+      }, 5000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [showToast]);
+
 
   useEffect(() => {
     const fetchKpiData = async () => {
@@ -370,7 +381,7 @@ export default function MyNonProfitDashboard() {
       {/* Toast Notification */}
       {showToast && (
         <div className="fixed bottom-5 right-5 z-[60]">
-          <Toast duration={5000} onClose={() => setShowToast(false)}>
+          <Toast onClose={() => setShowToast(false)}>
             {toastMessage.type === 'success' && <div className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-green-100 text-green-500">✓</div>}
             {toastMessage.type === 'warning' && <div className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-orange-100 text-orange-500">!</div>}
             {toastMessage.type === 'error' && <div className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-100 text-red-500">!</div>}
