@@ -5,23 +5,8 @@ import { HiExclamationTriangle } from 'react-icons/hi2';
 
 import { useTranslations } from 'next-intl';
 import { deleteActivity } from '@/utils/crudActivities';
+import { formatDateOnly } from '@/utils/dateUtils';
 
-// Helper function to convert Firestore timestamps to readable dates
-const formatDateForDisplay = (dateValue) => {
-  if (!dateValue) return '';
-  
-  try {
-    // Handle Firestore Timestamp objects
-    if (dateValue && typeof dateValue === 'object' && 'seconds' in dateValue) {
-      return new Date(dateValue.seconds * 1000).toLocaleDateString();
-    }
-    // Handle regular Date objects or strings
-    return new Date(dateValue).toLocaleDateString();
-  } catch (error) {
-    console.error('Error converting date for display:', error);
-    return 'Invalid date';
-  }
-};
 
 export default function DeleteActivityModal({ 
   isOpen, 

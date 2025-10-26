@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import { fetchActivitiesByCriteria, deleteActivity } from "@/utils/crudActivities";
 import ActivityCard from "@/components/activities/ActivityCard";
 import DeleteActivityModal from "@/components/activities/DeleteActivityModal";
+import ReviewApplicationsModal from "@/components/activities/ReviewApplicationsModal";
 
 export default function MyNonProfitDashboard() {
   const { claims } = useAuth();
@@ -28,6 +29,7 @@ export default function MyNonProfitDashboard() {
   const [selectedActivity, setSelectedActivity] = useState(null);
   const [showActionModal, setShowActionModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showReviewModal, setShowReviewModal] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState({ type: '', message: '' });
 
@@ -131,7 +133,7 @@ export default function MyNonProfitDashboard() {
 
   const handleReviewApplications = () => {
     setShowActionModal(false);
-    router.push(`/mynonprofit/applications?activityId=${selectedActivity.id}`);
+    setShowReviewModal(true);
   };
 
   const handleViewActivity = () => {
@@ -376,6 +378,14 @@ export default function MyNonProfitDashboard() {
         onClose={() => setShowDeleteModal(false)}
         activity={selectedActivity}
         onActivityDeleted={handleActivityDeleted}
+      />
+
+      {/* Review Applications Modal */}
+      <ReviewApplicationsModal
+        isOpen={showReviewModal}
+        onClose={() => setShowReviewModal(false)}
+        activity={selectedActivity}
+        onOrganizationDataUpdate={setOrgData}
       />
 
       {/* Toast Notification */}
