@@ -1,4 +1,4 @@
-import { collection, getDocs, addDoc, getDoc, updateDoc, doc, onSnapshot, query, where, deleteDoc } from 'firebase/firestore';
+import { collection, getDocs, addDoc, getDoc, updateDoc, doc, onSnapshot, query, where, deleteDoc, writeBatch, increment } from 'firebase/firestore';
 import { db } from 'firebaseConfig';
 
 // Fetch all activities from the Firestore database
@@ -137,9 +137,87 @@ export async function updateActivityStatus(id, status) {
 // Delete an activity from the Firestore database
 export async function deleteActivity(id) {
   try {
+    // First, get the activity data to access organizationId
     const activityDoc = doc(db, 'activities', id);
-    await deleteDoc(activityDoc);
-    console.log('Activity deleted:', id);
+    const activitySnapshot = await getDoc(activityDoc);
+    
+    if (!activitySnapshot.exists()) {
+      throw new Error('Activity not found');
+    }
+    
+    const activityData = activitySnapshot.data();
+    const organizationId = activityData.organizationId;
+    
+    // Get all applications for this activity
+    const applicationsRef = collection(activityDoc, 'applications');
+    const applicationsSnapshot = await getDocs(applicationsRef);
+    
+    // Count pending applications to update organization's totalNewApplications
+    let pendingApplicationsCount = 0;
+    applicationsSnapshot.docs.forEach((applicationDoc) => {
+      const applicationData = applicationDoc.data();
+      if (applicationData.status === 'pending') {
+        pendingApplicationsCount++;
+      }
+    });
+
+    // Pre-read and gather all references to delete, then commit in a single batch
+    const batch = writeBatch(db);
+
+    // Delete applications from the activity's applications collection
+    applicationsSnapshot.docs.forEach((applicationDoc) => {
+      batch.delete(applicationDoc.ref);
+    });
+
+    // Delete applications from user's applications collection
+    for (const applicationDoc of applicationsSnapshot.docs) {
+      const applicationData = applicationDoc.data();
+      const userId = applicationData.userId;
+      const applicationId = applicationDoc.id;
+
+      if (userId) {
+        const userRef = doc(db, 'members', userId);
+        const userApplicationsRef = collection(userRef, 'applications');
+        const userQuery = query(userApplicationsRef, where('applicationId', '==', applicationId));
+        const userQuerySnapshot = await getDocs(userQuery);
+
+        userQuerySnapshot.docs.forEach((userAppDoc) => {
+          batch.delete(userAppDoc.ref);
+        });
+      }
+    }
+
+    // Delete applications from organization's applications collection and update counts
+    if (organizationId) {
+      const orgRef = doc(db, 'organizations', organizationId);
+      const orgSnap = await getDoc(orgRef);
+
+      if (orgSnap.exists()) {
+        if (pendingApplicationsCount > 0) {
+          // Decrement by the number of pending applications
+          batch.update(orgRef, { totalNewApplications: increment(-pendingApplicationsCount) });
+        }
+
+        // Delete each application's mirror under organization
+        for (const applicationDoc of applicationsSnapshot.docs) {
+          const applicationId = applicationDoc.id;
+          const orgApplicationsRef = collection(orgRef, 'applications');
+          const orgQuery = query(orgApplicationsRef, where('applicationId', '==', applicationId));
+          const orgQuerySnapshot = await getDocs(orgQuery);
+
+          orgQuerySnapshot.docs.forEach((orgAppDoc) => {
+            batch.delete(orgAppDoc.ref);
+          });
+        }
+      }
+    }
+
+    // Finally, delete the activity document itself
+    batch.delete(activityDoc);
+
+    await batch.commit();
+    
+    console.log('Activity and all related applications deleted:', id);
   } catch (error) {
     console.error('Error deleting activity:', error);
     throw error;
