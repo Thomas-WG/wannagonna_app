@@ -190,23 +190,23 @@ export default function ActivityCard({
     <>
       <div
         onClick={onClick}
-        className="cursor-pointer w-96 mx-auto p-4 bg-white border border-gray-200 rounded-xl shadow-md hover:bg-gray-50 transition-all duration-300"
+        className="cursor-pointer w-full sm:w-80 md:w-96 mx-auto p-3 sm:p-4 bg-white border border-gray-200 rounded-xl shadow-md hover:bg-gray-50 transition-all duration-300"
         role="button"
         aria-label={title}
       >
         {/* Header Section (Top) */}
-        <div className='flex items-start justify-between'>
-          <div className='flex items-center space-x-2'>
+        <div className='flex items-start justify-between gap-2'>
+          <div className='flex items-center space-x-2 min-w-0 flex-1'>
             <Image
               src={organization_logo}
               alt={`${organization_name} logo`}
               width={40}
               height={40}
-              className='rounded-full'
+              className='rounded-full flex-shrink-0'
             />
-            <span className='text-xs text-gray-500 truncate max-w-[160px]' aria-label={organization_name}>{organization_name}</span>
+            <span className='text-xs text-gray-500 truncate' aria-label={organization_name}>{organization_name}</span>
           </div>
-          <div className='flex items-center space-x-2'>
+          <div className='flex items-center space-x-1.5 sm:space-x-2 flex-shrink-0'>
             {/* Status Badge */}
             {localStatus && (() => {
               const statusConfig = getStatusConfig(localStatus);
@@ -215,8 +215,8 @@ export default function ActivityCard({
                 ? `${statusConfig.label} - Click to change` 
                 : statusConfig.label;
               const badgeClasses = canEditStatus
-                ? `inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${statusConfig.color} ${statusConfig.borderColor} border cursor-pointer hover:opacity-80 transition-opacity`
-                : `inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${statusConfig.color} ${statusConfig.borderColor} border`;
+                ? `inline-flex items-center px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs font-medium ${statusConfig.color} ${statusConfig.borderColor} border cursor-pointer hover:opacity-80 transition-opacity`
+                : `inline-flex items-center px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs font-medium ${statusConfig.color} ${statusConfig.borderColor} border`;
               
               return (
                 <Tooltip content={tooltipContent} placement="top">
@@ -224,8 +224,9 @@ export default function ActivityCard({
                     className={badgeClasses}
                     onClick={canEditStatus ? handleStatusClick : undefined}
                   >
-                    <StatusIcon className='w-3 h-3 mr-1' />
-                    <span>{statusConfig.label}</span>
+                    <StatusIcon className='w-3 h-3 mr-0.5 sm:mr-1' />
+                    <span className='hidden sm:inline'>{statusConfig.label}</span>
+                    <span className='sm:hidden'>{statusConfig.label.split(' ')[0]}</span>
                   </div>
                 </Tooltip>
               );
@@ -240,7 +241,7 @@ export default function ActivityCard({
               return (
                 <Tooltip content={label} placement="top">
                   <span aria-label={label} role="img" tabIndex={0} className='inline-flex'>
-                    <Icon aria-hidden className='text-grey-400' size={28} />
+                    <Icon aria-hidden className='text-grey-400 w-6 h-6 sm:w-7 sm:h-7' />
                   </span>
                 </Tooltip>
               );
@@ -250,18 +251,18 @@ export default function ActivityCard({
         </div>
 
         {/* Title */}
-        <div className='mt-3 h-14 flex items-start'>
-          <h2 className='text-xl font-bold text-gray-900 leading-tight break-words'>{title}</h2>
+        <div className='mt-2 sm:mt-3 min-h-[3rem] sm:h-14 flex items-start'>
+          <h2 className='text-lg sm:text-xl font-bold text-gray-900 leading-tight break-words'>{title}</h2>
         </div>
 
         {/* Key Information Section (Middle) */}
-        <div className='mt-3 space-y-2'>
-          <div className='flex items-center justify-between'>
-            <div className='flex items-center text-base font-semibold text-indigo-600'>
-              <HiStar className='mr-1 text-indigo-500' />
-              <span>{xp_reward} {t('points')}</span>
+        <div className='mt-2 sm:mt-3 space-y-2'>
+          <div className='flex items-center justify-between gap-2'>
+            <div className='flex items-center text-sm sm:text-base font-semibold text-indigo-600'>
+              <HiStar className='mr-1 text-indigo-500 flex-shrink-0' />
+              <span className='truncate'>{xp_reward} {t('points')}</span>
             </div>
-            <div className='flex items-center text-sm font-semibold text-gray-700'>
+            <div className='flex items-center text-xs sm:text-sm font-semibold text-gray-700 flex-shrink-0'>
               <HiUserGroup className='mr-1 text-gray-600' />
               <span>{applicants} {t('applied')}</span>
             </div>
@@ -270,7 +271,7 @@ export default function ActivityCard({
           {skills?.length > 0 && (
             <div className='flex flex-wrap gap-1' aria-label={t('skills')}>
               {skills.map((skill, index) => (
-                <span key={index} className='px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-800'>
+                <span key={index} className='px-1.5 sm:px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-800'>
                   {skill}
                 </span>
               ))}
@@ -279,24 +280,25 @@ export default function ActivityCard({
         </div>
 
         {/* Footer Section (Bottom) */}
-        <div className='mt-3 pt-3 border-t border-gray-200'>
+        <div className='mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-gray-200'>
           <div className='flex flex-col space-y-1'>
-            <div className='flex items-center justify-between'>
+            <div className='flex items-center justify-between gap-2'>
               {/* SDG Icon on the left */}
               {sdg && (
-                <div className='flex items-center'>
+                <div className='flex items-center flex-shrink-0'>
                   <Image
                     src={`/icons/sdgs/c-${sdg}.png`}
                     alt={`SDG ${sdg}`}
                     width={28}
                     height={28}
+                    className='w-6 h-6 sm:w-7 sm:h-7'
                   />
                 </div>
               )}
               
               {/* Location on the right */}
-              <div className='flex items-center text-sm text-gray-700'>
-                <HiLocationMarker className='mr-1 text-gray-500' />
+              <div className='flex items-center text-xs sm:text-sm text-gray-700 min-w-0 flex-1 justify-end'>
+                <HiLocationMarker className='mr-1 text-gray-500 flex-shrink-0' />
                 <span className='truncate'>
                   {type === 'online' 
                     ? `Online (${country})`
@@ -309,7 +311,7 @@ export default function ActivityCard({
               </div>
             </div>
             {dateTimeLine && (
-              <div className='text-sm text-gray-700'>
+              <div className='text-xs sm:text-sm text-gray-700 truncate'>
                 {dateTimeLine}
               </div>
             )}
