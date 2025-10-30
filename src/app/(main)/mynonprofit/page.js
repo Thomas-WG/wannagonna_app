@@ -25,6 +25,7 @@ export default function MyNonProfitDashboard() {
   const [loading, setLoading] = useState(true);
   const [isFabOpen, setIsFabOpen] = useState(false);
   const [orgActivities, setOrgActivities] = useState([]);
+  const [allOrgActivities, setAllOrgActivities] = useState([]); // Store all activities for filtering
   const [loadingActivities, setLoadingActivities] = useState(true);
   const [selectedActivity, setSelectedActivity] = useState(null);
   const [showActionModal, setShowActionModal] = useState(false);
@@ -32,6 +33,7 @@ export default function MyNonProfitDashboard() {
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState({ type: '', message: '' });
+  const [selectedType, setSelectedType] = useState(null); // Track selected activity type for filtering (single selection)
 
   // Auto-dismiss toast after 5 seconds
   useEffect(() => {
@@ -71,9 +73,11 @@ export default function MyNonProfitDashboard() {
       if (claims && claims.npoId) {
         try {
           const results = await fetchActivitiesByCriteria(claims.npoId, 'any', 'any');
+          setAllOrgActivities(results || []);
           setOrgActivities(results || []);
         } catch (error) {
           console.error("Error fetching organization activities:", error);
+          setAllOrgActivities([]);
           setOrgActivities([]);
         } finally {
           setLoadingActivities(false);
@@ -84,6 +88,20 @@ export default function MyNonProfitDashboard() {
     };
     fetchActivities();
   }, [claims]);
+
+  // Filter activities based on selected type
+  useEffect(() => {
+    if (!selectedType) {
+      // Show all activities if no filter is selected
+      setOrgActivities(allOrgActivities);
+    } else {
+      // Filter activities that match the selected type
+      const filtered = allOrgActivities.filter(activity => 
+        activity.type === selectedType
+      );
+      setOrgActivities(filtered);
+    }
+  }, [selectedType, allOrgActivities]);
 
   const handleActivityCardClick = (activity) => {
     setSelectedActivity(activity);
@@ -106,7 +124,16 @@ export default function MyNonProfitDashboard() {
     try {
       // Refresh activities list
       const results = await fetchActivitiesByCriteria(claims.npoId, 'any', 'any');
-      setOrgActivities(results || []);
+      setAllOrgActivities(results || []);
+      // Re-apply filter if one is selected
+      if (!selectedType) {
+        setOrgActivities(results || []);
+      } else {
+        const filtered = (results || []).filter(activity => 
+          activity.type === selectedType
+        );
+        setOrgActivities(filtered);
+      }
       
       // Refresh organization data to update activity counts
       const orgData = await fetchOrganizationById(claims.npoId);
@@ -141,6 +168,18 @@ export default function MyNonProfitDashboard() {
     router.push(`/activities/${selectedActivity.id}`);
   };
 
+  // Handle type filter toggle - single selection with deselect option
+  const handleTypeFilterToggle = (type) => {
+    setSelectedType(prev => {
+      // If clicking the same type, deselect it
+      if (prev === type) {
+        return null;
+      }
+      // Otherwise, switch to the new type
+      return type;
+    });
+  };
+
   return (
     <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
       
@@ -152,11 +191,24 @@ export default function MyNonProfitDashboard() {
         <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
           {/* Online Activities Card */}
           <Card 
-            className="w-[calc(50%-0.375rem)] sm:w-36 hover:shadow-lg transition-shadow"
+            className={`w-[calc(50%-0.375rem)] sm:w-36 hover:shadow-lg transition-all cursor-pointer touch-manipulation ${
+              selectedType === 'online' 
+                ? 'ring-4 ring-blue-400 shadow-xl scale-105' 
+                : 'shadow-md'
+            }`}
+            onClick={() => handleTypeFilterToggle('online')}
           >
             <div className="flex flex-col items-center p-2 sm:p-3">
-              <div className="bg-blue-100 p-2 rounded-full mb-2">
-                <MdOutlineSocialDistance className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
+              <div className={`p-2 rounded-full mb-2 transition-colors ${
+                selectedType === 'online' 
+                  ? 'bg-blue-500' 
+                  : 'bg-blue-100'
+              }`}>
+                <MdOutlineSocialDistance className={`h-5 w-5 sm:h-6 sm:w-6 ${
+                  selectedType === 'online' 
+                    ? 'text-white' 
+                    : 'text-blue-600'
+                }`} />
               </div>
               <h2 className="text-xs sm:text-sm font-semibold mb-1 text-center">Online Activities</h2>
               <p className="text-xl sm:text-2xl font-bold text-blue-600 text-center">{orgData.totalOnlineActivities}</p>
@@ -165,11 +217,24 @@ export default function MyNonProfitDashboard() {
 
           {/* Local Activities Card */}
           <Card 
-            className="w-[calc(50%-0.375rem)] sm:w-36 hover:shadow-lg transition-shadow"
+            className={`w-[calc(50%-0.375rem)] sm:w-36 hover:shadow-lg transition-all cursor-pointer touch-manipulation ${
+              selectedType === 'local' 
+                ? 'ring-4 ring-green-400 shadow-xl scale-105' 
+                : 'shadow-md'
+            }`}
+            onClick={() => handleTypeFilterToggle('local')}
           >
             <div className="flex flex-col items-center p-2 sm:p-3">
-              <div className="bg-green-100 p-2 rounded-full mb-2">
-                <HiOfficeBuilding className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
+              <div className={`p-2 rounded-full mb-2 transition-colors ${
+                selectedType === 'local' 
+                  ? 'bg-green-500' 
+                  : 'bg-green-100'
+              }`}>
+                <HiOfficeBuilding className={`h-5 w-5 sm:h-6 sm:w-6 ${
+                  selectedType === 'local' 
+                    ? 'text-white' 
+                    : 'text-green-600'
+                }`} />
               </div>
               <h2 className="text-xs sm:text-sm font-semibold mb-1 text-center">Local Activities</h2>
               <p className="text-xl sm:text-2xl font-bold text-green-600 text-center">{orgData.totalLocalActivities}</p>
@@ -177,10 +242,25 @@ export default function MyNonProfitDashboard() {
           </Card>
 
           {/* Total Events Card */}
-          <Card className="w-[calc(50%-0.375rem)] sm:w-36 hover:shadow-lg transition-shadow">
+          <Card 
+            className={`w-[calc(50%-0.375rem)] sm:w-36 hover:shadow-lg transition-all cursor-pointer touch-manipulation ${
+              selectedType === 'event' 
+                ? 'ring-4 ring-purple-400 shadow-xl scale-105' 
+                : 'shadow-md'
+            }`}
+            onClick={() => handleTypeFilterToggle('event')}
+          >
             <div className="flex flex-col items-center p-2 sm:p-3">
-              <div className="bg-purple-100 p-2 rounded-full mb-2">
-                <HiCalendar className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
+              <div className={`p-2 rounded-full mb-2 transition-colors ${
+                selectedType === 'event' 
+                  ? 'bg-purple-500' 
+                  : 'bg-purple-100'
+              }`}>
+                <HiCalendar className={`h-5 w-5 sm:h-6 sm:w-6 ${
+                  selectedType === 'event' 
+                    ? 'text-white' 
+                    : 'text-purple-600'
+                }`} />
               </div>
               <h2 className="text-xs sm:text-sm font-semibold mb-1 text-center">Total Events</h2>
               <p className="text-xl sm:text-2xl font-bold text-purple-600 text-center">{orgData.totalEvents}</p>
@@ -222,7 +302,11 @@ export default function MyNonProfitDashboard() {
             <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
           </div>
         ) : orgActivities.length === 0 ? (
-          <p className="text-gray-600 px-1">No activities found for your organization.</p>
+          <p className="text-gray-600 px-1">
+            {selectedType 
+              ? `No activities found matching the selected filter.` 
+              : 'No activities found for your organization.'}
+          </p>
         ) : (
           <div className='flex flex-wrap justify-center gap-4 sm:gap-6'>
             {orgActivities.map((activity) => (
