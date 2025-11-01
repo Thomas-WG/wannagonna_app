@@ -5,13 +5,13 @@ import { useState, useEffect } from 'react';
 import {
   HiLocationMarker, HiUserGroup, HiStar,
   HiQuestionMarkCircle,
-  HiCode, HiPencil, HiTranslate, HiDocumentText, HiLightBulb, HiDatabase, HiCamera, HiShare, HiSupport, HiAcademicCap, HiHeart, HiClock, HiPlay, HiSparkles, HiBookOpen, HiTruck, HiUsers, HiClipboardList, HiGift, HiPresentationChartLine, HiUserCircle, HiShoppingBag,
+  HiClock,
   HiDocument, HiCheckCircle, HiArchive
 } from 'react-icons/hi';
-import { FaPaw, FaLeaf, FaChild, FaWrench, FaPaintBrush,FaRegCircle } from 'react-icons/fa';
-import { IoMegaphone } from 'react-icons/io5';
+import { FaRegCircle } from 'react-icons/fa';
 import StatusUpdateModal from './StatusUpdateModal';
 import { updateActivityStatus } from '@/utils/crudActivities';
+import { categoryIcons } from '@/constant/categoryIcons';
 
 // Main component for displaying an activity card
 export default function ActivityCard({
@@ -86,42 +86,6 @@ export default function ActivityCard({
     return statusConfigs[status] || statusConfigs['Draft'];
   };
 
-  // Category icon mapping (same as CategorySelector)
-  const categoryIcons = {
-    website: HiCode,
-    logo: HiPencil,
-    translation: HiTranslate,
-    flyer: HiDocumentText,
-    consulting: HiLightBulb,
-    architecture: HiSparkles,
-    dataentry: HiDatabase,
-    photovideo: HiCamera,
-    sns: HiShare,
-    onlinesupport: HiSupport,
-    education: HiAcademicCap,
-    fundraising: HiHeart,
-    longtermrole: HiClock,
-    explainer: HiPlay,
-    other: HiQuestionMarkCircle,
-    cleaning: HiSparkles,
-    teaching: HiBookOpen,
-    food_distribution: HiTruck,
-    elderly_support: HiUserGroup,
-    animal_care: FaPaw,
-    environment: FaLeaf,
-    community_events: HiUsers,
-    childcare: FaChild,
-    manual_labor: FaWrench,
-    administrative: HiClipboardList,
-    fundraising_event: HiGift,
-    awareness_campaign: IoMegaphone,
-    workshop: HiPresentationChartLine,
-    seminar_conference: HiUserCircle,
-    charity_walk: HiUsers,
-    networking: HiUserGroup,
-    arts_and_crafts: FaPaintBrush,
-    food_fair: HiShoppingBag
-  };
 
   const formatDateTimeRange = (start, end) => {
     if (!start) return null;

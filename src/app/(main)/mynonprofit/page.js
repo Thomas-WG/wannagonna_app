@@ -11,6 +11,7 @@ import { fetchActivitiesByCriteria, deleteActivity } from "@/utils/crudActivitie
 import ActivityCard from "@/components/activities/ActivityCard";
 import DeleteActivityModal from "@/components/activities/DeleteActivityModal";
 import ReviewApplicationsModal from "@/components/activities/ReviewApplicationsModal";
+import ActivityDetailsModal from "@/components/activities/ActivityDetailsModal";
 
 export default function MyNonProfitDashboard() {
   const { claims } = useAuth();
@@ -31,6 +32,7 @@ export default function MyNonProfitDashboard() {
   const [showActionModal, setShowActionModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
+  const [showActivityDetailsModal, setShowActivityDetailsModal] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState({ type: '', message: '' });
   const [selectedType, setSelectedType] = useState(null); // Track selected activity type for filtering (single selection)
@@ -165,7 +167,7 @@ export default function MyNonProfitDashboard() {
 
   const handleViewActivity = () => {
     setShowActionModal(false);
-    router.push(`/activities/${selectedActivity.id}`);
+    setShowActivityDetailsModal(true);
   };
 
   // Handle type filter toggle - single selection with deselect option
@@ -473,6 +475,16 @@ export default function MyNonProfitDashboard() {
         onClose={() => setShowReviewModal(false)}
         activity={selectedActivity}
         onOrganizationDataUpdate={setOrgData}
+      />
+
+      {/* Activity Details Modal */}
+      <ActivityDetailsModal
+        isOpen={showActivityDetailsModal}
+        onClose={() => {
+          setShowActivityDetailsModal(false);
+          setSelectedActivity(null);
+        }}
+        activityId={selectedActivity?.id}
       />
 
       {/* Toast Notification */}
