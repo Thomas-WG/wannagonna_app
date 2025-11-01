@@ -15,6 +15,7 @@ import {
   HiOfficeBuilding,
   HiGlobeAlt,
   HiQuestionMarkCircle,
+  HiTranslate
 } from 'react-icons/hi';
 import { HiClock } from 'react-icons/hi2';
 import NPODetailsModal from './NPODetailsModal';
@@ -107,43 +108,11 @@ export default function ActivityDetailsModal({ isOpen, onClose, activityId }) {
     }
   })() : '';
 
-  const formatDateTimeRange = (start, end) => {
-    if (!start) return 'Not specified';
-    try {
-      const startDate = new Date(start);
-      const endDate = end ? new Date(end) : null;
-
-      const dateFormatter = new Intl.DateTimeFormat(undefined, {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-      });
-
-      const timeFormatter = new Intl.DateTimeFormat(undefined, {
-        hour: 'numeric',
-        minute: '2-digit',
-      });
-
-      const datePart = dateFormatter.format(startDate);
-      const startTime = timeFormatter.format(startDate);
-      const endTime = endDate ? timeFormatter.format(endDate) : null;
-
-      if (endDate && startDate.toDateString() === endDate.toDateString()) {
-        return `${datePart}, ${startTime} - ${endTime}`;
-      } else if (endDate) {
-        return `${datePart}, ${startTime} - ${dateFormatter.format(endDate)}, ${endTime}`;
-      } else {
-        return `${datePart}, ${startTime}`;
-      }
-    } catch (e) {
-      return formatDateOnly(start);
-    }
-  };
 
   return (
     <>
       <Modal show={isOpen} onClose={onClose} size="4xl" className="z-50">
-        <Modal.Header className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
+        <Modal.Header className="bg-gradient-to-r from-yellow-300 to-pink-300 text-white">
           <div className="flex items-center gap-3">
             <h3 className="text-xl font-semibold">Activity Details</h3>
           </div>
@@ -291,12 +260,6 @@ export default function ActivityDetailsModal({ isOpen, onClose, activityId }) {
                         </p>
                       </div>
                     )}
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">Time</p>
-                      <p className="text-sm font-medium text-gray-700">
-                        {formatDateTimeRange(activity.start_date, activity.end_date)}
-                      </p>
-                    </div>
                   </div>
                 </div>
 

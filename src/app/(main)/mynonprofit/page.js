@@ -105,6 +105,24 @@ export default function MyNonProfitDashboard() {
     }
   }, [selectedType, allOrgActivities]);
 
+  // Handle status change from activity card
+  const handleStatusChange = (activityId, newStatus) => {
+    setAllOrgActivities(prevActivities => 
+      prevActivities.map(activity => 
+        activity.id === activityId 
+          ? { ...activity, status: newStatus }
+          : activity
+      )
+    );
+    setOrgActivities(prevActivities => 
+      prevActivities.map(activity => 
+        activity.id === activityId 
+          ? { ...activity, status: newStatus }
+          : activity
+      )
+    );
+  };
+
   const handleActivityCardClick = (activity) => {
     setSelectedActivity(activity);
     setShowActionModal(true);
@@ -330,6 +348,8 @@ export default function MyNonProfitDashboard() {
                   city={activity.city}
                   category={activity.category}
                   onClick={() => handleActivityCardClick(activity)}
+                  canEditStatus={true}
+                  onStatusChange={handleStatusChange}
                 />
                 
                 {/* Overlay with action buttons */}

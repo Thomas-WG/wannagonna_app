@@ -65,11 +65,20 @@ export const formatDate = (date, options = {}) => {
  * @returns {string} Formatted date string
  */
 export const formatDateOnly = (date) => {
-  return formatDate(date, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  });
+  const jsDate = convertTimestampToDate(date);
+  if (!jsDate) return 'Unknown date';
+  
+  try {
+    // Use toLocaleDateString directly to ensure no time is included
+    return jsDate.toLocaleDateString(undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return 'Invalid date';
+  }
 };
 
 /**
