@@ -4,8 +4,6 @@ import { useTranslations } from 'use-intl';
 import Select from 'react-select';
 import { fetchSkills } from '@/utils/crudSkills';
 import { 
-  HiGlobeAlt, 
-  HiLocationMarker, 
   HiCalendar, 
   HiUsers, 
   HiLink, 
@@ -14,8 +12,6 @@ import {
   HiMail, 
   HiUser,
   HiMapPin,
-  HiWrench,
-  HiTicket,
   HiShieldCheck,
   HiRefresh,
   HiChevronDown
@@ -191,178 +187,33 @@ export default function ActivityDetailsForm({ formData, handleChange, setFormDat
         </div>
       </Card>
 
-      {/* Online Activity Specific Fields */}
-      {formData.type === 'online' && (
-        <Card className="p-6 shadow-lg border-0 bg-gradient-to-br from-blue-50 to-indigo-50">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <HiGlobeAlt className="h-6 w-6 text-blue-600" />
-            </div>
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900">Online Activity Details</h2>
-              <p className="text-sm text-gray-600">Configure your online meeting and participation settings</p>
-            </div>
+      {/* URL Field for Event Links or Volunteering Management System */}
+      <Card className="p-6 shadow-lg border-0 bg-gradient-to-br from-white to-gray-50">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-2 bg-blue-100 rounded-lg">
+            <HiLink className="h-6 w-6 text-blue-600" />
           </div>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="lg:col-span-2">
-              <FloatingLabel
-                variant='filled'
-                label="Meeting Link"
-                helperText="URL for the online meeting (Zoom, Teams, etc.)"
-                name='meeting_link'
-                value={formData.meeting_link || ''}
-                onChange={handleChange}
-                type='url'
-              />
-            </div>
-            <div>
-              <FloatingLabel
-                variant='filled'
-                label="Max Participants"
-                helperText="Maximum number of participants allowed"
-                name='max_participants'
-                value={formData.max_participants || ''}
-                onChange={handleChange}
-                type='number'
-                min='1'
-              />
-            </div>
+          <div>
+            <h2 className="text-xl font-semibold text-gray-900">Activity Link</h2>
+            <p className="text-sm text-gray-600">Link to the event or your volunteering management system (optional)</p>
           </div>
-        </Card>
-      )}
-
-      {/* Local Activity Specific Fields */}
-      {formData.type === 'local' && (
-        <Card className="p-6 shadow-lg border-0 bg-gradient-to-br from-green-50 to-emerald-50">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <HiLocationMarker className="h-6 w-6 text-green-600" />
-            </div>
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900">Local Activity Details</h2>
-              <p className="text-sm text-gray-600">Set up location and logistics for your local activity</p>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="lg:col-span-2">
-              <FloatingLabel
-                variant='filled'
-                label="Address"
-                helperText="Full address where the activity takes place"
-                name='address'
-                value={formData.address || ''}
-                onChange={handleChange}
-              />
-            </div>
-            <div>
-              <FloatingLabel
-                variant='filled'
-                label="Meeting Point"
-                helperText="Specific meeting location or landmark"
-                name='meeting_point'
-                value={formData.meeting_point || ''}
-                onChange={handleChange}
-              />
-            </div>
-            <div>
-              <FloatingLabel
-                variant='filled'
-                label="Max Volunteers"
-                helperText="Maximum number of volunteers needed"
-                name='max_volunteers'
-                value={formData.max_volunteers || ''}
-                onChange={handleChange}
-                type='number'
-                min='1'
-              />
-            </div>
-            <div className="lg:col-span-2">
-              <FloatingLabel
-                variant='filled'
-                label="Equipment Needed"
-                helperText="Tools, materials, or equipment volunteers should bring"
-                name='equipment_needed'
-                value={formData.equipment_needed || ''}
-                onChange={handleChange}
-              />
-            </div>
-          </div>
-        </Card>
-      )}
-
-      {/* Event Specific Fields */}
-      {formData.type === 'event' && (
-        <Card className="p-6 shadow-lg border-0 bg-gradient-to-br from-purple-50 to-pink-50">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <HiCalendar className="h-6 w-6 text-purple-600" />
-            </div>
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900">Event Details</h2>
-              <p className="text-sm text-gray-600">Configure your event logistics and registration</p>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="lg:col-span-2">
-              <FloatingLabel
-                variant='filled'
-                label="Venue"
-                helperText="Event venue or location"
-                name='venue'
-                value={formData.venue || ''}
-                onChange={handleChange}
-              />
-            </div>
-            <div>
-              <FloatingLabel
-                variant='filled'
-                label="Event Time"
-                helperText="Time when the event starts"
-                name='event_time'
-                value={formData.event_time || ''}
-                onChange={handleChange}
-                type='time'
-              />
-            </div>
-            <div>
-              <FloatingLabel
-                variant='filled'
-                label="Duration"
-                helperText="How long the event will last (e.g., 2 hours, 1 day, etc.)"
-                name='duration'
-                value={formData.duration || ''}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="lg:col-span-2">
-              <FloatingLabel
-                variant='filled'
-                label="Registration Link"
-                helperText="Link to registration or ticketing system"
-                name='ticketing_link'
-                value={formData.ticketing_link || ''}
-                onChange={handleChange}
-                type='url'
-              />
-            </div>
-            <div>
-              <FloatingLabel
-                variant='filled'
-                label="Max Attendees"
-                helperText="Maximum number of attendees"
-                name='max_attendees'
-                value={formData.max_attendees || ''}
-                onChange={handleChange}
-                type='number'
-                min='1'
-          />
         </div>
-      </div>
-    </Card>
-      )}
+        
+        <div className="grid grid-cols-1 gap-6">
+          <div>
+            <FloatingLabel
+              variant='filled'
+              label="Event or Management System URL"
+              helperText="Provide a link to the event, registration page, or your own volunteering management system"
+              name='activity_url'
+              value={formData.activity_url || ''}
+              onChange={handleChange}
+              type='url'
+              icon={HiLink}
+            />
+          </div>
+        </div>
+      </Card>
     </div>
   );
 } 
