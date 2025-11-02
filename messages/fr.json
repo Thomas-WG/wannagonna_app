@@ -266,9 +266,7 @@
         "status": {
             "Draft": "Brouillon",
             "Open": "Ouvert",
-            "InProgress": "En cours",
-            "Completed": "Terminé",
-            "Archived": "Archivé"
+            "Closed": "Fermé"
         }
     },
     "PublishDraftModal": {
@@ -279,5 +277,33 @@
         "publish": "Publier maintenant",
         "publishDescription": "Rendre disponible aux volontaires",
         "cancel": "Annuler"
+    },
+    "OrganizationEdit": {
+        "editOrganization": "Modifier l'organisation",
+        "logo": "Logo",
+        "logoHelper": "Télécharger une nouvelle image de logo pour votre organisation",
+        "name": "Nom de l'organisation",
+        "nameReadOnly": "Le nom de l'organisation ne peut pas être modifié. Veuillez contacter le support si vous devez le mettre à jour.",
+        "country": "Pays",
+        "city": "Ville",
+        "address": "Adresse",
+        "languages": "Langues",
+        "selectLanguages": "Sélectionner les langues",
+        "languagesHelper": "Sélectionnez les langues utilisées par votre organisation",
+        "sdgs": "ODD",
+        "selectSDGs": "Sélectionner les ODD",
+        "description": "Description",
+        "website": "Site web",
+        "email": "Email",
+        "registrationNumber": "Numéro d'enregistrement",
+        "selectCountry": "Sélectionner un pays",
+        "save": "Enregistrer les modifications",
+        "saving": "Enregistrement...",
+        "cancel": "Annuler",
+        "organizationUpdated": "Organisation mise à jour avec succès !",
+        "errorSavingOrganization": "Erreur lors de l'enregistrement de l'organisation. Veuillez réessayer.",
+        "errorUploadingLogo": "Erreur lors du téléchargement du logo. Veuillez réessayer.",
+        "errorLoading": "Erreur lors du chargement des données de l'organisation",
+        "noOrganization": "Aucune organisation trouvée"
     }
 }

@@ -266,9 +266,7 @@
         "status": {
             "Draft": "Draft",
             "Open": "Open",
-            "InProgress": "In Progress",
-            "Completed": "Completed",
-            "Archived": "Archived"
+            "Closed": "Closed"
         }
     },
     "PublishDraftModal": {
@@ -279,5 +277,33 @@
         "publish": "Publish Now",
         "publishDescription": "Make it available to volunteers",
         "cancel": "Cancel"
+    },
+    "OrganizationEdit": {
+        "editOrganization": "Edit Organization",
+        "logo": "Logo",
+        "logoHelper": "Upload a new logo image for your organization",
+        "name": "Organization Name",
+        "nameReadOnly": "Organization name cannot be changed. Please contact support if you need to update it.",
+        "country": "Country",
+        "city": "City",
+        "address": "Address",
+        "languages": "Languages",
+        "selectLanguages": "Select languages",
+        "languagesHelper": "Select the languages your organization uses",
+        "sdgs": "SDGs",
+        "selectSDGs": "Select SDGs",
+        "description": "Description",
+        "website": "Website",
+        "email": "Email",
+        "registrationNumber": "Registration Number",
+        "selectCountry": "Select a country",
+        "save": "Save Changes",
+        "saving": "Saving...",
+        "cancel": "Cancel",
+        "organizationUpdated": "Organization updated successfully!",
+        "errorSavingOrganization": "Error saving organization. Please try again.",
+        "errorUploadingLogo": "Error uploading logo. Please try again.",
+        "errorLoading": "Error loading organization data",
+        "noOrganization": "No organization found"
     }
 }

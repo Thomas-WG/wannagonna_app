@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, Toast } from "flowbite-react";
-import { HiUsers, HiOfficeBuilding, HiCalendar, HiDocumentText, HiPencil, HiTrash, HiEye, HiUserGroup } from "react-icons/hi";
+import { HiUsers, HiOfficeBuilding, HiCalendar, HiDocumentText, HiPencil, HiTrash, HiEye, HiUserGroup, HiCog, HiViewGrid, HiLockClosed } from "react-icons/hi";
 import { MdOutlineSocialDistance } from "react-icons/md";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/utils/auth/AuthContext";
@@ -36,6 +36,7 @@ export default function MyNonProfitDashboard() {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState({ type: '', message: '' });
   const [selectedType, setSelectedType] = useState(null); // Track selected activity type for filtering (single selection)
+  const [showClosedOnly, setShowClosedOnly] = useState(false); // Track if showing only closed activities
 
   // Auto-dismiss toast after 5 seconds
   useEffect(() => {
@@ -91,19 +92,32 @@ export default function MyNonProfitDashboard() {
     fetchActivities();
   }, [claims]);
 
-  // Filter activities based on selected type
+  // Filter activities based on selected type and status (closed/open)
   useEffect(() => {
-    if (!selectedType) {
-      // Show all activities if no filter is selected
-      setOrgActivities(allOrgActivities);
+    let filtered = [...allOrgActivities];
+
+    // Filter by status first (closed vs open/draft)
+    if (showClosedOnly) {
+      // Show only closed activities (Completed or Archived)
+      filtered = filtered.filter(activity => 
+        activity.status === 'Completed' || activity.status === 'Archived'
+      );
     } else {
-      // Filter activities that match the selected type
-      const filtered = allOrgActivities.filter(activity => 
+      // By default, exclude closed activities (show only Draft, Open, InProgress)
+      filtered = filtered.filter(activity => 
+        activity.status !== 'Completed' && activity.status !== 'Archived'
+      );
+    }
+
+    // Then filter by type if selected
+    if (selectedType) {
+      filtered = filtered.filter(activity => 
         activity.type === selectedType
       );
-      setOrgActivities(filtered);
     }
-  }, [selectedType, allOrgActivities]);
+
+    setOrgActivities(filtered);
+  }, [selectedType, allOrgActivities, showClosedOnly]);
 
   // Handle status change from activity card
   const handleStatusChange = (activityId, newStatus) => {
@@ -130,7 +144,7 @@ export default function MyNonProfitDashboard() {
 
   const handleEditActivity = () => {
     setShowActionModal(false);
-    router.push(`/activities/manage?activityId=${selectedActivity.id}`);
+    router.push(`/mynonprofit/activities/manage?activityId=${selectedActivity.id}`);
   };
 
   const handleDeleteActivity = () => {
@@ -145,15 +159,7 @@ export default function MyNonProfitDashboard() {
       // Refresh activities list
       const results = await fetchActivitiesByCriteria(claims.npoId, 'any', 'any');
       setAllOrgActivities(results || []);
-      // Re-apply filter if one is selected
-      if (!selectedType) {
-        setOrgActivities(results || []);
-      } else {
-        const filtered = (results || []).filter(activity => 
-          activity.type === selectedType
-        );
-        setOrgActivities(filtered);
-      }
+      // Note: The useEffect hook will automatically apply filters (type and closed status) when allOrgActivities changes
       
       // Refresh organization data to update activity counts
       const orgData = await fetchOrganizationById(claims.npoId);
@@ -200,6 +206,18 @@ export default function MyNonProfitDashboard() {
     });
   };
 
+  // Handle closed activities filter toggle
+  const handleClosedFilterToggle = () => {
+    setShowClosedOnly(prev => !prev);
+    // Reset type filter when toggling closed filter to avoid confusion
+    setSelectedType(null);
+  };
+
+  // Calculate closed activities count
+  const closedActivitiesCount = allOrgActivities.filter(
+    activity => activity.status === 'Completed' || activity.status === 'Archived'
+  ).length;
+
   return (
     <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
       
@@ -208,110 +226,214 @@ export default function MyNonProfitDashboard() {
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
         </div>
       ) : (
-        <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
-          {/* Online Activities Card */}
-          <Card 
-            className={`w-[calc(50%-0.375rem)] sm:w-36 hover:shadow-lg transition-all cursor-pointer touch-manipulation ${
-              selectedType === 'online' 
-                ? 'ring-4 ring-blue-400 shadow-xl scale-105' 
-                : 'shadow-md'
-            }`}
-            onClick={() => handleTypeFilterToggle('online')}
-          >
-            <div className="flex flex-col items-center p-2 sm:p-3">
-              <div className={`p-2 rounded-full mb-2 transition-colors ${
-                selectedType === 'online' 
-                  ? 'bg-blue-500' 
-                  : 'bg-blue-100'
-              }`}>
-                <MdOutlineSocialDistance className={`h-5 w-5 sm:h-6 sm:w-6 ${
+        <>
+          {/* Primary Metrics Section */}
+          <div className="mb-6 sm:mb-8">
+            <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 px-1 text-gray-700">Metrics & Filters</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+              {/* All Activities Card */}
+              <Card 
+                className={`hover:shadow-lg transition-all cursor-pointer touch-manipulation ${
+                  !selectedType && !showClosedOnly
+                    ? 'ring-4 ring-gray-400 shadow-xl scale-105' 
+                    : 'shadow-md'
+                }`}
+                onClick={() => {
+                  setSelectedType(null);
+                  setShowClosedOnly(false);
+                }}
+              >
+                <div className="flex flex-col items-center p-2 sm:p-3">
+                  <div className={`p-2 rounded-full mb-2 transition-colors ${
+                    !selectedType && !showClosedOnly
+                      ? 'bg-gray-500' 
+                      : 'bg-gray-100'
+                  }`}>
+                    <HiViewGrid className={`h-5 w-5 sm:h-6 sm:w-6 ${
+                      !selectedType && !showClosedOnly
+                        ? 'text-white' 
+                        : 'text-gray-600'
+                    }`} />
+                  </div>
+                  <h2 className="text-xs sm:text-sm font-semibold mb-1 text-center">All Activities</h2>
+                  <p className="text-xl sm:text-2xl font-bold text-gray-600 text-center">{allOrgActivities.length}</p>
+                </div>
+              </Card>
+
+              {/* Online Activities Card */}
+              <Card 
+                className={`hover:shadow-lg transition-all cursor-pointer touch-manipulation ${
                   selectedType === 'online' 
-                    ? 'text-white' 
-                    : 'text-blue-600'
-                }`} />
-              </div>
-              <h2 className="text-xs sm:text-sm font-semibold mb-1 text-center">Online Activities</h2>
-              <p className="text-xl sm:text-2xl font-bold text-blue-600 text-center">{orgData.totalOnlineActivities}</p>
-            </div>
-          </Card>
+                    ? 'ring-4 ring-blue-400 shadow-xl scale-105' 
+                    : 'shadow-md'
+                }`}
+                onClick={() => handleTypeFilterToggle('online')}
+              >
+                <div className="flex flex-col items-center p-2 sm:p-3">
+                  <div className={`p-2 rounded-full mb-2 transition-colors ${
+                    selectedType === 'online' 
+                      ? 'bg-blue-500' 
+                      : 'bg-blue-100'
+                  }`}>
+                    <MdOutlineSocialDistance className={`h-5 w-5 sm:h-6 sm:w-6 ${
+                      selectedType === 'online' 
+                        ? 'text-white' 
+                        : 'text-blue-600'
+                    }`} />
+                  </div>
+                  <h2 className="text-xs sm:text-sm font-semibold mb-1 text-center">Online</h2>
+                  <p className="text-xl sm:text-2xl font-bold text-blue-600 text-center">{orgData.totalOnlineActivities}</p>
+                </div>
+              </Card>
 
-          {/* Local Activities Card */}
-          <Card 
-            className={`w-[calc(50%-0.375rem)] sm:w-36 hover:shadow-lg transition-all cursor-pointer touch-manipulation ${
-              selectedType === 'local' 
-                ? 'ring-4 ring-green-400 shadow-xl scale-105' 
-                : 'shadow-md'
-            }`}
-            onClick={() => handleTypeFilterToggle('local')}
-          >
-            <div className="flex flex-col items-center p-2 sm:p-3">
-              <div className={`p-2 rounded-full mb-2 transition-colors ${
-                selectedType === 'local' 
-                  ? 'bg-green-500' 
-                  : 'bg-green-100'
-              }`}>
-                <HiOfficeBuilding className={`h-5 w-5 sm:h-6 sm:w-6 ${
+              {/* Local Activities Card */}
+              <Card 
+                className={`hover:shadow-lg transition-all cursor-pointer touch-manipulation ${
                   selectedType === 'local' 
-                    ? 'text-white' 
-                    : 'text-green-600'
-                }`} />
-              </div>
-              <h2 className="text-xs sm:text-sm font-semibold mb-1 text-center">Local Activities</h2>
-              <p className="text-xl sm:text-2xl font-bold text-green-600 text-center">{orgData.totalLocalActivities}</p>
-            </div>
-          </Card>
+                    ? 'ring-4 ring-green-400 shadow-xl scale-105' 
+                    : 'shadow-md'
+                }`}
+                onClick={() => handleTypeFilterToggle('local')}
+              >
+                <div className="flex flex-col items-center p-2 sm:p-3">
+                  <div className={`p-2 rounded-full mb-2 transition-colors ${
+                    selectedType === 'local' 
+                      ? 'bg-green-500' 
+                      : 'bg-green-100'
+                  }`}>
+                    <HiOfficeBuilding className={`h-5 w-5 sm:h-6 sm:w-6 ${
+                      selectedType === 'local' 
+                        ? 'text-white' 
+                        : 'text-green-600'
+                    }`} />
+                  </div>
+                  <h2 className="text-xs sm:text-sm font-semibold mb-1 text-center">Local</h2>
+                  <p className="text-xl sm:text-2xl font-bold text-green-600 text-center">{orgData.totalLocalActivities}</p>
+                </div>
+              </Card>
 
-          {/* Total Events Card */}
-          <Card 
-            className={`w-[calc(50%-0.375rem)] sm:w-36 hover:shadow-lg transition-all cursor-pointer touch-manipulation ${
-              selectedType === 'event' 
-                ? 'ring-4 ring-purple-400 shadow-xl scale-105' 
-                : 'shadow-md'
-            }`}
-            onClick={() => handleTypeFilterToggle('event')}
-          >
-            <div className="flex flex-col items-center p-2 sm:p-3">
-              <div className={`p-2 rounded-full mb-2 transition-colors ${
-                selectedType === 'event' 
-                  ? 'bg-purple-500' 
-                  : 'bg-purple-100'
-              }`}>
-                <HiCalendar className={`h-5 w-5 sm:h-6 sm:w-6 ${
+              {/* Total Events Card */}
+              <Card 
+                className={`hover:shadow-lg transition-all cursor-pointer touch-manipulation ${
                   selectedType === 'event' 
-                    ? 'text-white' 
-                    : 'text-purple-600'
-                }`} />
-              </div>
-              <h2 className="text-xs sm:text-sm font-semibold mb-1 text-center">Total Events</h2>
-              <p className="text-xl sm:text-2xl font-bold text-purple-600 text-center">{orgData.totalEvents}</p>
-            </div>
-          </Card>
+                    ? 'ring-4 ring-purple-400 shadow-xl scale-105' 
+                    : 'shadow-md'
+                }`}
+                onClick={() => handleTypeFilterToggle('event')}
+              >
+                <div className="flex flex-col items-center p-2 sm:p-3">
+                  <div className={`p-2 rounded-full mb-2 transition-colors ${
+                    selectedType === 'event' 
+                      ? 'bg-purple-500' 
+                      : 'bg-purple-100'
+                  }`}>
+                    <HiCalendar className={`h-5 w-5 sm:h-6 sm:w-6 ${
+                      selectedType === 'event' 
+                        ? 'text-white' 
+                        : 'text-purple-600'
+                    }`} />
+                  </div>
+                  <h2 className="text-xs sm:text-sm font-semibold mb-1 text-center">Events</h2>
+                  <p className="text-xl sm:text-2xl font-bold text-purple-600 text-center">{orgData.totalEvents}</p>
+                </div>
+              </Card>
 
-          {/* New Applications Card */}
-          <Card 
-            className="w-[calc(50%-0.375rem)] sm:w-36 hover:shadow-lg transition-shadow cursor-pointer"
-            onClick={() => router.push('/mynonprofit/activities/applications')}
-          >
-            <div className="flex flex-col items-center p-2 sm:p-3">
-              <div className="bg-yellow-100 p-2 rounded-full mb-2">
-                <HiDocumentText className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-600" />
-              </div>
-              <h2 className="text-xs sm:text-sm font-semibold mb-1 text-center">New Applications</h2>
-              <p className="text-xl sm:text-2xl font-bold text-yellow-600 text-center">{orgData.totalNewApplications}</p>
-            </div>
-          </Card>
+              {/* Total Participants Card */}
+              <Card className="hover:shadow-lg transition-shadow">
+                <div className="flex flex-col items-center p-2 sm:p-3">
+                  <div className="bg-red-100 p-2 rounded-full mb-2">
+                    <HiUsers className="h-5 w-5 sm:h-6 sm:w-6 text-red-600" />
+                  </div>
+                  <h2 className="text-xs sm:text-sm font-semibold mb-1 text-center">Participants</h2>
+                  <p className="text-xl sm:text-2xl font-bold text-red-600 text-center">{orgData.totalParticipants}</p>
+                </div>
+              </Card>
 
-          {/* Total Participants Card */}
-          <Card className="w-[calc(50%-0.375rem)] sm:w-36 hover:shadow-lg transition-shadow">
-            <div className="flex flex-col items-center p-2 sm:p-3">
-              <div className="bg-red-100 p-2 rounded-full mb-2">
-                <HiUsers className="h-5 w-5 sm:h-6 sm:w-6 text-red-600" />
-              </div>
-              <h2 className="text-xs sm:text-sm font-semibold mb-1 text-center">Total Participants</h2>
-              <p className="text-xl sm:text-2xl font-bold text-red-600 text-center">{orgData.totalParticipants}</p>
+              {/* Closed Activities Card */}
+              <Card 
+                className={`hover:shadow-lg transition-all cursor-pointer touch-manipulation ${
+                  showClosedOnly 
+                    ? 'ring-4 ring-orange-400 shadow-xl scale-105' 
+                    : 'shadow-md'
+                }`}
+                onClick={handleClosedFilterToggle}
+              >
+                <div className="flex flex-col items-center p-2 sm:p-3">
+                  <div className={`p-2 rounded-full mb-2 transition-colors ${
+                    showClosedOnly 
+                      ? 'bg-orange-500' 
+                      : 'bg-orange-100'
+                  }`}>
+                    <HiLockClosed className={`h-5 w-5 sm:h-6 sm:w-6 ${
+                      showClosedOnly 
+                        ? 'text-white' 
+                        : 'text-orange-600'
+                    }`} />
+                  </div>
+                  <h2 className="text-xs sm:text-sm font-semibold mb-1 text-center">Closed</h2>
+                  <p className="text-xl sm:text-2xl font-bold text-orange-600 text-center">{closedActivitiesCount}</p>
+                </div>
+              </Card>
             </div>
-          </Card>
-        </div>
+          </div>
+
+          {/* Actions & Alerts Section */}
+          <div className="mb-6 sm:mb-8">
+            <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 px-1 text-gray-700">Quick Actions</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 gap-3 sm:gap-4">
+              {/* New Applications Card - With Badge */}
+              <Card 
+                className="hover:shadow-lg transition-shadow cursor-pointer relative"
+                onClick={() => router.push('/mynonprofit/activities/applications')}
+              >
+                <div className="flex flex-col items-center p-2 sm:p-3">
+                  {/* Badge indicator */}
+                  {orgData.totalNewApplications > 0 && (
+                    <div className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center text-xs sm:text-sm font-bold shadow-lg animate-pulse">
+                      {orgData.totalNewApplications > 99 ? '99+' : orgData.totalNewApplications}
+                    </div>
+                  )}
+                  <div className={`p-2 rounded-full mb-2 transition-colors ${
+                    orgData.totalNewApplications > 0 
+                      ? 'bg-yellow-500' 
+                      : 'bg-yellow-100'
+                  }`}>
+                    <HiDocumentText className={`h-5 w-5 sm:h-6 sm:w-6 ${
+                      orgData.totalNewApplications > 0 
+                        ? 'text-white' 
+                        : 'text-yellow-600'
+                    }`} />
+                  </div>
+                  <h2 className="text-xs sm:text-sm font-semibold mb-1 text-center">New Applications</h2>
+                  <p className={`text-xl sm:text-2xl font-bold text-center ${
+                    orgData.totalNewApplications > 0 
+                      ? 'text-red-600' 
+                      : 'text-yellow-600'
+                  }`}>
+                    {orgData.totalNewApplications}
+                  </p>
+                  {orgData.totalNewApplications > 0 && (
+                    <p className="text-xs text-gray-500 mt-1 text-center">Requires attention</p>
+                  )}
+                </div>
+              </Card>
+
+              {/* Edit Organization Card */}
+              <Card 
+                className="hover:shadow-lg transition-shadow cursor-pointer"
+                onClick={() => router.push('/mynonprofit/organization/edit')}
+              >
+                <div className="flex flex-col items-center p-2 sm:p-3">
+                  <div className="bg-indigo-100 p-2 rounded-full mb-2">
+                    <HiCog className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-600" />
+                  </div>
+                  <h2 className="text-xs sm:text-sm font-semibold mb-1 text-center">Organization</h2>
+                  <p className="text-xs sm:text-sm text-indigo-600 text-center font-medium">Edit Settings</p>
+                </div>
+              </Card>
+            </div>
+          </div>
+        </>
       )}
 
       {/* Organization Activities */}
@@ -323,9 +445,11 @@ export default function MyNonProfitDashboard() {
           </div>
         ) : orgActivities.length === 0 ? (
           <p className="text-gray-600 px-1">
-            {selectedType 
-              ? `No activities found matching the selected filter.` 
-              : 'No activities found for your organization.'}
+            {showClosedOnly 
+              ? 'No closed activities found.' 
+              : selectedType 
+                ? `No activities found matching the selected filter.` 
+                : 'No activities found for your organization.'}
           </p>
         ) : (
           <div className='flex flex-wrap justify-center gap-4 sm:gap-6'>

@@ -266,9 +266,7 @@
         "status": {
             "Draft": "下書き",
             "Open": "公開中",
-            "InProgress": "進行中",
-            "Completed": "完了",
-            "Archived": "アーカイブ"
+            "Closed": "閉鎖"
         }
     },
     "PublishDraftModal": {
@@ -279,5 +277,33 @@
         "publish": "今すぐ公開",
         "publishDescription": "ボランティアが利用できるようにする",
         "cancel": "キャンセル"
+    },
+    "OrganizationEdit": {
+        "editOrganization": "組織を編集",
+        "logo": "ロゴ",
+        "logoHelper": "組織の新しいロゴ画像をアップロード",
+        "name": "組織名",
+        "nameReadOnly": "組織名は変更できません。更新が必要な場合はサポートにお問い合わせください。",
+        "country": "国",
+        "city": "都市",
+        "address": "住所",
+        "languages": "言語",
+        "selectLanguages": "言語を選択",
+        "languagesHelper": "組織で使用する言語を選択してください",
+        "sdgs": "SDGs",
+        "selectSDGs": "SDGsを選択",
+        "description": "説明",
+        "website": "ウェブサイト",
+        "email": "メールアドレス",
+        "registrationNumber": "登録番号",
+        "selectCountry": "国を選択",
+        "save": "変更を保存",
+        "saving": "保存中...",
+        "cancel": "キャンセル",
+        "organizationUpdated": "組織が正常に更新されました！",
+        "errorSavingOrganization": "組織の保存中にエラーが発生しました。もう一度お試しください。",
+        "errorUploadingLogo": "ロゴのアップロード中にエラーが発生しました。もう一度お試しください。",
+        "errorLoading": "組織データの読み込み中にエラーが発生しました",
+        "noOrganization": "組織が見つかりません"
     }
 }

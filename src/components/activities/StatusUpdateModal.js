@@ -38,22 +38,10 @@ export default function StatusUpdateModal({
       color: 'text-green-600'
     },
     {
-      value: 'InProgress',
-      label: t('status.InProgress'),
-      icon: HiClock,
-      color: 'text-blue-600'
-    },
-    {
-      value: 'Completed',
-      label: t('status.Completed'),
+      value: 'Closed',
+      label: t('status.Closed'),
       icon: HiCheckCircle,
       color: 'text-purple-600'
-    },
-    {
-      value: 'Archived',
-      label: t('status.Archived'),
-      icon: HiArchive,
-      color: 'text-gray-500'
     }
   ];
 
