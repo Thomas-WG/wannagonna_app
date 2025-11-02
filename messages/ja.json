@@ -52,9 +52,7 @@
         "status": {
             "Draft": "下書き",
             "Open": "公開中",
-            "InProgress": "進行中",
-            "Completed": "完了",
-            "Archived": "アーカイブ"
+            "Closed": "閉鎖"
         }
     },
     "ManageActivities": {

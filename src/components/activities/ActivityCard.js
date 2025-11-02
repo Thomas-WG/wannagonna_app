@@ -63,23 +63,11 @@ export default function ActivityCard({
         borderColor: 'border-green-300',
         label: t('status.Open')
       },
-      'InProgress': {
-        icon: HiClock,
-        color: 'bg-blue-100 text-blue-800',
-        borderColor: 'border-blue-300',
-        label: t('status.InProgress')
-      },
-      'Completed': {
+      'Closed': {
         icon: HiCheckCircle,
         color: 'bg-purple-100 text-purple-800',
         borderColor: 'border-purple-300',
-        label: t('status.Completed')
-      },
-      'Archived': {
-        icon: HiArchive,
-        color: 'bg-gray-100 text-gray-600',
-        borderColor: 'border-gray-300',
-        label: t('status.Archived')
+        label: t('status.Closed')
       }
     };
     

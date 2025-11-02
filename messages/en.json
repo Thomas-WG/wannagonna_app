@@ -52,9 +52,7 @@
         "status": {
             "Draft": "Draft",
             "Open": "Open",
-            "InProgress": "In Progress",
-            "Completed": "Completed",
-            "Archived": "Archived"
+            "Closed": "Closed"
         }
     },
     "ManageActivities": {
@@ -333,5 +331,20 @@
         "successDeletedMultiple": "Successfully deleted {count} activities!",
         "successDeletedSingle": "Activity deleted successfully!",
         "errorRefreshing": "Error refreshing activities. Please try again."
+    },
+    "Dashboard": {
+        "yourStatistics": "Your Statistics",
+        "localActivities": "Local Activities",
+        "onlineActivities": "Online Activities",
+        "events": "Events",
+        "totalApplications": "Applications",
+        "inProgress": "In Progress",
+        "closedActivities": "Closed",
+        "yourActivities": "Your Activities",
+        "noActivitiesFound": "No activities found. Start applying to activities to see them here!",
+        "yourBadges": "Your Badges",
+        "badgesComingSoon": "Badges system coming soon!",
+        "badgesPlaceholder": "Earn badges by completing activities and reaching milestones.",
+        "errorLoading": "Error loading dashboard data"
     }
 }

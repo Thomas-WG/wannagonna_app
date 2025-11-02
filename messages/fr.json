@@ -52,9 +52,7 @@
         "status": {
             "Draft": "Brouillon",
             "Open": "Ouvert",
-            "InProgress": "En cours",
-            "Completed": "Terminé",
-            "Archived": "Archivé"
+            "Closed": "Fermé"
         }
     },
     "ManageActivities": {

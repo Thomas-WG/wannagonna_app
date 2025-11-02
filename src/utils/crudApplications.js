@@ -1,5 +1,6 @@
 import { collection, addDoc, getDoc, doc, query, where, getDocs, updateDoc, runTransaction, increment } from 'firebase/firestore';
 import { db } from 'firebaseConfig';
+import { fetchActivityById } from './crudActivities';
 
 export const checkExistingApplication = async (activityId, userId) => {
   try {
@@ -180,4 +181,73 @@ export const updateApplicationStatus = async (activityId, applicationId, status,
     console.error('Error updating application status:', error);
     throw error;
   }
-}; 
+};
+
+// Fetch all applications for a specific user (volunteer)
+export const fetchApplicationsByUserId = async (userId) => {
+  try {
+    const userRef = doc(db, 'members', userId);
+    const userApplicationsRef = collection(userRef, 'applications');
+    const querySnapshot = await getDocs(userApplicationsRef);
+    
+    const applications = [];
+    
+    for (const docSnapshot of querySnapshot.docs) {
+      const data = docSnapshot.data();
+      
+      // Convert Firestore timestamps to Date objects
+      const createdAt = data.createdAt?.toDate ? data.createdAt.toDate() : data.createdAt;
+      const updatedAt = data.updatedAt?.toDate ? data.updatedAt.toDate() : data.updatedAt;
+      
+      applications.push({
+        id: docSnapshot.id,
+        ...data,
+        createdAt,
+        updatedAt
+      });
+    }
+    
+    return applications;
+  } catch (error) {
+    console.error('Error fetching applications for user:', error);
+    throw error;
+  }
+};
+
+// Fetch activities for a volunteer based on their accepted applications
+export const fetchActivitiesForVolunteer = async (userId) => {
+  try {
+    // First, get all applications for this user
+    const applications = await fetchApplicationsByUserId(userId);
+    
+    // Filter only accepted applications
+    const acceptedApplications = applications.filter(app => app.status === 'accepted');
+    
+    // Fetch activity details for each accepted application
+    const activities = await Promise.all(
+      acceptedApplications.map(async (app) => {
+        try {
+          const activity = await fetchActivityById(app.activityId);
+          if (activity) {
+            return {
+              ...activity,
+              applicationStatus: app.status,
+              applicationId: app.id,
+              appliedAt: app.createdAt
+            };
+          }
+          return null;
+        } catch (error) {
+          console.error(`Error fetching activity ${app.activityId}:`, error);
+          return null;
+        }
+      })
+    );
+    
+    // Filter out null values
+    return activities.filter(activity => activity !== null);
+  } catch (error) {
+    console.error('Error fetching activities for volunteer:', error);
+    throw error;
+  }
+};
