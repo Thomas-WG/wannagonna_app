@@ -22,6 +22,7 @@ import { countries } from 'countries-list';
 import languages from '@cospired/i18n-iso-languages';
 import Select from 'react-select';
 import Image from 'next/image';
+import { sdgOptions } from '@/constant/sdgs';
 
 // Register the languages you want to use
 languages.registerLocale(require("@cospired/i18n-iso-languages/langs/en.json"));
@@ -221,26 +222,7 @@ export default function OrganizationsManagementPage() {
     label: name
   }));
 
-  // Get SDG options with names
-  const sdgOptions = [
-    { value: 'Goal-01', label: '01 - No Poverty' },
-    { value: 'Goal-02', label: '02 - Zero Hunger' },
-    { value: 'Goal-03', label: '03 - Good Health and Well-being' },
-    { value: 'Goal-04', label: '04 - Quality Education' },
-    { value: 'Goal-05', label: '05 - Gender Equality' },
-    { value: 'Goal-06', label: '06 - Clean Water and Sanitation' },
-    { value: 'Goal-07', label: '07 - Affordable and Clean Energy' },
-    { value: 'Goal-08', label: '08 - Decent Work and Economic Growth' },
-    { value: 'Goal-09', label: '09 - Industry, Innovation and Infrastructure' },
-    { value: 'Goal-10', label: '10 - Reduced Inequalities' },
-    { value: 'Goal-11', label: '11 - Sustainable Cities and Communities' },
-    { value: 'Goal-12', label: '12 - Responsible Consumption and Production' },
-    { value: 'Goal-13', label: '13 - Climate Action' },
-    { value: 'Goal-14', label: '14 - Life Below Water' },
-    { value: 'Goal-15', label: '15 - Life on Land' },
-    { value: 'Goal-16', label: '16 - Peace, Justice and Strong Institutions' },
-    { value: 'Goal-17', label: '17 - Partnerships for the Goals' }
-  ];
+  // SDG options are imported from constants
 
   return (
     <div className="container mx-auto p-4 space-y-6">
