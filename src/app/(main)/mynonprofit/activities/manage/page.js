@@ -249,56 +249,86 @@ export default function CreateUpdateActivityPage() {
   if (!user) return null;
 
   return (
-    <div className='p-4 max-w-full mx-auto'>
-      <h1 className='text-2xl font-bold mb-4 text-center'>
-        {isEditMode ? t('update-activity') : t('create-activity')}
-      </h1>
-      {loading && <p>Loading...</p>}
-      <div className='max-w-full'>
-        <ProgressStepper currentStep={currentStep} />
+    <div className='min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800'>
+      <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8'>
+        {/* Header Section */}
+        <div className='mb-6 sm:mb-8'>
+          <h1 className='text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white text-center mb-2'>
+            {isEditMode ? t('update-activity') : t('create-activity')}
+          </h1>
+          <p className='text-sm sm:text-base text-gray-600 dark:text-gray-400 text-center'>
+            {currentStep === 1 && 'Select the category that best describes your activity'}
+            {currentStep === 2 && 'Provide details about your activity'}
+            {currentStep === 3 && 'Choose a Sustainable Development Goal'}
+          </p>
+        </div>
+
+        {/* Loading State */}
+        {loading && (
+          <div className='flex justify-center items-center py-12'>
+            <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500'></div>
+          </div>
+        )}
+
+        {/* Progress Stepper */}
+        {!loading && (
+          <div className='mb-6 sm:mb-8'>
+            <ProgressStepper currentStep={currentStep} />
+          </div>
+        )}
+
+        {/* Form Content */}
+        {!loading && (
+          <form onSubmit={handleSubmit} className='space-y-4 sm:space-y-6'>
+            {/* Step 1 */}
+            {currentStep === 1 && (
+              <div className='animate-fadeIn'>
+                <CategorySelector 
+                  availableCategories={availableCategories}
+                  formData={formData}
+                  setFormData={setFormData}
+                  nextStep={nextStep}
+                />
+              </div>
+            )}
+
+            {/* Step 2 */}
+            {currentStep === 2 && (
+              <div className='animate-fadeIn'>
+                <ActivityDetailsForm 
+                  formData={formData}
+                  handleChange={handleChange}
+                  setFormData={setFormData}
+                  availableCategories={availableCategories}
+                />
+              </div>
+            )}
+
+            {/* Step 3 */}
+            {currentStep === 3 && (
+              <div className='animate-fadeIn'>
+                <SDGSelector 
+                  formData={formData}
+                  setFormData={setFormData}
+                  organizationData={organizationData}
+                />
+              </div>
+            )}
+
+            {/* Navigation Buttons */}
+            <div className='sticky bottom-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-4 sm:py-5 shadow-lg sm:shadow-xl'>
+              <FormNavigation 
+                currentStep={currentStep}
+                prevStep={prevStep}
+                nextStep={nextStep}
+                formData={formData}
+                isEditMode={isEditMode}
+                handleSubmit={handleSubmit}
+              />
+            </div>
+          </form>
+        )}
       </div>
-      <form onSubmit={handleSubmit} className='space-y-4 mt-4'>
-        {/* Step 1 */}
-        {currentStep === 1 && (
-          <>
-            <CategorySelector 
-              availableCategories={availableCategories}
-              formData={formData}
-              setFormData={setFormData}
-              nextStep={nextStep}
-            />
-          </>
-        )}
-
-        {/* Step 2 */}
-        {currentStep === 2 && (
-          <ActivityDetailsForm 
-            formData={formData}
-            handleChange={handleChange}
-            setFormData={setFormData}
-            availableCategories={availableCategories}
-          />
-        )}
-
-        {/* Step 3 */}
-        {currentStep === 3 && (
-          <SDGSelector 
-            formData={formData}
-            setFormData={setFormData}
-            organizationData={organizationData}
-          />
-        )}
-
-        {/* Navigation Buttons */}
-        <FormNavigation 
-          currentStep={currentStep}
-          prevStep={prevStep}
-          nextStep={nextStep}
-          formData={formData}
-          isEditMode={isEditMode}
-          handleSubmit={handleSubmit}
-        />
-      </form>
       
       {/* Status Update Modal */}
       <StatusUpdateModal

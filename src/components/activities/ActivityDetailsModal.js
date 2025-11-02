@@ -15,7 +15,8 @@ import {
   HiOfficeBuilding,
   HiGlobeAlt,
   HiQuestionMarkCircle,
-  HiTranslate
+  HiTranslate,
+  HiLink
 } from 'react-icons/hi';
 import { HiClock } from 'react-icons/hi2';
 import NPODetailsModal from './NPODetailsModal';
@@ -234,6 +235,26 @@ export default function ActivityDetailsModal({ isOpen, onClose, activityId }) {
                   {activity.description || 'No description provided.'}
                 </p>
               </div>
+
+              {/* Activity URL */}
+              {activity.activity_url && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="flex items-center gap-3">
+                    <HiLink className="h-5 w-5 text-blue-600 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-gray-500 mb-1">Activity Link</p>
+                      <a
+                        href={activity.activity_url.startsWith('http') ? activity.activity_url : `https://${activity.activity_url}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800 text-sm sm:text-base font-medium break-all underline decoration-2 underline-offset-2 hover:decoration-blue-800 transition-colors"
+                      >
+                        {activity.activity_url}
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Activity Details Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
