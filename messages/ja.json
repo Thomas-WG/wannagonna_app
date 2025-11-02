@@ -270,5 +270,14 @@
             "Completed": "完了",
             "Archived": "アーカイブ"
         }
+    },
+    "PublishDraftModal": {
+        "title": "活動を公開",
+        "question": "今すぐ公開しますか、それとも下書きのままにしますか？",
+        "draft": "下書きのまま保存",
+        "draftDescription": "後で編集するために保存",
+        "publish": "今すぐ公開",
+        "publishDescription": "ボランティアが利用できるようにする",
+        "cancel": "キャンセル"
     }
 }

@@ -21,7 +21,7 @@ import CategorySelector from '@/components/activities/CategorySelector';
 import ActivityDetailsForm from '@/components/activities/ActivityDetailsForm';
 import SDGSelector from '@/components/activities/SDGSelector';
 import FormNavigation from '@/components/activities/FormNavigation';
-import StatusUpdateModal from '@/components/activities/StatusUpdateModal';
+import PublishDraftModal from '@/components/activities/PublishDraftModal';
 
 export default function CreateUpdateActivityPage() {
   // Retrieve query parameters from URL
@@ -221,9 +221,9 @@ export default function CreateUpdateActivityPage() {
     }
   };
 
-  // Handle status update
-  const handleStatusUpdate = async (newStatus) => {
-    console.log('handleStatusUpdate called with:', newStatus, 'savedActivityId:', savedActivityId);
+  // Handle publish action - sets status to 'Open'
+  const handlePublish = async () => {
+    console.log('handlePublish called, savedActivityId:', savedActivityId);
     if (!savedActivityId) {
       console.error('No savedActivityId available');
       return;
@@ -231,8 +231,32 @@ export default function CreateUpdateActivityPage() {
     
     try {
       setIsUpdatingStatus(true);
-      console.log('Updating activity status...');
-      await updateActivityStatus(savedActivityId, newStatus);
+      console.log('Updating activity status to: Open');
+      await updateActivityStatus(savedActivityId, 'Open');
+      console.log('Activity status updated successfully');
+      setShowStatusModal(false);
+      // Navigate back after successful status update
+      router.back();
+    } catch (error) {
+      console.error('Error updating activity status:', error);
+      alert('Error updating activity status. Please try again.');
+    } finally {
+      setIsUpdatingStatus(false);
+    }
+  };
+
+  // Handle draft action - sets status to 'Draft'
+  const handleDraft = async () => {
+    console.log('handleDraft called, savedActivityId:', savedActivityId);
+    if (!savedActivityId) {
+      console.error('No savedActivityId available');
+      return;
+    }
+    
+    try {
+      setIsUpdatingStatus(true);
+      console.log('Updating activity status to: Draft');
+      await updateActivityStatus(savedActivityId, 'Draft');
       console.log('Activity status updated successfully');
       setShowStatusModal(false);
       // Navigate back after successful status update
@@ -330,12 +354,12 @@ export default function CreateUpdateActivityPage() {
         )}
       </div>
       
-      {/* Status Update Modal */}
-      <StatusUpdateModal
+      {/* Publish/Draft Modal */}
+      <PublishDraftModal
         isOpen={showStatusModal}
         onClose={() => setShowStatusModal(false)}
-        currentStatus={formData.status}
-        onStatusUpdate={handleStatusUpdate}
+        onPublish={handlePublish}
+        onDraft={handleDraft}
         isUpdating={isUpdatingStatus}
       />
     </div>

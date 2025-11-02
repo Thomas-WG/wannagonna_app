@@ -10,33 +10,11 @@ export default function FormNavigation({ currentStep, prevStep, nextStep, formDa
     (currentStep === 2 && formData.title && formData.description && formData.frequency) ||
     (currentStep === 3 && formData.sdg);
 
-  const getValidationMessage = () => {
-    if (currentStep === 1 && !formData.category) {
-      return 'Please select a category';
-    }
-    if (currentStep === 2) {
-      if (!formData.title) return 'Please enter a title';
-      if (!formData.description) return 'Please enter a description';
-      if (!formData.frequency) return 'Please select frequency';
-    }
-    if (currentStep === 3 && !formData.sdg) {
-      return 'Please select an SDG';
-    }
-    return null;
-  };
 
-  const validationMessage = getValidationMessage();
 
   return (
     <div className='w-full space-y-3'>
-      {/* Validation Message - Always reserve space */}
-      <div className="min-h-[24px] flex items-center">
-        {validationMessage && (
-          <p className="text-xs sm:text-sm text-red-600 dark:text-red-400 font-medium w-full text-center sm:text-left">
-            {validationMessage}
-          </p>
-        )}
-      </div>
+
       
       {/* Button Container - Stable layout */}
       <div className='flex justify-between items-center gap-3 w-full'>

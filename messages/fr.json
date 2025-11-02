@@ -270,5 +270,14 @@
             "Completed": "Terminé",
             "Archived": "Archivé"
         }
+    },
+    "PublishDraftModal": {
+        "title": "Publier l'activité",
+        "question": "Voulez-vous le publier maintenant ou le garder en brouillon ?",
+        "draft": "Garder en brouillon",
+        "draftDescription": "Enregistrer pour modification ultérieure",
+        "publish": "Publier maintenant",
+        "publishDescription": "Rendre disponible aux volontaires",
+        "cancel": "Annuler"
     }
 }

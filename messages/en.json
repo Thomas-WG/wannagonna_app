@@ -270,5 +270,14 @@
             "Completed": "Completed",
             "Archived": "Archived"
         }
+    },
+    "PublishDraftModal": {
+        "title": "Publish Activity",
+        "question": "Do you want to publish it now or keep it in draft?",
+        "draft": "Keep as Draft",
+        "draftDescription": "Save for later editing",
+        "publish": "Publish Now",
+        "publishDescription": "Make it available to volunteers",
+        "cancel": "Cancel"
     }
 }

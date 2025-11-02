@@ -264,5 +264,14 @@
             "Completed": "Completado",
             "Archived": "Archivado"
         }
+    },
+    "PublishDraftModal": {
+        "title": "Publicar actividad",
+        "question": "¿Quieres publicarlo ahora o mantenerlo en borrador?",
+        "draft": "Mantener como borrador",
+        "draftDescription": "Guardar para editar más tarde",
+        "publish": "Publicar ahora",
+        "publishDescription": "Hacerlo disponible para voluntarios",
+        "cancel": "Cancelar"
     }
 }
