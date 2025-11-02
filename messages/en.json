@@ -305,5 +305,33 @@
         "errorUploadingLogo": "Error uploading logo. Please try again.",
         "errorLoading": "Error loading organization data",
         "noOrganization": "No organization found"
+    },
+    "MyNonProfit": {
+        "metricsAndFilters": "Metrics & Filters",
+        "allActivities": "All Activities",
+        "online": "Online",
+        "local": "Local",
+        "events": "Events",
+        "closed": "Closed",
+        "participants": "Participants",
+        "quickActions": "Quick Actions",
+        "newApplications": "New Applications",
+        "requiresAttention": "Requires attention",
+        "organization": "Organization",
+        "editInformation": "Edit Information",
+        "yourActivities": "Your Activities",
+        "noClosedActivities": "No closed activities found.",
+        "noActivitiesMatchingFilter": "No activities found matching the selected filter.",
+        "noActivitiesFound": "No activities found for your organization.",
+        "edit": "Edit",
+        "delete": "Delete",
+        "view": "View",
+        "applications": "Applications",
+        "event": "Event",
+        "closeMenu": "Close menu",
+        "openMenu": "Open menu",
+        "successDeletedMultiple": "Successfully deleted {count} activities!",
+        "successDeletedSingle": "Activity deleted successfully!",
+        "errorRefreshing": "Error refreshing activities. Please try again."
     }
 }

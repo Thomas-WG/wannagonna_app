@@ -8,12 +8,14 @@ import { useAuth } from "@/utils/auth/AuthContext";
 import { fetchOrganizationById } from "@/utils/crudOrganizations";
 import { useRouter } from "next/navigation";
 import { fetchActivitiesByCriteria, deleteActivity } from "@/utils/crudActivities";
+import { useTranslations } from "next-intl";
 import ActivityCard from "@/components/activities/ActivityCard";
 import DeleteActivityModal from "@/components/activities/DeleteActivityModal";
 import ReviewApplicationsModal from "@/components/activities/ReviewApplicationsModal";
 import ActivityDetailsModal from "@/components/activities/ActivityDetailsModal";
 
 export default function MyNonProfitDashboard() {
+  const t = useTranslations('MyNonProfit');
   const { claims } = useAuth();
   const router = useRouter();
   const [orgData, setOrgData] = useState({
@@ -98,14 +100,14 @@ export default function MyNonProfitDashboard() {
 
     // Filter by status first (closed vs open/draft)
     if (showClosedOnly) {
-      // Show only closed activities (Completed or Archived)
+      // Show only closed activities
       filtered = filtered.filter(activity => 
-        activity.status === 'Completed' || activity.status === 'Archived'
+        activity.status === 'Closed'
       );
     } else {
-      // By default, exclude closed activities (show only Draft, Open, InProgress)
+      // By default, exclude closed activities (show only Draft and Open)
       filtered = filtered.filter(activity => 
-        activity.status !== 'Completed' && activity.status !== 'Archived'
+        activity.status !== 'Closed'
       );
     }
 
@@ -172,14 +174,14 @@ export default function MyNonProfitDashboard() {
       
       // Show success toast
       const message = deletedCount > 1 
-        ? `Successfully deleted ${deletedCount} activities!`
-        : 'Activity deleted successfully!';
+        ? t('successDeletedMultiple', { count: deletedCount })
+        : t('successDeletedSingle');
       setToastMessage({ type: 'success', message });
       setShowToast(true);
     } catch (error) {
       console.error("Error refreshing activities:", error);
       // Show error toast
-      setToastMessage({ type: 'error', message: 'Error refreshing activities. Please try again.' });
+      setToastMessage({ type: 'error', message: t('errorRefreshing') });
       setShowToast(true);
     }
   };
@@ -215,7 +217,7 @@ export default function MyNonProfitDashboard() {
 
   // Calculate closed activities count
   const closedActivitiesCount = allOrgActivities.filter(
-    activity => activity.status === 'Completed' || activity.status === 'Archived'
+    activity => activity.status === 'Closed'
   ).length;
 
   return (
@@ -229,7 +231,7 @@ export default function MyNonProfitDashboard() {
         <>
           {/* Primary Metrics Section */}
           <div className="mb-6 sm:mb-8">
-            <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 px-1 text-gray-700">Metrics & Filters</h2>
+            <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 px-1 text-gray-700">{t('metricsAndFilters')}</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
               {/* All Activities Card */}
               <Card 
@@ -255,7 +257,7 @@ export default function MyNonProfitDashboard() {
                         : 'text-gray-600'
                     }`} />
                   </div>
-                  <h2 className="text-xs sm:text-sm font-semibold mb-1 text-center">All Activities</h2>
+                  <h2 className="text-xs sm:text-sm font-semibold mb-1 text-center">{t('allActivities')}</h2>
                   <p className="text-xl sm:text-2xl font-bold text-gray-600 text-center">{allOrgActivities.length}</p>
                 </div>
               </Card>
@@ -281,7 +283,7 @@ export default function MyNonProfitDashboard() {
                         : 'text-blue-600'
                     }`} />
                   </div>
-                  <h2 className="text-xs sm:text-sm font-semibold mb-1 text-center">Online</h2>
+                  <h2 className="text-xs sm:text-sm font-semibold mb-1 text-center">{t('online')}</h2>
                   <p className="text-xl sm:text-2xl font-bold text-blue-600 text-center">{orgData.totalOnlineActivities}</p>
                 </div>
               </Card>
@@ -307,7 +309,7 @@ export default function MyNonProfitDashboard() {
                         : 'text-green-600'
                     }`} />
                   </div>
-                  <h2 className="text-xs sm:text-sm font-semibold mb-1 text-center">Local</h2>
+                  <h2 className="text-xs sm:text-sm font-semibold mb-1 text-center">{t('local')}</h2>
                   <p className="text-xl sm:text-2xl font-bold text-green-600 text-center">{orgData.totalLocalActivities}</p>
                 </div>
               </Card>
@@ -333,19 +335,8 @@ export default function MyNonProfitDashboard() {
                         : 'text-purple-600'
                     }`} />
                   </div>
-                  <h2 className="text-xs sm:text-sm font-semibold mb-1 text-center">Events</h2>
+                  <h2 className="text-xs sm:text-sm font-semibold mb-1 text-center">{t('events')}</h2>
                   <p className="text-xl sm:text-2xl font-bold text-purple-600 text-center">{orgData.totalEvents}</p>
-                </div>
-              </Card>
-
-              {/* Total Participants Card */}
-              <Card className="hover:shadow-lg transition-shadow">
-                <div className="flex flex-col items-center p-2 sm:p-3">
-                  <div className="bg-red-100 p-2 rounded-full mb-2">
-                    <HiUsers className="h-5 w-5 sm:h-6 sm:w-6 text-red-600" />
-                  </div>
-                  <h2 className="text-xs sm:text-sm font-semibold mb-1 text-center">Participants</h2>
-                  <p className="text-xl sm:text-2xl font-bold text-red-600 text-center">{orgData.totalParticipants}</p>
                 </div>
               </Card>
 
@@ -370,8 +361,19 @@ export default function MyNonProfitDashboard() {
                         : 'text-orange-600'
                     }`} />
                   </div>
-                  <h2 className="text-xs sm:text-sm font-semibold mb-1 text-center">Closed</h2>
+                  <h2 className="text-xs sm:text-sm font-semibold mb-1 text-center">{t('closed')}</h2>
                   <p className="text-xl sm:text-2xl font-bold text-orange-600 text-center">{closedActivitiesCount}</p>
+                </div>
+              </Card>
+
+              {/* Total Participants Card */}
+              <Card className="hover:shadow-lg transition-shadow">
+                <div className="flex flex-col items-center p-2 sm:p-3">
+                  <div className="bg-red-100 p-2 rounded-full mb-2">
+                    <HiUsers className="h-5 w-5 sm:h-6 sm:w-6 text-red-600" />
+                  </div>
+                  <h2 className="text-xs sm:text-sm font-semibold mb-1 text-center">{t('participants')}</h2>
+                  <p className="text-xl sm:text-2xl font-bold text-red-600 text-center">{orgData.totalParticipants}</p>
                 </div>
               </Card>
             </div>
@@ -379,7 +381,7 @@ export default function MyNonProfitDashboard() {
 
           {/* Actions & Alerts Section */}
           <div className="mb-6 sm:mb-8">
-            <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 px-1 text-gray-700">Quick Actions</h2>
+            <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 px-1 text-gray-700">{t('quickActions')}</h2>
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 gap-3 sm:gap-4">
               {/* New Applications Card - With Badge */}
               <Card 
@@ -404,7 +406,7 @@ export default function MyNonProfitDashboard() {
                         : 'text-yellow-600'
                     }`} />
                   </div>
-                  <h2 className="text-xs sm:text-sm font-semibold mb-1 text-center">New Applications</h2>
+                  <h2 className="text-xs sm:text-sm font-semibold mb-1 text-center">{t('newApplications')}</h2>
                   <p className={`text-xl sm:text-2xl font-bold text-center ${
                     orgData.totalNewApplications > 0 
                       ? 'text-red-600' 
@@ -413,7 +415,7 @@ export default function MyNonProfitDashboard() {
                     {orgData.totalNewApplications}
                   </p>
                   {orgData.totalNewApplications > 0 && (
-                    <p className="text-xs text-gray-500 mt-1 text-center">Requires attention</p>
+                    <p className="text-xs text-gray-500 mt-1 text-center">{t('requiresAttention')}</p>
                   )}
                 </div>
               </Card>
@@ -427,8 +429,8 @@ export default function MyNonProfitDashboard() {
                   <div className="bg-indigo-100 p-2 rounded-full mb-2">
                     <HiCog className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-600" />
                   </div>
-                  <h2 className="text-xs sm:text-sm font-semibold mb-1 text-center">Organization</h2>
-                  <p className="text-xs sm:text-sm text-indigo-600 text-center font-medium">Edit Settings</p>
+                  <h2 className="text-xs sm:text-sm font-semibold mb-1 text-center">{t('organization')}</h2>
+                  <p className="text-xs sm:text-sm text-indigo-600 text-center font-medium">{t('editInformation')}</p>
                 </div>
               </Card>
             </div>
@@ -438,7 +440,7 @@ export default function MyNonProfitDashboard() {
 
       {/* Organization Activities */}
       <div className="mt-6 sm:mt-10">
-        <h2 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 px-1">Your Activities</h2>
+        <h2 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 px-1">{t('yourActivities')}</h2>
         {loadingActivities ? (
           <div className="flex justify-center items-center h-32">
             <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
@@ -446,10 +448,10 @@ export default function MyNonProfitDashboard() {
         ) : orgActivities.length === 0 ? (
           <p className="text-gray-600 px-1">
             {showClosedOnly 
-              ? 'No closed activities found.' 
+              ? t('noClosedActivities') 
               : selectedType 
-                ? `No activities found matching the selected filter.` 
-                : 'No activities found for your organization.'}
+                ? t('noActivitiesMatchingFilter') 
+                : t('noActivitiesFound')}
           </p>
         ) : (
           <div className='flex flex-wrap justify-center gap-4 sm:gap-6'>
@@ -489,7 +491,7 @@ export default function MyNonProfitDashboard() {
                         >
                           <HiPencil className="h-6 w-6 sm:h-8 sm:w-8" />
                         </button>
-                        <span className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-white font-medium">Edit</span>
+                        <span className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-white font-medium">{t('edit')}</span>
                       </div>
 
                       {/* Delete Button */}
@@ -501,7 +503,7 @@ export default function MyNonProfitDashboard() {
                         >
                           <HiTrash className="h-6 w-6 sm:h-8 sm:w-8" />
                         </button>
-                        <span className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-white font-medium">Delete</span>
+                        <span className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-white font-medium">{t('delete')}</span>
                       </div>
 
                       {/* View Activity Button */}
@@ -513,7 +515,7 @@ export default function MyNonProfitDashboard() {
                         >
                           <HiEye className="h-6 w-6 sm:h-8 sm:w-8" />
                         </button>
-                        <span className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-white font-medium">View</span>
+                        <span className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-white font-medium">{t('view')}</span>
                       </div>
 
                       {/* Review Applications Button */}
@@ -525,7 +527,7 @@ export default function MyNonProfitDashboard() {
                         >
                           <HiUserGroup className="h-6 w-6 sm:h-8 sm:w-8" />
                         </button>
-                        <span className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-white font-medium">Applications</span>
+                        <span className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-white font-medium">{t('applications')}</span>
                       </div>
                     </div>
                     
@@ -561,7 +563,7 @@ export default function MyNonProfitDashboard() {
               >
                 <MdOutlineSocialDistance className="h-6 w-6 sm:h-7 sm:w-7" />
               </button>
-              <span className="mt-1 text-xs sm:text-sm text-blue-600 font-medium">Online</span>
+              <span className="mt-1 text-xs sm:text-sm text-blue-600 font-medium">{t('online')}</span>
             </div>
 
             {/* Local */}
@@ -576,7 +578,7 @@ export default function MyNonProfitDashboard() {
               >
                 <HiOfficeBuilding className="h-6 w-6 sm:h-7 sm:w-7" />
               </button>
-              <span className="mt-1 text-xs sm:text-sm text-green-600 font-medium">Local</span>
+              <span className="mt-1 text-xs sm:text-sm text-green-600 font-medium">{t('local')}</span>
             </div>
 
             {/* Event */}
@@ -591,7 +593,7 @@ export default function MyNonProfitDashboard() {
               >
                 <HiCalendar className="h-6 w-6 sm:h-7 sm:w-7" />
               </button>
-              <span className="mt-1 text-xs sm:text-sm text-purple-600 font-medium">Event</span>
+              <span className="mt-1 text-xs sm:text-sm text-purple-600 font-medium">{t('event')}</span>
             </div>
           </div>
         )}
@@ -599,7 +601,7 @@ export default function MyNonProfitDashboard() {
         <button
           onClick={() => setIsFabOpen((prev) => !prev)}
           className="bg-orange-500 text-white text-xl sm:text-2xl w-12 h-12 sm:w-14 sm:h-14 rounded-full shadow-lg hover:bg-orange-600 active:bg-orange-700 transition-colors touch-manipulation flex items-center justify-center"
-          aria-label={isFabOpen ? 'Close menu' : 'Open menu'}
+          aria-label={isFabOpen ? t('closeMenu') : t('openMenu')}
         >
           {isFabOpen ? '×' : '+'}
         </button>

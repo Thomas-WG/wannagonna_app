@@ -305,5 +305,33 @@
         "errorUploadingLogo": "ロゴのアップロード中にエラーが発生しました。もう一度お試しください。",
         "errorLoading": "組織データの読み込み中にエラーが発生しました",
         "noOrganization": "組織が見つかりません"
+    },
+    "MyNonProfit": {
+        "metricsAndFilters": "メトリクスとフィルター",
+        "allActivities": "すべての活動",
+        "online": "オンライン",
+        "local": "ローカル",
+        "events": "イベント",
+        "closed": "閉鎖",
+        "participants": "参加者",
+        "quickActions": "クイックアクション",
+        "newApplications": "新しい申請",
+        "requiresAttention": "注意が必要です",
+        "organization": "組織",
+        "editInformation": "情報を編集",
+        "yourActivities": "あなたの活動",
+        "noClosedActivities": "閉鎖された活動が見つかりません。",
+        "noActivitiesMatchingFilter": "選択したフィルターに一致する活動が見つかりません。",
+        "noActivitiesFound": "あなたの組織の活動が見つかりません。",
+        "edit": "編集",
+        "delete": "削除",
+        "view": "表示",
+        "applications": "申請",
+        "event": "イベント",
+        "closeMenu": "メニューを閉じる",
+        "openMenu": "メニューを開く",
+        "successDeletedMultiple": "{count}件の活動が正常に削除されました！",
+        "successDeletedSingle": "活動が正常に削除されました！",
+        "errorRefreshing": "活動の更新中にエラーが発生しました。もう一度お試しください。"
     }
 }

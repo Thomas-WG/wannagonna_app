@@ -305,5 +305,33 @@
         "errorUploadingLogo": "Erreur lors du téléchargement du logo. Veuillez réessayer.",
         "errorLoading": "Erreur lors du chargement des données de l'organisation",
         "noOrganization": "Aucune organisation trouvée"
+    },
+    "MyNonProfit": {
+        "metricsAndFilters": "Métriques et Filtres",
+        "allActivities": "Toutes les Activités",
+        "online": "En ligne",
+        "local": "Sur place",
+        "events": "Événements",
+        "closed": "Fermé",
+        "participants": "Participants",
+        "quickActions": "Actions Rapides",
+        "newApplications": "Nouvelles Candidatures",
+        "requiresAttention": "Nécessite une attention",
+        "organization": "Organisation",
+        "editInformation": "Modifier les Informations",
+        "yourActivities": "Vos Activités",
+        "noClosedActivities": "Aucune activité fermée trouvée.",
+        "noActivitiesMatchingFilter": "Aucune activité trouvée correspondant au filtre sélectionné.",
+        "noActivitiesFound": "Aucune activité trouvée pour votre organisation.",
+        "edit": "Modifier",
+        "delete": "Supprimer",
+        "view": "Voir",
+        "applications": "Candidatures",
+        "event": "Événement",
+        "closeMenu": "Fermer le menu",
+        "openMenu": "Ouvrir le menu",
+        "successDeletedMultiple": "Succès de la suppression de {count} activités !",
+        "successDeletedSingle": "Activité supprimée avec succès !",
+        "errorRefreshing": "Erreur lors de l'actualisation des activités. Veuillez réessayer."
     }
 }
