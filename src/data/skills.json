@@ -2,68 +2,12 @@
   "categories": [
     {
       "name": {
-        "en": "Digital Skills",
-        "fr": "Compétences Numériques",
-        "es": "Habilidades Digitales",
-        "ja": "デジタルスキル"
-      },
-      "order": 1
-    },
-    {
-      "name": {
-        "en": "Education & Training",
-        "fr": "Éducation et Formation",
-        "es": "Educación y Capacitación",
-        "ja": "教育とトレーニング"
-      },
-      "order": 2
-    },
-    {
-      "name": {
-        "en": "Community Service",
-        "fr": "Service Communautaire",
-        "es": "Servicio Comunitario",
-        "ja": "コミュニティサービス"
-      },
-      "order": 3
-    },
-    {
-      "name": {
-        "en": "Event Management",
-        "fr": "Gestion d'Événements",
-        "es": "Gestión de Eventos",
-        "ja": "イベント管理"
-      },
-      "order": 4
-    },
-    {
-      "name": {
-        "en": "Healthcare & Wellness",
-        "fr": "Santé et Bien-être",
-        "es": "Salud y Bienestar",
-        "ja": "ヘルスケアとウェルネス"
-      },
-      "order": 5
-    },
-    {
-      "name": {
-        "en": "Writing & Content",
-        "fr": "Rédaction et Contenu",
-        "es": "Redacción y Contenido",
-        "ja": "執筆とコンテンツ"
-      },
-      "order": 6
-    }
-  ],
-  "skills": [
-    {
-      "name": {
         "en": "Website Development",
         "fr": "Développement Web",
         "es": "Desarrollo Web",
-        "ja": "ウェブ開発"
+        "ja": "ウェブサイト開発"
       },
-      "categoryId": "digital-skills",
+      "id": "website",
       "order": 1
     },
     {
@@ -73,148 +17,168 @@
         "es": "Diseño de Logo",
         "ja": "ロゴデザイン"
       },
-      "categoryId": "digital-skills",
+      "id": "logo",
       "order": 2
+    },
+    {
+      "name": {
+        "en": "Translation Services",
+        "fr": "Services de Traduction",
+        "es": "Servicios de Traducción",
+        "ja": "翻訳サービス"
+      },
+      "id": "translation",
+      "order": 3
+    },
+    {
+      "name": {
+        "en": "Flyer Design",
+        "fr": "Conception de Flyers",
+        "es": "Diseño de Folletos",
+        "ja": "チラシデザイン"
+      },
+      "id": "flyer",
+      "order": 4
+    },
+    {
+      "name": {
+        "en": "IT Consulting",
+        "fr": "Conseil en Informatique",
+        "es": "Consultoría Informática",
+        "ja": "ITコンサルティング"
+      },
+      "id": "consulting",
+      "order": 5
+    },
+    {
+      "name": {
+        "en": "System Architecture",
+        "fr": "Architecture Système",
+        "es": "Arquitectura de Sistemas",
+        "ja": "システムアーキテクチャ"
+      },
+      "id": "architecture",
+      "order": 6
+    },
+    {
+      "name": {
+        "en": "Data Entry",
+        "fr": "Saisie de Données",
+        "es": "Entrada de Datos",
+        "ja": "データ入力"
+      },
+      "id": "dataentry",
+      "order": 7
+    },
+    {
+      "name": {
+        "en": "Photo & Video",
+        "fr": "Photo et Vidéo",
+        "es": "Foto y Video",
+        "ja": "写真・動画"
+      },
+      "id": "photovideo",
+      "order": 8
     },
     {
       "name": {
         "en": "Social Media Management",
         "fr": "Gestion des Réseaux Sociaux",
         "es": "Gestión de Redes Sociales",
-        "ja": "ソーシャルメディア管理"
+        "ja": "SNS管理"
       },
-      "categoryId": "digital-skills",
-      "order": 3
+      "id": "sns",
+      "order": 9
     },
     {
       "name": {
-        "en": "Content Creation",
-        "fr": "Création de Contenu",
-        "es": "Creación de Contenido",
-        "ja": "コンテンツ制作"
+        "en": "Online Support",
+        "fr": "Support en Ligne",
+        "es": "Soporte en Línea",
+        "ja": "オンラインサポート"
       },
-      "categoryId": "digital-skills",
-      "order": 4
+      "id": "onlinesupport",
+      "order": 10
     },
     {
       "name": {
-        "en": "Video Editing",
-        "fr": "Montage Vidéo",
-        "es": "Edición de Video",
-        "ja": "動画編集"
+        "en": "Online Education",
+        "fr": "Formation en Ligne",
+        "es": "Educación en Línea",
+        "ja": "オンライン教育"
       },
-      "categoryId": "digital-skills",
-      "order": 5
+      "id": "education",
+      "order": 11
     },
     {
       "name": {
-        "en": "Photography",
-        "fr": "Photographie",
-        "es": "Fotografía",
-        "ja": "写真撮影"
+        "en": "Online Fundraising",
+        "fr": "Collecte de Fonds en Ligne",
+        "es": "Recaudación de Fondos en Línea",
+        "ja": "オンライン募金"
       },
-      "categoryId": "digital-skills",
-      "order": 6
+      "id": "fundraising",
+      "order": 12
     },
     {
       "name": {
-        "en": "Data Analysis",
-        "fr": "Analyse de Données",
-        "es": "Análisis de Datos",
-        "ja": "データ分析"
+        "en": "Long-term Role",
+        "fr": "Rôle à Long Terme",
+        "es": "Rol a Largo Plazo",
+        "ja": "長期ボランティア"
       },
-      "categoryId": "digital-skills",
-      "order": 7
+      "id": "longtermrole",
+      "order": 13
+    },
+    {
+      "name": {
+        "en": "Explainer Content",
+        "fr": "Contenu Explicatif",
+        "es": "Contenido Explicativo",
+        "ja": "解説コンテンツ"
+      },
+      "id": "explainer",
+      "order": 14
+    },
+    {
+      "name": {
+        "en": "Cleaning Services",
+        "fr": "Services de Nettoyage",
+        "es": "Servicios de Limpieza",
+        "ja": "清掃サービス"
+      },
+      "id": "cleaning",
+      "order": 15
     },
     {
       "name": {
         "en": "Teaching",
         "fr": "Enseignement",
         "es": "Enseñanza",
-        "ja": "教育"
+        "ja": "教育・指導"
       },
-      "categoryId": "education-training",
-      "order": 1
-    },
-    {
-      "name": {
-        "en": "Tutoring",
-        "fr": "Tutorat",
-        "es": "Tutoría",
-        "ja": "個別指導"
-      },
-      "categoryId": "education-training",
-      "order": 2
-    },
-    {
-      "name": {
-        "en": "Workshop Facilitation",
-        "fr": "Animation d'Ateliers",
-        "es": "Facilitación de Talleres",
-        "ja": "ワークショップ進行"
-      },
-      "categoryId": "education-training",
-      "order": 3
-    },
-    {
-      "name": {
-        "en": "Curriculum Development",
-        "fr": "Développement de Programmes",
-        "es": "Desarrollo de Programas",
-        "ja": "カリキュラム開発"
-      },
-      "categoryId": "education-training",
-      "order": 4
-    },
-    {
-      "name": {
-        "en": "Language Teaching",
-        "fr": "Enseignement des Langues",
-        "es": "Enseñanza de Idiomas",
-        "ja": "語学教育"
-      },
-      "categoryId": "education-training",
-      "order": 5
+      "id": "teaching",
+      "order": 16
     },
     {
       "name": {
         "en": "Food Distribution",
-        "fr": "Distribution de Nourriture",
+        "fr": "Distribution Alimentaire",
         "es": "Distribución de Alimentos",
-        "ja": "食料配布"
+        "ja": "食品配布"
       },
-      "categoryId": "community-service",
-      "order": 1
+      "id": "food_distribution",
+      "order": 17
     },
     {
       "name": {
-        "en": "Elderly Care",
-        "fr": "Soins aux Personnes Âgées",
-        "es": "Cuidado de Ancianos",
-        "ja": "高齢者介護"
+        "en": "Elderly Support",
+        "fr": "Soutien aux Personnes Âgées",
+        "es": "Apoyo a Personas Mayores",
+        "ja": "高齢者支援"
       },
-      "categoryId": "community-service",
-      "order": 2
-    },
-    {
-      "name": {
-        "en": "Childcare",
-        "fr": "Garde d'Enfants",
-        "es": "Cuidado de Niños",
-        "ja": "子育て支援"
-      },
-      "categoryId": "community-service",
-      "order": 3
-    },
-    {
-      "name": {
-        "en": "Environmental Conservation",
-        "fr": "Conservation de l'Environnement",
-        "es": "Conservación Ambiental",
-        "ja": "環境保護"
-      },
-      "categoryId": "community-service",
-      "order": 4
+      "id": "elderly_support",
+      "order": 18
     },
     {
       "name": {
@@ -223,188 +187,2050 @@
         "es": "Cuidado de Animales",
         "ja": "動物ケア"
       },
-      "categoryId": "community-service",
-      "order": 5
+      "id": "animal_care",
+      "order": 19
     },
     {
       "name": {
-        "en": "Homeless Support",
-        "fr": "Soutien aux Sans-Abri",
-        "es": "Apoyo a Personas sin Hogar",
-        "ja": "ホームレス支援"
+        "en": "Environmental Conservation",
+        "fr": "Conservation de l'Environnement",
+        "es": "Conservación Ambiental",
+        "ja": "環境保全"
       },
-      "categoryId": "community-service",
-      "order": 6
+      "id": "environment",
+      "order": 20
     },
     {
       "name": {
-        "en": "Event Planning",
-        "fr": "Planification d'Événements",
-        "es": "Planificación de Eventos",
-        "ja": "イベント企画"
+        "en": "Community Events",
+        "fr": "Événements Communautaires",
+        "es": "Eventos Comunitarios",
+        "ja": "地域イベント"
       },
-      "categoryId": "event-management",
-      "order": 1
+      "id": "community_events",
+      "order": 21
     },
     {
       "name": {
-        "en": "Fundraising",
-        "fr": "Collecte de Fonds",
-        "es": "Recaudación de Fondos",
-        "ja": "資金調達"
+        "en": "Childcare",
+        "fr": "Garde d'Enfants",
+        "es": "Cuidado de Niños",
+        "ja": "保育・子育て支援"
       },
-      "categoryId": "event-management",
-      "order": 2
+      "id": "childcare",
+      "order": 22
     },
     {
       "name": {
-        "en": "Volunteer Coordination",
-        "fr": "Coordination des Bénévoles",
-        "es": "Coordinación de Voluntarios",
-        "ja": "ボランティア調整"
+        "en": "Manual Labor",
+        "fr": "Travail Manuel",
+        "es": "Trabajo Manual",
+        "ja": "肉体労働"
       },
-      "categoryId": "event-management",
-      "order": 3
+      "id": "manual_labor",
+      "order": 23
     },
     {
       "name": {
-        "en": "Logistics Management",
-        "fr": "Gestion Logistique",
-        "es": "Gestión Logística",
-        "ja": "物流管理"
+        "en": "Administrative Support",
+        "fr": "Support Administratif",
+        "es": "Apoyo Administrativo",
+        "ja": "事務サポート"
       },
-      "categoryId": "event-management",
-      "order": 4
+      "id": "administrative",
+      "order": 24
     },
     {
       "name": {
-        "en": "Healthcare Assistance",
-        "fr": "Assistance Médicale",
-        "es": "Asistencia Sanitaria",
-        "ja": "医療支援"
+        "en": "Fundraising Events",
+        "fr": "Événements de Collecte de Fonds",
+        "es": "Eventos de Recaudación de Fondos",
+        "ja": "募金イベント"
       },
-      "categoryId": "healthcare-wellness",
-      "order": 1
+      "id": "fundraising_event",
+      "order": 25
     },
     {
       "name": {
-        "en": "Mental Health Support",
-        "fr": "Soutien en Santé Mentale",
-        "es": "Apoyo en Salud Mental",
-        "ja": "メンタルヘルス支援"
+        "en": "Awareness Campaigns",
+        "fr": "Campagnes de Sensibilisation",
+        "es": "Campañas de Concienciación",
+        "ja": "啓発キャンペーン"
       },
-      "categoryId": "healthcare-wellness",
-      "order": 2
+      "id": "awareness_campaign",
+      "order": 26
     },
     {
       "name": {
-        "en": "First Aid",
-        "fr": "Premiers Secours",
-        "es": "Primeros Auxilios",
-        "ja": "救急救命"
+        "en": "Workshops",
+        "fr": "Ateliers",
+        "es": "Talleres",
+        "ja": "ワークショップ"
       },
-      "categoryId": "healthcare-wellness",
-      "order": 3
+      "id": "workshop",
+      "order": 27
     },
     {
       "name": {
-        "en": "Health Education",
-        "fr": "Éducation à la Santé",
-        "es": "Educación para la Salud",
-        "ja": "健康教育"
+        "en": "Seminars & Conferences",
+        "fr": "Séminaires et Conférences",
+        "es": "Seminarios y Conferencias",
+        "ja": "セミナー・カンファレンス"
       },
-      "categoryId": "healthcare-wellness",
-      "order": 4
+      "id": "seminar_conference",
+      "order": 28
     },
     {
       "name": {
-        "en": "Nutrition Support",
-        "fr": "Support Nutritionnel",
-        "es": "Apoyo Nutricional",
-        "ja": "栄養支援"
+        "en": "Charity Walks",
+        "fr": "Marches Caritatives",
+        "es": "Caminatas Benéficas",
+        "ja": "チャリティーウォーク"
       },
-      "categoryId": "healthcare-wellness",
-      "order": 5
+      "id": "charity_walk",
+      "order": 29
     },
     {
       "name": {
-        "en": "Physical Therapy Assistance",
-        "fr": "Assistance en Physiothérapie",
-        "es": "Asistencia en Fisioterapia",
-        "ja": "理学療法支援"
+        "en": "Networking Events",
+        "fr": "Événements de Réseautage",
+        "es": "Eventos de Networking",
+        "ja": "交流会"
       },
-      "categoryId": "healthcare-wellness",
-      "order": 6
+      "id": "networking",
+      "order": 30
     },
     {
       "name": {
-        "en": "Translation",
-        "fr": "Traduction",
-        "es": "Traducción",
-        "ja": "翻訳"
+        "en": "Arts & Crafts Events",
+        "fr": "Événements d'Arts et Artisanat",
+        "es": "Eventos de Artes y Manualidades",
+        "ja": "アート・クラフトイベント"
       },
-      "categoryId": "writing-content",
-      "order": 1
+      "id": "arts_and_crafts",
+      "order": 31
     },
     {
+      "name": {
+        "en": "Food Fairs",
+        "fr": "Foires Alimentaires",
+        "es": "Ferias de Alimentos",
+        "ja": "フードフェア"
+      },
+      "id": "food_fair",
+      "order": 32
+    },
+    {
+      "name": {
+        "en": "Other Services",
+        "fr": "Autres Services",
+        "es": "Otros Servicios",
+        "ja": "その他のサービス"
+      },
+      "id": "other",
+      "order": 33
+    }
+  ],
+  "skills": [
+    {
+      "categoryId": "website",
+      "order": 1,
+      "name": {
+        "en": "Website Development",
+        "fr": "Développement Web",
+        "es": "Desarrollo Web",
+        "ja": "ウェブサイト開発"
+      }
+    },
+    {
+      "categoryId": "website",
+      "order": 2,
+      "name": {
+        "en": "WordPress",
+        "fr": "WordPress",
+        "es": "WordPress",
+        "ja": "WordPress"
+      }
+    },
+    {
+      "categoryId": "website",
+      "order": 3,
+      "name": {
+        "en": "Wix",
+        "fr": "Wix",
+        "es": "Wix",
+        "ja": "ウィックス"
+      }
+    },
+    {
+      "categoryId": "website",
+      "order": 4,
+      "name": {
+        "en": "Squarespace",
+        "fr": "Squarespace",
+        "es": "Squarespace",
+        "ja": "スクエアスペース"
+      }
+    },
+    {
+      "categoryId": "website",
+      "order": 5,
+      "name": {
+        "en": "Webflow",
+        "fr": "Webflow",
+        "es": "Webflow",
+        "ja": "Webflow"
+      }
+    },
+    {
+      "categoryId": "website",
+      "order": 6,
+      "name": {
+        "en": "Shopify",
+        "fr": "Shopify",
+        "es": "Shopify",
+        "ja": "ショップフィール"
+      }
+    },
+    {
+      "categoryId": "website",
+      "order": 7,
+      "name": {
+        "en": "HTML/CSS",
+        "fr": "HTML/CSS",
+        "es": "HTML/CSS",
+        "ja": "HTML/CSS"
+      }
+    },
+    {
+      "categoryId": "website",
+      "order": 8,
+      "name": {
+        "en": "JavaScript",
+        "fr": "JavaScript",
+        "es": "JavaScript",
+        "ja": "JavaScript"
+      }
+    },
+    {
+      "categoryId": "website",
+      "order": 9,
+      "name": {
+        "en": "React",
+        "fr": "React",
+        "es": "React",
+        "ja": "React"
+      }
+    },
+    {
+      "categoryId": "website",
+      "order": 10,
+      "name": {
+        "en": "Vue.js",
+        "fr": "Vue.js",
+        "es": "Vue.js",
+        "ja": "Vue.js"
+      }
+    },
+    {
+      "categoryId": "website",
+      "order": 11,
+      "name": {
+        "en": "Node.js",
+        "fr": "Node.js",
+        "es": "Node.js",
+        "ja": "Node.js"
+      }
+    },
+    {
+      "categoryId": "website",
+      "order": 12,
+      "name": {
+        "en": "Angular",
+        "fr": "Angular",
+        "es": "Angular",
+        "ja": "Angular"
+      }
+    },
+    {
+      "categoryId": "website",
+      "order": 13,
+      "name": {
+        "en": "Figma",
+        "fr": "Figma",
+        "es": "Figma",
+        "ja": "Figma"
+      }
+    },
+    {
+      "categoryId": "website",
+      "order": 14,
+      "name": {
+        "en": "SEO",
+        "fr": "SEO",
+        "es": "SEO",
+        "ja": "SEO"
+      }
+    },
+    {
+      "categoryId": "website",
+      "order": 15,
+      "name": {
+        "en": "Web Hosting",
+        "fr": "Hébergement Web",
+        "es": "Hospedaje Web",
+        "ja": "Webホスティング"
+      }
+    },
+    {
+      "categoryId": "website",
+      "order": 16,
+      "name": {
+        "en": "Domain Management",
+        "fr": "Gestion de Domaines",
+        "es": "Gestión de Dominios",
+        "ja": "ドメイン管理"
+      }
+    },
+    {
+      "categoryId": "website",
+      "order": 17,
+      "name": {
+        "en": "CMS",
+        "fr": "CMS",
+        "es": "CMS",
+        "ja": "CMS"
+      }
+    },
+    {
+      "categoryId": "website",
+      "order": 18,
+      "name": {
+        "en": "E-commerce",
+        "fr": "E-commerce",
+        "es": "E-commerce",
+        "ja": "E-commerce"
+      }
+    },
+    {
+      "categoryId": "website",
+      "order": 19,
+      "name": {
+        "en": "Responsive Design",
+        "fr": "Design Responsif",
+        "es": "Diseño Responsivo",
+        "ja": "レスポンシブデザイン"
+      }
+    },
+    {
+      "categoryId": "website",
+      "order": 20,
+      "name": {
+        "en": "Frontend Development",
+        "fr": "Développement Frontend",
+        "es": "Desarrollo Frontend",
+        "ja": "フロントエンド開発"
+      }
+    },
+    {
+      "categoryId": "website",
+      "order": 21,
+      "name": {
+        "en": "Backend Development",
+        "fr": "Développement Backend",
+        "es": "Desarrollo Backend",
+        "ja": "バックエンド開発"
+      }
+    },
+    {
+      "categoryId": "website",
+      "order": 22,
+      "name": {
+        "en": "Database Management",
+        "fr": "Gestion de Base de Données",
+        "es": "Gestión de Base de Datos",
+        "ja": "データベース管理"
+      }
+    },
+    {
+      "categoryId": "website",
+      "order": 23,
+      "name": {
+        "en": "UI/UX Design",
+        "fr": "Design UI/UX",
+        "es": "Diseño UI/UX",
+        "ja": "UI/UXデザイン"
+      }
+    },
+    {
+      "categoryId": "logo",
+      "order": 1,
+      "name": {
+        "en": "Logo Design",
+        "fr": "Création de Logo",
+        "es": "Diseño de Logo",
+        "ja": "ロゴデザイン"
+      }
+    },
+    {
+      "categoryId": "logo",
+      "order": 2,
+      "name": {
+        "en": "Adobe Illustrator",
+        "fr": "Adobe Illustrator",
+        "es": "Adobe Illustrator",
+        "ja": "Adobe Illustrator"
+      }
+    },
+    {
+      "categoryId": "logo",
+      "order": 3,
+      "name": {
+        "en": "Figma",
+        "fr": "Figma",
+        "es": "Figma",
+        "ja": "Figma"
+      }
+    },
+    {
+      "categoryId": "logo",
+      "order": 4,
+      "name": {
+        "en": "Canva",
+        "fr": "Canva",
+        "es": "Canva",
+        "ja": "Canva"
+      }
+    },
+    {
+      "categoryId": "logo", 
+      "order": 5,
+      "name": {
+        "en": "Inkscape",
+        "fr": "Inkscape",
+        "es": "Inkscape",
+        "ja": "Inkscape"
+      }
+    },
+    {
+      "categoryId": "logo",
+      "order": 6,
+      "name": {
+        "en": "Affinity Designer",
+        "fr": "Affinity Designer",
+        "es": "Affinity Designer",
+        "ja": "Affinity Designer"
+      }
+    },
+    {
+      "categoryId": "logo",
+      "order": 7,
+      "name": {
+        "en": "Adobe Photoshop",
+        "fr": "Adobe Photoshop",
+        "es": "Adobe Photoshop",
+        "ja": "Adobe Photoshop"
+      }
+    },
+    {
+      "categoryId": "logo",
+      "order": 8,
+      "name": {
+        "en": "Vector Graphics",
+        "fr": "Vecteurs",
+        "es": "Vectores",
+        "ja": "ベクターグラフィック"
+      }
+    },
+    {
+      "categoryId": "logo",
+      "order": 9,
+      "name": {
+        "en": "Color Theory",
+        "fr": "Théorie des Couleurs",
+        "es": "Teoría del Color",
+        "ja": "色彩理論"
+      }
+    },
+    {
+      "categoryId": "logo",
+      "order": 10,
+      "name": {
+        "en": "Typography",
+        "fr": "Typographie",
+        "es": "Tipografía",
+        "ja": "タイポグラフィ"
+      }
+    },
+    {
+      "categoryId": "logo",
+      "order": 11,
+      "name": {
+        "en": "Brand Identity",
+        "fr": "Identité de Marque",
+        "es": "Identidad de Marca",
+        "ja": "ブランドアイデンティティ"
+      }
+    },
+    {
+      "categoryId": "logo",
+      "order": 12, 
+      "name": {
+        "en": "Print Design",
+        "fr": "Design pour Impression",
+        "es": "Diseño para Impresión",
+        "ja": "印刷デザイン"
+      }
+    },
+    {
+      "categoryId": "logo",
+      "order": 13,
+      "name": {
+        "en": "Graphic Design",
+        "fr": "Design Graphique",
+        "es": "Diseño Gráfico",
+        "ja": "グラフィックデザイン"
+      }
+    },
+    {
+      "categoryId": "logo",
+      "order": 14,
+      "name": {
+        "en": "Brand Design",
+        "fr": "Design de Marque",
+        "es": "Diseño de Marca",
+        "ja": "ブランドデザイン"
+      }
+    },
+    {
+      "categoryId": "logo",
+      "order": 15,
+      "name": {
+        "en": "Visual Communication",
+        "fr": "Communication Visuelle",
+        "es": "Comunicación Visual",
+        "ja": "ビジュアルコミュニケーション"
+      }
+    },
+    {
+      "categoryId": "logo",
+      "order": 16,
+      "name": {
+        "en": "Art Direction",
+        "fr": "Direction Artistique",
+        "es": "Dirección de Arte",
+        "ja": "アートディレクション"
+      }
+    },
+    {
+      "categoryId": "logo",
+      "order": 17,
+      "name": {
+        "en": "Creative Design",
+        "fr": "Design Créatif",
+        "es": "Diseño Creativo",
+        "ja": "クリエイティブデザイン"
+      }
+    },
+    {
+      "categoryId": "translation",
+      "order": 1,
+      "name": {
+        "en": "Translation Services",
+        "fr": "Services de Traduction",
+        "es": "Servicios de Traducción",
+        "ja": "翻訳サービス"
+      }
+    },
+    {
+      "categoryId": "translation",
+      "order": 2, 
+      "name": {
+        "en": "SDL",
+        "fr": "SDL",
+        "es": "SDL",
+        "ja": "SDL"
+      }
+    },
+    {
+      "categoryId": "translation",
+      "order": 3,
+      "name": {
+        "en": "MemoQ",
+        "fr": "MemoQ",
+        "es": "MemoQ",
+        "ja": "MemoQ"
+      }
+    },
+    {
+      "categoryId": "translation",
+      "order": 4,
+      "name": {
+        "en": "Wordfast",
+        "fr": "Wordfast",
+        "es": "Wordfast",
+        "ja": "Wordfast"
+      }
+    },
+    {
+      "categoryId": "translation",
+      "order": 5,
+      "name": {
+        "en": "Google Translate API",
+        "fr": "API Google Translate",
+        "es": "API de Google Translate",
+        "ja": "Google Translate API"
+      }
+    },
+    {
+      "categoryId": "translation",
+      "order": 6,
+      "name": {
+        "en": "DeepL API",
+        "fr": "API DeepL",
+        "es": "API de DeepL",
+        "ja": "DeepL API"
+      }
+    },
+    {
+      "categoryId": "translation",
+      "order": 7,
+      "name": {
+        "en": "Translation Memory",
+        "fr": "Mémoire de Traduction",
+        "es": "Memoria de Traducción",
+        "ja": "翻訳メモリ"
+      }
+    },
+    {
+      "categoryId": "translation",
+      "order": 8, 
+      "name": {
+        "en": "Terminology Management",
+        "fr": "Gestion Terminologique",
+        "es": "Gestión Terminológica",
+        "ja": "用語管理"
+      }
+    },
+    {
+      "categoryId": "translation",
+      "order": 9,
+      "name": {
+        "en": "Localization",
+        "fr": "Localisation",
+        "es": "Localización",
+        "ja": "ローカライゼーション"
+      }
+    },
+    {
+      "categoryId": "translation",
+      "order": 10,
       "name": {
         "en": "Proofreading",
-        "fr": "Correction",
-        "es": "Corrección",
+        "fr": "Preuvereading",
+        "es": "Proofreading",
         "ja": "校正"
+      }
+    },
+    {
+      "name": {
+        "en": "English⇄Japanese",
+        "fr": "English⇄Japanese",
+        "es": "English⇄Japanese",
+        "ja": "English⇄Japanese"
       },
-      "categoryId": "writing-content",
+      "categoryId": "translation",
+      "order": 11
+    },
+    {
+      "name":{
+        "en": "French⇄Japanese",
+        "fr": "French⇄Japanese",
+        "es": "French⇄Japanese",
+        "jp": "French⇄Japanese"
+      },
+      "categoryId": "translation",
+      "order": 12
+    },
+    {
+      "name": {
+        "en": "English⇄French",
+        "fr": "English⇄French",
+        "es": "English⇄French",
+        "ja": "English⇄French"
+      },
+      "categoryId": "translation",
+      "order": 13
+    },
+    {
+      "name": {
+        "en": "English⇄Spanish",
+        "fr": "English⇄Spanish",
+        "es": "English⇄Spanish",
+        "ja": "English⇄Spanish"
+      },
+      "categoryId": "translation",
+      "order": 14
+    },
+    {
+      "name": {
+        "en": "Japanese⇄Spanish",
+        "fr": "Japanese⇄Spanish",
+        "es": "Japanese⇄Spanish",
+        "ja": "Japanese⇄Spanish"
+      },
+      "categoryId": "translation",
+      "order": 14
+    },
+    {
+      "name": {
+        "en": "Adobe InDesign",
+        "fr": "Adobe InDesign",
+        "es": "Adobe InDesign",
+        "ja": "Adobe InDesign"
+      },
+      "categoryId": "flyer",
+      "order": 1
+    },
+    {
+      "name": {
+        "en": "MS Publisher",
+        "fr": "MS Publisher",
+        "es": "MS Publisher",
+        "ja": "MS Publisher"
+      },
+      "categoryId": "flyer",
       "order": 2
     },
     {
       "name": {
-        "en": "Blog Writing",
-        "fr": "Rédaction de Blog",
-        "es": "Redacción de Blog",
-        "ja": "ブログ執筆"
+        "en": "Affinity Publisher",
+        "fr": "Affinity Publisher",
+        "es": "Affinity Publisher",
+        "ja": "Affinity Publisher"
       },
-      "categoryId": "writing-content",
+      "categoryId": "flyer",
       "order": 3
     },
     {
       "name": {
-        "en": "Technical Writing",
-        "fr": "Rédaction Technique",
-        "es": "Redacción Técnica",
-        "ja": "技術文書作成"
+        "en": "Adobe Illustrator",
+        "fr": "Adobe Illustrator",
+        "es": "Adobe Illustrator",
+        "ja": "Adobe Illustrator"
       },
-      "categoryId": "writing-content",
+      "categoryId": "flyer",
       "order": 4
     },
     {
       "name": {
-        "en": "Copywriting",
-        "fr": "Rédaction Publicitaire",
-        "es": "Redacción Publicitaria",
-        "ja": "コピーライティング"
+        "en": "Adobe Photoshop",
+        "fr": "Adobe Photoshop",
+        "es": "Adobe Photoshop",
+        "ja": "Adobe Photoshop"
       },
-      "categoryId": "writing-content",
+      "categoryId": "flyer",
       "order": 5
     },
     {
       "name": {
-        "en": "Content Editing",
-        "fr": "Édition de Contenu",
-        "es": "Edición de Contenido",
-        "ja": "コンテンツ編集"
+        "en": "Canva",
+        "fr": "Canva",
+        "es": "Canva",
+        "ja": "Canva"
       },
-      "categoryId": "writing-content",
+      "categoryId": "flyer",
       "order": 6
     },
     {
       "name": {
-        "en": "Creative Writing",
-        "fr": "Écriture Créative",
-        "es": "Escritura Creativa",
-        "ja": "クリエイティブライティング"
+        "en": "Crello",
+        "fr": "Crello",
+        "es": "Crello",
+        "ja": "Crello"
       },
-      "categoryId": "writing-content",
+      "categoryId": "flyer",
       "order": 7
+    },
+    {
+      "name": {
+        "en": "Print Layout",
+        "fr": "Print Layout",
+        "es": "Print Layout",
+        "ja": "Print Layout"
+      },
+      "categoryId": "flyer",
+      "order": 8
+    },
+    {
+      "name": {
+        "en": "Bleed/Margin Setup",
+        "fr": "Bleed/Margin Setup",
+        "es": "Bleed/Margin Setup",
+        "ja": "Bleed/Margin Setup"
+      },
+      "categoryId": "flyer",
+      "order": 9
+    },
+    {
+      "name": {
+        "en": "Typography",
+        "fr": "Typography",
+        "es": "Typography",
+        "ja": "Typography"
+      },
+      "categoryId": "flyer",
+      "order": 10
+    },
+    {
+      "name": {
+        "en": "Image Tracing",
+        "fr": "Image Tracing",
+        "es": "Image Tracing",
+        "ja": "Image Tracing"
+      },
+      "categoryId": "flyer",
+      "order": 11
+    },
+    {
+      "name": {
+        "en": "Network Design",
+        "fr": "Network Design",
+        "es": "Network Design",
+        "ja": "Network Design"
+      },
+      "categoryId": "consulting",
+      "order": 1
+    },
+    {
+      "name": {
+        "en": "VPNs",
+        "fr": "VPNs",
+        "es": "VPNs",
+        "ja": "VPNs"
+      },
+      "categoryId": "consulting",
+      "order": 2
+    },
+    {
+      "name": {
+        "en": "Firewalls",
+        "fr": "Firewalls",
+        "es": "Firewalls",
+        "ja": "Firewalls"
+      },
+      "categoryId": "consulting",
+      "order": 3
+    },
+    {
+      "name": {
+        "en": "Cybersecurity Best Practices",
+        "fr": "Cybersecurity Best Practices",
+        "es": "Cybersecurity Best Practices",
+        "ja": "Cybersecurity Best Practices"
+      },
+      "categoryId": "consulting",
+      "order": 4
+    },
+    {
+      "name": {
+        "en": "AWS",
+        "fr": "AWS",
+        "es": "AWS",
+        "ja": "AWS"
+      },
+      "categoryId": "consulting",
+      "order": 5
+    },
+    {
+      "name": {
+        "en": "Azure",
+        "fr": "Azure",
+        "es": "Azure",
+        "ja": "Azure"
+      },
+      "categoryId": "consulting",
+      "order": 6
+    },
+    {
+      "name": {
+        "en": "Google Cloud",
+        "fr": "Google Cloud",
+        "es": "Google Cloud",
+        "ja": "Google Cloud"
+      },
+      "categoryId": "consulting",
+      "order": 7
+    },
+    {
+      "name": {
+        "en": "VMware",
+        "fr": "VMware",
+        "es": "VMware",
+        "ja": "VMware"
+      },
+      "categoryId": "consulting",
+      "order": 8
+    },
+    {
+      "name": {
+        "en": "Docker",
+        "fr": "Docker",
+        "es": "Docker",
+        "ja": "Docker"
+      },
+      "categoryId": "consulting",
+      "order": 9
+    },
+    {
+      "name": {
+        "en": "Kubernetes",
+        "fr": "Kubernetes",
+        "es": "Kubernetes",
+        "ja": "Kubernetes"
+      },
+      "categoryId": "consulting",
+      "order": 10
+    },
+    {
+      "name": {
+        "en": "ITIL",
+        "fr": "ITIL",
+        "es": "ITIL",
+        "ja": "ITIL"
+      },
+      "categoryId": "consulting",
+      "order": 11
+    },
+    {
+      "name": {
+        "en": "Jira",
+        "fr": "Jira",
+        "es": "Jira",
+        "ja": "Jira"
+      },
+      "categoryId": "consulting",
+      "order": 12
+    },
+    {
+      "name": {
+        "en": "Trello",
+        "fr": "Trello",
+        "es": "Trello",
+        "ja": "Trello"
+      },
+      "categoryId": "consulting",
+      "order": 13
+    },
+    {
+      "name": {
+        "en": "Nagios",
+        "fr": "Nagios",
+        "es": "Nagios",
+        "ja": "Nagios"
+      },
+      "categoryId": "consulting",
+      "order": 14
+    },
+    {
+      "name": {
+        "en": "Zabbix",
+        "fr": "Zabbix",
+        "es": "Zabbix",
+        "ja": "Zabbix"
+      },
+      "categoryId": "consulting",
+      "order": 15
+    },
+    {
+      "name": {
+        "en": "AutoCAD",
+        "fr": "AutoCAD",
+        "es": "AutoCAD",
+        "ja": "AutoCAD"
+      },
+      "categoryId": "architecture",
+      "order": 1
+    },
+    {
+      "name": {
+        "en": "Revit",
+        "fr": "Revit",
+        "es": "Revit",
+        "ja": "Revit"
+      },
+      "categoryId": "architecture", 
+      "order": 2
+    },
+    {
+      "name": {
+        "en": "SketchUp",
+        "fr": "SketchUp",
+        "es": "SketchUp",
+        "ja": "SketchUp"
+      },
+      "categoryId": "architecture",
+      "order": 3
+    },
+    {
+      "name": {
+        "en": "3ds Max",
+        "fr": "3ds Max",
+        "es": "3ds Max",
+        "ja": "3ds Max"
+      },
+      "categoryId": "architecture",
+      "order": 4
+    },
+    {
+      "name": {
+        "en": "ArchiCAD",
+        "fr": "ArchiCAD",
+        "es": "ArchiCAD",
+        "ja": "ArchiCAD"
+      },
+      "categoryId": "architecture",
+      "order": 5
+    },
+    {
+      "name": {
+        "en": "Rhino",
+        "fr": "Rhino",
+        "es": "Rhino",
+        "ja": "Rhino"
+      },
+      "categoryId": "architecture",
+      "order": 6
+    },
+    {
+      "name": {
+        "en": "V-Ray",
+        "fr": "V-Ray",
+        "es": "V-Ray",
+        "ja": "V-Ray"
+      },
+      "categoryId": "architecture",
+      "order": 7
+    },
+    {
+      "name": {
+        "en": "Lumion",
+        "fr": "Lumion",
+        "es": "Lumion",
+        "ja": "Lumion"
+      },
+      "categoryId": "architecture",
+      "order": 8
+    },
+    {
+      "name": {
+        "en": "Adobe Photoshop",
+        "fr": "Adobe Photoshop",
+        "es": "Adobe Photoshop",
+        "ja": "Adobe Photoshop"
+      },
+      "categoryId": "architecture",
+      "order": 9
+    },
+    {
+      "name": {
+        "en": "Adobe InDesign",
+        "fr": "Adobe InDesign",
+        "es": "Adobe InDesign",
+        "ja": "Adobe InDesign"
+      },
+      "categoryId": "architecture",
+      "order": 10
+    },
+    {
+      "name": {
+        "en": "BIM",
+        "fr": "BIM",
+        "es": "BIM",
+        "ja": "BIM"
+      },
+      "categoryId": "architecture",
+      "order": 11
+    },
+    {
+      "name": {
+        "en": "Chief Architect",
+        "fr": "Chief Architect",
+        "es": "Chief Architect",
+        "ja": "Chief Architect"
+      },
+      "categoryId": "architecture",
+      "order": 12
+    },
+    {
+      "name": {
+        "en": "Vectorworks",
+        "fr": "Vectorworks",
+        "es": "Vectorworks",
+        "ja": "Vectorworks"
+      },
+      "categoryId": "architecture",
+      "order": 13
+    },
+    {
+      "name": {
+        "en": "Maya",
+        "fr": "Maya",
+        "es": "Maya",
+        "ja": "Maya"
+      },
+      "categoryId": "architecture",
+      "order": 14
+    },
+    {
+      "name": {
+        "en": "Blender",
+        "fr": "Blender",
+        "es": "Blender",
+        "ja": "Blender"
+      },
+      "categoryId": "architecture",
+      "order": 15
+    },
+    {
+      "name": {
+        "en": "Excel",
+        "fr": "Excel",
+        "es": "Excel",
+        "ja": "Excel"
+      },
+      "categoryId": "dataentry",
+      "order": 1
+    },
+    {
+      "name": {
+        "en": "Open Office",
+        "fr": "Open Office",
+        "es": "Open Office",
+        "ja": "Open Office"
+      },
+      "categoryId": "dataentry",
+      "order": 2
+    },
+    {
+      "name": {
+        "en": "Google Sheets",
+        "fr": "Google Sheets",
+        "es": "Google Sheets",
+        "ja": "Google Sheets"
+      },
+      "categoryId": "dataentry",
+      "order": 3
+    },
+    {
+      "name": {
+        "en": "Salesforce",
+        "fr": "Salesforce",
+        "es": "Salesforce",
+        "ja": "Salesforce"
+      },
+      "categoryId": "dataentry",
+      "order": 4
+    },
+    {
+      "name": {
+        "en": "HubSpot",
+        "fr": "HubSpot",
+        "es": "HubSpot",
+        "ja": "HubSpot"
+      },
+      "categoryId": "dataentry",
+      "order": 5
+    },
+    {
+      "name": {
+        "en": "Airtable",
+        "fr": "Airtable",
+        "es": "Airtable",
+        "ja": "Airtable"
+      },
+      "categoryId": "dataentry",
+      "order": 6
+    },
+    {
+      "name": {
+        "en": "SQL",
+        "fr": "SQL",
+        "es": "SQL",
+        "ja": "SQL"
+      },
+      "categoryId": "dataentry",
+      "order": 7
+    },
+    {
+      "name": {
+        "en": "Data Cleaning",
+        "fr": "Data Cleaning",
+        "es": "Data Cleaning",
+        "ja": "Data Cleaning"
+      },
+      "categoryId": "dataentry",
+      "order": 8
+    },
+    {
+      "name": {
+        "en": "Data Validation",
+        "fr": "Data Validation",
+        "es": "Data Validation",
+        "ja": "Data Validation"
+      },
+      "categoryId": "dataentry",
+      "order": 9
+    },
+    {
+      "name": {
+        "en": "Python Scripting",
+        "fr": "Python Scripting",
+        "es": "Python Scripting",
+        "ja": "Python Scripting"
+      },
+      "categoryId": "dataentry",
+      "order": 10
+    },
+    {
+      "name": {
+        "en": "VBA",
+        "fr": "VBA",
+        "es": "VBA",
+        "ja": "VBA"
+      },
+      "categoryId": "dataentry",
+      "order": 11
+    },
+    {
+      "name": {
+        "en": "OCR Technology",
+        "fr": "OCR Technology",
+        "es": "OCR Technology",
+        "ja": "OCR Technology"
+      },
+      "categoryId": "dataentry",
+      "order": 12
+    },
+    {
+      "name": {
+        "en": "Database Management",
+        "fr": "Database Management",
+        "es": "Database Management",
+        "ja": "Database Management"
+      },
+      "categoryId": "dataentry",
+      "order": 13
+    },
+    {
+      "name": {
+        "en": "DSLR Photography",
+        "fr": "DSLR Photography",
+        "es": "DSLR Photography",
+        "ja": "DSLR Photography"
+      },
+      "categoryId": "photovideo",
+      "order": 1
+    },
+    {
+      "name": {
+        "en": "Mirrorless Photography",
+        "fr": "Mirrorless Photography",
+        "es": "Mirrorless Photography",
+        "ja": "Mirrorless Photography"
+      },
+      "categoryId": "photovideo",
+      "order": 2
+    },
+    {
+      "name": {
+        "en": "Lightroom",
+        "fr": "Lightroom",
+        "es": "Lightroom",
+        "ja": "Lightroom"
+      },
+      "categoryId": "photovideo",
+      "order": 3
+    },
+    {
+      "name": {
+        "en": "Premiere Pro",
+        "fr": "Premiere Pro",
+        "es": "Premiere Pro",
+        "ja": "Premiere Pro"
+      },
+      "categoryId": "photovideo",
+      "order": 4
+    },
+    {
+      "name": {
+        "en": "DaVinci Resolve",
+        "fr": "DaVinci Resolve",
+        "es": "DaVinci Resolve",
+        "ja": "DaVinci Resolve"
+      },
+      "categoryId": "photovideo",
+      "order": 5
+    },
+    {
+      "name": {
+        "en": "Final Cut Pro",
+        "fr": "Final Cut Pro",
+        "es": "Final Cut Pro",
+        "ja": "Final Cut Pro"
+      },
+      "categoryId": "photovideo",
+      "order": 6
+    },
+    {
+      "name": {
+        "en": "After Effects",
+        "fr": "After Effects",
+        "es": "After Effects",
+        "ja": "After Effects"
+      },
+      "categoryId": "photovideo",
+      "order": 7
+    },
+    {
+      "name": {
+        "en": "Motion Graphics",
+        "fr": "Motion Graphics",
+        "es": "Motion Graphics",
+        "ja": "Motion Graphics"
+      },
+      "categoryId": "photovideo",
+      "order": 8
+    },
+    {
+      "name": {
+        "en": "Color Grading",
+        "fr": "Color Grading",
+        "es": "Color Grading",
+        "ja": "Color Grading"
+      },
+      "categoryId": "photovideo",
+      "order": 9
+    },
+    {
+      "name": {
+        "en": "Camera Operation",
+        "fr": "Camera Operation",
+        "es": "Camera Operation",
+        "ja": "Camera Operation"
+      },
+      "categoryId": "photovideo",
+      "order": 10
+    },
+    {
+      "name": {
+        "en": "Lighting",
+        "fr": "Lighting",
+        "es": "Lighting",
+        "ja": "Lighting"
+      },
+      "categoryId": "photovideo",
+      "order": 11
+    },
+    {
+      "name": {
+        "en": "Facebook",
+        "fr": "Facebook",
+        "es": "Facebook",
+        "ja": "Facebook"
+      },
+      "categoryId": "sns",
+      "order": 1
+    },
+    {
+      "name": {
+        "en": "Instagram",
+        "fr": "Instagram",
+        "es": "Instagram",
+        "ja": "Instagram"
+      },
+      "categoryId": "sns",
+      "order": 2
+    },
+    {
+      "name": {
+        "en": "Twitter",
+        "fr": "Twitter",
+        "es": "Twitter",
+        "ja": "Twitter"
+      },
+      "categoryId": "sns",
+      "order": 3
+    },
+    {
+      "name": {
+        "en": "LinkedIn",
+        "fr": "LinkedIn",
+        "es": "LinkedIn",
+        "ja": "LinkedIn"
+      },
+      "categoryId": "sns",
+      "order": 4
+    },
+    {
+      "name": {
+        "en": "TikTok",
+        "fr": "TikTok",
+        "es": "TikTok",
+        "ja": "TikTok"
+      },
+      "categoryId": "sns",
+      "order": 5
+    },
+    {
+      "name": {
+        "en": "Pinterest",
+        "fr": "Pinterest",
+        "es": "Pinterest",
+        "ja": "Pinterest"
+      },
+      "categoryId": "sns",
+      "order": 6
+    },
+    {
+      "name": {
+        "en": "Hootsuite",
+        "fr": "Hootsuite",
+        "es": "Hootsuite",
+        "ja": "Hootsuite"
+      },
+      "categoryId": "sns",
+      "order": 7
+    },
+    {
+      "name": {
+        "en": "Buffer",
+        "fr": "Buffer",
+        "es": "Buffer",
+        "ja": "Buffer"
+      },
+      "categoryId": "sns",
+      "order": 8
+    },
+    {
+      "name": {
+        "en": "Sprout Social",
+        "fr": "Sprout Social",
+        "es": "Sprout Social",
+        "ja": "Sprout Social"
+      },
+      "categoryId": "sns",
+      "order": 9
+    },
+    {
+      "name": {
+        "en": "Editorial Calendar",
+        "fr": "Editorial Calendar",
+        "es": "Editorial Calendar",
+        "ja": "Editorial Calendar"
+      },
+      "categoryId": "sns",
+      "order": 10
+    },
+    {
+      "name": {
+        "en": "Hashtag Research",
+        "fr": "Hashtag Research",
+        "es": "Hashtag Research",
+        "ja": "Hashtag Research"
+      },
+      "categoryId": "sns",
+      "order": 11
+    },
+    {
+      "name": {
+        "en": "Analytics",
+        "fr": "Analytics",
+        "es": "Analytics",
+        "ja": "Analytics"
+      },
+      "categoryId": "sns",
+      "order": 12
+    },
+    {
+      "name": {
+        "en": "Paid Campaigns",
+        "fr": "Paid Campaigns",
+        "es": "Paid Campaigns",
+        "ja": "Paid Campaigns"
+      },
+      "categoryId": "sns",
+      "order": 13
+    },
+    {
+      "name": {
+        "en": "Intercom",
+        "fr": "Intercom",
+        "es": "Intercom",
+        "ja": "Intercom"
+      },
+      "categoryId": "onlinesupport",
+      "order": 1
+    },
+    {
+      "name": {
+        "en": "Drift",
+        "fr": "Drift",
+        "es": "Drift",
+        "ja": "Drift"
+      },
+      "categoryId": "onlinesupport",
+      "order": 2
+    },
+    {
+      "name": {
+        "en": "Zendesk",
+        "fr": "Zendesk",
+        "es": "Zendesk",
+        "ja": "Zendesk"
+      },
+      "categoryId": "onlinesupport",
+      "order": 3
+    },
+    {
+      "name": {
+        "en": "Freshdesk",
+        "fr": "Freshdesk",
+        "es": "Freshdesk",
+        "ja": "Freshdesk"
+      },
+      "categoryId": "onlinesupport",
+      "order": 4
+    },
+    {
+      "name": {
+        "en": "SLA Management",
+        "fr": "SLA Management",
+        "es": "SLA Management",
+        "ja": "SLA Management"
+      },
+      "categoryId": "onlinesupport",
+      "order": 5
+    },
+    {
+      "name": {
+        "en": "Ticket Triage",
+        "fr": "Ticket Triage",
+        "es": "Ticket Triage",
+        "ja": "Ticket Triage"
+      },
+      "categoryId": "onlinesupport",
+      "order": 6
+    },
+    {
+      "name": {
+        "en": "Email Support",
+        "fr": "Email Support",
+        "es": "Email Support",
+        "ja": "Email Support"
+      },
+      "categoryId": "onlinesupport",
+      "order": 7
+    },
+    {
+      "name": {
+        "en": "Live Chat",
+        "fr": "Live Chat",
+        "es": "Live Chat",
+        "ja": "Live Chat"
+      },
+      "categoryId": "onlinesupport",
+      "order": 8
+    },
+    {
+      "name": {
+        "en": "Knowledge-base Creation",
+        "fr": "Knowledge-base Creation",
+        "es": "Knowledge-base Creation",
+        "ja": "Knowledge-base Creation"
+      },
+      "categoryId": "onlinesupport",
+      "order": 9
+    },
+    {
+      "name": {
+        "en": "Multilingual Support",
+        "fr": "Multilingual Support",
+        "es": "Multilingual Support",
+        "ja": "Multilingual Support"
+      },
+      "categoryId": "onlinesupport",
+      "order": 10
+    },
+    {
+      "name": {
+        "en": "Moodle",
+        "fr": "Moodle",
+        "es": "Moodle",
+        "ja": "Moodle"
+      },
+      "categoryId": "education",
+      "order": 1
+    },
+    {
+      "name": {
+        "en": "Canvas",
+        "fr": "Canvas",
+        "es": "Canvas",
+        "ja": "Canvas"
+      },
+      "categoryId": "education",
+      "order": 2
+    },
+    {
+      "name": {
+        "en": "Google Classroom",
+        "fr": "Google Classroom",
+        "es": "Google Classroom",
+        "ja": "Google Classroom"
+      },
+      "categoryId": "education",
+      "order": 3
+    },
+    {
+      "name": {
+        "en": "Teachable",
+        "fr": "Teachable",
+        "es": "Teachable",
+        "ja": "Teachable"
+      },
+      "categoryId": "education",
+      "order": 4
+    },
+    {
+      "name": {
+        "en": "Articulate Storyline",
+        "fr": "Articulate Storyline",
+        "es": "Articulate Storyline",
+        "ja": "Articulate Storyline"
+      },
+      "categoryId": "education",
+      "order": 5
+    },
+    {
+      "name": {
+        "en": "Adobe Captivate",
+        "fr": "Adobe Captivate",
+        "es": "Adobe Captivate",
+        "ja": "Adobe Captivate"
+      },
+      "categoryId": "education",
+      "order": 6
+    },
+    {
+      "name": {
+        "en": "Video Lessons",
+        "fr": "Video Lessons",
+        "es": "Video Lessons",
+        "ja": "Video Lessons"
+      },
+      "categoryId": "education",
+      "order": 7
+    },
+    {
+      "name": {
+        "en": "Slide Decks",
+        "fr": "Slide Decks",
+        "es": "Slide Decks",
+        "ja": "Slide Decks"
+      },
+      "categoryId": "education",
+      "order": 8
+    },
+    {
+      "name": {
+        "en": "Quizzes",
+        "fr": "Quizzes",
+        "es": "Quizzes",
+        "ja": "Quizzes"
+      },
+      "categoryId": "education",
+      "order": 9
+    },
+    {
+      "name": {
+        "en": "Interactive Modules",
+        "fr": "Interactive Modules",
+        "es": "Interactive Modules",
+        "ja": "Interactive Modules"
+      },
+      "categoryId": "education",
+      "order": 10
+    },
+    {
+      "name": {
+        "en": "GoFundMe",
+        "fr": "GoFundMe",
+        "es": "GoFundMe",
+        "ja": "GoFundMe"
+      },
+      "categoryId": "fundraising",
+      "order": 1
+    },
+    {
+      "name": {
+        "en": "Kickstarter",
+        "fr": "Kickstarter",
+        "es": "Kickstarter",
+        "ja": "Kickstarter"
+      },
+      "categoryId": "fundraising",
+      "order": 2
+    },
+    {
+      "name": {
+        "en": "Fundly",
+        "fr": "Fundly",
+        "es": "Fundly",
+        "ja": "Fundly"
+      },
+      "categoryId": "fundraising",
+      "order": 3
+    },
+    {
+      "name": {
+        "en": "Donorbox",
+        "fr": "Donorbox",
+        "es": "Donorbox",
+        "ja": "Donorbox"
+      },
+      "categoryId": "fundraising",
+      "order": 4
+    },
+    {
+      "name": {
+        "en": "Peer-to-Peer Fundraising",
+        "fr": "Peer-to-Peer Fundraising",
+        "es": "Peer-to-Peer Fundraising",
+        "ja": "Peer-to-Peer Fundraising"
+      },
+      "categoryId": "fundraising",
+      "order": 5
+    },
+    {
+      "name": {
+        "en": "Email Appeals",
+        "fr": "Email Appeals",
+        "es": "Email Appeals",
+        "ja": "Email Appeals"
+      },
+      "categoryId": "fundraising",
+      "order": 6
+    },
+    {
+      "name": {
+        "en": "Social Media Drives",
+        "fr": "Social Media Drives",
+        "es": "Social Media Drives",
+        "ja": "Social Media Drives"
+      },
+      "categoryId": "fundraising",
+      "order": 7
+    },
+    {
+      "name": {
+        "en": "Grant Writing",
+        "fr": "Grant Writing",
+        "es": "Grant Writing",
+        "ja": "Grant Writing"
+      },
+      "categoryId": "fundraising",
+      "order": 8
+    },
+    {
+      "name": {
+        "en": "Volunteer Management",
+        "fr": "Volunteer Management",
+        "es": "Volunteer Management",
+        "ja": "Volunteer Management"
+      },
+      "categoryId": "longtermrole",
+      "order": 1
+    },
+    {
+      "name": {
+        "en": "Project Coordination",
+        "fr": "Project Coordination",
+        "es": "Project Coordination",
+        "ja": "Project Coordination"
+      },
+      "categoryId": "longtermrole",
+      "order": 2
+    },
+    {
+      "name": {
+        "en": "Stakeholder Liaison",
+        "fr": "Stakeholder Liaison",
+        "es": "Stakeholder Liaison",
+        "ja": "Stakeholder Liaison"
+      },
+      "categoryId": "longtermrole",
+      "order": 3
+    },
+    {
+      "name": {
+        "en": "Data Gathering",
+        "fr": "Data Gathering",
+        "es": "Data Gathering",
+        "ja": "Data Gathering"
+      },
+      "categoryId": "longtermrole",
+      "order": 4
+    },
+    {
+      "name": {
+        "en": "Report Writing",
+        "fr": "Report Writing",
+        "es": "Report Writing",
+        "ja": "Report Writing"
+      },
+      "categoryId": "longtermrole",
+      "order": 5
+    },
+    {
+      "name": {
+        "en": "Impact Assessment",
+        "fr": "Impact Assessment",
+        "es": "Impact Assessment",
+        "ja": "Impact Assessment"
+      },
+      "categoryId": "longtermrole",
+      "order": 6
+    },
+    {
+      "name": {
+        "en": "Moderation",
+        "fr": "Moderation",
+        "es": "Moderation",
+        "ja": "Moderation"
+      },
+      "categoryId": "longtermrole",
+      "order": 7
+    },
+    {
+      "name": {
+        "en": "Content Updates",
+        "fr": "Content Updates",
+        "es": "Content Updates",
+        "ja": "Content Updates"
+      },
+      "categoryId": "longtermrole",
+      "order": 8
+    },
+    {
+      "name": {
+        "en": "Community Nurturing",
+        "fr": "Community Nurturing",
+        "es": "Community Nurturing",
+        "ja": "Community Nurturing"
+      },
+      "categoryId": "longtermrole",
+      "order": 9
+    },
+    {
+      "name": {
+        "en": "Video Creation",
+        "fr": "Video Creation",
+        "es": "Video Creation",
+        "ja": "Video Creation"
+      },
+      "categoryId": "explainer",
+      "order": 1
+    },
+    {
+      "name": {
+        "en": "Animation",
+        "fr": "Animation",
+        "es": "Animation",
+        "ja": "Animation"
+      },
+      "categoryId": "explainer",
+      "order": 2
+    },
+    {
+      "name": {
+        "en": "Script Writing",
+        "fr": "Script Writing",
+        "es": "Script Writing",
+        "ja": "Script Writing"
+      },
+      "categoryId": "explainer",
+      "order": 3
+    },
+    {
+      "name": {
+        "en": "Voice Over",
+        "fr": "Voice Over",
+        "es": "Voice Over",
+        "ja": "Voice Over"
+      },
+      "categoryId": "explainer",
+      "order": 4
+    },
+    {
+      "name": {
+        "en": "Storyboarding",
+        "fr": "Storyboarding",
+        "es": "Storyboarding",
+        "ja": "Storyboarding"
+      },
+      "categoryId": "explainer",
+      "order": 5
+    },
+    {
+      "name": {
+        "en": "Whiteboard Explain",
+        "fr": "Whiteboard Explain",
+        "es": "Whiteboard Explain",
+        "ja": "Whiteboard Explain"
+      },
+      "categoryId": "explainer",
+      "order": 6
+    },
+    {
+      "name": {
+        "en": "Infographics",
+        "fr": "Infographics",
+        "es": "Infographics",
+        "ja": "Infographics"
+      },
+      "categoryId": "explainer",
+      "order": 7
+    },
+    {
+      "name": {
+        "en": "Lesson Planning",
+        "fr": "Lesson Planning",
+        "es": "Lesson Planning",
+        "ja": "Lesson Planning"
+      },
+      "categoryId": "teaching",
+      "order": 1
+    },
+    {
+      "name": {
+        "en": "Assessment Design",
+        "fr": "Assessment Design",
+        "es": "Assessment Design",
+        "ja": "Assessment Design"
+      },
+      "categoryId": "teaching",
+      "order": 2
+    },
+    {
+      "name": {
+        "en": "Group Facilitation",
+        "fr": "Group Facilitation",
+        "es": "Group Facilitation",
+        "ja": "Group Facilitation"
+      },
+      "categoryId": "teaching",
+      "order": 3
+    },
+    {
+      "name": {
+        "en": "Zoom",
+        "fr": "Zoom",
+        "es": "Zoom",
+        "ja": "Zoom"
+      },
+      "categoryId": "teaching",
+      "order": 4
+    },
+    {
+      "name": {
+        "en": "Google Meet",
+        "fr": "Google Meet",
+        "es": "Google Meet",
+        "ja": "Google Meet"
+      },
+      "categoryId": "teaching",
+      "order": 5
+    },
+    {
+      "name": {
+        "en": "Interactive Quizzes",
+        "fr": "Interactive Quizzes",
+        "es": "Interactive Quizzes",
+        "ja": "Interactive Quizzes"
+      },
+      "categoryId": "teaching",
+      "order": 6
+    },
+    {
+      "name": {
+        "en": "Online Tutoring",
+        "fr": "Online Tutoring",
+        "es": "Online Tutoring",
+        "ja": "Online Tutoring"
+      },
+      "categoryId": "teaching",
+      "order": 7
+    },
+    {
+      "name": {
+        "en": "Career Coaching",
+        "fr": "Career Coaching",
+        "es": "Career Coaching",
+        "ja": "Career Coaching"
+      },
+      "categoryId": "mentoring",
+      "order": 1
+    },
+    {
+      "name": {
+        "en": "Startup Mentoring",
+        "fr": "Startup Mentoring",
+        "es": "Startup Mentoring",
+        "ja": "Startup Mentoring"
+      },
+      "categoryId": "mentoring",
+      "order": 2
+    },
+    {
+      "name": {
+        "en": "Peer Support",
+        "fr": "Peer Support",
+        "es": "Peer Support",
+        "ja": "Peer Support"
+      },
+      "categoryId": "mentoring",
+      "order": 3
+    },
+    {
+      "name": {
+        "en": "Workshop Delivery",
+        "fr": "Workshop Delivery",
+        "es": "Workshop Delivery",
+        "ja": "Workshop Delivery"
+      },
+      "categoryId": "mentoring",
+      "order": 4
+    },
+    {
+      "name": {
+        "en": "Goal Setting",
+        "fr": "Goal Setting",
+        "es": "Goal Setting",
+        "ja": "Goal Setting"
+      },
+      "categoryId": "mentoring",
+      "order": 5
+    },
+    {
+      "name": {
+        "en": "Feedback",
+        "fr": "Feedback",
+        "es": "Feedback",
+        "ja": "Feedback"
+      },
+      "categoryId": "mentoring",
+      "order": 6
     }
   ]
-} 
+}

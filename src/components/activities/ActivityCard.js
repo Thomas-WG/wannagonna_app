@@ -1,10 +1,17 @@
-import { Modal, Button, Label, Textarea, Toast } from 'flowbite-react';
-import { useState, useEffect } from 'react';
+import { Tooltip } from 'flowbite-react';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
-import { useAuth } from '@/hooks/useAuth';
-import { createApplication } from '@/utils/crudApplications';
-import { HiCheck, HiExclamation } from 'react-icons/hi';
+import { useState, useEffect } from 'react';
+import {
+  HiLocationMarker, HiUserGroup, HiStar,
+  HiQuestionMarkCircle,
+  HiClock,
+  HiDocument, HiCheckCircle, HiArchive
+} from 'react-icons/hi';
+import { FaRegCircle } from 'react-icons/fa';
+import StatusUpdateModal from './StatusUpdateModal';
+import { updateActivityStatus } from '@/utils/crudActivities';
+import { categoryIcons } from '@/constant/categoryIcons';
 
 // Main component for displaying an activity card
 export default function ActivityCard({
@@ -12,197 +19,280 @@ export default function ActivityCard({
   organization_name,
   organization_logo,
   title,
-  location,
+  country,
+  category,
+  skills,
   applicants,
+  type,
   xp_reward,
+  city,
   description,
+  start_date,
+  end_date,
+  sdg,
+  status,
+  onClick,
+  onStatusChange,
+  canEditStatus = false,
 }) {
-  // State variables for managing component behavior
-  const [isExpanded, setIsExpanded] = useState(false); // Track if the card is expanded
-  const [openModal, setOpenModal] = useState(false); // Track if the modal is open
-  const [message, setMessage] = useState(''); // Message input for application
-  const [isSubmitting, setIsSubmitting] = useState(false); // Track submission state
-  const [showToast, setShowToast] = useState(false); // Track toast visibility
-  const [toastMessage, setToastMessage] = useState({ type: '', message: '' }); // Toast message details
-  const { user } = useAuth(); // Get user information from authentication hook
-  const t = useTranslations('ActivityCard'); // Translation function for internationalization
+  const t = useTranslations('ActivityCard');
+  const tManage = useTranslations('ManageActivities');
+  
+  // State for status update modal
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [localStatus, setLocalStatus] = useState(status);
 
-  // Effect to handle toast visibility timeout
+  // Sync local status with prop changes
   useEffect(() => {
-    let timeoutId;
-    if (showToast) {
-      timeoutId = setTimeout(() => {
-        setShowToast(false);
-      }, 5000); // Hide toast after 5 seconds
-    }
-    return () => {
-      if (timeoutId) {
-        clearTimeout(timeoutId); // Clear timeout on component unmount
+    setLocalStatus(status);
+  }, [status]);
+
+  // Status configuration
+  const getStatusConfig = (status) => {
+    const statusConfigs = {
+      'Draft': {
+        icon: HiDocument,
+        color: 'bg-gray-100 text-gray-800',
+        borderColor: 'border-gray-300',
+        label: t('status.Draft')
+      },
+      'Open': {
+        icon: FaRegCircle,
+        color: 'bg-green-100 text-green-800',
+        borderColor: 'border-green-300',
+        label: t('status.Open')
+      },
+      'InProgress': {
+        icon: HiClock,
+        color: 'bg-blue-100 text-blue-800',
+        borderColor: 'border-blue-300',
+        label: t('status.InProgress')
+      },
+      'Completed': {
+        icon: HiCheckCircle,
+        color: 'bg-purple-100 text-purple-800',
+        borderColor: 'border-purple-300',
+        label: t('status.Completed')
+      },
+      'Archived': {
+        icon: HiArchive,
+        color: 'bg-gray-100 text-gray-600',
+        borderColor: 'border-gray-300',
+        label: t('status.Archived')
       }
     };
-  }, [showToast]);
-
-  // Function to handle application submission
-  const handleSubmitApplication = async (e) => {
-    e.preventDefault(); // Prevent default form submission
-    setIsSubmitting(true); // Set submitting state to true
     
+    return statusConfigs[status] || statusConfigs['Draft'];
+  };
+
+
+  const formatDateTimeRange = (start, end) => {
+    if (!start) return null;
     try {
-      const result = await createApplication({
-        activityId: id,
-        userId: user.uid,
-        userEmail: user.email,
-        message,
+      const startDate = new Date(start);
+      const endDate = end ? new Date(end) : null;
+
+      const dateFormatter = new Intl.DateTimeFormat(undefined, {
+        month: 'short',
+        day: 'numeric'
       });
 
-      // Handle successful application submission
-      if (result.success) {
-        setToastMessage({
-          type: 'success',
-          message: 'Your application has been successfully submitted!'
-        });
-        setMessage(''); // Clear message input
-        setOpenModal(false); // Close modal
-      } else if (result.error === 'existing_application') {
-        // Handle case where user has already applied
-        setToastMessage({
-          type: 'warning',
-          message: 'You have already applied for this activity. Check your profile for the application status.'
-        });
-      }
-    } catch (error) {
-      // Handle errors during submission
-      setToastMessage({
-        type: 'error',
-        message: 'An error occurred while submitting your application. Please try again.'
+      const timeFormatter = new Intl.DateTimeFormat(undefined, {
+        hour: 'numeric',
+        minute: '2-digit'
       });
-    } finally {
-      setShowToast(true); // Show toast message
-      setIsSubmitting(false); // Reset submitting state
+
+      const datePart = dateFormatter.format(startDate);
+      const startTime = timeFormatter.format(startDate);
+      const endTime = endDate ? timeFormatter.format(endDate) : null;
+
+      return endTime ? `${datePart}, ${startTime} - ${endTime}` : `${datePart}, ${startTime}`;
+    } catch (e) {
+      return null;
     }
   };
 
-  // Prevent event bubble up when clicking the modal
-  const handleModalClick = (e) => {
-    e.stopPropagation();
+  const dateTimeLine = formatDateTimeRange(start_date, end_date);
+
+  // Handle status update
+  const handleStatusUpdate = async (newStatus) => {
+    try {
+      setIsUpdatingStatus(true);
+      
+      // Update local state immediately for instant visual feedback
+      setLocalStatus(newStatus);
+      
+      // Update in database
+      await updateActivityStatus(id, newStatus);
+      
+      // Notify parent component of the change
+      if (onStatusChange) {
+        onStatusChange(id, newStatus);
+      }
+      
+      setShowStatusModal(false);
+    } catch (error) {
+      console.error('Error updating activity status:', error);
+      // Revert local state on error
+      setLocalStatus(status);
+      alert('Error updating activity status. Please try again.');
+    } finally {
+      setIsUpdatingStatus(false);
+    }
   };
+
+  // Handle status badge click
+  const handleStatusClick = (e) => {
+    e.stopPropagation(); // Prevent card click
+    setShowStatusModal(true);
+  };
+
+  // presentational component only; click handling provided by parent via onClick
 
   return (
     <>
       <div
-        onClick={() => setIsExpanded(!isExpanded)} // Toggle expanded state on click
-        className="cursor-pointer block max-w-sm p-6 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-50 transition-all duration-300"
+        onClick={onClick}
+        className="cursor-pointer w-full sm:w-80 md:w-96 mx-auto p-3 sm:p-4 bg-white border border-gray-200 rounded-xl shadow-md hover:bg-gray-50 transition-all duration-300"
+        role="button"
+        aria-label={title}
       >
-        <div className='flex items-center'>
-          <Image
-            src={organization_logo}
-            alt={`${organization_name} Logo`} // Alt text for organization logo
-            width={50}
-            height={50}
-            className='rounded-full'
-          />
-          <div className='ml-3'>
-            <h5 className='text-lg font-semibold text-gray-900 dark:text-white'>
-              {title} {/* Activity title */}
-            </h5>
-            <p className='text-sm text-gray-500'>{organization_name}</p> {/* Organization name */}
-            <p className='text-sm text-gray-500'>{location}</p> {/* Activity location */}
+        {/* Header Section (Top) */}
+        <div className='flex items-start justify-between gap-2'>
+          <div className='flex items-center space-x-2 min-w-0 flex-1'>
+            <Image
+              src={organization_logo}
+              alt={`${organization_name} logo`}
+              width={40}
+              height={40}
+              className='rounded-full flex-shrink-0'
+            />
+            <span className='text-xs text-gray-500 truncate' aria-label={organization_name}>{organization_name}</span>
+          </div>
+          <div className='flex items-center space-x-1.5 sm:space-x-2 flex-shrink-0'>
+            {/* Status Badge */}
+            {localStatus && (() => {
+              const statusConfig = getStatusConfig(localStatus);
+              const StatusIcon = statusConfig.icon;
+              const tooltipContent = canEditStatus 
+                ? `${statusConfig.label} - Click to change` 
+                : statusConfig.label;
+              const badgeClasses = canEditStatus
+                ? `inline-flex items-center px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs font-medium ${statusConfig.color} ${statusConfig.borderColor} border cursor-pointer hover:opacity-80 transition-opacity`
+                : `inline-flex items-center px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs font-medium ${statusConfig.color} ${statusConfig.borderColor} border`;
+              
+              return (
+                <Tooltip content={tooltipContent} placement="top">
+                  <div 
+                    className={badgeClasses}
+                    onClick={canEditStatus ? handleStatusClick : undefined}
+                  >
+                    <StatusIcon className='w-3 h-3 mr-0.5 sm:mr-1' />
+                    <span className='hidden sm:inline'>{statusConfig.label}</span>
+                    <span className='sm:hidden'>{statusConfig.label.split(' ')[0]}</span>
+                  </div>
+                </Tooltip>
+              );
+            })()}
+            
+            {/* Category Icon */}
+            {(() => {
+              const Icon = categoryIcons[category] || HiQuestionMarkCircle;
+              const label = (() => {
+                try { return tManage(category); } catch { return category; }
+              })();
+              return (
+                <Tooltip content={label} placement="top">
+                  <span aria-label={label} role="img" tabIndex={0} className='inline-flex'>
+                    <Icon aria-hidden className='text-grey-400 w-6 h-6 sm:w-7 sm:h-7' />
+                  </span>
+                </Tooltip>
+              );
+            })()}
+            <span className='sr-only'>{category}</span>
           </div>
         </div>
-        <div className='flex items-center justify-between mt-3'>
-          <span className='text-gray-600 dark:text-gray-400'>
-            {applicants} applied {/* Number of applicants */}
-          </span>
-          <span className='px-2 py-1 text-sm font-medium text-white bg-orange-500 rounded-full'>
-            {xp_reward} {t('points')} {/* XP reward points */}
-          </span>
+
+        {/* Title */}
+        <div className='mt-2 sm:mt-3 min-h-[3rem] sm:h-14 flex items-start'>
+          <h2 className='text-lg sm:text-xl font-bold text-gray-900 leading-tight break-words'>{title}</h2>
         </div>
-        {isExpanded && (
-          <div className='mt-4'>
-            <div className='font-semibold'>Description:</div>
-            <p className='text-sm text-gray-900'>
-              {description || 'No description available'} {/* Activity description */}
-            </p>
-            <Button
-              onClick={(e) => {
-                e.stopPropagation(); // Prevent event bubbling
-                setOpenModal(true); // Open application modal
-              }}
-              className='mt-4'
-            >
-              Apply Now {/* Button to apply for the activity */}
-            </Button>
+
+        {/* Key Information Section (Middle) */}
+        <div className='mt-2 sm:mt-3 space-y-2'>
+          <div className='flex items-center justify-between gap-2'>
+            <div className='flex items-center text-sm sm:text-base font-semibold text-indigo-600'>
+              <HiStar className='mr-1 text-indigo-500 flex-shrink-0' />
+              <span className='truncate'>{xp_reward} {t('points')}</span>
+            </div>
+            <div className='flex items-center text-xs sm:text-sm font-semibold text-gray-700 flex-shrink-0'>
+              <HiUserGroup className='mr-1 text-gray-600' />
+              <span>{applicants} {t('applied')}</span>
+            </div>
           </div>
-        )}
+
+          {skills?.length > 0 && (
+            <div className='flex flex-wrap gap-1' aria-label={t('skills')}>
+              {skills.map((skill, index) => (
+                <span key={index} className='px-1.5 sm:px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-800'>
+                  {skill}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Footer Section (Bottom) */}
+        <div className='mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-gray-200'>
+          <div className='flex flex-col space-y-1'>
+            <div className='flex items-center justify-between gap-2'>
+              {/* SDG Icon on the left */}
+              {sdg && (
+                <div className='flex items-center flex-shrink-0'>
+                  <Image
+                    src={`/icons/sdgs/c-${sdg}.png`}
+                    alt={`SDG ${sdg}`}
+                    width={28}
+                    height={28}
+                    className='w-6 h-6 sm:w-7 sm:h-7'
+                  />
+                </div>
+              )}
+              
+              {/* Location on the right */}
+              <div className='flex items-center text-xs sm:text-sm text-gray-700 min-w-0 flex-1 justify-end'>
+                <HiLocationMarker className='mr-1 text-gray-500 flex-shrink-0' />
+                <span className='truncate'>
+                  {type === 'online' 
+                    ? `Online (${country})`
+                    : type === 'event'
+                      ? `Event - ${city}, ${country}`
+                      : type === 'local' 
+                        ? `Local - ${city}, ${country}`
+                        : ''}
+                </span>
+              </div>
+            </div>
+            {dateTimeLine && (
+              <div className='text-xs sm:text-sm text-gray-700 truncate'>
+                {dateTimeLine}
+              </div>
+            )}
+          </div>
+
+        </div>
+
       </div>
-      {showToast && (
-        <div className="fixed bottom-5 right-5 z-[60]">
-          <Toast
-            duration={5000} // Duration for toast visibility
-            onClose={() => setShowToast(false)} // Close toast on action
-          >
-            {toastMessage.type === 'success' && (
-              <div className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-green-100 text-green-500">
-                <HiCheck className="h-5 w-5" /> {/* Success icon */}
-              </div>
-            )}
-            {toastMessage.type === 'warning' && (
-              <div className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-orange-100 text-orange-500">
-                <HiExclamation className="h-5 w-5" /> {/* Warning icon */}
-              </div>
-            )}
-            {toastMessage.type === 'error' && (
-              <div className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-100 text-red-500">
-                <HiExclamation className="h-5 w-5" /> {/* Error icon */}
-              </div>
-            )}
-            <div className="ml-3 text-sm font-normal">
-              {toastMessage.message} {/* Toast message content */}
-            </div>
-            <Toast.Toggle onClose={() => setShowToast(false)} /> {/* Button to close toast */}
-          </Toast>
-        </div>
-      )}
-      <Modal 
-        show={openModal}
-        onClose={() => setOpenModal(false)} 
-        onClick={handleModalClick} 
-        className="z-50"
-      >
-        <Modal.Header>Apply for {title}</Modal.Header> {/* Modal header */}
-        <Modal.Body>
-          <div className="space-y-6">
-            <div>
-              <div className="mb-2 block">
-                <Label htmlFor="message" value="Why do you want to help?" /> 
-              </div>
-              <Textarea
-                id="message"
-                placeholder="Tell us why you're interested in this opportunity..."
-                required
-                rows={4}
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-              />
-            </div>
-          </div>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button 
-            onClick={handleSubmitApplication} 
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? 'Submitting...' : 'I want to help'} {/* Button text based on state */}
-          </Button>
-          <Button 
-            color="gray" 
-            onClick={() => setOpenModal(false)}
-            disabled={isSubmitting} 
-          >
-            Cancel {/* Cancel button */}
-          </Button>
-        </Modal.Footer>
-      </Modal>
+
+      {/* Status Update Modal */}
+      <StatusUpdateModal
+        isOpen={showStatusModal}
+        onClose={() => setShowStatusModal(false)}
+        currentStatus={localStatus}
+        onStatusUpdate={handleStatusUpdate}
+        isUpdating={isUpdatingStatus}
+      />
     </>
   );
 }

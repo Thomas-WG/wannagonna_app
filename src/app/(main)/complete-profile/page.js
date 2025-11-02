@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { auth } from 'firebaseConfig';
 import { useRouter } from 'next/navigation';
 import { Button, Toast } from 'flowbite-react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/utils/auth/AuthContext'; // Hook for accessing user authentication status
 import { countries } from 'countries-list';
 import languages from '@cospired/i18n-iso-languages';
 import { updateMember, fetchMemberById } from '@/utils/crudMemberProfile';

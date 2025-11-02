@@ -50,6 +50,7 @@ export default function SkillsAndAvailability({ profileData, handleMultiSelectCh
         }
       } catch (error) {
         console.error('Error loading skills:', error);
+        setSelectedSkills([]); // Ensure selectedSkills is always defined
       } finally {
         setIsLoading(false);
       }
@@ -114,6 +115,9 @@ export default function SkillsAndAvailability({ profileData, handleMultiSelectCh
     }),
   };
 
+  // Ensure we have a valid value for the Select component
+  const safeSelectedSkills = selectedSkills || [];
+
   return (
     <Card className="w-full h-fit">
               <div className="p-4">
@@ -130,7 +134,7 @@ export default function SkillsAndAvailability({ profileData, handleMultiSelectCh
                       name="skills"
                       isMulti
                       options={skillOptions}
-                      value={selectedSkills}
+                      value={safeSelectedSkills}
                       onChange={handleMultiSelectChange('skills')}
                       placeholder={t('skillsPlaceholder')}
                       className="basic-multi-select"

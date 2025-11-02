@@ -35,12 +35,11 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { FcGoogle } from "react-icons/fc";
 import { Button, Checkbox, Label, TextInput, Modal } from "flowbite-react";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dropdown, DropdownItem } from "flowbite-react";
 import { useTranslations } from "use-intl"; // Import hook to handle translations
 import { setUserLocale } from '@/utils/locale'; // Import function to set the user's preferred locale
-
-
+import { useAuth } from '@/utils/auth/AuthContext';
 
 /**
  * LoginPage - Renders the login UI, with logo and Google sign-in functionality.
@@ -48,7 +47,8 @@ import { setUserLocale } from '@/utils/locale'; // Import function to set the us
  * @returns JSX.Element - The login page UI with Google sign-in functionality.
  */
 export default function LoginPage() {
-  const router = useRouter(); // Initialize router for navigation
+  const router = useRouter();
+  const { user, loading } = useAuth();
   const [email, setEmail] = useState(''); // State for email
   const [password, setPassword] = useState(''); // State for password
   const [loginErrorMessage, setLoginErrorMessage] = useState(''); // State for login error message
@@ -57,6 +57,8 @@ export default function LoginPage() {
   const [newEmail, setNewEmail] = useState(''); // State for new email
   const [newPassword, setNewPassword] = useState(''); // State for new password
   const [confirmPassword, setConfirmPassword] = useState(''); // State for confirm password
+  const [isLoading, setIsLoading] = useState(false); // State for loading
+  const [error, setError] = useState(''); // State for error
 
   const t = useTranslations('Login');
 
@@ -73,6 +75,14 @@ export default function LoginPage() {
     console.log(`Language changed to: ${locale}`);
     // You might want to store the selected language in local storage or context
   };
+
+  useEffect(() => {
+    if (user && !loading) {
+      console.log('Login page: User already authenticated, redirecting to dashboard');
+      router.push('/dashboard');
+    }
+  }, [user, loading, router]);
+
   /**
    * handleGoogleSignIn - Initiates Google sign-in and manages user data in Firestore.
    *
@@ -81,6 +91,9 @@ export default function LoginPage() {
    */
   const handleGoogleSignIn = async () => {
     try {
+      // Set loading state if you have one
+      if (setIsLoading) setIsLoading(true);
+      
       // Step 1: Sign in with Google
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
@@ -91,10 +104,10 @@ export default function LoginPage() {
 
       if (userDocSnap.exists()) {
         // User exists - Redirect to dashboard for returning users
-        router.push('/main/dashboard');
+        router.push('/dashboard');
       } else {
         // New user - Save user data to Firestore with all fields from complete-profile
-        await setDoc(userDocRef, {
+        const userData = {
           displayName: user.displayName || '',
           email: user.email || '',
           bio: '',
@@ -119,13 +132,38 @@ export default function LoginPage() {
             flexible: false
           },
           createdAt: new Date().toISOString(),
-        });
+        };
+        
+        // Use setDoc with merge option to prevent overwriting existing data
+        await setDoc(userDocRef, userData, { merge: true });
+        
         // Redirect to profile completion page for new users
-        router.push('/main/complete-profile');
+        router.push('/complete-profile');
       }
     } catch (error) {
-      // Log any errors that occur during the sign-in process
-      console.error('Error signing in:', error);
+      // Handle specific error types
+      let errorMessage = 'An error occurred during sign-in.';
+      
+      if (error.code === 'auth/popup-closed-by-user') {
+        errorMessage = 'Sign-in was cancelled.';
+      } else if (error.code === 'auth/popup-blocked') {
+        errorMessage = 'Pop-up was blocked by your browser. Please enable pop-ups for this site.';
+      } else if (error.code === 'auth/network-request-failed') {
+        errorMessage = 'Network error. Please check your internet connection.';
+      } else if (error.code === 'auth/account-exists-with-different-credential') {
+        errorMessage = 'An account already exists with the same email address but different sign-in credentials.';
+      }
+      
+      // Only log errors in development
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error signing in:', error);
+      }
+      
+      // Set error state if you have one
+      if (setError) setError(errorMessage);
+    } finally {
+      // Reset loading state
+      if (setIsLoading) setIsLoading(false);
     }
   };
 
@@ -135,7 +173,7 @@ export default function LoginPage() {
     setLoginErrorMessage(''); // Clear previous login error messages
     try {
       await signInWithEmailAndPassword(auth, email, password); // Sign in with email and password
-      router.push('/main/dashboard'); // Redirect to dashboard on successful login
+      router.push('/dashboard'); // Redirect to dashboard on successful login
     } catch (error) {
       // Set error message based on the error code
       if (error.code === 'auth/wrong-password') {
@@ -193,12 +231,14 @@ export default function LoginPage() {
             availabilities: {
                 weekdays: false,
                 weekends: false,
+                mornings: false,
+                afternoons: false,
                 evenings: false,
                 flexible: false
             },
             createdAt: new Date().toISOString(),
         });
-        router.push('/main/complete-profile'); // Redirect to profile completion page
+        router.push('/complete-profile'); // Redirect to profile completion page
     } catch (error) {
         // Handle errors (e.g., email already in use)
         if (error.code === 'auth/email-already-in-use') {

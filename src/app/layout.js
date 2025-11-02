@@ -22,7 +22,7 @@
  */
 
 import '@/styles/globals.css'; // Global styles for the entire application
-import { AuthProvider } from '@/utils/AuthContext'; // Authentication context provider
+import { AuthProvider } from '@/utils/auth/AuthContext'; // Authentication context provider
 import { Roboto } from 'next/font/google'; // Roboto font from Google Fonts
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';

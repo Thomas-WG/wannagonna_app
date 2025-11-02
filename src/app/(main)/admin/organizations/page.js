@@ -7,7 +7,7 @@
  * It allows administrators to view, add, edit, and delete organizations with their details.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { useLocale } from 'next-intl';
 import { Card, Button, Label, TextInput, Table, Modal, Toast, Textarea } from 'flowbite-react';
@@ -21,6 +21,8 @@ import { uploadOrgPicture } from '@/utils/storage';
 import { countries } from 'countries-list';
 import languages from '@cospired/i18n-iso-languages';
 import Select from 'react-select';
+import Image from 'next/image';
+import { sdgOptions } from '@/constant/sdgs';
 
 // Register the languages you want to use
 languages.registerLocale(require("@cospired/i18n-iso-languages/langs/en.json"));
@@ -58,27 +60,35 @@ export default function OrganizationsManagementPage() {
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' }); // Toast notification state
   const [logoFile, setLogoFile] = useState(null); // File object for logo upload
 
-  // Load organizations data when component mounts
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  /**
-   * Fetches organizations data from the backend
-   * Updates the organizations state and handles loading states
-   */
-  const loadData = async () => {
+  // Define loadData function outside of useEffect so it can be reused
+  const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
       const organizationsData = await fetchOrganizations();
       setOrganizations(organizationsData);
     } catch (error) {
       console.error('Error loading data:', error);
-      showToast(t('errorLoading'), 'error');
+      setToast({ show: true, message: t('errorLoading'), type: 'error' });
+      setTimeout(() => setToast({ show: false, message: '', type: 'success' }), 3000);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [t]);
+
+  // Load organizations data when component mounts
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  /**
+   * Displays a toast notification
+   * @param {string} message - The message to display
+   * @param {string} type - The type of toast ('success' or 'error')
+   */
+  const showToast = useCallback((message, type = 'success') => {
+    setToast({ show: true, message, type });
+    setTimeout(() => setToast({ show: false, message: '', type: 'success' }), 3000);
+  }, []);
 
   /**
    * Handles form submission for adding or updating an organization
@@ -166,6 +176,7 @@ export default function OrganizationsManagementPage() {
       sdgs: [],
       description: '',
       address: '',
+      city: '',
       website: '',
       email: '',
       members: [],
@@ -173,16 +184,6 @@ export default function OrganizationsManagementPage() {
       createdAt: ''
     });
     setLogoFile(null);
-  };
-
-  /**
-   * Displays a toast notification
-   * @param {string} message - The message to display
-   * @param {string} type - The type of toast ('success' or 'error')
-   */
-  const showToast = (message, type = 'success') => {
-    setToast({ show: true, message, type });
-    setTimeout(() => setToast({ show: false, message: '', type: 'success' }), 3000);
   };
 
   /**
@@ -221,11 +222,7 @@ export default function OrganizationsManagementPage() {
     label: name
   }));
 
-  // Get SDG options (1-17) for Sustainable Development Goals
-  const sdgOptions = Array.from({ length: 17 }, (_, i) => ({
-    value: `Goal-${String(i + 1).padStart(2, '0')}`,
-    label: `Goal-${String(i + 1).padStart(2, '0')}`
-  }));
+  // SDG options are imported from constants
 
   return (
     <div className="container mx-auto p-4 space-y-6">
@@ -261,9 +258,12 @@ export default function OrganizationsManagementPage() {
                 <Table.Cell>
                   {/* Organization Logo */}
                   {org.logo && (
-                    <img 
+                    <Image 
                       src={org.logo} 
                       alt={org.name} 
+                      width={40}
+                      height={40}
+                      priority={true}
                       className="w-10 h-10 rounded-full object-cover"
                     />
                   )}
@@ -307,9 +307,12 @@ export default function OrganizationsManagementPage() {
               <Label htmlFor="logo">{t('logo')}</Label>
               <div className="flex items-center space-x-4">
                 {organizationForm.logo && (
-                  <img 
+                  <Image 
                     src={organizationForm.logo} 
                     alt="Organization logo" 
+                    width={80}
+                    height={80}
+                    priority={true}
                     className="w-20 h-20 rounded-full object-cover"
                   />
                 )}
@@ -443,6 +446,19 @@ export default function OrganizationsManagementPage() {
                 })}
               />
             </div>
+
+            {/* City Field */}
+            <div>
+              <Label htmlFor="city">{t('city')}</Label>
+              <TextInput
+                id="city"
+                value={organizationForm.city}
+                onChange={(e) => setOrganizationForm({
+                  ...organizationForm,
+                  city: e.target.value
+              })}
+            />
+          </div>
 
             {/* Website Field */}
             <div>

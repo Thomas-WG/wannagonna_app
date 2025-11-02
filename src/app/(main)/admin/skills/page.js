@@ -40,23 +40,23 @@ export default function SkillsManagementPage() {
 
   // Load data on component mount
   useEffect(() => {
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        const categoriesData = await fetchSkillCategories();
+        const skillsData = await fetchSkills();
+        setCategories(categoriesData);
+        setSkills(skillsData);
+      } catch (error) {
+        console.error('Error loading data:', error);
+        showToast(t('errorLoading'), 'error');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
     loadData();
-  }, []);
-
-  const loadData = async () => {
-    try {
-      setIsLoading(true);
-      const categoriesData = await fetchSkillCategories();
-      const skillsData = await fetchSkills();
-      setCategories(categoriesData);
-      setSkills(skillsData);
-    } catch (error) {
-      console.error('Error loading data:', error);
-      showToast(t('errorLoading'), 'error');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  }, [t]);
 
   const handleCategorySubmit = async (e) => {
     e.preventDefault();
