@@ -20,7 +20,13 @@
         "errordefault": "An error occurred. Please try again later.",
         "passwordmatch": "Passwords do not match. Please try again.",
         "emailused": "This email is already in use. Please log in instead.",
-        "weakpwd": "Password should be at least 6 characters"
+        "weakpwd": "Password should be at least 6 characters",
+        "referralCode": "Referral Code",
+        "referralCodePlaceholder": "Enter 5-character code",
+        "referralCodeHelper": "You need a referral code from an existing member to create an account",
+        "referralCodeRequired": "Referral code is required to create an account",
+        "invalidReferralCode": "Invalid referral code. Please check and try again.",
+        "errorValidatingCode": "Error validating referral code. Please try again."
     },
     "Sidebar": {
         "dashboard": "Dashboard",

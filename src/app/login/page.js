@@ -30,7 +30,7 @@
 
 import { signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth, googleProvider, db } from 'firebaseConfig';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { FcGoogle } from "react-icons/fc";
@@ -59,6 +59,8 @@ export default function LoginPage() {
   const [confirmPassword, setConfirmPassword] = useState(''); // State for confirm password
   const [isLoading, setIsLoading] = useState(false); // State for loading
   const [error, setError] = useState(''); // State for error
+  const [referralCode, setReferralCode] = useState(''); // Add state for referral code
+  const [googleReferralCode, setGoogleReferralCode] = useState(''); // Add state for Google sign-in referral code
 
   const t = useTranslations('Login');
 
@@ -84,29 +86,121 @@ export default function LoginPage() {
   }, [user, loading, router]);
 
   /**
-   * handleGoogleSignIn - Initiates Google sign-in and manages user data in Firestore.
-   *
-   * - Checks Firestore to see if the user is new or returning.
-   * - Redirects new users to profile completion and returning users to the dashboard.
+   * Validate referral code by checking if it exists in members collection
+   */
+  const validateReferralCode = async (code) => {
+    if (!code || code.trim().length === 0) {
+      return { valid: false, error: t('referralCodeRequired') };
+    }
+    
+    try {
+      const membersRef = collection(db, 'members');
+      const q = query(membersRef, where('code', '==', code.toUpperCase().trim()));
+      const querySnapshot = await getDocs(q);
+      
+      if (querySnapshot.empty) {
+        return { valid: false, error: t('invalidReferralCode') };
+      }
+      
+      return { valid: true };
+    } catch (error) {
+      console.error('Error validating referral code:', error);
+      return { valid: false, error: t('errorValidatingCode') };
+    }
+  };
+
+  /**
+   * Generate a unique 5-character code based on user email
+   */
+  const generateUserCode = async (email, displayName = '') => {
+    // Extract first 3 characters from email (before @) and make uppercase
+    const emailPrefix = email.split('@')[0].substring(0, 3).toUpperCase().padEnd(3, 'A');
+    
+    // Get first letter of display name or random letter
+    let nameLetter = 'X';
+    if (displayName && displayName.length > 0) {
+      nameLetter = displayName.charAt(0).toUpperCase();
+      if (!/[A-Z0-9]/.test(nameLetter)) {
+        nameLetter = 'X';
+      }
+    }
+    
+    // Generate last character from email hash
+    const emailHash = email.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    const lastChar = chars[emailHash % chars.length];
+    
+    // Combine: 3 from email + 1 from name + 1 from hash = 5 characters
+    let generatedCode = emailPrefix.substring(0, 3) + nameLetter + lastChar;
+    
+    // Ensure uniqueness by checking and modifying if needed
+    let attempts = 0;
+    while (attempts < 10) {
+      const membersRef = collection(db, 'members');
+      const q = query(membersRef, where('code', '==', generatedCode));
+      const querySnapshot = await getDocs(q);
+      
+      if (querySnapshot.empty) {
+        return generatedCode; // Code is unique
+      }
+      
+      // If not unique, modify last character
+      const newIndex = (emailHash + attempts) % chars.length;
+      generatedCode = generatedCode.substring(0, 4) + chars[newIndex];
+      attempts++;
+    }
+    
+    // Fallback: use timestamp-based code if all attempts fail
+    const timestamp = Date.now().toString(36).toUpperCase().slice(-5);
+    return timestamp.padStart(5, 'A');
+  };
+
+ 
+  /**
+   * handleGoogleSignIn - Validate referral code only for new users after sign-in
    */
   const handleGoogleSignIn = async () => {
     try {
-      // Set loading state if you have one
       if (setIsLoading) setIsLoading(true);
       
-      // Step 1: Sign in with Google
+      // Clear any previous errors
+      if (setError) setError('');
+      
+      // Proceed with Google sign-in first (referral code validation happens after, only for new users)
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
 
-      // Step 2: Check if the user already exists in Firestore
-      const userDocRef = doc(db, 'members', user.uid); // Reference to user document
-      const userDocSnap = await getDoc(userDocRef); // Retrieve user document
+      const userDocRef = doc(db, 'members', user.uid);
+      const userDocSnap = await getDoc(userDocRef);
 
       if (userDocSnap.exists()) {
-        // User exists - Redirect to dashboard for returning users
+        // Returning user - No referral code needed, just redirect to dashboard
         router.push('/dashboard');
       } else {
-        // New user - Save user data to Firestore with all fields from complete-profile
+        // New user - Validate referral code is required
+        if (!googleReferralCode || googleReferralCode.trim().length === 0) {
+          // Sign out the user since referral code is missing
+          await auth.signOut();
+          const errorMsg = t('referralCodeRequired') || 'Referral code is required for new accounts.';
+          setError(errorMsg);
+          console.error('New user sign-in failed: Referral code required');
+          return;
+        }
+        
+        // Validate the referral code exists in the database
+        const codeValidation = await validateReferralCode(googleReferralCode);
+        if (!codeValidation.valid) {
+          // Sign out the user since validation failed
+          await auth.signOut();
+          setError(codeValidation.error);
+          console.error('New user sign-in failed: Invalid referral code', googleReferralCode);
+          return;
+        }
+        
+        // Referral code is valid - create member document
+        const userCode = await generateUserCode(user.email || '', user.displayName || '');
+        
+        // Save user data to Firestore with generated code
         const userData = {
           displayName: user.displayName || '',
           email: user.email || '',
@@ -114,7 +208,10 @@ export default function LoginPage() {
           country: '',
           languages: [],
           skills: [],
-          profilePicture: user.photoURL || '',
+          profilePicture: user.photoURL || '', // Use Google photo if available, otherwise empty string
+          code: userCode, // Add generated code
+          referredBy: googleReferralCode.toUpperCase().trim(), // Store who referred them
+          xp: 0, // Initialize XP to 0
           timeCommitment: {
             daily: false,
             weekly: false,
@@ -134,10 +231,7 @@ export default function LoginPage() {
           createdAt: new Date().toISOString(),
         };
         
-        // Use setDoc with merge option to prevent overwriting existing data
         await setDoc(userDocRef, userData, { merge: true });
-        
-        // Redirect to profile completion page for new users
         router.push('/complete-profile');
       }
     } catch (error) {
@@ -162,7 +256,6 @@ export default function LoginPage() {
       // Set error state if you have one
       if (setError) setError(errorMessage);
     } finally {
-      // Reset loading state
       if (setIsLoading) setIsLoading(false);
     }
   };
@@ -189,37 +282,48 @@ export default function LoginPage() {
     }
   };
 
-  // Function to handle account creation
+  // Function to handle account creation - Updated to validate referral code
   const handleCreateAccount = async (event) => {
-    event.preventDefault(); // Prevent default form submission
-    setCreateErrorMessage(''); // Clear previous creation error messages
+    event.preventDefault();
+    setCreateErrorMessage('');
 
     // Check if passwords match
     if (newPassword !== confirmPassword) {
-        setCreateErrorMessage(t('passwordmatch')); // Set error message
-        return; // Exit the function
+        setCreateErrorMessage(t('passwordmatch'));
+        return;
+    }
+
+    // Validate referral code
+    const codeValidation = await validateReferralCode(referralCode);
+    if (!codeValidation.valid) {
+        setCreateErrorMessage(codeValidation.error);
+        return;
     }
 
     try {
         // Create a new user with Firebase
         const userCredential = await createUserWithEmailAndPassword(auth, newEmail, newPassword);
-        const user = userCredential.user; // Get the user object
+        const user = userCredential.user;
         
-        // Log the user in with the newly created credentials
-        await signInWithEmailAndPassword(auth, newEmail, newPassword);
+        // Extract display name from email (first part before @)
+        const emailPrefix = newEmail.split('@')[0];
         
-        // After successful account creation and login, close the modal
-        setModalOpen(false);
+        // Generate unique code for the new user
+        const userCode = await generateUserCode(newEmail, emailPrefix);
         
-        // New user - Save user data to Firestore with all fields from complete-profile
-        await setDoc(doc(db, 'members', user.uid), {
-            displayName: '',
+        // New user - Save user data to Firestore with generated code BEFORE logging in
+        // This ensures the document exists even if something goes wrong during login
+        const memberData = {
+            displayName: emailPrefix,
             email: user.email,
             bio: '',
             country: '',
             languages: [],
             skills: [],
-            profilePicture: '',
+            profilePicture: '', // Empty string by default for email/password accounts
+            code: userCode, // Add generated code
+            referredBy: referralCode.toUpperCase().trim(), // Store who referred them
+            xp: 0, // Initialize XP to 0
             timeCommitment: {
                 daily: false,
                 weekly: false,
@@ -237,18 +341,38 @@ export default function LoginPage() {
                 flexible: false
             },
             createdAt: new Date().toISOString(),
-        });
-        router.push('/complete-profile'); // Redirect to profile completion page
+        };
+        
+        console.log('Creating member document with data:', { ...memberData, profilePicture: memberData.profilePicture ? 'URL set' : 'empty' });
+        
+        await setDoc(doc(db, 'members', user.uid), memberData);
+        console.log('Member document created successfully for user:', user.uid);
+        
+        // Log the user in with the newly created credentials
+        await signInWithEmailAndPassword(auth, newEmail, newPassword);
+        
+        // After successful account creation and login, close the modal
+        setModalOpen(false);
+        
+        router.push('/complete-profile');
     } catch (error) {
-        // Handle errors (e.g., email already in use)
+        // Handle errors (e.g., email already in use, Firestore errors)
+        console.error('Error creating account:', error);
+        console.error('Error details:', {
+            code: error.code,
+            message: error.message,
+            stack: error.stack
+        });
+        
         if (error.code === 'auth/email-already-in-use') {
             setCreateErrorMessage(t('emailused')); // Set specific error message
         } else if (error.code === 'auth/weak-password') {
             setCreateErrorMessage(t('weakpwd')); // Set specific error message
+        } else if (error.code?.startsWith('permission-denied') || error.message?.includes('Firestore')) {
+            setCreateErrorMessage('Failed to create user profile. Please check your permissions or try again.');
         } else {
-            setCreateErrorMessage(error.message); // Set error message based on Firebase error
+            setCreateErrorMessage(error.message || 'An error occurred while creating your account. Please try again.'); // Set error message based on Firebase error
         }
-        console.error('Error creating account:', error); // Log any errors
     }
   };
 
@@ -307,6 +431,30 @@ export default function LoginPage() {
           <span className="text-gray-500">{t('or')}</span>
         </div>
 
+        {/* Referral Code Input - Optional for returning users, required for new accounts */}
+        <div className="mb-4">
+          <Label htmlFor="googleReferralCode">{t('referralCode')} <span className="text-gray-400 text-xs">(optional for returning users)</span></Label>
+          <TextInput 
+            id="googleReferralCode" 
+            type="text" 
+            placeholder={t('referralCodePlaceholder')}
+            value={googleReferralCode}
+            onChange={(e) => {
+              setGoogleReferralCode(e.target.value.toUpperCase());
+              // Clear error when user starts typing
+              if (error) setError('');
+            }}
+            maxLength={5}
+            className="uppercase"
+          />
+          <p className="text-xs text-gray-500 mt-1">{t('referralCodeHelper')} Required for new accounts.</p>
+          {error && (
+            <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-600">
+              <p className="font-medium">{error}</p>
+            </div>
+          )}
+        </div>
+
         <button
           onClick={handleGoogleSignIn}
           className="w-full max-w-xs mx-auto py-3 px-6 bg-white border border-gray-300 rounded-lg flex items-center justify-center gap-3 hover:bg-gray-50 transition-colors duration-200 text-gray-700 text-lg font-medium"
@@ -332,6 +480,20 @@ export default function LoginPage() {
         <Modal.Header>{t('createtitle')}</Modal.Header>
         <Modal.Body>
           <form className="flex flex-col gap-4 w-full max-w-sm mx-auto" onSubmit={handleCreateAccount}>
+            <div>
+              <Label htmlFor="referralCode">{t('referralCode')}</Label>
+              <TextInput 
+                id="referralCode" 
+                type="text" 
+                required 
+                placeholder={t('referralCodePlaceholder')}
+                value={referralCode}
+                onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                maxLength={5}
+                className="uppercase"
+              />
+              <p className="text-xs text-gray-500 mt-1">{t('referralCodeHelper')}</p>
+            </div>
             <div>
               <Label htmlFor="newEmail">{t('email')}</Label>
               <TextInput 

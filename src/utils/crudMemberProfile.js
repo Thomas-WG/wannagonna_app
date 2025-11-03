@@ -47,20 +47,67 @@ export async function fetchMemberById(userId, setProfileData) {
     
     if (docSnap.exists()) {
       const memberData = docSnap.data();
-      setProfileData(prevData => ({
-        ...prevData,
+      
+      // Default values for all fields
+      const defaultValues = {
+        displayName: '',
+        email: '',
+        bio: '',
+        country: '',
+        languages: [],
+        skills: [],
+        profilePicture: '',
+        timeCommitment: {
+          daily: false,
+          weekly: false,
+          biweekly: false,
+          monthly: false,
+          occasional: false,
+          flexible: false
+        },
+        availabilities: {
+          weekdays: false,
+          weekends: false,
+          mornings: false,
+          afternoons: false,
+          evenings: false,
+          flexible: false
+        },
+        xp: 0,
+        code: '',
+        referredBy: ''
+      };
+      
+      // Build the final data object with proper defaults
+      const finalData = {
+        ...defaultValues,
         ...memberData,
-        // Ensure we don't override with undefined values
-        displayName: memberData.displayName || prevData.displayName,
-        email: memberData.email || prevData.email,
-        profilePicture: memberData.profilePicture || prevData.profilePicture,
-        bio: memberData.bio || prevData.bio,
-        country: memberData.country || prevData.country,
-        languages: memberData.languages || prevData.languages,
-        skills: memberData.skills || prevData.skills,
-        timeCommitment: memberData.timeCommitment || prevData.timeCommitment,
-        availabilities: memberData.availabilities || prevData.availabilities
-      }));
+        // Ensure we don't override with undefined/null values, use defaults
+        displayName: memberData.displayName ?? defaultValues.displayName,
+        email: memberData.email ?? defaultValues.email,
+        profilePicture: memberData.profilePicture ?? defaultValues.profilePicture,
+        bio: memberData.bio ?? defaultValues.bio,
+        country: memberData.country ?? defaultValues.country,
+        languages: Array.isArray(memberData.languages) ? memberData.languages : defaultValues.languages,
+        skills: Array.isArray(memberData.skills) ? memberData.skills : defaultValues.skills,
+        xp: memberData.xp ?? defaultValues.xp,
+        code: memberData.code ?? defaultValues.code,
+        referredBy: memberData.referredBy ?? defaultValues.referredBy,
+        timeCommitment: {
+          ...defaultValues.timeCommitment,
+          ...(memberData.timeCommitment || {})
+        },
+        availabilities: {
+          ...defaultValues.availabilities,
+          ...(memberData.availabilities || {})
+        }
+      };
+      
+      // Call setProfileData with final data
+      // React's useState setter accepts both values and functions, so this works for both patterns:
+      // - Direct setter: setProfileData (will receive finalData as value)
+      // - Callback pattern: (data) => setProfileData(data) (will receive finalData as argument)
+      setProfileData(finalData);
     } else {
       console.log("No member document found for user ID:", userId);
     }

@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, Avatar, Progress, Toast, Badge, Button } from "flowbite-react";
+import { Card, Progress, Toast, Badge, Button } from "flowbite-react";
 import { 
   HiUser, 
   HiOfficeBuilding, 
@@ -221,7 +221,9 @@ export default function DashboardPage() {
     }
   }, [profileData]);
 
-  const profilePicture = profileData?.profilePicture || user?.photoURL || null;
+  // Ensure profilePicture is a valid non-empty string or null
+  const profilePictureValue = profileData?.profilePicture || user?.photoURL || null;
+  const profilePicture = profilePictureValue && profilePictureValue.trim() !== '' ? profilePictureValue : null;
   const displayName = profileData?.displayName || user?.displayName || user?.email || 'Volunteer';
   const userCode = profileData?.code || null;
 
@@ -489,16 +491,9 @@ export default function DashboardPage() {
                       className="rounded-full border-4 border-white shadow-lg"
                     />
                   ) : (
-                    <Avatar
-                      alt={displayName}
-                      rounded
-                      size="xl"
-                      className="border-4 border-white shadow-lg"
-                    >
-                      <div className="rounded-full bg-indigo-500 w-24 h-24 flex items-center justify-center">
-                        <HiUser className="w-12 h-12 text-white" />
-                      </div>
-                    </Avatar>
+                    <div className="rounded-full bg-indigo-500 w-24 h-24 flex items-center justify-center border-4 border-white shadow-lg">
+                      <HiUser className="w-12 h-12 text-white" />
+                    </div>
                   )}
                 </div>
 

@@ -20,7 +20,13 @@
         "errordefault": "Une erreur s'est produite. Veuillez réessayer plus tard.",
         "passwordmatch": "Les mots de passe ne correspondent pas. Veuillez réessayer.",
         "emailused": "Cet email est déjà utilisé. Veuillez vous connecter à la place.",
-        "weakpwd": "Le mot de passe doit contenir au moins 6 caractères"
+        "weakpwd": "Le mot de passe doit contenir au moins 6 caractères",
+        "referralCode": "Code de Parrainage",
+        "referralCodePlaceholder": "Entrez un code de 5 caractères",
+        "referralCodeHelper": "Vous avez besoin d'un code de parrainage d'un membre existant pour créer un compte",
+        "referralCodeRequired": "Le code de parrainage est requis pour créer un compte",
+        "invalidReferralCode": "Code de parrainage invalide. Veuillez vérifier et réessayer.",
+        "errorValidatingCode": "Erreur lors de la validation du code de parrainage. Veuillez réessayer."
     },
     "Sidebar": {
         "dashboard": "Tableau de bord",
