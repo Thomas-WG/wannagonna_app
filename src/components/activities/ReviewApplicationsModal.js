@@ -7,9 +7,12 @@ import { fetchApplicationsForActivity, updateApplicationStatus } from "@/utils/c
 import { formatDate } from "@/utils/dateUtils";
 import { fetchOrganizationById } from "@/utils/crudOrganizations";
 import { useAuth } from "@/utils/auth/AuthContext";
+import { useTranslations } from "next-intl";
 
 export default function ReviewApplicationsModal({ isOpen, onClose, activity, onOrganizationDataUpdate }) {
   const { claims } = useAuth();
+  const t = useTranslations('MyNonProfit');
+  const tStatus = useTranslations('Dashboard');
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(false);
   const [processingApplication, setProcessingApplication] = useState(null);
@@ -97,11 +100,13 @@ export default function ReviewApplicationsModal({ isOpen, onClose, activity, onO
   const getStatusBadge = (status) => {
     switch (status) {
       case 'accepted':
-        return <Badge color="success" icon={HiCheck}>Accepted</Badge>;
+        return <Badge color="success" icon={HiCheck}>{tStatus('statusAccepted') || 'Accepted'}</Badge>;
       case 'rejected':
-        return <Badge color="failure" icon={HiX}>Rejected</Badge>;
+        return <Badge color="failure" icon={HiX}>{tStatus('statusRejected') || 'Rejected'}</Badge>;
+      case 'cancelled':
+        return <Badge color="gray" icon={HiX}>{tStatus('statusCancelled') || 'Cancelled'}</Badge>;
       default:
-        return <Badge color="warning" icon={HiClock}>Pending</Badge>;
+        return <Badge color="warning" icon={HiClock}>{tStatus('statusPending') || 'Pending'}</Badge>;
     }
   };
 
@@ -114,7 +119,7 @@ export default function ReviewApplicationsModal({ isOpen, onClose, activity, onO
     <Modal show={isOpen} onClose={onClose} size="4xl">
       <Modal.Header>
         <div className="flex flex-col">
-          <span className="text-lg font-semibold">Review Applications</span>
+          <span className="text-lg font-semibold">{t('reviewApplications') || 'Review Applications'}</span>
           <span className="text-sm text-gray-500 truncate">{activity?.title}</span>
         </div>
       </Modal.Header>
@@ -125,7 +130,7 @@ export default function ReviewApplicationsModal({ isOpen, onClose, activity, onO
           </div>
         ) : applications.length === 0 ? (
           <div className="text-center py-8">
-            <p className="text-gray-500">No applications found for this activity.</p>
+            <p className="text-gray-500">{t('noApplicationsForActivity') || 'No applications found for this activity.'}</p>
           </div>
         ) : (
           <div className="space-y-4 max-h-96 overflow-y-auto">
@@ -162,14 +167,14 @@ export default function ReviewApplicationsModal({ isOpen, onClose, activity, onO
                   {/* Message content */}
                   <div className="mb-3">
                     <p className="text-sm text-gray-600 mb-2">
-                      <span className="font-medium text-gray-700">Message:</span>
+                      <span className="font-medium text-gray-700">{t('message') || 'Message'}:</span>
                     </p>
                     <p className="text-sm text-gray-600 bg-gray-50 p-2 rounded">
-                      {application.message || 'No message provided'}
+                      {application.message || (t('noMessageProvided') || 'No message provided')}
                     </p>
                     {application.npoResponse && (
                       <div className="mt-2">
-                        <p className="text-xs font-medium text-blue-700 mb-1">NPO Response:</p>
+                        <p className="text-xs font-medium text-blue-700 mb-1">{t('npoResponse') || 'NPO Response'}:</p>
                         <p className="text-xs text-blue-600 bg-blue-50 p-2 rounded">
                           {application.npoResponse}
                         </p>
@@ -188,7 +193,7 @@ export default function ReviewApplicationsModal({ isOpen, onClose, activity, onO
                         className="flex items-center justify-center space-x-1 flex-1"
                       >
                         <HiCheck className="h-4 w-4" />
-                        <span>Accept</span>
+                        <span>{t('accept') || 'Accept'}</span>
                       </Button>
                       <Button
                         size="sm"
@@ -198,7 +203,7 @@ export default function ReviewApplicationsModal({ isOpen, onClose, activity, onO
                         className="flex items-center justify-center space-x-1 flex-1"
                       >
                         <HiX className="h-4 w-4" />
-                        <span>Reject</span>
+                        <span>{t('reject') || 'Reject'}</span>
                       </Button>
                     </div>
                   )}
@@ -215,7 +220,7 @@ export default function ReviewApplicationsModal({ isOpen, onClose, activity, onO
             onClick={onClose}
             className="w-full sm:w-auto"
           >
-            Close
+            {t('close') || 'Close'}
           </Button>
         </div>
       </Modal.Footer>
@@ -223,7 +228,7 @@ export default function ReviewApplicationsModal({ isOpen, onClose, activity, onO
       {/* Confirmation Modal */}
       <Modal show={showConfirmation} onClose={handleCancelAction} size="md">
         <Modal.Header>
-          Confirm Action
+          {t('confirmAction') || 'Confirm Action'}
         </Modal.Header>
         <Modal.Body>
           <div className="text-center">
@@ -235,45 +240,45 @@ export default function ReviewApplicationsModal({ isOpen, onClose, activity, onO
               )}
             </div>
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              {confirmationData?.action === 'accept' ? 'Accept Application' : 'Reject Application'}
+              {confirmationData?.action === 'accept' ? (t('acceptApplication') || 'Accept Application') : (t('rejectApplication') || 'Reject Application')}
             </h3>
             <p className="text-sm text-gray-500 mb-4">
-              Are you sure you want to {confirmationData?.action} the application from{' '}
+              {t('confirmActionMessage') || 'Are you sure you want to'} {confirmationData?.action === 'accept' ? (t('accept').toLowerCase() || 'accept') : (t('reject').toLowerCase() || 'reject')} {t('theApplicationFrom') || 'the application from'}{' '}
               <span className="font-medium">{confirmationData?.application?.displayName}</span>?
             </p>
             <div className="bg-gray-50 p-3 rounded-lg text-left">
               <p className="text-xs text-gray-600 mb-1">
-                <strong>Activity:</strong> {activity?.title}
+                <strong>{t('activity') || 'Activity'}:</strong> {activity?.title}
               </p>
               <p className="text-xs text-gray-600 mb-1">
-                <strong>Applicant:</strong> {confirmationData?.application?.displayName}
+                <strong>{t('applicant') || 'Applicant'}:</strong> {confirmationData?.application?.displayName}
               </p>
               <p className="text-xs text-gray-600">
-                <strong>Message:</strong> {confirmationData?.application?.message || 'No message provided'}
+                <strong>{t('message') || 'Message'}:</strong> {confirmationData?.application?.message || (t('noMessageProvided') || 'No message provided')}
               </p>
             </div>
             
             {/* NPO Response Message */}
             <div className="mt-4">
               <label htmlFor="npoResponse" className="block text-sm font-medium text-gray-700 mb-2">
-                Message to volunteer (optional)
+                {t('messageToVolunteer') || 'Message to volunteer (optional)'}
               </label>
               <textarea
                 id="npoResponse"
                 rows={3}
                 value={npoResponse}
                 onChange={(e) => setNpoResponse(e.target.value)}
-                placeholder={`Add a personal message for ${confirmationData?.application?.displayName}...`}
+                placeholder={t('addPersonalMessagePlaceholder', { name: confirmationData?.application?.displayName || t('theVolunteer') || 'the volunteer' }) || `Add a personal message for ${confirmationData?.application?.displayName}...`}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                 maxLength={500}
               />
               <p className="text-xs text-gray-500 mt-1">
-                {npoResponse.length}/500 characters
+                {npoResponse.length}/500 {t('characters') || 'characters'}
               </p>
             </div>
             
             <p className="text-xs text-red-600 mt-3">
-              ⚠️ This action cannot be undone and will notify the volunteer.
+              {t('actionCannotBeUndone') || '⚠️ This action cannot be undone and will notify the volunteer.'}
             </p>
           </div>
         </Modal.Body>
@@ -284,7 +289,7 @@ export default function ReviewApplicationsModal({ isOpen, onClose, activity, onO
               onClick={handleCancelAction}
               className="w-full sm:w-auto"
             >
-              Cancel
+              {t('cancel') || 'Cancel'}
             </Button>
             <Button
               color={confirmationData?.action === 'accept' ? 'success' : 'failure'}
@@ -295,10 +300,10 @@ export default function ReviewApplicationsModal({ isOpen, onClose, activity, onO
               {processingApplication === confirmationData?.application?.id ? (
                 <div className="flex items-center justify-center space-x-2">
                   <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
-                  <span>Processing...</span>
+                  <span>{t('processing') || 'Processing...'}</span>
                 </div>
               ) : (
-                `Yes, ${confirmationData?.action === 'accept' ? 'Accept' : 'Reject'}`
+                `${t('yes') || 'Yes'}, ${confirmationData?.action === 'accept' ? (t('accept') || 'Accept') : (t('reject') || 'Reject')}`
               )}
             </Button>
           </div>

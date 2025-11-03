@@ -7,9 +7,12 @@ import { useAuth } from '@/utils/auth/AuthContext'
 import { fetchActivitiesByCriteria } from '@/utils/crudActivities'
 import { fetchApplicationsForActivity, updateApplicationStatus } from '@/utils/crudApplications'
 import { formatDate } from '@/utils/dateUtils'
+import { useTranslations } from 'next-intl'
 
 export default function ReviewApplicationsPage() {
   const { user, claims } = useAuth()
+  const t = useTranslations('MyNonProfit')
+  const tStatus = useTranslations('Dashboard')
   const [loading, setLoading] = useState(true)
   const [activities, setActivities] = useState([])
   const [applicationsByActivityId, setApplicationsByActivityId] = useState({})
@@ -23,11 +26,13 @@ export default function ReviewApplicationsPage() {
   const getStatusBadge = (status) => {
     switch (status) {
       case 'accepted':
-        return <Badge color="success" icon={HiCheck}>Accepted</Badge>
+        return <Badge color="success" icon={HiCheck}>{tStatus('statusAccepted') || 'Accepted'}</Badge>
       case 'rejected':
-        return <Badge color="failure" icon={HiX}>Rejected</Badge>
+        return <Badge color="failure" icon={HiX}>{tStatus('statusRejected') || 'Rejected'}</Badge>
+      case 'cancelled':
+        return <Badge color="gray" icon={HiX}>{tStatus('statusCancelled') || 'Cancelled'}</Badge>
       default:
-        return <Badge color="warning" icon={HiClock}>Pending</Badge>
+        return <Badge color="warning" icon={HiClock}>{tStatus('statusPending') || 'Pending'}</Badge>
     }
   }
 
@@ -156,14 +161,14 @@ export default function ReviewApplicationsPage() {
   return (
     <div className="p-4 max-w-5xl mx-auto">
       <div className="mb-4">
-        <h1 className="text-2xl font-bold">Review Applications</h1>
+        <h1 className="text-2xl font-bold">{t('reviewApplications') || 'Review Applications'}</h1>
         <p className="text-sm text-gray-500">
-          {loading ? 'Loading…' : (
+          {loading ? (t('loading') || 'Loading…') : (
             <>
-              {sortedActivities.length} activities • {totalApplications} applications
+              {sortedActivities.length} {t('activities') || 'activities'} • {totalApplications} {t('applications') || 'applications'}
               {totalPendingApplications > 0 && (
                 <span className="ml-2 text-yellow-600 font-semibold">
-                  • {totalPendingApplications} pending
+                  • {totalPendingApplications} {t('pending') || 'pending'}
                 </span>
               )}
             </>
@@ -177,7 +182,7 @@ export default function ReviewApplicationsPage() {
         </div>
       ) : sortedActivities.length === 0 ? (
         <div className="text-center py-10">
-          <p className="text-gray-500">No activities found for your organization.</p>
+          <p className="text-gray-500">{t('noActivitiesFound') || 'No activities found for your organization.'}</p>
         </div>
       ) : (
         <div className="space-y-6">
@@ -191,17 +196,17 @@ export default function ReviewApplicationsPage() {
                 <div className={`p-4 rounded-t-lg ${hasPending ? 'bg-yellow-50' : 'bg-gray-50'}`}>
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                     <div className="min-w-0">
-                      <h2 className="text-lg font-semibold truncate">{activity.title || 'Untitled activity'}</h2>
+                      <h2 className="text-lg font-semibold truncate">{activity.title || (t('untitledActivity') || 'Untitled activity')}</h2>
                       <p className="text-xs text-gray-500 truncate">{activity.city ? `${activity.city}${activity.country ? `, ${activity.country}` : ''}` : activity.country || ''}</p>
                     </div>
                     <div className="flex items-center gap-2">
                       {pendingCount > 0 && (
                         <Badge color="warning" icon={HiClock}>
-                          {pendingCount} pending
+                          {pendingCount} {t('pending') || 'pending'}
                         </Badge>
                       )}
                       <span className="text-sm text-gray-600">
-                        {applications.length} application{applications.length !== 1 ? 's' : ''}
+                        {applications.length} {applications.length !== 1 ? (t('applications') || 'applications') : (t('application') || 'application')}
                       </span>
                     </div>
                   </div>
@@ -209,7 +214,7 @@ export default function ReviewApplicationsPage() {
 
                 {applications.length === 0 ? (
                   <div className="p-4">
-                    <p className="text-gray-500 text-sm">No applications yet.</p>
+                    <p className="text-gray-500 text-sm">{t('noApplicationsYet') || 'No applications yet.'}</p>
                   </div>
                 ) : (
                   <div className="divide-y divide-gray-100">
@@ -227,10 +232,10 @@ export default function ReviewApplicationsPage() {
                         </div>
 
                         <div className="mb-3">
-                          <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded">{application.message || 'No message provided'}</p>
+                          <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded">{application.message || (t('noMessageProvided') || 'No message provided')}</p>
                           {application.npoResponse && (
                             <div className="mt-2">
-                              <p className="text-xs font-medium text-blue-700 mb-1">NPO Response:</p>
+                              <p className="text-xs font-medium text-blue-700 mb-1">{t('npoResponse') || 'NPO Response'}:</p>
                               <p className="text-xs text-blue-700 bg-blue-50 p-2 rounded">{application.npoResponse}</p>
                             </div>
                           )}
@@ -246,7 +251,7 @@ export default function ReviewApplicationsPage() {
                               className="flex items-center justify-center gap-1 flex-1"
                             >
                               <HiCheck className="h-4 w-4" />
-                              <span>Accept</span>
+                              <span>{t('accept') || 'Accept'}</span>
                             </Button>
                             <Button
                               size="sm"
@@ -256,7 +261,7 @@ export default function ReviewApplicationsPage() {
                               className="flex items-center justify-center gap-1 flex-1"
                             >
                               <HiX className="h-4 w-4" />
-                              <span>Reject</span>
+                              <span>{t('reject') || 'Reject'}</span>
                             </Button>
                           </div>
                         )}
@@ -271,7 +276,7 @@ export default function ReviewApplicationsPage() {
       )}
 
       <Modal show={confirmationOpen} onClose={closeConfirm} size="md">
-        <Modal.Header>Confirm Action</Modal.Header>
+        <Modal.Header>{t('confirmAction') || 'Confirm Action'}</Modal.Header>
         <Modal.Body>
           <div className="text-center">
             <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 mb-4">
@@ -282,45 +287,45 @@ export default function ReviewApplicationsPage() {
               )}
             </div>
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              {confirmation?.nextStatus === 'accepted' ? 'Accept Application' : 'Reject Application'}
+              {confirmation?.nextStatus === 'accepted' ? (t('acceptApplication') || 'Accept Application') : (t('rejectApplication') || 'Reject Application')}
             </h3>
             <p className="text-sm text-gray-500 mb-4">
-              Are you sure you want to {confirmation?.nextStatus === 'accepted' ? 'accept' : 'reject'} the application from{' '}
+              {t('confirmActionMessage') || 'Are you sure you want to'} {confirmation?.nextStatus === 'accepted' ? (t('accept').toLowerCase() || 'accept') : (t('reject').toLowerCase() || 'reject')} {t('theApplicationFrom') || 'the application from'}{' '}
               <span className="font-medium">{confirmation?.application?.displayName}</span>?
             </p>
             <div className="bg-gray-50 p-3 rounded-lg text-left">
               <p className="text-xs text-gray-600 mb-1">
-                <strong>Activity:</strong> {activities.find((a) => a.id === confirmation?.activityId)?.title || 'Untitled activity'}
+                <strong>{t('activity') || 'Activity'}:</strong> {activities.find((a) => a.id === confirmation?.activityId)?.title || (t('untitledActivity') || 'Untitled activity')}
               </p>
               <p className="text-xs text-gray-600 mb-1">
-                <strong>Applicant:</strong> {confirmation?.application?.displayName}
+                <strong>{t('applicant') || 'Applicant'}:</strong> {confirmation?.application?.displayName}
               </p>
               <p className="text-xs text-gray-600">
-                <strong>Message:</strong> {confirmation?.application?.message || 'No message provided'}
+                <strong>{t('message') || 'Message'}:</strong> {confirmation?.application?.message || (t('noMessageProvided') || 'No message provided')}
               </p>
             </div>
 
             <div className="mt-4">
               <label htmlFor="npoResponse" className="block text-sm font-medium text-gray-700 mb-2">
-                Message to volunteer (optional)
+                {t('messageToVolunteer') || 'Message to volunteer (optional)'}
               </label>
               <textarea
                 id="npoResponse"
                 rows={3}
                 value={npoResponse}
                 onChange={(e) => setNpoResponse(e.target.value)}
-                placeholder={`Add a personal message for ${confirmation?.application?.displayName || 'the volunteer'}...`}
+                placeholder={t('addPersonalMessagePlaceholder', { name: confirmation?.application?.displayName || t('theVolunteer') || 'the volunteer' }) || `Add a personal message for ${confirmation?.application?.displayName || 'the volunteer'}...`}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                 maxLength={500}
               />
-              <p className="text-xs text-gray-500 mt-1">{npoResponse.length}/500 characters</p>
+              <p className="text-xs text-gray-500 mt-1">{npoResponse.length}/500 {t('characters') || 'characters'}</p>
             </div>
-            <p className="text-xs text-red-600 mt-3">⚠️ This action cannot be undone and will notify the volunteer.</p>
+            <p className="text-xs text-red-600 mt-3">{t('actionCannotBeUndone') || '⚠️ This action cannot be undone and will notify the volunteer.'}</p>
           </div>
         </Modal.Body>
         <Modal.Footer>
           <div className="flex flex-col sm:flex-row gap-2 sm:justify-end w-full">
-            <Button color="gray" onClick={closeConfirm} className="w-full sm:w-auto">Cancel</Button>
+            <Button color="gray" onClick={closeConfirm} className="w-full sm:w-auto">{t('cancel') || 'Cancel'}</Button>
             <Button
               color={confirmation?.nextStatus === 'accepted' ? 'success' : 'failure'}
               onClick={confirmAction}
@@ -330,10 +335,10 @@ export default function ReviewApplicationsPage() {
               {processingApplicationId === confirmation?.application?.id ? (
                 <div className="flex items-center justify-center gap-2">
                   <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
-                  <span>Processing...</span>
+                  <span>{t('processing') || 'Processing...'}</span>
                 </div>
               ) : (
-                `Yes, ${confirmation?.nextStatus === 'accepted' ? 'Accept' : 'Reject'}`
+                `${t('yes') || 'Yes'}, ${confirmation?.nextStatus === 'accepted' ? (t('accept') || 'Accept') : (t('reject') || 'Reject')}`
               )}
             </Button>
           </div>

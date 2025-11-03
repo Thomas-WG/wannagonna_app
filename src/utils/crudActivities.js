@@ -1,5 +1,6 @@
 import { collection, getDocs, addDoc, getDoc, updateDoc, doc, onSnapshot, query, where, deleteDoc, writeBatch, increment } from 'firebase/firestore';
 import { db } from 'firebaseConfig';
+import { fetchApplicationsForActivity } from './crudApplications';
 
 // Fetch all activities from the Firestore database
 export async function fetchActivities() {
@@ -118,15 +119,120 @@ export async function fetchActivitiesByCriteria(organizationId = 'any', type = '
   }
 }
 
+// Helper function to duplicate activity to members' history collection
+async function addActivityToMemberHistory(activityId, activityData, userId) {
+  try {
+    const memberRef = doc(db, 'members', userId);
+    const historyRef = collection(memberRef, 'history');
+    
+    // Create a copy of the activity data for history
+    // Convert Firestore Timestamps to Date objects if needed
+    const historyData = { ...activityData };
+    
+    // Convert any Firestore Timestamp objects to Date objects
+    Object.keys(historyData).forEach(key => {
+      const value = historyData[key];
+      if (value && typeof value.toDate === 'function') {
+        historyData[key] = value.toDate();
+      }
+    });
+    
+    // Remove the document ID field if it exists (we'll store activityId separately)
+    delete historyData.id;
+    
+    // Add metadata
+    historyData.activityId = activityId;
+    historyData.addedToHistoryAt = new Date();
+    
+    await addDoc(historyRef, historyData);
+    console.log(`Activity ${activityId} added to history for member ${userId}`);
+  } catch (error) {
+    console.error(`Error adding activity to history for member ${userId}:`, error);
+    throw error;
+  }
+}
+
+// Fetch closed activities from member history
+export const fetchHistoryActivities = async (userId) => {
+  try {
+    const memberRef = doc(db, 'members', userId);
+    const historyRef = collection(memberRef, 'history');
+    const querySnapshot = await getDocs(historyRef);
+    
+    const historyActivities = [];
+    
+    for (const docSnapshot of querySnapshot.docs) {
+      const data = docSnapshot.data();
+      
+      // Convert Firestore timestamps to Date objects if needed
+      const historyData = { ...data };
+      Object.keys(historyData).forEach(key => {
+        const value = historyData[key];
+        if (value && typeof value.toDate === 'function') {
+          historyData[key] = value.toDate();
+        }
+      });
+      
+      historyActivities.push({
+        id: docSnapshot.id,
+        ...historyData,
+        fromHistory: true
+      });
+    }
+    
+    return historyActivities;
+  } catch (error) {
+    console.error('Error fetching history activities:', error);
+    throw error;
+  }
+};
+
 // Update activity status in the Firestore database
 export async function updateActivityStatus(id, status) {
   try {
     const activityDoc = doc(db, 'activities', id);
+    
+    // Get the activity data before updating status
+    const activitySnapshot = await getDoc(activityDoc);
+    if (!activitySnapshot.exists()) {
+      throw new Error('Activity not found');
+    }
+    
+    const activityData = activitySnapshot.data();
+    
+    // Update the activity status
     await updateDoc(activityDoc, {
       status: status,
       last_updated: new Date()
     });
     console.log('Activity status updated:', id, 'to', status);
+    
+    // If closing an online activity, add it to history for accepted members
+    if (status === 'Closed' && activityData.type === 'online') {
+      try {
+        // Fetch all applications for this activity
+        const applications = await fetchApplicationsForActivity(id);
+        
+        // Filter for accepted applications
+        const acceptedApplications = applications.filter(app => app.status === 'accepted');
+        
+        console.log(`Found ${acceptedApplications.length} accepted applications for activity ${id}`);
+        
+        // Add activity to history for each member with accepted application
+        const historyPromises = acceptedApplications.map(async (application) => {
+          if (application.userId) {
+            await addActivityToMemberHistory(id, activityData, application.userId);
+          }
+        });
+        
+        await Promise.all(historyPromises);
+        console.log(`Activity ${id} added to history for ${acceptedApplications.length} members`);
+      } catch (historyError) {
+        // Log the error but don't fail the status update
+        console.error('Error adding activity to member history:', historyError);
+      }
+    }
+    
     return { success: true };
   } catch (error) {
     console.error('Error updating activity status:', error);
