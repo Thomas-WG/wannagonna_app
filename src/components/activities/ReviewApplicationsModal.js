@@ -100,6 +100,8 @@ export default function ReviewApplicationsModal({ isOpen, onClose, activity, onO
         return <Badge color="success" icon={HiCheck}>Accepted</Badge>;
       case 'rejected':
         return <Badge color="failure" icon={HiX}>Rejected</Badge>;
+      case 'cancelled':
+        return <Badge color="gray" icon={HiX}>Cancelled</Badge>;
       default:
         return <Badge color="warning" icon={HiClock}>Pending</Badge>;
     }

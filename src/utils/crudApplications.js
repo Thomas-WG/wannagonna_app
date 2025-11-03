@@ -128,7 +128,7 @@ export const updateApplicationStatus = async (activityId, applicationId, status,
     }
 
     // Check if we need to update the organization's totalNewApplications count
-    const shouldDecrementCount = applicationData.status === 'pending' && (status === 'accepted' || status === 'rejected');
+    const shouldDecrementCount = applicationData.status === 'pending' && (status === 'accepted' || status === 'rejected' || status === 'cancelled');
 
     // Update in activity's applications collection
     await updateDoc(applicationRef, {
