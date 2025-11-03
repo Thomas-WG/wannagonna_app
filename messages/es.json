@@ -20,7 +20,13 @@
         "errordefault": "Ha ocurrido un error. Por favor, inténtalo de nuevo más tarde.",
         "passwordmatch": "Las contraseñas no coinciden. Por favor, inténtalo de nuevo.",
         "emailused": "Este correo ya está en uso. Por favor, inicia sesión en su lugar.",
-        "weakpwd": "La contraseña debe tener al menos 6 caracteres"
+        "weakpwd": "La contraseña debe tener al menos 6 caracteres",
+        "referralCode": "Código de Referencia",
+        "referralCodePlaceholder": "Ingrese código de 5 caracteres",
+        "referralCodeHelper": "Necesita un código de referencia de un miembro existente para crear una cuenta",
+        "referralCodeRequired": "Se requiere un código de referencia para crear una cuenta",
+        "invalidReferralCode": "Código de referencia inválido. Por favor verifique e intente nuevamente.",
+        "errorValidatingCode": "Error al validar el código de referencia. Por favor intente nuevamente."
     },
     "Sidebar": {
         "dashboard": "Panel de control",
