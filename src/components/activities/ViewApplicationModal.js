@@ -15,13 +15,13 @@ export default function ViewApplicationModal({ isOpen, onClose, application, act
   const getStatusBadge = (status) => {
     switch (status) {
       case 'accepted':
-        return <Badge color="success" icon={HiCheck}>Accepted</Badge>;
+        return <Badge color="success" icon={HiCheck}>{t('statusAccepted') || 'Accepted'}</Badge>;
       case 'rejected':
-        return <Badge color="failure" icon={HiX}>Rejected</Badge>;
+        return <Badge color="failure" icon={HiX}>{t('statusRejected') || 'Rejected'}</Badge>;
       case 'cancelled':
-        return <Badge color="gray" icon={HiX}>Cancelled</Badge>;
+        return <Badge color="gray" icon={HiX}>{t('statusCancelled') || 'Cancelled'}</Badge>;
       default:
-        return <Badge color="warning" icon={HiClock}>Pending</Badge>;
+        return <Badge color="warning" icon={HiClock}>{t('statusPending') || 'Pending'}</Badge>;
     }
   };
 

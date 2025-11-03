@@ -456,13 +456,13 @@ export default function DashboardPage() {
   const getApplicationStatusBadge = (status) => {
     switch (status) {
       case 'accepted':
-        return <Badge color="success" icon={HiCheck}>Accepted</Badge>;
+        return <Badge color="success" icon={HiCheck}>{t('statusAccepted') || 'Accepted'}</Badge>;
       case 'rejected':
-        return <Badge color="failure" icon={HiX}>Rejected</Badge>;
+        return <Badge color="failure" icon={HiX}>{t('statusRejected') || 'Rejected'}</Badge>;
       case 'cancelled':
-        return <Badge color="gray" icon={HiX}>Cancelled</Badge>;
+        return <Badge color="gray" icon={HiX}>{t('statusCancelled') || 'Cancelled'}</Badge>;
       default:
-        return <Badge color="warning" icon={HiClock}>Pending</Badge>;
+        return <Badge color="warning" icon={HiClock}>{t('statusPending') || 'Pending'}</Badge>;
     }
   };
 
@@ -814,7 +814,7 @@ export default function DashboardPage() {
                               <button
                                 onClick={handleViewActivity}
                                 className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-purple-500 text-white flex items-center justify-center shadow-lg hover:bg-purple-600 active:bg-purple-700 transition-colors touch-manipulation"
-                                aria-label="View Activity"
+                                aria-label={t('viewActivity') || 'View Activity'}
                               >
                                 <HiEye className="h-6 w-6 sm:h-8 sm:w-8" />
                               </button>
@@ -826,7 +826,7 @@ export default function DashboardPage() {
                               <button
                                 onClick={handleViewApplication}
                                 className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-blue-500 text-white flex items-center justify-center shadow-lg hover:bg-blue-600 active:bg-blue-700 transition-colors touch-manipulation"
-                                aria-label="View Application"
+                                aria-label={t('viewMyApplication') || 'View Application'}
                               >
                                 <HiDocumentText className="h-6 w-6 sm:h-8 sm:w-8" />
                               </button>
@@ -841,7 +841,7 @@ export default function DashboardPage() {
                               setSelectedApplicationActivity(null);
                             }}
                             className="absolute top-2 right-2 sm:top-3 sm:right-3 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gray-600 text-white flex items-center justify-center hover:bg-gray-700 active:bg-gray-800 transition-colors text-lg sm:text-xl touch-manipulation"
-                            aria-label="Close"
+                            aria-label={t('close') || 'Close'}
                           >
                             ×
                           </button>
