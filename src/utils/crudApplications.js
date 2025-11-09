@@ -1,6 +1,7 @@
 import { collection, addDoc, getDoc, doc, query, where, getDocs, updateDoc, runTransaction, increment } from 'firebase/firestore';
 import { db } from 'firebaseConfig';
 import { fetchActivityById } from './crudActivities';
+import { grantBadgeToUser } from './crudBadges';
 
 export const checkExistingApplication = async (activityId, userId) => {
   try {
@@ -27,6 +28,12 @@ export const createApplication = async ({ activityId, userId, userEmail, message
       };
     }
 
+    // Check if this is the user's first application
+    const userRef = doc(db, 'members', userId);
+    const userApplicationsRef = collection(userRef, 'applications');
+    const existingApplicationsSnapshot = await getDocs(userApplicationsRef);
+    const isFirstApplication = existingApplicationsSnapshot.empty;
+
     // Get activity details to get organization ID
     const activityRef = doc(db, 'activities', activityId);
     const activityDoc = await getDoc(activityRef);
@@ -48,7 +55,6 @@ export const createApplication = async ({ activityId, userId, userEmail, message
       const docRef = await addDoc(applicationsRef, applicationData);
       
       // Add application to user's applications collection
-      const userRef = doc(db, 'members', userId);
       const userApplicationsRef = collection(userRef, 'applications');
       transaction.set(doc(userApplicationsRef), {
         ...applicationData,
@@ -65,6 +71,17 @@ export const createApplication = async ({ activityId, userId, userEmail, message
 
       return docRef.id;
     });
+
+    // Grant badge if this is the first application (after transaction succeeds)
+    if (isFirstApplication) {
+      try {
+        await grantBadgeToUser(userId, 'firstApplication');
+        console.log('First application badge granted to user:', userId);
+      } catch (badgeError) {
+        // Log error but don't fail the application creation
+        console.error('Error granting first application badge:', badgeError);
+      }
+    }
 
     return { success: true, id: result };
   } catch (error) {

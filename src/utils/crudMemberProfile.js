@@ -74,6 +74,7 @@ export async function fetchMemberById(userId, setProfileData) {
           flexible: false
         },
         xp: 0,
+        badges:[],
         code: '',
         referredBy: ''
       };
@@ -91,6 +92,7 @@ export async function fetchMemberById(userId, setProfileData) {
         languages: Array.isArray(memberData.languages) ? memberData.languages : defaultValues.languages,
         skills: Array.isArray(memberData.skills) ? memberData.skills : defaultValues.skills,
         xp: memberData.xp ?? defaultValues.xp,
+        badges: Array.isArray(memberData.badges) ? memberData.badges : defaultValues.badges,
         code: memberData.code ?? defaultValues.code,
         referredBy: memberData.referredBy ?? defaultValues.referredBy,
         timeCommitment: {

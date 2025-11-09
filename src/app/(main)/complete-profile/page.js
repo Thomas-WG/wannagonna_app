@@ -10,6 +10,8 @@ import { countries } from 'countries-list';
 import languages from '@cospired/i18n-iso-languages';
 import { updateMember, fetchMemberById } from '@/utils/crudMemberProfile';
 import { uploadProfilePicture } from '@/utils/storage';
+import { isProfileComplete } from '@/utils/profileHelpers';
+import { grantBadgeToUser, userHasBadge } from '@/utils/crudBadges';
 import ProfileInformation from '@/components/profile/ProfileInformation';
 import SkillsAndAvailability from '@/components/profile/SkillsAndAvailability';
 
@@ -160,8 +162,31 @@ export default function CompleteProfilePage() {
       await updateMember(user.uid, cleanedProfileData);
       console.log("Profile updated!");
       
-      // Show success toast
-      setToastMessage('Profile updated successfully!');
+      // Check if profile is complete and grant badge if needed
+      const profileIsComplete = isProfileComplete(cleanedProfileData);
+      let badgeGranted = false;
+      
+      if (profileIsComplete) {
+        // Check if user already has the profile completion badge
+        // Badge document ID is "completeProfile" (must match Firestore document ID)
+        const hasBadge = await userHasBadge(user.uid, 'completeProfile');
+        
+        if (!hasBadge) {
+          // Grant the badge
+          badgeGranted = await grantBadgeToUser(user.uid, 'completeProfile');
+          
+          if (badgeGranted) {
+            console.log('Profile completion badge granted!');
+          }
+        }
+      }
+      
+      // Show success toast with badge notification if granted
+      if (badgeGranted) {
+        setToastMessage('Profile updated successfully! 🎉 You earned a badge!');
+      } else {
+        setToastMessage('Profile updated successfully!');
+      }
       setToastType('success');
       setShowToast(true);
       

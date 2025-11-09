@@ -26,6 +26,7 @@ import { useTranslations } from "next-intl";
 import ActivityCard from "@/components/activities/ActivityCard";
 import ActivityDetailsModal from "@/components/activities/ActivityDetailsModal";
 import ViewApplicationModal from "@/components/activities/ViewApplicationModal";
+import BadgeList from "@/components/badges/BadgeList";
 import Image from "next/image";
 
 export default function DashboardPage() {
@@ -178,10 +179,7 @@ export default function DashboardPage() {
         });
 
         // Note: Gamification data will be updated in separate useEffect when profileData is available
-        setGamificationData(prev => ({
-          ...prev,
-          badgesCount: completedActivities.length // Placeholder: badges count
-        }));
+        // Don't update badge count here as profileData might not be set yet due to async callback
 
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
@@ -203,20 +201,26 @@ export default function DashboardPage() {
     if (profileData) {
       // Read XP from user profile (default to 0 if not present)
       // Try different possible field names: xp, totalXP, experiencePoints
-      const totalXP = profileData.xp || profileData.totalXP || profileData.experiencePoints || 0;
+      const totalXP = profileData.xp || 0;
       
       // Calculate level based on XP (100 XP per level)
       const level = Math.floor(totalXP / 100) + 1;
       const currentXP = totalXP % 100;
 
       // Read badges count from profile if available, otherwise use 0 as default
-      const badgesCount = profileData.badgesCount || profileData.badges?.length || 0;
+      // Check if badges array exists and has items
+      const badgesArray = profileData.badges;
+      const badgesCount = Array.isArray(badgesArray) ? badgesArray.length : 0;
+      
+      // Debug logging
+      console.log('Profile data badges:', badgesArray);
+      console.log('Badges count:', badgesCount);
 
       setGamificationData(prev => ({
         level,
         currentXP,
         totalXP,
-        badgesCount: badgesCount || prev.badgesCount || 0
+        badgesCount
       }));
     }
   }, [profileData]);
@@ -849,23 +853,13 @@ export default function DashboardPage() {
             )}
           </div>
 
-          {/* Badges Section - Placeholder */}
+          {/* Badges Section */}
           <div className="mb-6 sm:mb-10">
             <h2 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 px-1">
               {t('yourBadges') || 'Your Badges'}
             </h2>
-            <Card className="bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200">
-              <div className="flex flex-col items-center justify-center py-8 sm:py-12">
-                <HiBadgeCheck className="w-16 h-16 sm:w-20 sm:h-20 text-purple-400 mb-4" />
-                <p className="text-lg sm:text-xl text-gray-600 font-medium text-center">
-                  {t('badgesComingSoon') || 'Badges system coming soon!'}
-                </p>
-                <p className="text-sm sm:text-base text-gray-500 text-center mt-2">
-                  {t('badgesPlaceholder') || 'Earn badges by completing activities and reaching milestones.'}
-                </p>
-              </div>
-        </Card>
-      </div>
+            <BadgeList userId={user?.uid} />
+          </div>
 
           {/* Activity Details Modal */}
           <ActivityDetailsModal
