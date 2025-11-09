@@ -73,17 +73,20 @@ export const createApplication = async ({ activityId, userId, userEmail, message
     });
 
     // Grant badge if this is the first application (after transaction succeeds)
+    let badgeDetails = null;
     if (isFirstApplication) {
       try {
-        await grantBadgeToUser(userId, 'firstApplication');
-        console.log('First application badge granted to user:', userId);
+        badgeDetails = await grantBadgeToUser(userId, 'firstApplication');
+        if (badgeDetails) {
+          console.log('First application badge granted to user:', userId);
+        }
       } catch (badgeError) {
         // Log error but don't fail the application creation
         console.error('Error granting first application badge:', badgeError);
       }
     }
 
-    return { success: true, id: result };
+    return { success: true, id: result, badgeDetails };
   } catch (error) {
     console.error('Error creating application:', error);
     throw error;

@@ -6,6 +6,7 @@
  * - country (not empty)
  * - at least one language
  * - at least one skill
+ * - profilePicture (not empty)
  * - at least one timeCommitment option selected
  * - at least one availability option selected
  * @param {Object} profileData - The profile data object
@@ -33,6 +34,11 @@ export function isProfileComplete(profileData) {
   
   // Check languages (must have at least one)
   if (!profileData.languages || !Array.isArray(profileData.languages) || profileData.languages.length === 0) {
+    return false;
+  }
+  
+  // Check profilePicture (must be present and not empty)
+  if (!profileData.profilePicture || profileData.profilePicture.trim() === '') {
     return false;
   }
   

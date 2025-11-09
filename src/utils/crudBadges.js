@@ -107,7 +107,8 @@ export async function getBadgeImageUrl(badgeId) {
  * Grant a badge to a user
  * @param {string} userId - The user's ID
  * @param {string} badgeId - The badge ID to grant
- * @returns {Promise<boolean>} True if successful, false otherwise
+ * @returns {Promise<Object|null>} Badge details object if successful, null otherwise
+ * Returns { id, title, description, xp } if badge was granted, null if already exists or error
  */
 export async function grantBadgeToUser(userId, badgeId) {
   try {
@@ -119,7 +120,7 @@ export async function grantBadgeToUser(userId, badgeId) {
     
     if (!badgeDetails) {
       console.error(`Badge document ${badgeId} not found in Firestore`);
-      return false;
+      return null;
     }
     
     const badgeXP = badgeDetails.xp || 0;
@@ -129,7 +130,7 @@ export async function grantBadgeToUser(userId, badgeId) {
     const memberSnap = await getDoc(memberDoc);
     if (!memberSnap.exists()) {
       console.error(`Member document ${userId} does not exist`);
-      return false;
+      return null;
     }
     
     const memberData = memberSnap.data();
@@ -139,7 +140,7 @@ export async function grantBadgeToUser(userId, badgeId) {
     const badgeExists = existingBadges.some(badge => badge.id === badgeId);
     if (badgeExists) {
       console.log(`User ${userId} already has badge ${badgeId} - skipping XP grant`);
-      return false;
+      return null;
     }
     
     // Prepare update data
@@ -162,10 +163,17 @@ export async function grantBadgeToUser(userId, badgeId) {
     await updateDoc(memberDoc, updateData);
     
     console.log(`Badge ${badgeId} granted to user ${userId}${badgeXP > 0 ? ` with ${badgeXP} XP` : ''}`);
-    return true;
+    
+    // Return badge details for animation/display
+    return {
+      id: badgeId,
+      title: badgeDetails.title,
+      description: badgeDetails.description,
+      xp: badgeXP
+    };
   } catch (error) {
     console.error(`Error granting badge ${badgeId} to user ${userId}:`, error);
-    return false;
+    return null;
   }
 }
 

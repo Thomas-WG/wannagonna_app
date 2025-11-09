@@ -14,6 +14,7 @@ import { isProfileComplete } from '@/utils/profileHelpers';
 import { grantBadgeToUser, userHasBadge } from '@/utils/crudBadges';
 import ProfileInformation from '@/components/profile/ProfileInformation';
 import SkillsAndAvailability from '@/components/profile/SkillsAndAvailability';
+import BadgeAnimation from '@/components/badges/BadgeAnimation';
 
 // Register the languages you want to use
 languages.registerLocale(require("@cospired/i18n-iso-languages/langs/en.json"));
@@ -84,6 +85,10 @@ export default function CompleteProfilePage() {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState('success'); // 'success' or 'error'
+  
+  // Add state for badge animation
+  const [showBadgeAnimation, setShowBadgeAnimation] = useState(false);
+  const [earnedBadgeId, setEarnedBadgeId] = useState(null);
 
   useEffect(() => {
     if (user?.uid) {
@@ -164,7 +169,7 @@ export default function CompleteProfilePage() {
       
       // Check if profile is complete and grant badge if needed
       const profileIsComplete = isProfileComplete(cleanedProfileData);
-      let badgeGranted = false;
+      let badgeDetails = null;
       
       if (profileIsComplete) {
         // Check if user already has the profile completion badge
@@ -173,17 +178,20 @@ export default function CompleteProfilePage() {
         
         if (!hasBadge) {
           // Grant the badge
-          badgeGranted = await grantBadgeToUser(user.uid, 'completeProfile');
+          badgeDetails = await grantBadgeToUser(user.uid, 'completeProfile');
           
-          if (badgeGranted) {
-            console.log('Profile completion badge granted!');
+          if (badgeDetails) {
+            console.log('Profile completion badge granted!', badgeDetails);
+            // Show badge animation
+            setEarnedBadgeId(badgeDetails.id);
+            setShowBadgeAnimation(true);
           }
         }
       }
       
-      // Show success toast with badge notification if granted
-      if (badgeGranted) {
-        setToastMessage('Profile updated successfully! 🎉 You earned a badge!');
+      // Show success toast
+      if (badgeDetails) {
+        setToastMessage('Profile updated successfully!');
       } else {
         setToastMessage('Profile updated successfully!');
       }
@@ -258,6 +266,16 @@ export default function CompleteProfilePage() {
           </Toast>
         </div>
       )}
+      
+      {/* Badge Animation */}
+      <BadgeAnimation
+        badgeId={earnedBadgeId}
+        show={showBadgeAnimation}
+        onClose={() => {
+          setShowBadgeAnimation(false);
+          setEarnedBadgeId(null);
+        }}
+      />
     </div>
   );
 }

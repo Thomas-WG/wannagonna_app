@@ -27,6 +27,7 @@ import { Modal, Button, Label, Textarea, Toast } from 'flowbite-react';
 import { createApplication } from '@/utils/crudApplications';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/utils/auth/AuthContext';
+import BadgeAnimation from '@/components/badges/BadgeAnimation';
 
 // Main component to display activities
 export default function ActivitiesPage() {
@@ -41,6 +42,10 @@ export default function ActivitiesPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState({ type: '', message: '' });
+  
+  // Add state for badge animation
+  const [showBadgeAnimation, setShowBadgeAnimation] = useState(false);
+  const [earnedBadgeId, setEarnedBadgeId] = useState(null);
 
   const router = useRouter();
 
@@ -115,6 +120,12 @@ export default function ActivitiesPage() {
         setToastMessage({ type: 'success', message: 'Your application has been successfully submitted!' });
         setApplyMessage('');
         setOpenApplyModal(false);
+        
+        // Show badge animation if a badge was earned
+        if (result.badgeDetails) {
+          setEarnedBadgeId(result.badgeDetails.id);
+          setShowBadgeAnimation(true);
+        }
       } else if (result.error === 'existing_application') {
         setToastMessage({ type: 'warning', message: 'You have already applied for this activity. Check your profile for the application status.' });
       }
@@ -211,6 +222,16 @@ export default function ActivitiesPage() {
           +
         </button>
       )}
+      
+      {/* Badge Animation */}
+      <BadgeAnimation
+        badgeId={earnedBadgeId}
+        show={showBadgeAnimation}
+        onClose={() => {
+          setShowBadgeAnimation(false);
+          setEarnedBadgeId(null);
+        }}
+      />
     </div>
 
   );
