@@ -138,7 +138,6 @@ export async function findBadgeById(badgeId) {
 export async function getBadgeImageUrl(categoryId, badgeId) {
   try {
     if (!categoryId || !badgeId) {
-      console.warn(`Missing categoryId or badgeId: categoryId=${categoryId}, badgeId=${badgeId}`);
       return null;
     }
 
@@ -152,25 +151,15 @@ export async function getBadgeImageUrl(categoryId, badgeId) {
         const imagePath = `badges/${categoryId}/${badgeId}${ext}`;
         const imageRef = ref(storage, imagePath);
         const url = await getDownloadURL(imageRef);
-        console.log(`✓ Found badge image: ${imagePath} -> ${url.substring(0, 50)}...`);
         return url;
       } catch (error) {
-        // Log the specific error for debugging
-        if (error.code === 'storage/object-not-found') {
-          // This is expected, continue to next extension
-          continue;
-        } else {
-          console.warn(`Error checking ${imagePath}:`, error.code || error.message);
-          continue;
-        }
+        // Continue to next extension if not found
+        continue;
       }
     }
     
-    console.warn(`✗ Could not find badge image for ${badgeId} in category ${categoryId}`);
-    console.warn(`  Tried paths: badges/${categoryId}/${badgeId}.{svg,png,jpg,jpeg,webp}`);
     return null;
   } catch (error) {
-    console.error(`Error getting badge image URL for ${badgeId} in category ${categoryId}:`, error);
     return null;
   }
 }
@@ -238,26 +227,17 @@ export function setCachedBadgeUrls(urls) {
 export async function batchLoadBadgeImageUrls(badges, batchSize = 10) {
   const urlMap = {};
   
-  console.log(`Batch loading image URLs for ${badges.length} badges`);
-  
   // Process badges in batches
   for (let i = 0; i < badges.length; i += batchSize) {
     const batch = badges.slice(i, i + batchSize);
     const promises = batch.map(async (badge) => {
       try {
         if (!badge.categoryId) {
-          console.warn(`Badge ${badge.id} missing categoryId`);
           return { badgeId: badge.id, url: null };
         }
         const url = await getBadgeImageUrl(badge.categoryId, badge.id);
-        if (url) {
-          console.log(`✓ Loaded image for ${badge.id} (${badge.categoryId})`);
-        } else {
-          console.warn(`✗ No image found for ${badge.id} (${badge.categoryId})`);
-        }
         return { badgeId: badge.id, url };
       } catch (error) {
-        console.error(`Error loading image for badge ${badge.id} (category: ${badge.categoryId}):`, error);
         return { badgeId: badge.id, url: null };
       }
     });
@@ -267,9 +247,6 @@ export async function batchLoadBadgeImageUrls(badges, batchSize = 10) {
       urlMap[badgeId] = url;
     });
   }
-  
-  const loadedCount = Object.values(urlMap).filter(url => url !== null).length;
-  console.log(`Batch loading complete: ${loadedCount}/${badges.length} images loaded`);
   
   return urlMap;
 }
@@ -370,6 +347,31 @@ export async function userHasBadge(userId, badgeId) {
   } catch (error) {
     console.error(`Error checking badge for user ${userId}:`, error);
     return false;
+  }
+}
+
+/**
+ * Fetch user badge IDs only (optimized for performance)
+ * @param {string} userId - The user's ID
+ * @returns {Promise<Set>} Set of badge IDs the user has earned
+ */
+export async function fetchUserBadgeIds(userId) {
+  try {
+    const memberDoc = doc(db, 'members', userId);
+    const memberSnap = await getDoc(memberDoc);
+    
+    if (!memberSnap.exists()) {
+      return new Set();
+    }
+    
+    const memberData = memberSnap.data();
+    const userBadges = memberData.badges || [];
+    
+    // Return just the badge IDs as a Set for fast lookup
+    return new Set(userBadges.map(badge => badge.id));
+  } catch (error) {
+    console.error(`Error fetching user badge IDs for ${userId}:`, error);
+    return new Set();
   }
 }
 

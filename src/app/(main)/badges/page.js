@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { fetchBadgeCategories, fetchBadgesByCategory, getCachedBadgeUrls, setCachedBadgeUrls, batchLoadBadgeImageUrls, fetchUserBadges } from '@/utils/crudBadges';
+import { fetchBadgeCategories, fetchBadgesByCategory, getCachedBadgeUrls, setCachedBadgeUrls, batchLoadBadgeImageUrls, fetchUserBadgeIds } from '@/utils/crudBadges';
 import { useAuth } from '@/utils/auth/AuthContext';
 import { Card } from 'flowbite-react';
 import { HiBadgeCheck, HiStar } from 'react-icons/hi';
@@ -120,6 +120,7 @@ export default function BadgesPage() {
   const [categories, setCategories] = useState([]);
   const [badgesByCategory, setBadgesByCategory] = useState({});
   const [loading, setLoading] = useState(true);
+  const [imagesLoading, setImagesLoading] = useState(true);
   const [badgeImageUrls, setBadgeImageUrls] = useState({});
   const [earnedBadgeIds, setEarnedBadgeIds] = useState(new Set());
 
@@ -127,24 +128,20 @@ export default function BadgesPage() {
     const loadBadges = async () => {
       try {
         setLoading(true);
+        setImagesLoading(true);
         
-        // Fetch user's earned badges if logged in
-        if (user?.uid) {
-          try {
-            const userBadges = await fetchUserBadges(user.uid);
-            const earnedIds = new Set(userBadges.map(b => b.id));
-            setEarnedBadgeIds(earnedIds);
-            console.log('User earned badges:', earnedIds.size);
-          } catch (error) {
-            console.error('Error loading user badges:', error);
-          }
-        }
+        // Load user badges and categories/badges in parallel
+        const [earnedIds, allCategories] = await Promise.all([
+          // Fetch user's earned badge IDs (optimized - just IDs, no details)
+          user?.uid ? fetchUserBadgeIds(user.uid).catch(() => new Set()) : Promise.resolve(new Set()),
+          // Fetch all categories
+          fetchBadgeCategories()
+        ]);
         
-        // Fetch all categories
-        const allCategories = await fetchBadgeCategories();
+        setEarnedBadgeIds(earnedIds);
         setCategories(allCategories);
         
-        // Fetch badges for each category
+        // Fetch badges for each category in parallel
         const badgesPromises = allCategories.map(async (category) => {
           const badges = await fetchBadgesByCategory(category.id);
           return { categoryId: category.id, badges };
@@ -167,34 +164,44 @@ export default function BadgesPage() {
         
         setBadgesByCategory(badgesMap);
         
-        console.log('Loaded badges:', allBadges.length);
-        console.log('Sample badge:', allBadges[0]);
+        // Show content immediately, don't wait for images
+        setLoading(false);
         
-        // Always reload image URLs to ensure we have the latest from storage
-        // Clear cache first to force reload
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('badge_image_urls');
-        }
-        
-        // Load image URLs
-        if (allBadges.length > 0) {
-          console.log('Loading badge image URLs...');
-          const urls = await batchLoadBadgeImageUrls(allBadges);
-          console.log('Loaded image URLs:', Object.keys(urls).length);
-          const loadedUrls = Object.entries(urls).filter(([_, url]) => url !== null);
-          console.log('Successfully loaded:', loadedUrls.length);
-          console.log('Sample loaded URLs:', loadedUrls.slice(0, 3));
-          const failedUrls = Object.entries(urls).filter(([_, url]) => url === null);
-          if (failedUrls.length > 0) {
-            console.warn('Failed to load images for:', failedUrls.slice(0, 5).map(([id]) => id));
+        // Load image URLs in background (use cache if available)
+        const cachedUrls = getCachedBadgeUrls();
+        if (cachedUrls && allBadges.length > 0) {
+          // Check if cache is still valid
+          const badgeIds = new Set(allBadges.map(b => b.id));
+          const cachedIds = new Set(Object.keys(cachedUrls));
+          const idsMatch = badgeIds.size === cachedIds.size && 
+                          [...badgeIds].every(id => cachedIds.has(id));
+          
+          if (idsMatch) {
+            // Use cached URLs immediately
+            setBadgeImageUrls(cachedUrls);
+            setImagesLoading(false);
+          } else {
+            // Cache outdated, reload in background
+            batchLoadBadgeImageUrls(allBadges).then(urls => {
+              setBadgeImageUrls(urls);
+              setCachedBadgeUrls(urls);
+              setImagesLoading(false);
+            });
           }
-          setBadgeImageUrls(urls);
-          setCachedBadgeUrls(urls);
+        } else if (allBadges.length > 0) {
+          // No cache, load URLs
+          batchLoadBadgeImageUrls(allBadges).then(urls => {
+            setBadgeImageUrls(urls);
+            setCachedBadgeUrls(urls);
+            setImagesLoading(false);
+          });
+        } else {
+          setImagesLoading(false);
         }
       } catch (error) {
         console.error('Error loading badges:', error);
-      } finally {
         setLoading(false);
+        setImagesLoading(false);
       }
     };
 
@@ -210,6 +217,9 @@ export default function BadgesPage() {
       </div>
     );
   }
+
+  // Show loading indicator for images if still loading
+  const showImageLoading = imagesLoading && Object.keys(badgeImageUrls).length === 0;
 
   // Calculate totals
   const totalBadges = Object.values(badgesByCategory).reduce((sum, badges) => sum + badges.length, 0);
@@ -300,7 +310,13 @@ export default function BadgesPage() {
                 {category.description}
               </p>
             )}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
+            {showImageLoading && (
+              <div className="flex justify-center items-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-orange-500"></div>
+                <span className="ml-3 text-gray-600">Loading badge images...</span>
+              </div>
+            )}
+            <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6 ${showImageLoading ? 'opacity-50' : ''}`}>
               {sortedBadges.map((badge) => (
                 <BadgeCard 
                   key={badge.id} 
