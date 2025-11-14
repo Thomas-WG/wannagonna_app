@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getBadgeImageUrl, fetchBadgeById } from '@/utils/crudBadges';
+import { getBadgeImageUrl, findBadgeById } from '@/utils/crudBadges';
 
 /**
  * BadgeAnimation component displays a celebratory animation when a badge is earned
@@ -33,14 +33,17 @@ export default function BadgeAnimation({ badgeId, show, onClose }) {
     
     try {
       setLoading(true);
-      // Fetch badge details and image in parallel
-      const [details, image] = await Promise.all([
-        fetchBadgeById(badgeId),
-        getBadgeImageUrl(badgeId)
-      ]);
+      // Find badge across all categories (since we don't know the category)
+      const details = await findBadgeById(badgeId);
       
-      setBadgeDetails(details);
-      setImageUrl(image);
+      if (details && details.categoryId) {
+        // Fetch image using categoryId
+        const image = await getBadgeImageUrl(details.categoryId, badgeId);
+        setBadgeDetails(details);
+        setImageUrl(image);
+      } else {
+        console.error(`Badge ${badgeId} not found`);
+      }
     } catch (error) {
       console.error('Error loading badge data:', error);
     } finally {

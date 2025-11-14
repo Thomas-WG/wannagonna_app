@@ -1,106 +1,277 @@
-import { collection, getDocs, getDoc, doc, updateDoc, arrayUnion, Timestamp, increment } from 'firebase/firestore';
+import { collection, getDocs, getDoc, doc, updateDoc, arrayUnion, Timestamp, increment, setDoc } from 'firebase/firestore';
 import { db } from 'firebaseConfig';
 import { ref, getDownloadURL } from 'firebase/storage';
 import { storage } from 'firebaseConfig';
 
 /**
- * Fetch all badges from the badges collection
- * @returns {Promise<Array>} Array of badge objects with id, title, description
+ * Fetch all badge categories (sdg, geography, general, etc.)
+ * @returns {Promise<Array>} Array of category objects with id, title, description
  */
-export async function fetchAllBadges() {
+export async function fetchBadgeCategories() {
   try {
-    const badgesCollection = collection(db, 'badges');
-    const snapshot = await getDocs(badgesCollection);
+    const categoriesCollection = collection(db, 'badges');
+    const snapshot = await getDocs(categoriesCollection);
     
-    const badges = snapshot.docs.map((doc) => ({
+    const categories = snapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data()
     }));
     
-    return badges;
+    // Sort categories by a default order (can be customized with an order field)
+    return categories.sort((a, b) => {
+      // If categories have an order field, use it
+      if (a.order !== undefined && b.order !== undefined) {
+        return a.order - b.order;
+      }
+      // Otherwise sort alphabetically
+      return a.id.localeCompare(b.id);
+    });
   } catch (error) {
-    console.error('Error fetching badges:', error);
+    console.error('Error fetching badge categories:', error);
     return [];
   }
 }
 
 /**
- * Fetch a specific badge by ID
- * @param {string} badgeId - The ID of the badge
+ * Fetch all badges from a specific category
+ * @param {string} categoryId - The category ID (e.g., 'sdg', 'geography', 'general')
+ * @returns {Promise<Array>} Array of badge objects with id, title, description
+ */
+export async function fetchBadgesByCategory(categoryId) {
+  try {
+    const categoryDoc = doc(db, 'badges', categoryId);
+    const badgesCollection = collection(categoryDoc, 'badges');
+    const snapshot = await getDocs(badgesCollection);
+    
+    const badges = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      categoryId,
+      ...doc.data()
+    }));
+    
+    return badges;
+  } catch (error) {
+    console.error(`Error fetching badges for category ${categoryId}:`, error);
+    return [];
+  }
+}
+
+/**
+ * Fetch all badges from all categories
+ * @returns {Promise<Array>} Array of badge objects with id, title, description, categoryId
+ */
+export async function fetchAllBadges() {
+  try {
+    const categories = await fetchBadgeCategories();
+    const allBadgesPromises = categories.map(category => 
+      fetchBadgesByCategory(category.id)
+    );
+    
+    const badgesByCategory = await Promise.all(allBadgesPromises);
+    const allBadges = badgesByCategory.flat();
+    
+    return allBadges;
+  } catch (error) {
+    console.error('Error fetching all badges:', error);
+    return [];
+  }
+}
+
+/**
+ * Fetch a specific badge by ID and category
+ * @param {string} categoryId - The category ID
+ * @param {string} badgeId - The badge ID
  * @returns {Promise<Object|null>} Badge object or null if not found
  */
-export async function fetchBadgeById(badgeId) {
+export async function fetchBadgeById(categoryId, badgeId) {
   try {
-    const badgeDoc = doc(db, 'badges', badgeId);
+    const categoryDoc = doc(db, 'badges', categoryId);
+    const badgeDoc = doc(collection(categoryDoc, 'badges'), badgeId);
     const badgeSnap = await getDoc(badgeDoc);
     
     if (badgeSnap.exists()) {
       return {
         id: badgeSnap.id,
+        categoryId,
         ...badgeSnap.data()
       };
     }
     
     return null;
   } catch (error) {
-    console.error(`Error fetching badge ${badgeId}:`, error);
+    console.error(`Error fetching badge ${badgeId} from category ${categoryId}:`, error);
+    return null;
+  }
+}
+
+/**
+ * Search for a badge across all categories (for backward compatibility)
+ * @param {string} badgeId - The badge ID to search for
+ * @returns {Promise<Object|null>} Badge object with categoryId, or null if not found
+ */
+export async function findBadgeById(badgeId) {
+  try {
+    const categories = await fetchBadgeCategories();
+    
+    // Search through all categories
+    for (const category of categories) {
+      const badge = await fetchBadgeById(category.id, badgeId);
+      if (badge) {
+        return badge;
+      }
+    }
+    
+    return null;
+  } catch (error) {
+    console.error(`Error finding badge ${badgeId}:`, error);
     return null;
   }
 }
 
 /**
  * Get the download URL for a badge image from Firebase Storage
+ * Optimized: Since images are SVG and match document ID, try .svg first
+ * @param {string} categoryId - The category ID (e.g., 'sdg', 'geography', 'general')
  * @param {string} badgeId - The ID of the badge (filename without extension)
  * @returns {Promise<string|null>} Download URL or null if error
  */
-export async function getBadgeImageUrl(badgeId) {
+export async function getBadgeImageUrl(categoryId, badgeId) {
   try {
-    // Try common image extensions
-    const extensions = ['.png', '.jpg', '.jpeg', '.svg', '.webp'];
+    if (!categoryId || !badgeId) {
+      console.warn(`Missing categoryId or badgeId: categoryId=${categoryId}, badgeId=${badgeId}`);
+      return null;
+    }
+
+    // Since images are SVG and match document ID, try .svg first
+    // Path format: badges/{category}/{badgeId}.svg
+    const extensions = ['.svg', '.png', '.jpg', '.jpeg', '.webp'];
     
-    // Generate possible filename variations
-    // Try the badgeId first (most common case - badgeId matches filename)
-    // Then try variations for backwards compatibility
-    const variations = [
-      badgeId, // Original: exact match (e.g., "completeProfile")
-      // For snake_case IDs like "profile_complete" -> try camelCase variations
-      ...(badgeId.includes('_') ? [
-        badgeId.split('_').reverse().join(''), // Reversed: "complete_profile" -> "completeprofile"
-        badgeId.split('_').map((word, index) => 
-          index === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1)
-        ).join(''), // CamelCase: "profile_complete" -> "profileComplete"
-        badgeId.split('_').reverse().map((word, index) => 
-          index === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1)
-        ).join(''), // Reversed CamelCase: "completeProfile"
-        badgeId.replace(/_/g, ''), // No underscores: "profilecomplete"
-        badgeId.split('_').reverse().join('').replace(/_/g, ''), // Reversed no underscores: "completeprofile"
-      ] : [])
-    ];
-    
-    // Remove duplicates
-    const uniqueVariations = [...new Set(variations)];
-    
-    // Try each variation with each extension
-    for (const variation of uniqueVariations) {
-      for (const ext of extensions) {
-        try {
-          const imageRef = ref(storage, `badges/${variation}${ext}`);
-          const url = await getDownloadURL(imageRef);
-          console.log(`Found badge image: badges/${variation}${ext}`);
-          return url;
-        } catch (error) {
-          // Continue to next variation/extension if this one fails
+    // Try each extension with the category-specific path
+    for (const ext of extensions) {
+      try {
+        const imagePath = `badges/${categoryId}/${badgeId}${ext}`;
+        const imageRef = ref(storage, imagePath);
+        const url = await getDownloadURL(imageRef);
+        console.log(`✓ Found badge image: ${imagePath} -> ${url.substring(0, 50)}...`);
+        return url;
+      } catch (error) {
+        // Log the specific error for debugging
+        if (error.code === 'storage/object-not-found') {
+          // This is expected, continue to next extension
+          continue;
+        } else {
+          console.warn(`Error checking ${imagePath}:`, error.code || error.message);
           continue;
         }
       }
     }
     
-    console.warn(`Could not find badge image for ${badgeId} (tried variations: ${uniqueVariations.join(', ')})`);
+    console.warn(`✗ Could not find badge image for ${badgeId} in category ${categoryId}`);
+    console.warn(`  Tried paths: badges/${categoryId}/${badgeId}.{svg,png,jpg,jpeg,webp}`);
     return null;
   } catch (error) {
-    console.error(`Error getting badge image URL for ${badgeId}:`, error);
+    console.error(`Error getting badge image URL for ${badgeId} in category ${categoryId}:`, error);
     return null;
   }
+}
+
+/**
+ * Cache management for badge image URLs
+ */
+const BADGE_URL_CACHE_KEY = 'badge_image_urls';
+const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
+
+/**
+ * Get cached badge image URLs from localStorage
+ * @returns {Object|null} Map of badgeId to imageUrl, or null if cache expired/missing
+ */
+export function getCachedBadgeUrls() {
+  try {
+    const cached = localStorage.getItem(BADGE_URL_CACHE_KEY);
+    if (!cached) return null;
+    
+    const { urls, timestamp } = JSON.parse(cached);
+    if (Date.now() - timestamp > CACHE_DURATION) {
+      localStorage.removeItem(BADGE_URL_CACHE_KEY);
+      return null;
+    }
+    
+    return urls;
+  } catch (error) {
+    console.error('Error reading badge URL cache:', error);
+    return null;
+  }
+}
+
+/**
+ * Cache badge image URLs to localStorage
+ * @param {Object} urls - Map of badgeId to imageUrl
+ */
+export function setCachedBadgeUrls(urls) {
+  try {
+    localStorage.setItem(BADGE_URL_CACHE_KEY, JSON.stringify({
+      urls,
+      timestamp: Date.now()
+    }));
+  } catch (error) {
+    console.error('Error caching badge URLs:', error);
+    // If storage is full, try to clear old cache and retry
+    try {
+      localStorage.removeItem(BADGE_URL_CACHE_KEY);
+      localStorage.setItem(BADGE_URL_CACHE_KEY, JSON.stringify({
+        urls,
+        timestamp: Date.now()
+      }));
+    } catch (retryError) {
+      console.error('Failed to cache badge URLs after retry:', retryError);
+    }
+  }
+}
+
+/**
+ * Batch load badge image URLs for multiple badges
+ * Loads URLs in parallel with batching to avoid overwhelming the network
+ * @param {Array} badges - Array of badge objects with id and categoryId properties
+ * @param {number} batchSize - Number of badges to load in parallel (default: 10)
+ * @returns {Promise<Object>} Map of badgeId to imageUrl
+ */
+export async function batchLoadBadgeImageUrls(badges, batchSize = 10) {
+  const urlMap = {};
+  
+  console.log(`Batch loading image URLs for ${badges.length} badges`);
+  
+  // Process badges in batches
+  for (let i = 0; i < badges.length; i += batchSize) {
+    const batch = badges.slice(i, i + batchSize);
+    const promises = batch.map(async (badge) => {
+      try {
+        if (!badge.categoryId) {
+          console.warn(`Badge ${badge.id} missing categoryId`);
+          return { badgeId: badge.id, url: null };
+        }
+        const url = await getBadgeImageUrl(badge.categoryId, badge.id);
+        if (url) {
+          console.log(`✓ Loaded image for ${badge.id} (${badge.categoryId})`);
+        } else {
+          console.warn(`✗ No image found for ${badge.id} (${badge.categoryId})`);
+        }
+        return { badgeId: badge.id, url };
+      } catch (error) {
+        console.error(`Error loading image for badge ${badge.id} (category: ${badge.categoryId}):`, error);
+        return { badgeId: badge.id, url: null };
+      }
+    });
+    
+    const results = await Promise.all(promises);
+    results.forEach(({ badgeId, url }) => {
+      urlMap[badgeId] = url;
+    });
+  }
+  
+  const loadedCount = Object.values(urlMap).filter(url => url !== null).length;
+  console.log(`Batch loading complete: ${loadedCount}/${badges.length} images loaded`);
+  
+  return urlMap;
 }
 
 /**
@@ -114,8 +285,8 @@ export async function grantBadgeToUser(userId, badgeId) {
   try {
     const memberDoc = doc(db, 'members', userId);
     
-    // Fetch badge document first to get XP value
-    const badgeDetails = await fetchBadgeById(badgeId);
+    // Search for badge across all categories
+    const badgeDetails = await findBadgeById(badgeId);
     console.log(`Badge details for ${badgeId}:`, badgeDetails);
     
     if (!badgeDetails) {
@@ -229,7 +400,7 @@ export async function fetchUserBadges(userId) {
     const badgesWithDetails = await Promise.all(
       userBadges.map(async (userBadge) => {
         console.log(`Fetching badge details for: ${userBadge.id}`);
-        const badgeDetails = await fetchBadgeById(userBadge.id);
+        const badgeDetails = await findBadgeById(userBadge.id);
         console.log(`Badge details for ${userBadge.id}:`, badgeDetails);
         
         if (badgeDetails) {

@@ -24,9 +24,21 @@ export default function BadgeDisplay({ badge }) {
 
       try {
         setLoading(true);
-        const url = await getBadgeImageUrl(badge.id);
-        console.log(`Badge image URL for ${badge.id}:`, url);
-        setImageUrl(url);
+        // Badge should have categoryId, but fallback to searching if not available
+        const categoryId = badge.categoryId;
+        if (categoryId) {
+          const url = await getBadgeImageUrl(categoryId, badge.id);
+          console.log(`Badge image URL for ${badge.id}:`, url);
+          setImageUrl(url);
+        } else {
+          // Fallback: try to find badge across categories (for backward compatibility)
+          const { findBadgeById } = await import('@/utils/crudBadges');
+          const foundBadge = await findBadgeById(badge.id);
+          if (foundBadge && foundBadge.categoryId) {
+            const url = await getBadgeImageUrl(foundBadge.categoryId, badge.id);
+            setImageUrl(url);
+          }
+        }
       } catch (error) {
         console.error(`Error loading badge image for ${badge.id}:`, error);
         setImageUrl(null);
@@ -36,7 +48,7 @@ export default function BadgeDisplay({ badge }) {
     };
 
     loadBadgeImage();
-  }, [badge?.id]);
+  }, [badge?.id, badge?.categoryId]);
 
   if (!badge) {
     return null;
