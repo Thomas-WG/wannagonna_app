@@ -1,14 +1,15 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { fetchBadgeCategories, fetchBadgesByCategory, getCachedBadgeUrls, setCachedBadgeUrls, batchLoadBadgeImageUrls } from '@/utils/crudBadges';
+import { fetchBadgeCategories, fetchBadgesByCategory, getCachedBadgeUrls, setCachedBadgeUrls, batchLoadBadgeImageUrls, fetchUserBadges } from '@/utils/crudBadges';
+import { useAuth } from '@/utils/auth/AuthContext';
 import { Card } from 'flowbite-react';
 import { HiBadgeCheck, HiStar } from 'react-icons/hi';
 
 /**
  * Badge Card Component with lazy loading
  */
-function BadgeCard({ badge, imageUrl }) {
+function BadgeCard({ badge, imageUrl, isEarned = false }) {
   const [isVisible, setIsVisible] = useState(false);
   const [imgLoaded, setImgLoaded] = useState(false);
   const cardRef = useRef(null);
@@ -32,8 +33,19 @@ function BadgeCard({ badge, imageUrl }) {
   }, []);
 
   return (
-    <Card ref={cardRef} className="h-full flex flex-col hover:shadow-lg transition-shadow">
+    <Card ref={cardRef} className={`h-full flex flex-col hover:shadow-lg transition-all relative ${
+      !isEarned ? 'opacity-60' : ''
+    }`}>
       <div className="flex flex-col items-center text-center">
+        {/* Lock icon for unearned badges */}
+        {!isEarned && (
+          <div className="absolute top-3 right-3 z-10">
+            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          </div>
+        )}
+
         {/* Badge Image */}
         <div className="mb-4 flex items-center justify-center min-h-[120px] relative">
           {!isVisible || !imageUrl ? (
@@ -50,9 +62,12 @@ function BadgeCard({ badge, imageUrl }) {
               <img
                 src={imageUrl}
                 alt={badge.title || 'Badge'}
-                className={`object-contain max-w-[120px] max-h-[120px] transition-opacity duration-300 ${
+                className={`object-contain max-w-[120px] max-h-[120px] transition-all duration-300 ${
                   imgLoaded ? 'opacity-100' : 'opacity-0'
-                }`}
+                } ${!isEarned ? 'grayscale' : ''}`}
+                style={{
+                  filter: !isEarned ? 'grayscale(100%)' : 'none'
+                }}
                 onLoad={() => setImgLoaded(true)}
                 onError={() => {
                   console.error(`Failed to load badge image: ${imageUrl}`);
@@ -64,13 +79,17 @@ function BadgeCard({ badge, imageUrl }) {
         </div>
 
         {/* Badge Title */}
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+        <h3 className={`text-lg font-semibold mb-2 ${
+          isEarned ? 'text-gray-900' : 'text-gray-500'
+        }`}>
           {badge.title || badge.id}
         </h3>
 
         {/* Badge Description */}
         {badge.description && (
-          <p className="text-sm text-gray-600 mb-3 flex-grow">
+          <p className={`text-sm mb-3 flex-grow ${
+            isEarned ? 'text-gray-600' : 'text-gray-400'
+          }`}>
             {badge.description}
           </p>
         )}
@@ -78,8 +97,12 @@ function BadgeCard({ badge, imageUrl }) {
         {/* XP Value */}
         {badge.xp !== undefined && badge.xp !== null && (
           <div className="mt-auto pt-2">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white text-sm font-bold rounded-full shadow-md">
-              <HiStar className="w-4 h-4 fill-current" />
+            <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold rounded-full shadow-md ${
+              isEarned 
+                ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white' 
+                : 'bg-gray-300 text-gray-600'
+            }`}>
+              <HiStar className={`w-4 h-4 ${isEarned ? 'fill-current' : ''}`} />
               <span>{badge.xp} XP</span>
             </span>
           </div>
@@ -93,15 +116,29 @@ function BadgeCard({ badge, imageUrl }) {
  * Badges Page Component
  */
 export default function BadgesPage() {
+  const { user } = useAuth();
   const [categories, setCategories] = useState([]);
   const [badgesByCategory, setBadgesByCategory] = useState({});
   const [loading, setLoading] = useState(true);
   const [badgeImageUrls, setBadgeImageUrls] = useState({});
+  const [earnedBadgeIds, setEarnedBadgeIds] = useState(new Set());
 
   useEffect(() => {
     const loadBadges = async () => {
       try {
         setLoading(true);
+        
+        // Fetch user's earned badges if logged in
+        if (user?.uid) {
+          try {
+            const userBadges = await fetchUserBadges(user.uid);
+            const earnedIds = new Set(userBadges.map(b => b.id));
+            setEarnedBadgeIds(earnedIds);
+            console.log('User earned badges:', earnedIds.size);
+          } catch (error) {
+            console.error('Error loading user badges:', error);
+          }
+        }
         
         // Fetch all categories
         const allCategories = await fetchBadgeCategories();
@@ -162,7 +199,7 @@ export default function BadgesPage() {
     };
 
     loadBadges();
-  }, []);
+  }, [user]);
 
   if (loading) {
     return (
@@ -265,7 +302,12 @@ export default function BadgesPage() {
             )}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
               {sortedBadges.map((badge) => (
-                <BadgeCard key={badge.id} badge={badge} imageUrl={badgeImageUrls[badge.id]} />
+                <BadgeCard 
+                  key={badge.id} 
+                  badge={badge} 
+                  imageUrl={badgeImageUrls[badge.id]}
+                  isEarned={earnedBadgeIds.has(badge.id)}
+                />
               ))}
             </div>
           </div>
