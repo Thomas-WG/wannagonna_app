@@ -162,6 +162,7 @@ export default function ActivitiesPage() {
             city={activity.city} // City of the activity
             category={activity.category} // Category of the activity
             status={activity.status} // Status of the activity
+            qrCodeToken={activity.qrCodeToken} // QR code token for validation
             onStatusChange={handleStatusChange}
             onClick={() => handleOpenApply(activity)}
           />

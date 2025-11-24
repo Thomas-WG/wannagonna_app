@@ -473,9 +473,11 @@ export default function MyNonProfitDashboard() {
                   status={activity.status}
                   city={activity.city}
                   category={activity.category}
+                  qrCodeToken={activity.qrCodeToken}
                   onClick={() => handleActivityCardClick(activity)}
                   canEditStatus={true}
                   onStatusChange={handleStatusChange}
+                  showQRButton={true}
                 />
                 
                 {/* Overlay with action buttons */}

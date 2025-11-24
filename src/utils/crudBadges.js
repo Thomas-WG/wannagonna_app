@@ -586,3 +586,92 @@ export async function handleReferralReward(referralCode) {
   }
 }
 
+/**
+ * Grant activity completion badges to a user
+ * This function grants: SDG badge, continent badge, and activity type badge (firstLocal, firstOnline, firstEvent)
+ * Should be called whenever an activity is completed/validated (via QR code or manually)
+ * @param {string} userId - The user's ID
+ * @param {Object} activity - The activity object with all activity details
+ * @returns {Promise<Array>} Array of granted badge details
+ */
+export async function grantActivityCompletionBadges(userId, activity) {
+  const grantedBadges = [];
+  
+  try {
+    if (!userId || !activity) {
+      console.error('Invalid parameters for grantActivityCompletionBadges:', { userId, activity });
+      return grantedBadges;
+    }
+
+    // Import dependencies dynamically to avoid circular dependencies
+    const { fetchOrganizationById } = await import('./crudOrganizations');
+    const { getContinentFromCountry } = await import('./continentMapping');
+
+    // Grant SDG badge if activity has SDG and user doesn't have it
+    if (activity.sdg) {
+      const sdgBadgeId = activity.sdg.toString();
+      const hasSdgBadge = await userHasBadge(userId, sdgBadgeId);
+      
+      if (!hasSdgBadge) {
+        const badgeResult = await grantBadgeToUser(userId, sdgBadgeId);
+        if (badgeResult) {
+          grantedBadges.push(badgeResult);
+          console.log(`SDG badge ${sdgBadgeId} granted to user ${userId}`);
+        }
+      }
+    }
+
+    // Grant continent badge if organization has country
+    if (activity.organizationId) {
+      try {
+        const organization = await fetchOrganizationById(activity.organizationId);
+        if (organization && organization.country) {
+          const continentId = getContinentFromCountry(organization.country);
+          
+          if (continentId) {
+            const hasContinentBadge = await userHasBadge(userId, continentId);
+            
+            if (!hasContinentBadge) {
+              const badgeResult = await grantBadgeToUser(userId, continentId);
+              if (badgeResult) {
+                grantedBadges.push(badgeResult);
+                console.log(`Continent badge ${continentId} granted to user ${userId}`);
+              }
+            }
+          }
+        }
+      } catch (orgError) {
+        console.error('Error fetching organization for continent badge:', orgError);
+        // Continue even if organization fetch fails
+      }
+    }
+
+    // Grant activity type badge (firstOnline, firstLocal, or firstEvent)
+    let activityTypeBadgeId = null;
+    if (activity.type === "online") {
+      activityTypeBadgeId = "firstOnline";
+    } else if (activity.type === "local") {
+      activityTypeBadgeId = "firstLocal";
+    } else if (activity.type === "event") {
+      activityTypeBadgeId = "firstEvent";
+    }
+
+    if (activityTypeBadgeId) {
+      const hasActivityTypeBadge = await userHasBadge(userId, activityTypeBadgeId);
+
+      if (!hasActivityTypeBadge) {
+        const badgeResult = await grantBadgeToUser(userId, activityTypeBadgeId);
+        if (badgeResult) {
+          grantedBadges.push(badgeResult);
+          console.log(`Activity type badge ${activityTypeBadgeId} granted to user ${userId}`);
+        }
+      }
+    }
+
+    return grantedBadges;
+  } catch (error) {
+    console.error(`Error granting activity completion badges to user ${userId}:`, error);
+    return grantedBadges; // Return what we've granted so far
+  }
+}
+

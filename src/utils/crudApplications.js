@@ -1,4 +1,4 @@
-import { collection, addDoc, getDoc, doc, query, where, getDocs, updateDoc, runTransaction, increment } from 'firebase/firestore';
+import { collection, addDoc, getDoc, doc, query, where, getDocs, updateDoc, runTransaction, increment, Timestamp } from 'firebase/firestore';
 import { db } from 'firebaseConfig';
 import { fetchActivityById } from './crudActivities';
 import { grantBadgeToUser } from './crudBadges';
@@ -28,16 +28,18 @@ export const createApplication = async ({ activityId, userId, userEmail, message
       };
     }
 
-    // Check if this is the user's first application
-    const userRef = doc(db, 'members', userId);
-    const userApplicationsRef = collection(userRef, 'applications');
-    const existingApplicationsSnapshot = await getDocs(userApplicationsRef);
-    const isFirstApplication = existingApplicationsSnapshot.empty;
-
     // Get activity details to get organization ID
     const activityRef = doc(db, 'activities', activityId);
     const activityDoc = await getDoc(activityRef);
     const organizationId = activityDoc.data().organizationId;
+
+    // Check if this is the user's first application (check BEFORE transaction)
+    const userRef = doc(db, 'members', userId);
+    const userApplicationsRef = collection(userRef, 'applications');
+    const existingApplicationsSnapshot = await getDocs(userApplicationsRef);
+    const isFirstApplication = existingApplicationsSnapshot.empty;
+    
+    console.log(`Checking first application for user ${userId}: ${isFirstApplication ? 'YES' : 'NO'} (found ${existingApplicationsSnapshot.size} existing applications)`);
 
     const applicationData = {
       userId,
@@ -76,14 +78,27 @@ export const createApplication = async ({ activityId, userId, userEmail, message
     let badgeDetails = null;
     if (isFirstApplication) {
       try {
+        console.log(`Attempting to grant firstApplication badge to user ${userId}...`);
         badgeDetails = await grantBadgeToUser(userId, 'firstApplication');
         if (badgeDetails) {
-          console.log('First application badge granted to user:', userId);
+          console.log('First application badge granted successfully to user:', userId, badgeDetails);
+        } else {
+          console.warn(`First application badge grant returned null for user ${userId}. This might mean:
+            - Badge document 'firstApplication' not found in Firestore
+            - User already has the badge
+            - Member document doesn't exist`);
         }
       } catch (badgeError) {
         // Log error but don't fail the application creation
         console.error('Error granting first application badge:', badgeError);
+        console.error('Badge error details:', {
+          message: badgeError.message,
+          stack: badgeError.stack,
+          userId: userId
+        });
       }
+    } else {
+      console.log(`Not granting firstApplication badge - user ${userId} already has ${existingApplicationsSnapshot.size} application(s)`);
     }
 
     return { success: true, id: result, badgeDetails };
@@ -268,6 +283,91 @@ export const fetchActivitiesForVolunteer = async (userId) => {
     return activities.filter(activity => activity !== null);
   } catch (error) {
     console.error('Error fetching activities for volunteer:', error);
+    throw error;
+  }
+};
+
+/**
+ * Create or update application with accepted status for QR validation
+ * @param {string} activityId - Activity ID
+ * @param {string} userId - User ID
+ * @returns {Promise<Object>} Result object
+ */
+export const createOrUpdateApplicationAsAccepted = async (activityId, userId) => {
+  try {
+    // Check if application already exists
+    const activityRef = doc(db, 'activities', activityId);
+    const applicationsRef = collection(activityRef, 'applications');
+    const q = query(applicationsRef, where('userId', '==', userId));
+    const querySnapshot = await getDocs(q);
+    
+    // Get activity data
+    const activityDoc = await getDoc(activityRef);
+    const activityData = activityDoc.data();
+    const organizationId = activityData.organizationId;
+    
+    if (!querySnapshot.empty) {
+      // Application exists - update to accepted
+      const existingApp = querySnapshot.docs[0];
+      const applicationId = existingApp.id;
+      
+      // Update status to accepted
+      await updateApplicationStatus(activityId, applicationId, 'accepted', 'Accepted via QR code validation');
+      
+      return { success: true, applicationId, action: 'updated' };
+    } else {
+      // No application exists - create new one with accepted status
+      // Check if this is the user's first application (before creating it)
+      const userRef = doc(db, 'members', userId);
+      const userApplicationsRef = collection(userRef, 'applications');
+      const existingApplicationsSnapshot = await getDocs(userApplicationsRef);
+      const isFirstApplication = existingApplicationsSnapshot.empty;
+      
+      const applicationData = {
+        userId,
+        message: 'Accepted via QR code validation',
+        status: 'accepted',
+        createdAt: Timestamp.now(),
+        activityId,
+        organizationId: organizationId
+      };
+      
+      // Create application in activity's applications collection first
+      const docRef = await addDoc(applicationsRef, applicationData);
+      const applicationId = docRef.id;
+      
+      // Then add to user's and organization's collections
+      await addDoc(userApplicationsRef, {
+        ...applicationData,
+        applicationId: applicationId,
+      });
+      
+      const orgRef = doc(db, 'organizations', organizationId);
+      const orgApplicationsRef = collection(orgRef, 'applications');
+      await addDoc(orgApplicationsRef, {
+        ...applicationData,
+        applicationId: applicationId,
+      });
+      
+      // Grant firstApplication badge if this is the first application
+      if (isFirstApplication) {
+        try {
+          console.log(`Attempting to grant firstApplication badge to user ${userId} (via QR validation)...`);
+          const badgeDetails = await grantBadgeToUser(userId, 'firstApplication');
+          if (badgeDetails) {
+            console.log('First application badge granted successfully to user via QR validation:', userId, badgeDetails);
+          } else {
+            console.warn(`First application badge grant returned null for user ${userId} (via QR validation)`);
+          }
+        } catch (badgeError) {
+          console.error('Error granting first application badge via QR validation:', badgeError);
+        }
+      }
+      
+      return { success: true, applicationId, action: 'created' };
+    }
+  } catch (error) {
+    console.error('Error creating/updating application for QR validation:', error);
     throw error;
   }
 };
