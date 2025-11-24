@@ -401,6 +401,16 @@
         "statusAccepted": "Aceptada",
         "statusRejected": "Rechazada",
         "statusCancelled": "Cancelada",
-        "statusPending": "Pendiente"
+        "statusPending": "Pendiente",
+        "viewXpHistory": "Ver Historial de XP"
+    },
+    "XpHistory": {
+        "title": "Historial de XP",
+        "subtitle": "Ver tu historial completo de ganancias de XP",
+        "back": "Volver",
+        "emptyTitle": "Aún No Hay Historial de XP",
+        "emptyMessage": "¡Comienza a ganar XP completando actividades y obteniendo insignias!",
+        "totalEntries": "Total de Entradas",
+        "totalXp": "Total de XP Ganado"
     }
 }

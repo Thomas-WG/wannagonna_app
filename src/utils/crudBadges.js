@@ -2,6 +2,7 @@ import { collection, getDocs, getDoc, doc, updateDoc, arrayUnion, Timestamp, inc
 import { db } from 'firebaseConfig';
 import { ref, getDownloadURL } from 'firebase/storage';
 import { storage } from 'firebaseConfig';
+import { logXpHistory } from './crudXpHistory';
 
 /**
  * Fetch all badge categories (sdg, geography, general, etc.)
@@ -311,6 +312,12 @@ export async function grantBadgeToUser(userId, badgeId) {
     await updateDoc(memberDoc, updateData);
     
     console.log(`Badge ${badgeId} granted to user ${userId}${badgeXP > 0 ? ` with ${badgeXP} XP` : ''}`);
+    
+    // Log XP history if XP was awarded
+    if (badgeXP > 0) {
+      const historyTitle = `Badge Earned: ${badgeDetails.title}`;
+      await logXpHistory(userId, historyTitle, badgeXP, 'badge');
+    }
     
     // Return badge details for animation/display
     return {

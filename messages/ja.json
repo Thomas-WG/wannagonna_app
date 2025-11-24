@@ -407,6 +407,16 @@
         "statusAccepted": "承認済み",
         "statusRejected": "拒否済み",
         "statusCancelled": "キャンセル済み",
-        "statusPending": "保留中"
+        "statusPending": "保留中",
+        "viewXpHistory": "XP履歴を表示"
+    },
+    "XpHistory": {
+        "title": "XP履歴",
+        "subtitle": "XP獲得履歴をすべて表示",
+        "back": "戻る",
+        "emptyTitle": "XP履歴はまだありません",
+        "emptyMessage": "活動を完了したり、バッジを獲得したりしてXPを獲得しましょう！",
+        "totalEntries": "総エントリ数",
+        "totalXp": "獲得した総XP"
     }
 }

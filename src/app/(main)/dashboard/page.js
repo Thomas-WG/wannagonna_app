@@ -18,6 +18,7 @@ import {
 } from "react-icons/hi";
 import { MdOutlineSocialDistance } from "react-icons/md";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/utils/auth/AuthContext";
 import { fetchMemberById } from "@/utils/crudMemberProfile";
 import { fetchApplicationsByUserId, fetchActivitiesForVolunteer } from "@/utils/crudApplications";
@@ -31,6 +32,7 @@ import Image from "next/image";
 
 export default function DashboardPage() {
   const t = useTranslations('Dashboard');
+  const router = useRouter();
   const { user, claims } = useAuth();
   const [loading, setLoading] = useState(true);
   const [profileData, setProfileData] = useState(null);
@@ -537,8 +539,12 @@ export default function DashboardPage() {
                       </div>
                     </div>
                     
-                    {/* XP Progress Bar */}
-                    <div className="w-full max-w-md mx-auto sm:mx-0">
+                    {/* XP Progress Bar - Clickable */}
+                    <div 
+                      className="w-full max-w-md mx-auto sm:mx-0 cursor-pointer hover:opacity-80 transition-opacity"
+                      onClick={() => router.push('/xp-history')}
+                      title={t('viewXpHistory') || 'View XP History'}
+                    >
                       <div className="flex justify-between text-xs text-gray-600 mb-1">
                         <span>{gamificationData.currentXP} / 100 XP</span>
                         <span>{100 - gamificationData.currentXP} XP to next level</span>

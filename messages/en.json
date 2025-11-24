@@ -407,6 +407,16 @@
         "statusAccepted": "Accepted",
         "statusRejected": "Rejected",
         "statusCancelled": "Cancelled",
-        "statusPending": "Pending"
+        "statusPending": "Pending",
+        "viewXpHistory": "View XP History"
+    },
+    "XpHistory": {
+        "title": "XP History",
+        "subtitle": "View your complete XP earning history",
+        "back": "Back",
+        "emptyTitle": "No XP History Yet",
+        "emptyMessage": "Start earning XP by completing activities and earning badges!",
+        "totalEntries": "Total Entries",
+        "totalXp": "Total XP Earned"
     }
 }

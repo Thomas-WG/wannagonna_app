@@ -407,6 +407,16 @@
         "statusAccepted": "Acceptée",
         "statusRejected": "Rejetée",
         "statusCancelled": "Annulée",
-        "statusPending": "En Attente"
+        "statusPending": "En Attente",
+        "viewXpHistory": "Voir l'historique XP"
+    },
+    "XpHistory": {
+        "title": "Historique XP",
+        "subtitle": "Consultez votre historique complet de gains d'XP",
+        "back": "Retour",
+        "emptyTitle": "Aucun historique XP pour le moment",
+        "emptyMessage": "Commencez à gagner de l'XP en complétant des activités et en obtenant des badges !",
+        "totalEntries": "Total des Entrées",
+        "totalXp": "Total XP Gagné"
     }
 }
