@@ -28,8 +28,27 @@ export default function QRCodeScanner({ isOpen, onClose, onScanSuccess }) {
       html5QrCodeRef.current = new Html5Qrcode('qr-reader');
     }
 
+    // Cleanup when component unmounts or modal closes
     return () => {
-      // Cleanup will be handled by stopScanning when modal closes
+      if (html5QrCodeRef.current) {
+        // Directly stop and clear the scanner
+        const scanner = html5QrCodeRef.current;
+        (async () => {
+          try {
+            // Try to stop if running
+            await scanner.stop().catch(() => {});
+          } catch (err) {
+            // Ignore stop errors
+          }
+          try {
+            // Clear to release all resources
+            scanner.clear();
+          } catch (err) {
+            // Ignore clear errors
+          }
+          html5QrCodeRef.current = null;
+        })();
+      }
     };
   }, [isOpen]);
 
@@ -91,26 +110,39 @@ export default function QRCodeScanner({ isOpen, onClose, onScanSuccess }) {
     if (scanning || isStartingRef.current) {
       try {
         isStoppingRef.current = true;
+        // Stop the scanner
         await html5QrCodeRef.current.stop();
+        // Clear the scanner to release camera resources
+        html5QrCodeRef.current.clear();
         setScanning(false);
         isStoppingRef.current = false;
         isStartingRef.current = false;
       } catch (err) {
         console.error('Error stopping scanner:', err);
+        // Try to clear even if stop failed
+        try {
+          if (html5QrCodeRef.current) {
+            html5QrCodeRef.current.clear();
+          }
+        } catch (clearErr) {
+          // Ignore clear errors
+        }
         isStoppingRef.current = false;
         isStartingRef.current = false;
       }
     }
   };
 
-  const handleScanSuccess = (decodedText) => {
+  const handleScanSuccess = async (decodedText) => {
     // Prevent multiple scans
     if (hasScannedRef.current) {
       return;
     }
     
     hasScannedRef.current = true;
-    stopScanning();
+    
+    // Stop scanning and wait for camera to fully stop before proceeding
+    await stopScanning();
     
     // Parse the URL to extract activityId and token
     try {
@@ -119,6 +151,9 @@ export default function QRCodeScanner({ isOpen, onClose, onScanSuccess }) {
       const token = url.searchParams.get('token');
 
       if (activityId && token && onScanSuccess) {
+        // Ensure camera is fully stopped before calling callback
+        // Add a small delay to ensure camera stream is released
+        await new Promise(resolve => setTimeout(resolve, 100));
         onScanSuccess({ activityId, token, url: decodedText });
       } else {
         hasScannedRef.current = false; // Reset on error
@@ -133,26 +168,40 @@ export default function QRCodeScanner({ isOpen, onClose, onScanSuccess }) {
   };
 
   const handleClose = async () => {
+    // Stop scanning and wait for it to complete
     await stopScanning();
+    
+    // Additional cleanup
     setError(null);
     setScanning(false);
     isStartingRef.current = false;
     isStoppingRef.current = false;
     hasScannedRef.current = false; // Reset scan flag when closing
     
-    // Clean up scanner instance
+    // Clean up scanner instance completely
     if (html5QrCodeRef.current) {
       try {
-        // Try to stop if still running
+        // Try to stop if still running (double-check using scanning state)
         if (scanning) {
           await html5QrCodeRef.current.stop().catch(() => {});
         }
+        // Clear the scanner to release all resources
         html5QrCodeRef.current.clear();
       } catch (err) {
-        // Ignore cleanup errors
+        console.error('Error during cleanup:', err);
+        // Force clear even if there's an error
+        try {
+          html5QrCodeRef.current.clear();
+        } catch (clearErr) {
+          // Ignore
+        }
       }
       html5QrCodeRef.current = null;
     }
+    
+    // Small delay to ensure camera stream is fully released
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
     onClose();
   };
 
