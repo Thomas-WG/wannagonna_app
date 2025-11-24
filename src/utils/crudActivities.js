@@ -235,53 +235,9 @@ export async function updateActivityStatus(id, status) {
     });
     console.log('Activity status updated:', id, 'to', status);
     
-    // If closing an online activity, complete it for accepted members (grant badges, XP, and add to history)
-    if (status === 'Closed' && activityData.type === 'online') {
-      try {
-        // Fetch all applications for this activity
-        const applications = await fetchApplicationsForActivity(id);
-        
-        // Filter for accepted applications
-        const acceptedApplications = applications.filter(app => app.status === 'accepted');
-        
-        console.log(`Found ${acceptedApplications.length} accepted applications for activity ${id}`);
-        
-        // Complete activity for each member with accepted application
-        const completionPromises = acceptedApplications.map(async (application) => {
-          if (application.userId) {
-            try {
-              // Grant activity XP
-              const xpReward = activityData.xp_reward || 0;
-              if (xpReward > 0) {
-                await awardXpToUser(
-                  application.userId,
-                  xpReward,
-                  `Activity: ${activityData.title}`,
-                  'activity'
-                );
-              }
-
-              // Grant activity completion badges (SDG, continent, activity type)
-              await grantActivityCompletionBadges(application.userId, activityData);
-
-              // Add activity to history
-              await addActivityToMemberHistory(id, activityData, application.userId);
-              
-              console.log(`Activity ${id} completed for user ${application.userId}`);
-            } catch (userError) {
-              console.error(`Error completing activity for user ${application.userId}:`, userError);
-              // Continue with other users even if one fails
-            }
-          }
-        });
-        
-        await Promise.all(completionPromises);
-        console.log(`Activity ${id} completed for ${acceptedApplications.length} members`);
-      } catch (completionError) {
-        // Log the error but don't fail the status update
-        console.error('Error completing activity for members:', completionError);
-      }
-    }
+    // Note: Activity completion (granting badges/XP) is now handled through
+    // the ActivityValidationModal when status is changed to "Closed"
+    // This ensures all activity types (online, local, event) go through the same validation process
     
     return { success: true };
   } catch (error) {

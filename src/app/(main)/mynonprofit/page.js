@@ -9,6 +9,7 @@ import { fetchOrganizationById } from "@/utils/crudOrganizations";
 import { useRouter } from "next/navigation";
 import { fetchActivitiesByCriteria, deleteActivity } from "@/utils/crudActivities";
 import { useTranslations } from "next-intl";
+import { countPendingApplicationsForOrganization } from "@/utils/crudApplications";
 import ActivityCard from "@/components/activities/ActivityCard";
 import DeleteActivityModal from "@/components/activities/DeleteActivityModal";
 import ReviewApplicationsModal from "@/components/activities/ReviewApplicationsModal";
@@ -58,7 +59,12 @@ export default function MyNonProfitDashboard() {
         try {
           const orgData = await fetchOrganizationById(claims.npoId);
           if (orgData) {
-            setOrgData(orgData);
+            // Count pending applications dynamically instead of using stored value
+            const pendingCount = await countPendingApplicationsForOrganization(claims.npoId);
+            setOrgData({
+              ...orgData,
+              totalNewApplications: pendingCount
+            });
           }
         } catch (error) {
           console.error("Error fetching KPI data:", error);
@@ -166,7 +172,12 @@ export default function MyNonProfitDashboard() {
       // Refresh organization data to update activity counts
       const orgData = await fetchOrganizationById(claims.npoId);
       if (orgData) {
-        setOrgData(orgData);
+        // Count pending applications dynamically instead of using stored value
+        const pendingCount = await countPendingApplicationsForOrganization(claims.npoId);
+        setOrgData({
+          ...orgData,
+          totalNewApplications: pendingCount
+        });
       }
       
       setShowDeleteModal(false);

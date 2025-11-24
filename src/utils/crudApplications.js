@@ -371,3 +371,21 @@ export const createOrUpdateApplicationAsAccepted = async (activityId, userId) =>
     throw error;
   }
 };
+
+/**
+ * Count pending applications for an organization dynamically
+ * @param {string} organizationId - Organization ID
+ * @returns {Promise<number>} Count of pending applications
+ */
+export const countPendingApplicationsForOrganization = async (organizationId) => {
+  try {
+    const orgRef = doc(db, 'organizations', organizationId);
+    const orgApplicationsRef = collection(orgRef, 'applications');
+    const q = query(orgApplicationsRef, where('status', '==', 'pending'));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.size;
+  } catch (error) {
+    console.error('Error counting pending applications for organization:', error);
+    return 0;
+  }
+};

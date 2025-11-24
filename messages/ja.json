@@ -273,6 +273,19 @@
             "Closed": "閉鎖"
         }
     },
+    "ActivityValidationModal": {
+        "title": "活動参加者の検証",
+        "noAcceptedApplicants": "この活動に承認された申請者が見つかりませんでした。",
+        "processing": "処理中...",
+        "validateAll": "すべて検証",
+        "rejectAll": "すべて却下",
+        "validated": "検証済み",
+        "rejected": "却下済み",
+        "validate": "検証",
+        "reject": "却下",
+        "allProcessed": "すべての申請者が処理されました。このウィンドウを閉じると活動が閉鎖されます。",
+        "close": "閉じる"
+    },
     "PublishDraftModal": {
         "title": "活動を公開",
         "question": "今すぐ公開しますか、それとも下書きのままにしますか？",

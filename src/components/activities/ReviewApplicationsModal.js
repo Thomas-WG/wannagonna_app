@@ -3,7 +3,7 @@
 import { Modal, Button, Avatar, Badge } from "flowbite-react";
 import { HiCheck, HiX, HiClock } from "react-icons/hi";
 import { useEffect, useState, useCallback } from "react";
-import { fetchApplicationsForActivity, updateApplicationStatus } from "@/utils/crudApplications";
+import { fetchApplicationsForActivity, updateApplicationStatus, countPendingApplicationsForOrganization } from "@/utils/crudApplications";
 import { formatDate } from "@/utils/dateUtils";
 import { fetchOrganizationById } from "@/utils/crudOrganizations";
 import { useAuth } from "@/utils/auth/AuthContext";
@@ -78,7 +78,12 @@ export default function ReviewApplicationsModal({ isOpen, onClose, activity, onO
       if (claims && claims.npoId && onOrganizationDataUpdate) {
         const orgData = await fetchOrganizationById(claims.npoId);
         if (orgData) {
-          onOrganizationDataUpdate(orgData);
+          // Count pending applications dynamically instead of using stored value
+          const pendingCount = await countPendingApplicationsForOrganization(claims.npoId);
+          onOrganizationDataUpdate({
+            ...orgData,
+            totalNewApplications: pendingCount
+          });
         }
       }
     } catch (error) {
