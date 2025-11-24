@@ -1,4 +1,4 @@
-import { collection, getDocs, addDoc, getDoc, updateDoc, doc, onSnapshot} from 'firebase/firestore';
+import { collection, getDocs, addDoc, getDoc, updateDoc, doc, onSnapshot, query, where} from 'firebase/firestore';
 import { db } from 'firebaseConfig';
 
 // Fetch all members from the Firestore database
@@ -115,5 +115,36 @@ export async function fetchMemberById(userId, setProfileData) {
     }
   } catch (error) {
     console.error("Error fetching member data:", error);
+  }
+}
+
+/**
+ * Find a user by their referral code
+ * @param {string} referralCode - The referral code to search for
+ * @returns {Promise<Object|null>} User object with id and data if found, null otherwise
+ */
+export async function findUserByCode(referralCode) {
+  try {
+    if (!referralCode || referralCode.trim().length === 0) {
+      return null;
+    }
+    
+    const membersRef = collection(db, 'members');
+    const q = query(membersRef, where('code', '==', referralCode.toUpperCase().trim()));
+    const querySnapshot = await getDocs(q);
+    
+    if (querySnapshot.empty) {
+      return null;
+    }
+    
+    // Return the first matching user (codes should be unique)
+    const userDoc = querySnapshot.docs[0];
+    return {
+      id: userDoc.id,
+      ...userDoc.data()
+    };
+  } catch (error) {
+    console.error('Error finding user by code:', error);
+    return null;
   }
 }

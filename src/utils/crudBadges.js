@@ -453,3 +453,136 @@ export async function fetchUserBadges(userId) {
   }
 }
 
+/**
+ * Award XP points to a user without granting a badge
+ * @param {string} userId - The user's ID
+ * @param {number} points - The number of XP points to award
+ * @param {string} title - The title/description of the XP earning event
+ * @param {string} type - The type of XP earning (e.g., "referral", "activity")
+ * @returns {Promise<boolean>} True if successful, false otherwise
+ */
+export async function awardXpToUser(userId, points, title, type = 'unknown') {
+  try {
+    if (!userId || !points || points <= 0) {
+      console.error('Invalid parameters for awardXpToUser:', { userId, points, title, type });
+      return false;
+    }
+
+    const memberDoc = doc(db, 'members', userId);
+    
+    // Check if user exists
+    const memberSnap = await getDoc(memberDoc);
+    if (!memberSnap.exists()) {
+      console.error(`Member document ${userId} does not exist`);
+      return false;
+    }
+
+    // Increment XP using Firestore increment for atomic operation
+    await updateDoc(memberDoc, {
+      xp: increment(points)
+    });
+
+    console.log(`Awarded ${points} XP to user ${userId} for: ${title}`);
+
+    // Log to XP history
+    await logXpHistory(userId, title, points, type);
+
+    return true;
+  } catch (error) {
+    console.error(`Error awarding XP to user ${userId}:`, error);
+    return false;
+  }
+}
+
+/**
+ * Handle referral reward when a new user signs up with a referral code
+ * Grants "buddyBuilder" badge on first referral, awards XP on subsequent referrals
+ * @param {string} referralCode - The referral code used by the new user
+ * @returns {Promise<void>}
+ */
+export async function handleReferralReward(referralCode) {
+  console.log(`[handleReferralReward] Called with referral code: ${referralCode}`);
+  try {
+    if (!referralCode || referralCode.trim().length === 0) {
+      console.log('No referral code provided, skipping referral reward');
+      return;
+    }
+
+    // Import findUserByCode dynamically to avoid circular dependencies
+    const { findUserByCode } = await import('./crudMemberProfile');
+    
+    // Find the referrer user by their code
+    console.log(`[handleReferralReward] Looking up referrer with code: ${referralCode}`);
+    const referrer = await findUserByCode(referralCode);
+    if (!referrer || !referrer.id) {
+      console.error(`Referrer not found for code: ${referralCode}`);
+      return;
+    }
+
+    const referrerId = referrer.id;
+    const badgeId = 'buddyBuilder';
+    console.log(`[handleReferralReward] Found referrer: ${referrerId}, checking for badge: ${badgeId}`);
+
+    // Check if referrer already has the buddyBuilder badge
+    const hasBadge = await userHasBadge(referrerId, badgeId);
+    console.log(`[handleReferralReward] Referrer ${referrerId} has badge ${badgeId}: ${hasBadge}`);
+
+    if (!hasBadge) {
+      // First referral - grant the badge (which will award XP automatically)
+      console.log(`Granting ${badgeId} badge to referrer ${referrerId} for first referral`);
+      const badgeDetails = await grantBadgeToUser(referrerId, badgeId);
+      if (badgeDetails) {
+        console.log(`Badge ${badgeId} granted successfully to ${referrerId}`);
+      } else {
+        console.error(`Failed to grant badge ${badgeId} to ${referrerId}`);
+      }
+    } else {
+      // Subsequent referral - award XP points from badge value without granting badge again
+      console.log(`Referrer ${referrerId} already has ${badgeId} badge, awarding XP only`);
+      
+      // Get badge details to retrieve XP value
+      console.log(`Searching for badge ${badgeId} to get XP value...`);
+      const badgeDetails = await findBadgeById(badgeId);
+      if (!badgeDetails) {
+        console.error(`Badge ${badgeId} not found in Firestore - cannot award XP`);
+        return;
+      }
+
+      console.log(`Found badge ${badgeId} with details:`, { 
+        id: badgeDetails.id, 
+        title: badgeDetails.title, 
+        xp: badgeDetails.xp,
+        categoryId: badgeDetails.categoryId 
+      });
+
+      const badgeXP = badgeDetails.xp || 0;
+      console.log(`Badge XP value: ${badgeXP}`);
+      
+      if (badgeXP > 0) {
+        console.log(`Attempting to award ${badgeXP} XP to referrer ${referrerId}...`);
+        const success = await awardXpToUser(
+          referrerId,
+          badgeXP,
+          'Referred member',
+          'referral'
+        );
+        if (success) {
+          console.log(`Successfully awarded ${badgeXP} XP to referrer ${referrerId} for referral`);
+        } else {
+          console.error(`Failed to award XP to referrer ${referrerId} - check awardXpToUser logs`);
+        }
+      } else {
+        console.warn(`Badge ${badgeId} has no XP value (xp=${badgeXP}), nothing to award`);
+      }
+    }
+  } catch (error) {
+    // Log error but don't throw - account creation should succeed even if reward fails
+    console.error('[handleReferralReward] Error handling referral reward:', error);
+    console.error('[handleReferralReward] Error details:', {
+      message: error.message,
+      stack: error.stack,
+      referralCode: referralCode
+    });
+  }
+}
+

@@ -40,6 +40,7 @@ import { Dropdown, DropdownItem } from "flowbite-react";
 import { useTranslations } from "use-intl"; // Import hook to handle translations
 import { setUserLocale } from '@/utils/locale'; // Import function to set the user's preferred locale
 import { useAuth } from '@/utils/auth/AuthContext';
+import { handleReferralReward } from '@/utils/crudBadges';
 
 /**
  * LoginPage - Renders the login UI, with logo and Google sign-in functionality.
@@ -232,6 +233,14 @@ export default function LoginPage() {
         };
         
         await setDoc(userDocRef, userData, { merge: true });
+        
+        // Reward the referrer (non-blocking - account creation succeeds even if reward fails)
+        try {
+          await handleReferralReward(googleReferralCode);
+        } catch (rewardError) {
+          console.error('Error rewarding referrer (non-blocking):', rewardError);
+        }
+        
         router.push('/complete-profile');
       }
     } catch (error) {
@@ -347,6 +356,13 @@ export default function LoginPage() {
         
         await setDoc(doc(db, 'members', user.uid), memberData);
         console.log('Member document created successfully for user:', user.uid);
+        
+        // Reward the referrer (non-blocking - account creation succeeds even if reward fails)
+        try {
+          await handleReferralReward(referralCode);
+        } catch (rewardError) {
+          console.error('Error rewarding referrer (non-blocking):', rewardError);
+        }
         
         // Log the user in with the newly created credentials
         await signInWithEmailAndPassword(auth, newEmail, newPassword);
