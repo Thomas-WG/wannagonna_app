@@ -228,7 +228,7 @@ export default function ActivityValidationModal({
     <Modal 
       show={isOpen} 
       onClose={handleClose} 
-      size="md"
+      size="lg"
     >
       <Modal.Header className="px-3 sm:px-6 py-3 sm:py-4">
         <div className="flex flex-col w-full min-w-0">
@@ -312,8 +312,8 @@ export default function ActivityValidationModal({
                     key={application.id}
                     className="border border-gray-200 rounded-lg p-3 sm:p-4 hover:bg-gray-50 transition-colors"
                   >
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                      <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                      <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0 pr-2">
                         <Avatar
                           img={application.profilePicture || '/favicon.ico'}
                           alt={application.displayName}
@@ -321,8 +321,8 @@ export default function ActivityValidationModal({
                           className="sm:!w-10 sm:!h-10 flex-shrink-0"
                           rounded
                         />
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm sm:text-base font-medium text-gray-900 truncate">
+                        <div className="min-w-0 flex-1 overflow-hidden">
+                          <p className="text-sm sm:text-base font-medium text-gray-900 truncate" title={application.displayName}>
                             {application.displayName}
                           </p>
                           {validationStatus && (
@@ -340,13 +340,13 @@ export default function ActivityValidationModal({
 
                       {/* Action Buttons */}
                       {!isProcessed && (
-                        <div className="flex items-center gap-2 flex-shrink-0 w-full sm:w-auto">
+                        <div className="flex items-center gap-2 flex-shrink-0 w-full sm:w-auto sm:ml-4">
                           <Button
                             size="sm"
                             color="success"
                             onClick={() => handleValidate(application.userId)}
                             disabled={isProcessingUser || isProcessingAll}
-                            className="flex-1 sm:flex-initial min-h-[44px] sm:min-h-0 flex items-center justify-center"
+                            className="flex-1 sm:flex-initial min-h-[44px] sm:min-h-0 flex items-center justify-center whitespace-nowrap"
                           >
                             {isProcessingUser ? (
                               <Spinner size="sm" />
@@ -362,7 +362,7 @@ export default function ActivityValidationModal({
                             color="failure"
                             onClick={() => handleReject(application.userId)}
                             disabled={isProcessingUser || isProcessingAll}
-                            className="flex-1 sm:flex-initial min-h-[44px] sm:min-h-0 flex items-center justify-center"
+                            className="flex-1 sm:flex-initial min-h-[44px] sm:min-h-0 flex items-center justify-center whitespace-nowrap"
                           >
                             {isProcessingUser ? (
                               <Spinner size="sm" />
