@@ -1,4 +1,4 @@
-import { Tooltip } from 'flowbite-react';
+import { Tooltip, Button } from 'flowbite-react';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { useState, useEffect } from 'react';
@@ -6,10 +6,13 @@ import {
   HiLocationMarker, HiUserGroup, HiStar,
   HiQuestionMarkCircle,
   HiClock,
-  HiDocument, HiCheckCircle, HiArchive
+  HiDocument, HiCheckCircle, HiArchive,
+  HiQrcode
 } from 'react-icons/hi';
 import { FaRegCircle } from 'react-icons/fa';
 import StatusUpdateModal from './StatusUpdateModal';
+import QRCodeModal from './QRCodeModal';
+import ActivityValidationModal from './ActivityValidationModal';
 import { updateActivityStatus } from '@/utils/crudActivities';
 import { categoryIcons } from '@/constant/categoryIcons';
 
@@ -31,9 +34,11 @@ export default function ActivityCard({
   end_date,
   sdg,
   status,
+  qrCodeToken,
   onClick,
   onStatusChange,
   canEditStatus = false,
+  showQRButton = false,
 }) {
   const t = useTranslations('ActivityCard');
   const tManage = useTranslations('ManageActivities');
@@ -42,6 +47,8 @@ export default function ActivityCard({
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [localStatus, setLocalStatus] = useState(status);
+  const [showQRModal, setShowQRModal] = useState(false);
+  const [showValidationModal, setShowValidationModal] = useState(false);
 
   // Sync local status with prop changes
   useEffect(() => {
@@ -105,6 +112,14 @@ export default function ActivityCard({
 
   // Handle status update
   const handleStatusUpdate = async (newStatus) => {
+    // If trying to close the activity, open validation modal instead
+    if (newStatus === 'Closed') {
+      setShowStatusModal(false);
+      setShowValidationModal(true);
+      return;
+    }
+
+    // For other status changes, proceed normally
     try {
       setIsUpdatingStatus(true);
       
@@ -127,6 +142,28 @@ export default function ActivityCard({
       alert('Error updating activity status. Please try again.');
     } finally {
       setIsUpdatingStatus(false);
+    }
+  };
+
+  // Handle validation modal close - check if activity should be closed
+  const handleValidationModalClose = async (shouldCloseActivity) => {
+    setShowValidationModal(false);
+    
+    // If all applicants are processed, close the activity
+    if (shouldCloseActivity) {
+      try {
+        await updateActivityStatus(id, 'Closed');
+        setLocalStatus('Closed');
+        if (onStatusChange) {
+          onStatusChange(id, 'Closed');
+        }
+      } catch (error) {
+        console.error('Error closing activity:', error);
+        alert('Failed to close activity');
+      }
+    } else {
+      // If not all processed, revert status to Open
+      setLocalStatus('Open');
     }
   };
 
@@ -199,6 +236,23 @@ export default function ActivityCard({
               );
             })()}
             <span className='sr-only'>{category}</span>
+            
+            {/* QR Code Button - Only for Local and Event activities, and only when showQRButton is true */}
+            {showQRButton && (type === 'local' || type === 'event') && qrCodeToken && (
+              <Tooltip content="Show QR Code" placement="top">
+                <Button
+                  size="sm"
+                  color="gray"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowQRModal(true);
+                  }}
+                  className="p-1.5"
+                >
+                  <HiQrcode className="h-4 w-4 sm:h-5 sm:w-5" />
+                </Button>
+              </Tooltip>
+            )}
           </div>
         </div>
 
@@ -281,6 +335,33 @@ export default function ActivityCard({
         onStatusUpdate={handleStatusUpdate}
         isUpdating={isUpdatingStatus}
       />
+
+      {/* QR Code Modal */}
+      {(type === 'local' || type === 'event') && qrCodeToken && (
+        <QRCodeModal
+          isOpen={showQRModal}
+          onClose={() => setShowQRModal(false)}
+          activityId={id}
+          qrCodeToken={qrCodeToken}
+          title={title}
+          startDate={start_date}
+        />
+      )}
+
+      {/* Activity Validation Modal */}
+      {canEditStatus && (
+        <ActivityValidationModal
+          isOpen={showValidationModal}
+          onClose={handleValidationModalClose}
+          activity={{
+            id,
+            title,
+            type,
+            status: localStatus
+          }}
+          onStatusChange={onStatusChange}
+        />
+      )}
     </>
   );
 }

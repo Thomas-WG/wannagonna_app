@@ -10,8 +10,11 @@ import { countries } from 'countries-list';
 import languages from '@cospired/i18n-iso-languages';
 import { updateMember, fetchMemberById } from '@/utils/crudMemberProfile';
 import { uploadProfilePicture } from '@/utils/storage';
+import { isProfileComplete } from '@/utils/profileHelpers';
+import { grantBadgeToUser, userHasBadge } from '@/utils/crudBadges';
 import ProfileInformation from '@/components/profile/ProfileInformation';
 import SkillsAndAvailability from '@/components/profile/SkillsAndAvailability';
+import BadgeAnimation from '@/components/badges/BadgeAnimation';
 
 // Register the languages you want to use
 languages.registerLocale(require("@cospired/i18n-iso-languages/langs/en.json"));
@@ -82,6 +85,10 @@ export default function CompleteProfilePage() {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState('success'); // 'success' or 'error'
+  
+  // Add state for badge animation
+  const [showBadgeAnimation, setShowBadgeAnimation] = useState(false);
+  const [earnedBadgeId, setEarnedBadgeId] = useState(null);
 
   useEffect(() => {
     if (user?.uid) {
@@ -160,8 +167,34 @@ export default function CompleteProfilePage() {
       await updateMember(user.uid, cleanedProfileData);
       console.log("Profile updated!");
       
+      // Check if profile is complete and grant badge if needed
+      const profileIsComplete = isProfileComplete(cleanedProfileData);
+      let badgeDetails = null;
+      
+      if (profileIsComplete) {
+        // Check if user already has the profile completion badge
+        // Badge document ID is "completeProfile" (must match Firestore document ID)
+        const hasBadge = await userHasBadge(user.uid, 'completeProfile');
+        
+        if (!hasBadge) {
+          // Grant the badge
+          badgeDetails = await grantBadgeToUser(user.uid, 'completeProfile');
+          
+          if (badgeDetails) {
+            console.log('Profile completion badge granted!', badgeDetails);
+            // Show badge animation
+            setEarnedBadgeId(badgeDetails.id);
+            setShowBadgeAnimation(true);
+          }
+        }
+      }
+      
       // Show success toast
-      setToastMessage('Profile updated successfully!');
+      if (badgeDetails) {
+        setToastMessage('Profile updated successfully!');
+      } else {
+        setToastMessage('Profile updated successfully!');
+      }
       setToastType('success');
       setShowToast(true);
       
@@ -233,6 +266,16 @@ export default function CompleteProfilePage() {
           </Toast>
         </div>
       )}
+      
+      {/* Badge Animation */}
+      <BadgeAnimation
+        badgeId={earnedBadgeId}
+        show={showBadgeAnimation}
+        onClose={() => {
+          setShowBadgeAnimation(false);
+          setEarnedBadgeId(null);
+        }}
+      />
     </div>
   );
 }

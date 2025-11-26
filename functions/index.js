@@ -10,6 +10,10 @@ import {updateActivityCountOnRemove} from
   "./src/activity-mgt/onRemoveActivity.js";
 import {onCall} from "firebase-functions/v2/https";
 import {setUserCustomClaims} from "./src/user-mgt/setCustomClaims.js";
+import {
+  onValidationCreated,
+  onValidationUpdated,
+} from "./src/rewards/onValidationCreated.js";
 
 export const onActivityCreatedUpdateActivityCount = onDocumentCreated(
     "activities/{activityId}",
@@ -72,3 +76,6 @@ export const setCustomClaims = onCall(async (request) => {
     throw new Error("Failed to set custom claims");
   }
 });
+
+// Export validation reward triggers
+export {onValidationCreated, onValidationUpdated};

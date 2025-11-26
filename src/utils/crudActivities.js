@@ -1,6 +1,8 @@
 import { collection, getDocs, addDoc, getDoc, updateDoc, doc, onSnapshot, query, where, deleteDoc, writeBatch, increment } from 'firebase/firestore';
 import { db } from 'firebaseConfig';
 import { fetchApplicationsForActivity } from './crudApplications';
+import { grantActivityCompletionBadges, awardXpToUser } from './crudBadges';
+import { v4 as uuidv4 } from 'uuid';
 
 // Fetch all activities from the Firestore database
 export async function fetchActivities() {
@@ -48,8 +50,15 @@ export async function createActivity(data) {
       throw new Error('organizationId is required to create an activity');
     }
 
+    // Generate QR code token for Event and Local activities
+    const activityData = { ...data };
+    if ((activityData.type === 'event' || activityData.type === 'local') && !activityData.qrCodeToken) {
+      activityData.qrCodeToken = uuidv4();
+      console.log('Generated QR code token for activity:', activityData.qrCodeToken);
+    }
+
     const activitiesCollection = collection(db, 'activities'); // Reference to the activities collection
-    const docRef = await addDoc(activitiesCollection, data); // Add a new document with the provided data
+    const docRef = await addDoc(activitiesCollection, activityData); // Add a new document with the provided data
     console.log('Activity created with ID:', docRef.id); // Log the ID of the created activity
     return docRef.id; // Return the ID of the created activity
   } catch (error) {
@@ -61,11 +70,30 @@ export async function createActivity(data) {
 // Update an existing activity in the Firestore database
 export async function updateActivity(id, data) {
   try {
-    const activityDoc = doc(db, 'activities', id); // Reference to the specific activity document
-    await updateDoc(activityDoc, data); // Update the document with the provided data
+    // Get current activity to check type and existing token
+    const activityDoc = doc(db, 'activities', id);
+    const activitySnapshot = await getDoc(activityDoc);
+    
+    if (!activitySnapshot.exists()) {
+      throw new Error('Activity not found');
+    }
+
+    const currentData = activitySnapshot.data();
+    const updateData = { ...data };
+
+    // Generate QR code token for Event and Local activities if not present
+    if ((updateData.type === 'event' || updateData.type === 'local' || 
+         currentData.type === 'event' || currentData.type === 'local') && 
+        !updateData.qrCodeToken && !currentData.qrCodeToken) {
+      updateData.qrCodeToken = uuidv4();
+      console.log('Generated QR code token for activity:', updateData.qrCodeToken);
+    }
+
+    await updateDoc(activityDoc, updateData); // Update the document with the provided data
     console.log('Activity updated:', id); // Log the ID of the updated activity
   } catch (error) {
     console.error('Error updating activity:', error); // Log any errors
+    throw error;
   }
 }
 
@@ -207,31 +235,9 @@ export async function updateActivityStatus(id, status) {
     });
     console.log('Activity status updated:', id, 'to', status);
     
-    // If closing an online activity, add it to history for accepted members
-    if (status === 'Closed' && activityData.type === 'online') {
-      try {
-        // Fetch all applications for this activity
-        const applications = await fetchApplicationsForActivity(id);
-        
-        // Filter for accepted applications
-        const acceptedApplications = applications.filter(app => app.status === 'accepted');
-        
-        console.log(`Found ${acceptedApplications.length} accepted applications for activity ${id}`);
-        
-        // Add activity to history for each member with accepted application
-        const historyPromises = acceptedApplications.map(async (application) => {
-          if (application.userId) {
-            await addActivityToMemberHistory(id, activityData, application.userId);
-          }
-        });
-        
-        await Promise.all(historyPromises);
-        console.log(`Activity ${id} added to history for ${acceptedApplications.length} members`);
-      } catch (historyError) {
-        // Log the error but don't fail the status update
-        console.error('Error adding activity to member history:', historyError);
-      }
-    }
+    // Note: Activity completion (granting badges/XP) is now handled through
+    // the ActivityValidationModal when status is changed to "Closed"
+    // This ensures all activity types (online, local, event) go through the same validation process
     
     return { success: true };
   } catch (error) {

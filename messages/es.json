@@ -267,6 +267,19 @@
             "Closed": "Cerrado"
         }
     },
+    "ActivityValidationModal": {
+        "title": "Validar participantes de la actividad",
+        "noAcceptedApplicants": "No se encontraron candidatos aceptados para esta actividad.",
+        "processing": "Procesando...",
+        "validateAll": "Validar todos",
+        "rejectAll": "Rechazar todos",
+        "validated": "Validado",
+        "rejected": "Rechazado",
+        "validate": "Validar",
+        "reject": "Rechazar",
+        "allProcessed": "Todos los candidatos han sido procesados. La actividad se cerrará cuando cierre esta ventana.",
+        "close": "Cerrar"
+    },
     "PublishDraftModal": {
         "title": "Publicar actividad",
         "question": "¿Quieres publicarlo ahora o mantenerlo en borrador?",
@@ -401,6 +414,16 @@
         "statusAccepted": "Aceptada",
         "statusRejected": "Rechazada",
         "statusCancelled": "Cancelada",
-        "statusPending": "Pendiente"
+        "statusPending": "Pendiente",
+        "viewXpHistory": "Ver Historial de XP"
+    },
+    "XpHistory": {
+        "title": "Historial de XP",
+        "subtitle": "Ver tu historial completo de ganancias de XP",
+        "back": "Volver",
+        "emptyTitle": "Aún No Hay Historial de XP",
+        "emptyMessage": "¡Comienza a ganar XP completando actividades y obteniendo insignias!",
+        "totalEntries": "Total de Entradas",
+        "totalXp": "Total de XP Ganado"
     }
 }

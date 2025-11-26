@@ -273,6 +273,19 @@
             "Closed": "Fermé"
         }
     },
+    "ActivityValidationModal": {
+        "title": "Valider les participants de l'activité",
+        "noAcceptedApplicants": "Aucun candidat accepté trouvé pour cette activité.",
+        "processing": "Traitement...",
+        "validateAll": "Tout valider",
+        "rejectAll": "Tout rejeter",
+        "validated": "Validé",
+        "rejected": "Rejeté",
+        "validate": "Valider",
+        "reject": "Rejeter",
+        "allProcessed": "Tous les candidats ont été traités. L'activité sera fermée lorsque vous fermerez cette fenêtre.",
+        "close": "Fermer"
+    },
     "PublishDraftModal": {
         "title": "Publier l'activité",
         "question": "Voulez-vous le publier maintenant ou le garder en brouillon ?",
@@ -407,6 +420,16 @@
         "statusAccepted": "Acceptée",
         "statusRejected": "Rejetée",
         "statusCancelled": "Annulée",
-        "statusPending": "En Attente"
+        "statusPending": "En Attente",
+        "viewXpHistory": "Voir l'historique XP"
+    },
+    "XpHistory": {
+        "title": "Historique XP",
+        "subtitle": "Consultez votre historique complet de gains d'XP",
+        "back": "Retour",
+        "emptyTitle": "Aucun historique XP pour le moment",
+        "emptyMessage": "Commencez à gagner de l'XP en complétant des activités et en obtenant des badges !",
+        "totalEntries": "Total des Entrées",
+        "totalXp": "Total XP Gagné"
     }
 }

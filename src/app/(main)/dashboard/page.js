@@ -14,10 +14,12 @@ import {
   HiClock,
   HiClipboardCopy,
   HiEye,
-  HiPencil
+  HiPencil,
+  HiQrcode
 } from "react-icons/hi";
 import { MdOutlineSocialDistance } from "react-icons/md";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/utils/auth/AuthContext";
 import { fetchMemberById } from "@/utils/crudMemberProfile";
 import { fetchApplicationsByUserId, fetchActivitiesForVolunteer } from "@/utils/crudApplications";
@@ -26,10 +28,16 @@ import { useTranslations } from "next-intl";
 import ActivityCard from "@/components/activities/ActivityCard";
 import ActivityDetailsModal from "@/components/activities/ActivityDetailsModal";
 import ViewApplicationModal from "@/components/activities/ViewApplicationModal";
+import BadgeList from "@/components/badges/BadgeList";
+import QRCodeScanner from "@/components/activities/QRCodeScanner";
+import ActivityValidationSuccessModal from "@/components/activities/ActivityValidationSuccessModal";
+import { Alert } from "flowbite-react";
 import Image from "next/image";
 
 export default function DashboardPage() {
   const t = useTranslations('Dashboard');
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, claims } = useAuth();
   const [loading, setLoading] = useState(true);
   const [profileData, setProfileData] = useState(null);
@@ -47,6 +55,7 @@ export default function DashboardPage() {
   const [selectedApplicationActivity, setSelectedApplicationActivity] = useState(null);
   const [showApplicationModal, setShowApplicationModal] = useState(false);
   const [showActionModal, setShowActionModal] = useState(false);
+  const [showQRScanner, setShowQRScanner] = useState(false);
   const [stats, setStats] = useState({
     totalLocalActivities: 0,
     totalOnlineActivities: 0,
@@ -56,6 +65,11 @@ export default function DashboardPage() {
   });
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState({ type: '', message: '' });
+  
+  // Validation result modal state
+  const [showValidationModal, setShowValidationModal] = useState(false);
+  const [validationResult, setValidationResult] = useState(null);
+  const validationProcessedRef = useRef(false);
   
   // Gamification data (placeholder - can be enhanced later)
   const [gamificationData, setGamificationData] = useState({
@@ -75,6 +89,71 @@ export default function DashboardPage() {
       return () => clearTimeout(timer);
     }
   }, [showToast]);
+
+  // Handle validation results from QR code scan
+  useEffect(() => {
+    const validation = searchParams.get('validation');
+    
+    // Only process once per validation key
+    const validationKey = validation ? `${validation}-${searchParams.get('xp') || ''}-${searchParams.get('activityTitle') || ''}` : null;
+    
+    if (!validation || !validationKey || validationProcessedRef.current === validationKey) {
+      return;
+    }
+
+    // Mark as processed immediately
+    validationProcessedRef.current = validationKey;
+
+    if (validation === 'success') {
+      // Parse success params
+      const xp = parseInt(searchParams.get('xp') || '0', 10);
+      const activityTitle = searchParams.get('activityTitle') || '';
+      
+      // Parse badges
+      const badges = [];
+      let idx = 0;
+      while (searchParams.get(`badge${idx}`)) {
+        const badgeId = searchParams.get(`badge${idx}`);
+        badges.push({ id: badgeId, title: badgeId }); // You might want to fetch badge details
+        idx++;
+      }
+
+      setValidationResult({
+        xpReward: xp,
+        badges: badges,
+        activityTitle: activityTitle
+      });
+      setShowValidationModal(true);
+
+      // Clean up URL immediately
+      if (window.location.search.includes('validation=')) {
+        router.replace('/dashboard', { scroll: false });
+      }
+    } else if (validation === 'already-validated') {
+      setToastMessage({
+        type: 'info',
+        message: 'You have already validated this activity.'
+      });
+      setShowToast(true);
+      
+      // Clean up URL immediately
+      if (window.location.search.includes('validation=')) {
+        router.replace('/dashboard', { scroll: false });
+      }
+    } else if (validation === 'error') {
+      const message = decodeURIComponent(searchParams.get('message') || 'Validation failed');
+      setToastMessage({
+        type: 'failure',
+        message: message
+      });
+      setShowToast(true);
+      
+      // Clean up URL immediately
+      if (window.location.search.includes('validation=')) {
+        router.replace('/dashboard', { scroll: false });
+      }
+    }
+  }, [searchParams, router]);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -178,10 +257,7 @@ export default function DashboardPage() {
         });
 
         // Note: Gamification data will be updated in separate useEffect when profileData is available
-        setGamificationData(prev => ({
-          ...prev,
-          badgesCount: completedActivities.length // Placeholder: badges count
-        }));
+        // Don't update badge count here as profileData might not be set yet due to async callback
 
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
@@ -203,20 +279,26 @@ export default function DashboardPage() {
     if (profileData) {
       // Read XP from user profile (default to 0 if not present)
       // Try different possible field names: xp, totalXP, experiencePoints
-      const totalXP = profileData.xp || profileData.totalXP || profileData.experiencePoints || 0;
+      const totalXP = profileData.xp || 0;
       
       // Calculate level based on XP (100 XP per level)
       const level = Math.floor(totalXP / 100) + 1;
       const currentXP = totalXP % 100;
 
       // Read badges count from profile if available, otherwise use 0 as default
-      const badgesCount = profileData.badgesCount || profileData.badges?.length || 0;
+      // Check if badges array exists and has items
+      const badgesArray = profileData.badges;
+      const badgesCount = Array.isArray(badgesArray) ? badgesArray.length : 0;
+      
+      // Debug logging
+      console.log('Profile data badges:', badgesArray);
+      console.log('Badges count:', badgesCount);
 
       setGamificationData(prev => ({
         level,
         currentXP,
         totalXP,
-        badgesCount: badgesCount || prev.badgesCount || 0
+        badgesCount
       }));
     }
   }, [profileData]);
@@ -533,8 +615,12 @@ export default function DashboardPage() {
                       </div>
                     </div>
                     
-                    {/* XP Progress Bar */}
-                    <div className="w-full max-w-md mx-auto sm:mx-0">
+                    {/* XP Progress Bar - Clickable */}
+                    <div 
+                      className="w-full max-w-md mx-auto sm:mx-0 cursor-pointer hover:opacity-80 transition-opacity"
+                      onClick={() => router.push('/xp-history')}
+                      title={t('viewXpHistory') || 'View XP History'}
+                    >
                       <div className="flex justify-between text-xs text-gray-600 mb-1">
                         <span>{gamificationData.currentXP} / 100 XP</span>
                         <span>{100 - gamificationData.currentXP} XP to next level</span>
@@ -783,6 +869,7 @@ export default function DashboardPage() {
                         status={activity.status}
                         city={activity.city}
                         category={activity.category}
+                        qrCodeToken={activity.qrCodeToken}
                         onClick={() => {
                           if (showApplications) {
                             handleApplicationCardClick(activity);
@@ -849,23 +936,13 @@ export default function DashboardPage() {
             )}
           </div>
 
-          {/* Badges Section - Placeholder */}
+          {/* Badges Section */}
           <div className="mb-6 sm:mb-10">
             <h2 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 px-1">
               {t('yourBadges') || 'Your Badges'}
             </h2>
-            <Card className="bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200">
-              <div className="flex flex-col items-center justify-center py-8 sm:py-12">
-                <HiBadgeCheck className="w-16 h-16 sm:w-20 sm:h-20 text-purple-400 mb-4" />
-                <p className="text-lg sm:text-xl text-gray-600 font-medium text-center">
-                  {t('badgesComingSoon') || 'Badges system coming soon!'}
-                </p>
-                <p className="text-sm sm:text-base text-gray-500 text-center mt-2">
-                  {t('badgesPlaceholder') || 'Earn badges by completing activities and reaching milestones.'}
-                </p>
-              </div>
-        </Card>
-      </div>
+            <BadgeList userId={user?.uid} />
+          </div>
 
           {/* Activity Details Modal */}
           <ActivityDetailsModal
@@ -916,6 +993,40 @@ export default function DashboardPage() {
               </Toast>
             </div>
           )}
+
+          {/* QR Code Scanner Floating Button */}
+          <div className="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-50">
+            <button
+              onClick={() => setShowQRScanner(true)}
+              className="bg-blue-500 text-white text-xl sm:text-2xl w-12 h-12 sm:w-14 sm:h-14 rounded-full shadow-lg hover:bg-blue-600 active:bg-blue-700 transition-colors touch-manipulation flex items-center justify-center"
+              aria-label="Scan QR Code"
+            >
+              <HiQrcode className="h-6 w-6 sm:h-7 sm:w-7" />
+            </button>
+          </div>
+
+          {/* QR Code Scanner Modal */}
+          <QRCodeScanner
+            isOpen={showQRScanner}
+            onClose={() => setShowQRScanner(false)}
+            onScanSuccess={({ activityId, token, url }) => {
+              setShowQRScanner(false);
+              // Use replace instead of push to avoid adding to history
+              router.replace(`/validate-activity?activityId=${activityId}&token=${token}`);
+            }}
+          />
+
+          {/* Activity Validation Success Modal */}
+          <ActivityValidationSuccessModal
+            show={showValidationModal}
+            onClose={() => {
+              setShowValidationModal(false);
+              setValidationResult(null);
+            }}
+            xpReward={validationResult?.xpReward || 0}
+            badges={validationResult?.badges || []}
+            activityTitle={validationResult?.activityTitle || ''}
+          />
         </>
       )}
     </div>

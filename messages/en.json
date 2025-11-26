@@ -273,6 +273,19 @@
             "Closed": "Closed"
         }
     },
+    "ActivityValidationModal": {
+        "title": "Validate Activity Participants",
+        "noAcceptedApplicants": "No accepted applicants found for this activity.",
+        "processing": "Processing...",
+        "validateAll": "Validate All",
+        "rejectAll": "Reject All",
+        "validated": "Validated",
+        "rejected": "Rejected",
+        "validate": "Validate",
+        "reject": "Reject",
+        "allProcessed": "All applicants have been processed. The activity will be closed when you close this modal.",
+        "close": "Close"
+    },
     "PublishDraftModal": {
         "title": "Publish Activity",
         "question": "Do you want to publish it now or keep it in draft?",
@@ -407,6 +420,16 @@
         "statusAccepted": "Accepted",
         "statusRejected": "Rejected",
         "statusCancelled": "Cancelled",
-        "statusPending": "Pending"
+        "statusPending": "Pending",
+        "viewXpHistory": "View XP History"
+    },
+    "XpHistory": {
+        "title": "XP History",
+        "subtitle": "View your complete XP earning history",
+        "back": "Back",
+        "emptyTitle": "No XP History Yet",
+        "emptyMessage": "Start earning XP by completing activities and earning badges!",
+        "totalEntries": "Total Entries",
+        "totalXp": "Total XP Earned"
     }
 }
