@@ -211,7 +211,7 @@ export const updateApplicationStatus = async (activityId, applicationId, status,
       }
     }
 
-    return { success: true };
+    return { success: true, application: { ...applicationData, status, npoResponse } };
   } catch (error) {
     console.error('Error updating application status:', error);
     throw error;

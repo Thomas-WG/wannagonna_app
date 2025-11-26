@@ -1,4 +1,4 @@
-import { collection, getDocs, getDoc, doc, updateDoc, arrayUnion, Timestamp, increment, setDoc } from 'firebase/firestore';
+import { collection, getDocs, getDoc, doc, updateDoc, arrayUnion, Timestamp, increment, setDoc, addDoc } from 'firebase/firestore';
 import { db } from 'firebaseConfig';
 import { ref, getDownloadURL } from 'firebase/storage';
 import { storage } from 'firebaseConfig';
@@ -532,7 +532,22 @@ export async function handleReferralReward(referralCode) {
       console.log(`Granting ${badgeId} badge to referrer ${referrerId} for first referral`);
       const badgeDetails = await grantBadgeToUser(referrerId, badgeId);
       if (badgeDetails) {
+        await addDoc(collection(db, 'notifications'), {
+          userId: referrerId,
+          type: 'REFERRAL',
+          title: 'Referral reward earned',
+          body: `You earned a badge and XP because someone joined using your code (${referralCode.toUpperCase().trim()}).`,
+          link: '/xp-history',
+          createdAt: Timestamp.now(),
+          readAt: null,
+          metadata: {
+            referralCode: referralCode.toUpperCase().trim(),
+            badgeId,
+            rewardType: 'first_referral_badge',
+          },
+        });
         console.log(`Badge ${badgeId} granted successfully to ${referrerId}`);
+        
       } else {
         console.error(`Failed to grant badge ${badgeId} to ${referrerId}`);
       }
@@ -559,7 +574,6 @@ export async function handleReferralReward(referralCode) {
       console.log(`Badge XP value: ${badgeXP}`);
       
       if (badgeXP > 0) {
-        console.log(`Attempting to award ${badgeXP} XP to referrer ${referrerId}...`);
         const success = await awardXpToUser(
           referrerId,
           badgeXP,
@@ -567,9 +581,21 @@ export async function handleReferralReward(referralCode) {
           'referral'
         );
         if (success) {
-          console.log(`Successfully awarded ${badgeXP} XP to referrer ${referrerId} for referral`);
-        } else {
-          console.error(`Failed to award XP to referrer ${referrerId} - check awardXpToUser logs`);
+          await addDoc(collection(db, 'notifications'), {
+            userId: referrerId,
+            type: 'REFERRAL',
+            title: 'Referral XP earned',
+            body: `You earned ${badgeXP} XP because someone joined using your code (${referralCode.toUpperCase().trim()}).`,
+            link: '/xp-history',
+            createdAt: Timestamp.now(),
+            readAt: null,
+            metadata: {
+              referralCode: referralCode.toUpperCase().trim(),
+              badgeId,
+              rewardType: 'referral_xp',
+              points: badgeXP,
+            },
+          });
         }
       } else {
         console.warn(`Badge ${badgeId} has no XP value (xp=${badgeXP}), nothing to award`);
