@@ -506,14 +506,15 @@ export async function processActivityValidationRewards(
     // Update total XP if completion badges were granted
     // Ensure finalTotalXP is a valid number
     const finalTotalXP = Number(totalXP) + Number(completionBadgeXP);
-    
+
     // Debug logging
     console.log(
         `XP calculation: activityXP=${activityXP}, ` +
-        `totalBadgeXP=${totalBadgeXP}, completionBadgeXP=${completionBadgeXP}, ` +
+        `totalBadgeXP=${totalBadgeXP}, ` +
+        `completionBadgeXP=${completionBadgeXP}, ` +
         `finalTotalXP=${finalTotalXP}`,
     );
-    
+
     // Validate finalTotalXP is a valid number
     if (isNaN(finalTotalXP) || !isFinite(finalTotalXP)) {
       console.error(
