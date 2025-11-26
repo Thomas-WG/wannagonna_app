@@ -89,3 +89,6 @@ if (process.env.NODE_ENV === 'development') {
   }
 }
 export { storage };
+
+// Export app for use with client-side messaging initialization
+export { app };

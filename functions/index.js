@@ -17,6 +17,8 @@ import {
   createNotification,
   markNotificationAsRead as markNotificationAsReadService,
   markAllUserNotificationsAsRead as markAllUserNotificationsAsReadService,
+  sendUserNotification,
+  deleteAllUserNotifications as deleteAllUserNotificationsService,
 } from "./src/notifications/notificationService.js";
 import {
   onValidationCreated,
@@ -113,7 +115,7 @@ export const onApplicationStatusChangedNotifyUser = onDocumentUpdated(
         "Your application has been rejected. You can review the details on your dashboard.";
 
       try {
-        await createNotification({
+        await sendUserNotification({
           userId,
           type: "APPLICATION_STATUS",
           title,
@@ -125,6 +127,34 @@ export const onApplicationStatusChangedNotifyUser = onDocumentUpdated(
             status: afterStatus,
           },
         });
+
+        // If the application was cancelled by the user, also notify NPO members
+        if (afterStatus === "cancelled" && after.organizationId) {
+          const organizationId = after.organizationId;
+          const membersSnap = await db.collection("members")
+              .where("npoId", "==", organizationId)
+              .get();
+
+          if (!membersSnap.empty) {
+            const promises = membersSnap.docs.map((memberDoc) =>
+              sendUserNotification({
+                userId: memberDoc.id,
+                type: "APPLICATION",
+                title: "Application cancelled",
+                body: "A volunteer cancelled their application. Review updates in your applications list.",
+                link: "/mynonprofit/activities/applications",
+                metadata: {
+                  activityId,
+                  applicationId,
+                  organizationId,
+                  status: "cancelled",
+                  cancelledByUserId: userId,
+                },
+              }),
+            );
+            await Promise.all(promises);
+          }
+        }
       } catch (error) {
         console.error(
             "Failed to create application status notification:",
@@ -186,6 +216,68 @@ export const markAllNotificationsAsRead = onCall(async (request) => {
   const userId = request.auth.uid;
   const updatedCount = await markAllUserNotificationsAsReadService(userId);
   return {success: true, updatedCount};
+});
+
+/**
+ * Callable function to clear (delete) all notifications
+ * for the authenticated user.
+ */
+export const clearAllNotifications = onCall(async (request) => {
+  if (!request.auth) {
+    throw new Error("Unauthorized");
+  }
+
+  const userId = request.auth.uid;
+  const deletedCount = await deleteAllUserNotificationsService(userId);
+  return {success: true, deletedCount};
+});
+
+/**
+ * Callable used by the client to send referral notifications
+ * to the referrer (who owns the referral code).
+ *
+ * This wraps sendUserNotification so it can also send push
+ * based on user preferences.
+ */
+export const notifyReferralReward = onCall(async (request) => {
+  if (!request.auth) {
+    throw new Error("Unauthorized");
+  }
+
+  const {referrerId, mode, badgeXP, referralCode} = request.data || {};
+
+  if (!referrerId || !mode || !referralCode) {
+    throw new Error("referrerId, mode and referralCode are required");
+  }
+
+  let title;
+  let body;
+
+  if (mode === "first") {
+    title = "Referral reward earned";
+    body = `You earned a badge and XP because someone joined using your code (${referralCode}).`;
+  } else {
+    const points = Number(badgeXP) || 0;
+    title = "Referral XP earned";
+    body = points > 0
+      ? `You earned ${points} XP because someone joined using your code (${referralCode}).`
+      : `You earned XP because someone joined using your code (${referralCode}).`;
+  }
+
+  await sendUserNotification({
+    userId: referrerId,
+    type: "REFERRAL",
+    title,
+    body,
+    link: "/xp-history",
+    metadata: {
+      referralCode,
+      mode,
+      badgeXP: Number(badgeXP) || 0,
+    },
+  });
+
+  return {success: true};
 });
 
 // Export validation reward triggers

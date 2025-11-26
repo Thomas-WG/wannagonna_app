@@ -1,5 +1,5 @@
 import {db} from "../init.js";
-import {createNotification} from "../notifications/notificationService.js";
+import {sendUserNotification} from "../notifications/notificationService.js";
 
 
 export const updateApplicantsCountOnAdd = async (activityId) => {
@@ -58,7 +58,7 @@ export const updateApplicantsCountOnAdd = async (activityId) => {
 
     if (!membersSnap.empty) {
       const promises = membersSnap.docs.map((memberDoc) =>
-        createNotification({
+        sendUserNotification({
           userId: memberDoc.id,
           type: "APPLICATION",
           title: "New application received",

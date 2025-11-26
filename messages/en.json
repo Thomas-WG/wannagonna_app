@@ -41,7 +41,15 @@
         "logout": "Logout"
     },
     "Settings": {
-        "language": "Change the language"
+        "language": "Change the language",
+        "notifications": "Notifications",
+        "notificationDescription": "Choose how you want to be notified for gamification and activity updates.",
+        "category": "Category",
+        "inApp": "In-app",
+        "push": "Push",
+        "gamification": "Gamification (badges, XP, referrals)",
+        "activities": "Activities (applications & updates)",
+        "saving": "Saving preferences..."
     },
     "ActivityCard": {
         "points": "points",

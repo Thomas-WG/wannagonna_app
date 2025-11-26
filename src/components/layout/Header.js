@@ -7,6 +7,7 @@ import {
   useNotificationsListener,
   markNotificationAsReadClient,
   markAllNotificationsAsReadClient,
+  clearAllNotificationsClient,
 } from '@/utils/notifications';
 import {getRelativeTime} from '@/utils/dateUtils';
 
@@ -47,11 +48,23 @@ const Header = () => {
   };
 
   const handleMarkAllAsRead = async () => {
+    setIsNotifOpen(false);
     try {
       void markAllNotificationsAsReadClient();
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
         console.error('Failed to mark all notifications as read:', error);
+      }
+    }
+  };
+
+  const handleClearAll = async () => {
+    setIsNotifOpen(false);
+    try {
+      void clearAllNotificationsClient();
+    } catch (error) {
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Failed to clear notifications:', error);
       }
     }
   };
@@ -71,6 +84,8 @@ const Header = () => {
         return 'bg-yellow-100 text-yellow-600';
       case 'SYSTEM':
         return 'bg-blue-100 text-blue-600';
+      case 'REFERRAL':
+        return 'bg-purple-100 text-purple-600';
       default:
         return 'bg-gray-100 text-gray-600';
     }
@@ -110,15 +125,38 @@ const Header = () => {
               </button>
 
               {isNotifOpen && (
-                <div className="absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto rounded-lg bg-white shadow-lg ring-1 ring-black/5">
-                  <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-                    <span className="text-sm font-semibold text-gray-900">
-                      Notifications
-                    </span>
-                    {unreadCount > 0 && (
-                      <span className="text-xs text-gray-500">
-                        {unreadCount} unread
+                <div
+                  className="fixed inset-x-2 top-14 z-50 max-h-[calc(100vh-5rem)] overflow-y-auto rounded-lg bg-white shadow-lg ring-1 ring-black/5
+                             sm:absolute sm:inset-x-auto sm:right-0 sm:top-auto sm:mt-2 sm:w-80 sm:max-h-96"
+                >
+                  <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between gap-2">
+                    <div className="flex flex-col">
+                      <span className="text-sm font-semibold text-gray-900">
+                        Notifications
                       </span>
+                      {unreadCount > 0 && (
+                        <span className="text-xs text-gray-500">
+                          {unreadCount} unread
+                        </span>
+                      )}
+                    </div>
+                    {notifications.length > 0 && (
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={handleMarkAllAsRead}
+                          className="text-[11px] text-gray-500 hover:text-gray-700"
+                        >
+                          Mark all as read
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleClearAll}
+                          className="text-[11px] text-red-500 hover:text-red-600"
+                        >
+                          Clear
+                        </button>
+                      </div>
                     )}
                   </div>
 
@@ -167,17 +205,6 @@ const Header = () => {
                     ))}
                   </div>
 
-                  {notifications.length > 0 && (
-                    <div className="px-4 py-2 border-t border-gray-100 flex justify-end items-center">
-                      <button
-                        type="button"
-                        onClick={handleMarkAllAsRead}
-                        className="text-xs text-gray-500 hover:text-gray-700"
-                      >
-                        Mark all as read
-                      </button>
-                    </div>
-                  )}
                 </div>
               )}
             </div>

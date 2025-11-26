@@ -1,6 +1,6 @@
 import {db} from "../init.js";
 import {FieldValue, Timestamp} from "firebase-admin/firestore";
-import {createNotification} from "../notifications/notificationService.js";
+import {sendUserNotification} from "../notifications/notificationService.js";
 
 /**
  * Continent mapping - matches client-side logic
@@ -623,7 +623,7 @@ export async function processActivityValidationRewards(
         `${completionBadges.length} completion)`,
     );
 
-    // Create an in-app notification for the validated user
+    // Create a notification (in-app and/or push) for the validated user
     try {
       const hasBadges = allBadgesGranted.length > 0;
       const xpPart = finalTotalXP > 0 ?
@@ -638,7 +638,7 @@ export async function processActivityValidationRewards(
       const body = `You earned ${xpPart}${badgesPart}` +
         ` for "${activity.title || "an activity"}".`;
 
-      await createNotification({
+      await sendUserNotification({
         userId,
         type: "REWARD",
         title,
@@ -651,7 +651,7 @@ export async function processActivityValidationRewards(
         },
       });
     } catch (notifError) {
-      console.error("Failed to create reward notification:", notifError);
+      console.error("Failed to send reward notification:", notifError);
     }
 
     return {

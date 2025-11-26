@@ -1,5 +1,5 @@
 import {db} from "../init.js";
-import {createNotification} from "../notifications/notificationService.js";
+import {sendUserNotification} from "../notifications/notificationService.js";
 
 export const updateApplicantsCountOnRemove = async (activityId, applicationData) => {
   // First, run the transaction to update counts and gather data
@@ -51,7 +51,7 @@ export const updateApplicantsCountOnRemove = async (activityId, applicationData)
   const {userId, organizationId, activityTitle} = result;
   if (userId) {
     try {
-      await createNotification({
+      await sendUserNotification({
         userId,
         type: "APPLICATION",
         title: "Application cancelled",
@@ -65,6 +65,36 @@ export const updateApplicantsCountOnRemove = async (activityId, applicationData)
       });
     } catch (notifError) {
       console.error("Failed to create cancellation notification:", notifError);
+    }
+  }
+
+  // Also notify all NPO members linked to this organization
+  if (organizationId) {
+    try {
+      const membersSnap = await db.collection("members")
+          .where("npoId", "==", organizationId)
+          .get();
+
+      if (!membersSnap.empty) {
+        const promises = membersSnap.docs.map((memberDoc) =>
+          sendUserNotification({
+            userId: memberDoc.id,
+            type: "APPLICATION",
+            title: "Application cancelled",
+            body: `A volunteer cancelled their application for "${activityTitle}".`,
+            link: "/mynonprofit/activities/applications",
+            metadata: {
+              activityId,
+              organizationId,
+              status: "cancelled",
+              cancelledByUserId: userId || null,
+            },
+          }),
+        );
+        await Promise.all(promises);
+      }
+    } catch (notifError) {
+      console.error("Failed to notify NPO members of cancellation:", notifError);
     }
   }
 

@@ -1,4 +1,4 @@
-import {db} from "../init.js";
+import {db, messaging} from "../init.js";
 import {FieldValue} from "firebase-admin/firestore";
 
 /**
@@ -112,6 +112,149 @@ export async function markAllUserNotificationsAsRead(userId) {
 
   await batch.commit();
   return querySnap.docs.length;
+}
+
+/**
+ * Delete all notifications for a user.
+ * @param {string} userId - Auth UID
+ * @return {Promise<number>} Number of notifications deleted
+ */
+export async function deleteAllUserNotifications(userId) {
+  if (!userId) {
+    throw new Error("deleteAllUserNotifications: userId is required");
+  }
+
+  const querySnap = await db
+    .collection("notifications")
+    .where("userId", "==", userId)
+    .get();
+
+  if (querySnap.empty) {
+    return 0;
+  }
+
+  const batch = db.batch();
+  querySnap.docs.forEach((doc) => {
+    batch.delete(doc.ref);
+  });
+
+  await batch.commit();
+  return querySnap.docs.length;
+}
+
+/**
+ * Helper to map notification type to category
+ * GAMIFICATION vs ACTIVITY
+ * @param {string} type
+ * @return {string} category
+ */
+function getCategoryFromType(type) {
+  const gamificationTypes = ["REWARD", "REFERRAL"];
+  if (gamificationTypes.includes(type)) {
+    return "GAMIFICATION";
+  }
+  return "ACTIVITY";
+}
+
+/**
+ * Send a notification to a user, respecting their preferences
+ * and optionally sending a push via FCM.
+ * This always creates the Firestore notification when inApp is enabled.
+ *
+ * @param {Object} params
+ * @param {string} params.userId
+ * @param {string} params.type
+ * @param {string} params.title
+ * @param {string} params.body
+ * @param {string|null} [params.link]
+ * @param {Object} [params.metadata]
+ * @return {Promise<void>}
+ */
+export async function sendUserNotification({
+  userId,
+  type,
+  title,
+  body,
+  link = null,
+  metadata = {},
+}) {
+  if (!userId) {
+    throw new Error("sendUserNotification: userId is required");
+  }
+
+  const category = getCategoryFromType(type);
+
+  // Load user document for preferences and tokens
+  const userRef = db.collection("members").doc(userId);
+  const userSnap = await userRef.get();
+  const userData = userSnap.exists ? userSnap.data() : {};
+
+  const prefsRoot = userData.notificationPreferences || {};
+  const categoryPrefs = prefsRoot[category] || {
+    inApp: true,
+    push: false,
+  };
+
+  const shouldInApp = categoryPrefs.inApp !== false;
+  const shouldPush = categoryPrefs.push === true;
+
+  let notificationId = null;
+
+  if (shouldInApp) {
+    notificationId = await createNotification({
+      userId,
+      type,
+      title,
+      body,
+      link,
+      metadata,
+    });
+  }
+
+  if (shouldPush) {
+    const tokens = Array.isArray(userData.fcmTokens) ? userData.fcmTokens : [];
+
+    if (tokens.length > 0) {
+      try {
+        const message = {
+          tokens,
+          notification: {
+            title,
+            body,
+          },
+          data: {
+            type: String(type || ""),
+            category,
+            link: String(link || ""),
+            notificationId: String(notificationId || ""),
+          },
+        };
+
+        const response = await messaging.sendEachForMulticast(message);
+
+        // Remove invalid tokens
+        const invalidTokens = [];
+        response.responses.forEach((res, idx) => {
+          if (!res.success) {
+            const code = res.error?.code || "";
+            if (
+              code.includes("registration-token-not-registered") ||
+              code.includes("invalid-registration-token")
+            ) {
+              invalidTokens.push(tokens[idx]);
+            }
+          }
+        });
+
+        if (invalidTokens.length > 0) {
+          const remaining = tokens.filter((t) => !invalidTokens.includes(t));
+          await userRef.update({fcmTokens: remaining});
+        }
+      } catch (error) {
+        console.error("Failed to send push notification:", error);
+      }
+    }
+  }
 }
 
 

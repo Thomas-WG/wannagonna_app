@@ -1,8 +1,9 @@
-import { collection, getDocs, getDoc, doc, updateDoc, arrayUnion, Timestamp, increment, setDoc, addDoc } from 'firebase/firestore';
-import { db } from 'firebaseConfig';
+import { collection, getDocs, getDoc, doc, updateDoc, arrayUnion, Timestamp, increment, setDoc } from 'firebase/firestore';
+import { db, functions } from 'firebaseConfig';
 import { ref, getDownloadURL } from 'firebase/storage';
 import { storage } from 'firebaseConfig';
 import { logXpHistory } from './crudXpHistory';
+import { httpsCallable } from 'firebase/functions';
 
 /**
  * Fetch all badge categories (sdg, geography, general, etc.)
@@ -532,22 +533,19 @@ export async function handleReferralReward(referralCode) {
       console.log(`Granting ${badgeId} badge to referrer ${referrerId} for first referral`);
       const badgeDetails = await grantBadgeToUser(referrerId, badgeId);
       if (badgeDetails) {
-        await addDoc(collection(db, 'notifications'), {
-          userId: referrerId,
-          type: 'REFERRAL',
-          title: 'Referral reward earned',
-          body: `You earned a badge and XP because someone joined using your code (${referralCode.toUpperCase().trim()}).`,
-          link: '/xp-history',
-          createdAt: Timestamp.now(),
-          readAt: null,
-          metadata: {
+        // Notify referrer via Cloud Function (in-app + push)
+        try {
+          const notifyFn = httpsCallable(functions, 'notifyReferralReward');
+          await notifyFn({
+            referrerId,
+            mode: 'first',
+            badgeXP: badgeDetails.xp || 0,
             referralCode: referralCode.toUpperCase().trim(),
-            badgeId,
-            rewardType: 'first_referral_badge',
-          },
-        });
+          });
+        } catch (notifyError) {
+          console.error('Failed to send referral notification (first):', notifyError);
+        }
         console.log(`Badge ${badgeId} granted successfully to ${referrerId}`);
-        
       } else {
         console.error(`Failed to grant badge ${badgeId} to ${referrerId}`);
       }
@@ -581,21 +579,17 @@ export async function handleReferralReward(referralCode) {
           'referral'
         );
         if (success) {
-          await addDoc(collection(db, 'notifications'), {
-            userId: referrerId,
-            type: 'REFERRAL',
-            title: 'Referral XP earned',
-            body: `You earned ${badgeXP} XP because someone joined using your code (${referralCode.toUpperCase().trim()}).`,
-            link: '/xp-history',
-            createdAt: Timestamp.now(),
-            readAt: null,
-            metadata: {
+          try {
+            const notifyFn = httpsCallable(functions, 'notifyReferralReward');
+            await notifyFn({
+              referrerId,
+              mode: 'xp',
+              badgeXP,
               referralCode: referralCode.toUpperCase().trim(),
-              badgeId,
-              rewardType: 'referral_xp',
-              points: badgeXP,
-            },
-          });
+            });
+          } catch (notifyError) {
+            console.error('Failed to send referral notification (XP):', notifyError);
+          }
         }
       } else {
         console.warn(`Badge ${badgeId} has no XP value (xp=${badgeXP}), nothing to award`);
