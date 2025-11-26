@@ -271,6 +271,91 @@ async function findBadgeDocument(badgeId) {
 }
 
 /**
+ * All continent badge IDs
+ */
+const ALL_CONTINENT_BADGES = [
+  "america",
+  "europe",
+  "asia",
+  "africa",
+  "oceania",
+];
+
+/**
+ * All SDG badge IDs (1-17)
+ */
+const ALL_SDG_BADGES = [
+  "1", "2", "3", "4", "5", "6", "7", "8", "9", "10",
+  "11", "12", "13", "14", "15", "16", "17",
+];
+
+/**
+ * Check if user has all continent badges and should receive "world" badge
+ * @param {Set<string>} userBadges - Set of badge IDs user has
+ * @return {Promise<Object|null>} Badge details if eligible, null otherwise
+ */
+async function checkWorldBadgeEligibility(userBadges) {
+  // Check if user already has world badge
+  if (userBadges.has("world")) {
+    return null;
+  }
+
+  // Check if user has all continent badges
+  const hasAllContinents = ALL_CONTINENT_BADGES.every((badgeId) =>
+    userBadges.has(badgeId),
+  );
+
+  if (hasAllContinents) {
+    // Find badge document
+    const badgeDetail = await findBadgeDocument("world");
+    if (badgeDetail) {
+      return {
+        id: "world",
+        title: badgeDetail.data?.title || "World",
+        description: badgeDetail.data?.description || "",
+        xp: Number(badgeDetail.data?.xp) || 0,
+        data: badgeDetail.data,
+      };
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Check if user has all SDG badges and should receive "sdg" badge
+ * @param {Set<string>} userBadges - Set of badge IDs user has
+ * @return {Promise<Object|null>} Badge details if eligible, null otherwise
+ */
+async function checkSdgBadgeEligibility(userBadges) {
+  // Check if user already has sdg badge
+  if (userBadges.has("sdg")) {
+    return null;
+  }
+
+  // Check if user has all SDG badges (1-17)
+  const hasAllSdgs = ALL_SDG_BADGES.every((badgeId) =>
+    userBadges.has(badgeId),
+  );
+
+  if (hasAllSdgs) {
+    // Find badge document
+    const badgeDetail = await findBadgeDocument("sdg");
+    if (badgeDetail) {
+      return {
+        id: "sdg",
+        title: badgeDetail.data?.title || "SDG",
+        description: badgeDetail.data?.description || "",
+        xp: Number(badgeDetail.data?.xp) || 0,
+        data: badgeDetail.data,
+      };
+    }
+  }
+
+  return null;
+}
+
+/**
  * Process activity validation rewards (XP + badges)
  * This is the optimized server-side version that processes rewards
  * in background
@@ -362,19 +447,23 @@ export async function processActivityValidationRewards(
     }
 
     // 5. Calculate total XP
-    const activityXP = activity.xp_reward || 0;
+    // Ensure activityXP is a valid number
+    const activityXP = Number(activity.xp_reward) || 0;
     let totalBadgeXP = 0;
     const newBadges = [];
 
     badgesToGrant.forEach((badgeId) => {
       const badgeDetail = badgeDetailsMap[badgeId];
       if (badgeDetail) {
-        const badgeXP = badgeDetail.data?.xp || 0;
+        // Ensure badgeXP is a valid number
+        const badgeXP = Number(badgeDetail.data?.xp) || 0;
         totalBadgeXP += badgeXP;
         newBadges.push({
           id: badgeId,
           earnedDate: Timestamp.now(),
         });
+        // Add to userBadges set for completion badge checks
+        userBadges.add(badgeId);
       }
     });
 
@@ -384,14 +473,69 @@ export async function processActivityValidationRewards(
     const batch = db.batch();
     const userRef = db.collection("members").doc(userId);
 
-    // Update user document with XP and badges
-    if (totalXP > 0 || newBadges.length > 0) {
+    // 7. Check for completion badges (world and sdg) after regular badges
+    // Check eligibility for completion badges (check in parallel)
+    const [worldBadgeEligible, sdgBadgeEligible] = await Promise.all([
+      checkWorldBadgeEligibility(userBadges),
+      checkSdgBadgeEligibility(userBadges),
+    ]);
+
+    const completionBadges = [];
+    let completionBadgeXP = 0;
+
+    if (worldBadgeEligible) {
+      completionBadges.push({
+        id: "world",
+        earnedDate: Timestamp.now(),
+      });
+      // Ensure XP is a valid number
+      const worldXP = Number(worldBadgeEligible.xp) || 0;
+      completionBadgeXP += worldXP;
+    }
+
+    if (sdgBadgeEligible) {
+      completionBadges.push({
+        id: "sdg",
+        earnedDate: Timestamp.now(),
+      });
+      // Ensure XP is a valid number
+      const sdgXP = Number(sdgBadgeEligible.xp) || 0;
+      completionBadgeXP += sdgXP;
+    }
+
+    // Update total XP if completion badges were granted
+    // Ensure finalTotalXP is a valid number
+    const finalTotalXP = Number(totalXP) + Number(completionBadgeXP);
+    
+    // Debug logging
+    console.log(
+        `XP calculation: activityXP=${activityXP}, ` +
+        `totalBadgeXP=${totalBadgeXP}, completionBadgeXP=${completionBadgeXP}, ` +
+        `finalTotalXP=${finalTotalXP}`,
+    );
+    
+    // Validate finalTotalXP is a valid number
+    if (isNaN(finalTotalXP) || !isFinite(finalTotalXP)) {
+      console.error(
+          `Invalid finalTotalXP calculated: ${finalTotalXP} ` +
+          `(activityXP: ${activityXP}, totalBadgeXP: ${totalBadgeXP}, ` +
+          `completionBadgeXP: ${completionBadgeXP})`,
+      );
+      throw new Error(
+          `Invalid XP calculation: finalTotalXP is not a valid number`,
+      );
+    }
+
+    // Update user document with XP and badges (including completion badges)
+    const allBadgesToAdd = [...newBadges, ...completionBadges];
+    if (finalTotalXP > 0 || allBadgesToAdd.length > 0) {
       const updates = {};
-      if (totalXP > 0) {
-        updates.xp = FieldValue.increment(totalXP);
+      // Only increment XP if we have a valid positive number
+      if (finalTotalXP > 0 && isFinite(finalTotalXP)) {
+        updates.xp = FieldValue.increment(finalTotalXP);
       }
-      if (newBadges.length > 0) {
-        updates.badges = FieldValue.arrayUnion(...newBadges);
+      if (allBadgesToAdd.length > 0) {
+        updates.badges = FieldValue.arrayUnion(...allBadgesToAdd);
       }
       batch.update(userRef, updates);
     }
@@ -420,7 +564,7 @@ export async function processActivityValidationRewards(
       });
     }
 
-    // Log badge XP history
+    // Log badge XP history for regular badges
     for (const badgeId of badgesToGrant) {
       const badgeDetail = badgeDetailsMap[badgeId];
       if (badgeDetail && badgeDetail.data?.xp > 0) {
@@ -435,20 +579,54 @@ export async function processActivityValidationRewards(
       }
     }
 
+    // Log XP history for completion badges
+    if (worldBadgeEligible && worldBadgeEligible.xp > 0) {
+      const xpHistoryRef = userRef.collection("xpHistory");
+      batch.set(xpHistoryRef.doc(), {
+        title: `Badge Earned: ${worldBadgeEligible.title}`,
+        points: worldBadgeEligible.xp,
+        type: "badge",
+        timestamp: FieldValue.serverTimestamp(),
+      });
+    }
+
+    if (sdgBadgeEligible && sdgBadgeEligible.xp > 0) {
+      const xpHistoryRef = userRef.collection("xpHistory");
+      batch.set(xpHistoryRef.doc(), {
+        title: `Badge Earned: ${sdgBadgeEligible.title}`,
+        points: sdgBadgeEligible.xp,
+        type: "badge",
+        timestamp: FieldValue.serverTimestamp(),
+      });
+    }
+
     // Execute batch
     await batch.commit();
 
+    const allBadgesGranted = [
+      ...newBadges.map((b) => b.id),
+      ...completionBadges.map((b) => b.id),
+    ];
+
+    if (completionBadges.length > 0) {
+      console.log(
+          `Completion badges granted: ` +
+          `${completionBadges.map((b) => b.id).join(", ")}`,
+      );
+    }
+
     console.log(
-        `Rewards processed successfully: ${totalXP} XP, ` +
-        `${newBadges.length} badges`,
+        `Rewards processed successfully: ${finalTotalXP} XP, ` +
+        `${allBadgesGranted.length} badges (${newBadges.length} regular, ` +
+        `${completionBadges.length} completion)`,
     );
 
     return {
       success: true,
       xpReward: activityXP,
-      badgeXP: totalBadgeXP,
-      totalXP: totalXP,
-      badgesGranted: newBadges.map((b) => b.id),
+      badgeXP: totalBadgeXP + completionBadgeXP,
+      totalXP: finalTotalXP,
+      badgesGranted: allBadgesGranted,
     };
   } catch (error) {
     console.error("Error processing rewards:", error);
