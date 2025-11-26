@@ -3,7 +3,7 @@
 import { useEffect, useRef, useMemo } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/utils/auth/AuthContext';
-import { validateActivityByQR, canUserValidateActivity } from '@/utils/crudActivityValidation';
+import { validateActivityByQR } from '@/utils/crudActivityValidation';
 import { Spinner } from 'flowbite-react';
 
 /**
@@ -59,39 +59,28 @@ export default function ValidateActivityPage() {
     // Process validation
     const processValidation = async () => {
       try {
-        // Check if already validated
-        const eligibility = await canUserValidateActivity(user.uid, activityId);
-        
-        if (eligibility && eligibility.reason === 'ALREADY_VALIDATED') {
-          // Already validated - redirect to dashboard with message
-          router.replace('/dashboard?validation=already-validated');
-          return;
-        }
-
-        // Not validated yet - validate now
+        // Validate activity - this function handles all checks (already validated, activity exists, token, type, date)
         const validationResult = await validateActivityByQR(user.uid, activityId, token);
 
         if (validationResult.success) {
           // Success - redirect to dashboard with success params
+          // Badges are processed in background by Cloud Function, so we don't include them here
           const params = new URLSearchParams({
             validation: 'success',
             xp: validationResult.xpReward?.toString() || '0',
             activityTitle: validationResult.activityTitle || ''
           });
           
-          // Add badge titles if any (for display)
-          if (validationResult.badges && validationResult.badges.length > 0) {
-            validationResult.badges.forEach((badge, idx) => {
-              const badgeTitle = badge.title || badge.id || `Badge ${idx + 1}`;
-              params.append(`badge${idx}`, badgeTitle);
-            });
-          }
-          
           router.replace(`/dashboard?${params.toString()}`);
         } else {
-          // Error - redirect to dashboard with error message
-          const errorMsg = encodeURIComponent(validationResult.message || 'Validation failed');
-          router.replace(`/dashboard?validation=error&message=${errorMsg}`);
+          // Handle specific error cases
+          if (validationResult.error === 'ALREADY_VALIDATED') {
+            router.replace('/dashboard?validation=already-validated');
+          } else {
+            // Other errors - redirect to dashboard with error message
+            const errorMsg = encodeURIComponent(validationResult.message || 'Validation failed');
+            router.replace(`/dashboard?validation=error&message=${errorMsg}`);
+          }
         }
       } catch (error) {
         console.error('Error processing validation:', error);
@@ -113,7 +102,7 @@ export default function ValidateActivityPage() {
     <div className="flex items-center justify-center min-h-screen">
       <div className="text-center">
         <Spinner size="xl" className="mx-auto mb-4" />
-        <p className="text-gray-600">Processing validation...</p>
+        <p className="text-gray-600">Validating activity...</p>
       </div>
     </div>
   );

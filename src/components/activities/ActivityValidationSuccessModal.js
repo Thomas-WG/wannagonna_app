@@ -111,7 +111,7 @@ export default function ActivityValidationSuccessModal({
 
           {/* XP Reward */}
           {xpReward > 0 && (
-            <div className="mb-3 flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
+            <div className="mb-4 flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
               <HiStar className="w-5 h-5" />
               <span className="text-lg font-semibold">
                 +{xpReward} XP Earned!
@@ -119,7 +119,13 @@ export default function ActivityValidationSuccessModal({
             </div>
           )}
 
-          {/* Badges earned */}
+          {/* Success message */}
+          <p className="text-gray-600 dark:text-gray-400 mb-4 text-center">
+            Congratulations for participating! 🎉
+          </p>
+
+
+          {/* Badges earned (if any were already processed) */}
           {badges.length > 0 && (
             <div className="mb-4">
               <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">

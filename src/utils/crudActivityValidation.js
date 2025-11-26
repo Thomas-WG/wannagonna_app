@@ -1,7 +1,6 @@
 import { collection, getDocs, addDoc, getDoc, doc, query, where, Timestamp, updateDoc } from 'firebase/firestore';
 import { db } from 'firebaseConfig';
 import { fetchActivityById } from './crudActivities';
-import { grantActivityCompletionBadges, awardXpToUser } from './crudBadges';
 import { createOrUpdateApplicationAsAccepted } from './crudApplications';
 
 /**
@@ -105,7 +104,7 @@ function isSameDay(date1, date2) {
 
 /**
  * Validate activity by QR code scan
- * Grants XP and badges to the user
+ * Records validation - rewards (XP/badges) are processed by Cloud Function trigger
  * @param {string} userId - User ID
  * @param {string} activityId - Activity ID
  * @param {string} token - QR code token
@@ -167,70 +166,29 @@ export async function validateActivityByQR(userId, activityId, token) {
       };
     }
 
-    // Add member as accepted applicant
-    try {
-      await createOrUpdateApplicationAsAccepted(activityId, userId);
-      console.log(`Application created/updated for user ${userId} on activity ${activityId}`);
-    } catch (appError) {
-      console.error('Error creating/updating application:', appError);
-      // Continue with validation even if application creation fails
-      // This ensures validation still works if there's an issue with application creation
-    }
-
-    // Grant activity XP
-    const xpReward = activity.xp_reward || 0;
-    if (xpReward > 0) {
-      await awardXpToUser(
-        userId,
-        xpReward,
-        `Activity: ${activity.title}`,
-        'activity'
-      );
-    }
-
-    // Grant activity completion badges (SDG, continent, activity type)
-    const grantedBadges = await grantActivityCompletionBadges(userId, activity);
-
-    // Add activity to member history
-    try {
-      const memberRef = doc(db, 'members', userId);
-      const historyRef = collection(memberRef, 'history');
-      
-      // Create a copy of the activity data for history
-      const historyData = { ...activity };
-      
-      // Convert any Firestore Timestamp objects to Date objects
-      Object.keys(historyData).forEach(key => {
-        const value = historyData[key];
-        if (value && typeof value.toDate === 'function') {
-          historyData[key] = value.toDate();
-        }
-      });
-      
-      // Remove the document ID field if it exists
-      delete historyData.id;
-      
-      // Add metadata
-      historyData.activityId = activityId;
-      historyData.addedToHistoryAt = new Date();
-      historyData.validatedViaQR = true;
-      
-      await addDoc(historyRef, historyData);
-      console.log(`Activity ${activityId} added to history for member ${userId}`);
-    } catch (historyError) {
-      console.error('Error adding activity to history:', historyError);
-      // Continue even if history addition fails
-    }
-
-    // Record validation
+    // Record validation immediately - Cloud Function trigger will process rewards in background
+    // This is the critical operation that must complete before showing success
     await recordValidation(userId, activityId, token);
 
+    // Create/update application in background (non-blocking) - not critical for immediate response
+    createOrUpdateApplicationAsAccepted(activityId, userId)
+      .then(() => {
+        console.log(`Application created/updated for user ${userId} on activity ${activityId}`);
+      })
+      .catch((appError) => {
+        console.error('Error creating/updating application:', appError);
+        // Continue even if application creation fails - validation is already recorded
+      });
+
+    // Return expected structure for backward compatibility
+    // Note: Actual rewards are processed by Cloud Function in background
+    const xpReward = activity.xp_reward || 0;
     return {
       success: true,
       xpReward,
-      badges: grantedBadges,
+      badges: [], // Will be populated by Cloud Function
       activityTitle: activity.title || '',
-      message: 'Activity validated successfully!'
+      message: 'Activity validated successfully! Rewards are being processed in the background.'
     };
   } catch (error) {
     console.error('Error validating activity by QR:', error);
@@ -274,50 +232,10 @@ export async function fetchValidationsForActivity(activityId) {
   }
 }
 
-/**
- * Add activity to member history (reusable helper)
- * @param {string} activityId - Activity ID
- * @param {Object} activityData - Activity data
- * @param {string} userId - User ID
- * @param {boolean} validatedViaManual - Whether validated manually by NPO
- * @returns {Promise<void>}
- */
-async function addActivityToMemberHistory(activityId, activityData, userId, validatedViaManual = false) {
-  try {
-    const memberRef = doc(db, 'members', userId);
-    const historyRef = collection(memberRef, 'history');
-    
-    // Create a copy of the activity data for history
-    const historyData = { ...activityData };
-    
-    // Convert any Firestore Timestamp objects to Date objects
-    Object.keys(historyData).forEach(key => {
-      const value = historyData[key];
-      if (value && typeof value.toDate === 'function') {
-        historyData[key] = value.toDate();
-      }
-    });
-    
-    // Remove the document ID field if it exists
-    delete historyData.id;
-    
-    // Add metadata
-    historyData.activityId = activityId;
-    historyData.addedToHistoryAt = new Date();
-    historyData.validatedViaQR = !validatedViaManual;
-    historyData.validatedViaManual = validatedViaManual;
-    
-    await addDoc(historyRef, historyData);
-    console.log(`Activity ${activityId} added to history for member ${userId}`);
-  } catch (error) {
-    console.error('Error adding activity to history:', error);
-    throw error;
-  }
-}
 
 /**
- * Manually validate an applicant (grants badges/XP, adds to history, records validation)
- * Reuses the same logic as QR validation but without token checks
+ * Manually validate an applicant
+ * Records validation - rewards (XP/badges) are processed by Cloud Function trigger
  * @param {string} activityId - Activity ID
  * @param {string} userId - User ID to validate
  * @param {string} validatedBy - NPO user ID who performed validation
@@ -340,7 +258,7 @@ export async function validateApplicant(activityId, userId, validatedBy) {
       }
     }
 
-    // Fetch activity
+    // Fetch activity to verify it exists
     const activity = await fetchActivityById(activityId);
     if (!activity) {
       return {
@@ -359,29 +277,12 @@ export async function validateApplicant(activityId, userId, validatedBy) {
       // Continue with validation even if application creation fails
     }
 
-    // Grant activity XP
-    const xpReward = activity.xp_reward || 0;
-    if (xpReward > 0) {
-      await awardXpToUser(
-        userId,
-        xpReward,
-        `Activity: ${activity.title}`,
-        'activity'
-      );
-    }
-
-    // Grant activity completion badges (SDG, continent, activity type)
-    await grantActivityCompletionBadges(userId, activity);
-
-    // Add activity to member history
-    await addActivityToMemberHistory(activityId, activity, userId, true);
-
-    // Record validation
+    // Record validation - Cloud Function trigger will process rewards in background
     await recordValidation(userId, activityId, null, validatedBy);
 
     return {
       success: true,
-      message: 'Applicant validated successfully!'
+      message: 'Applicant validated successfully! Rewards are being processed in the background.'
     };
   } catch (error) {
     console.error('Error validating applicant:', error);
