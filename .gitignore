@@ -45,6 +45,7 @@ next-env.d.ts
 firestore-debug.log
 firebase-debug.log
 .firebase/emulator-data/
+functions/.runtimeconfig.json
 
 # sample data
 sample-data/*

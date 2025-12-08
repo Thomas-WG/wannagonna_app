@@ -61,7 +61,9 @@ export async function createNotification({
  */
 export async function markNotificationAsRead(userId, notificationId) {
   if (!userId || !notificationId) {
-    throw new Error("markNotificationAsRead: userId and notificationId are required");
+    throw new Error(
+        "markNotificationAsRead: userId and notificationId are required",
+    );
   }
 
   const notifRef = db.collection("notifications").doc(notificationId);
@@ -73,7 +75,9 @@ export async function markNotificationAsRead(userId, notificationId) {
 
   const data = snap.data();
   if (data.userId !== userId) {
-    throw new Error("Permission denied: cannot modify another user's notification");
+    throw new Error(
+        "Permission denied: cannot modify another user's notification",
+    );
   }
 
   await notifRef.update({
@@ -94,10 +98,10 @@ export async function markAllUserNotificationsAsRead(userId) {
   }
 
   const querySnap = await db
-    .collection("notifications")
-    .where("userId", "==", userId)
-    .where("readAt", "==", null)
-    .get();
+      .collection("notifications")
+      .where("userId", "==", userId)
+      .where("readAt", "==", null)
+      .get();
 
   if (querySnap.empty) {
     return 0;
@@ -125,9 +129,9 @@ export async function deleteAllUserNotifications(userId) {
   }
 
   const querySnap = await db
-    .collection("notifications")
-    .where("userId", "==", userId)
-    .get();
+      .collection("notifications")
+      .where("userId", "==", userId)
+      .get();
 
   if (querySnap.empty) {
     return 0;
@@ -256,5 +260,3 @@ export async function sendUserNotification({
     }
   }
 }
-
-

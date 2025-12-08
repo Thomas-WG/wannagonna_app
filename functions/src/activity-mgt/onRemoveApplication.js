@@ -1,7 +1,10 @@
 import {db} from "../init.js";
 import {sendUserNotification} from "../notifications/notificationService.js";
 
-export const updateApplicantsCountOnRemove = async (activityId, applicationData) => {
+export const updateApplicantsCountOnRemove = async (
+    activityId,
+    applicationData,
+) => {
   // First, run the transaction to update counts and gather data
   const result = await db.runTransaction(async (transaction) => {
     // Get activity document
@@ -47,7 +50,8 @@ export const updateApplicantsCountOnRemove = async (activityId, applicationData)
     };
   });
 
-  // After transaction completes, create cancellation notification (if we know the user)
+  // After transaction completes, create cancellation notification
+  // (if we know the user)
   const {userId, organizationId, activityTitle} = result;
   if (userId) {
     try {
@@ -81,7 +85,8 @@ export const updateApplicantsCountOnRemove = async (activityId, applicationData)
             userId: memberDoc.id,
             type: "APPLICATION",
             title: "Application cancelled",
-            body: `A volunteer cancelled their application for "${activityTitle}".`,
+            body: `A volunteer cancelled their application ` +
+              `for "${activityTitle}".`,
             link: "/mynonprofit/activities/applications",
             metadata: {
               activityId,
@@ -94,7 +99,10 @@ export const updateApplicantsCountOnRemove = async (activityId, applicationData)
         await Promise.all(promises);
       }
     } catch (notifError) {
-      console.error("Failed to notify NPO members of cancellation:", notifError);
+      console.error(
+          "Failed to notify NPO members of cancellation:",
+          notifError,
+      );
     }
   }
 

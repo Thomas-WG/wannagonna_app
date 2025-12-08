@@ -86,7 +86,9 @@ export default function ReviewApplicationsPage() {
     const { activityId, application, nextStatus } = confirmation
     try {
       setProcessingApplicationId(application.id)
-      await updateApplicationStatus(activityId, application.id, nextStatus, npoResponse)
+      // Pass the current user's UID to track who approved/rejected the application
+      const updatedByUserId = user?.uid || null
+      await updateApplicationStatus(activityId, application.id, nextStatus, npoResponse, updatedByUserId)
       // Update local state for application status and response
       setApplicationsByActivityId((prev) => ({
         ...prev,

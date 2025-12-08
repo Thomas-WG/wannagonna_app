@@ -150,7 +150,7 @@ export const fetchApplicationsForActivity = async (activityId) => {
   }
 };
 
-export const updateApplicationStatus = async (activityId, applicationId, status, npoResponse = '') => {
+export const updateApplicationStatus = async (activityId, applicationId, status, npoResponse = '', updatedByUserId = null) => {
   try {
     // Get application data first to check current status and find user and organization IDs
     const activityRef = doc(db, 'activities', activityId);
@@ -165,12 +165,23 @@ export const updateApplicationStatus = async (activityId, applicationId, status,
     // Check if we need to update the organization's totalNewApplications count
     const shouldDecrementCount = applicationData.status === 'pending' && (status === 'accepted' || status === 'rejected' || status === 'cancelled');
 
-    // Update in activity's applications collection
-    await updateDoc(applicationRef, {
+    // Prepare update data - include lastStatusUpdatedBy if provided
+    const updateData = {
       status,
       npoResponse,
       updatedAt: new Date()
-    });
+    };
+    
+    // Only add lastStatusUpdatedBy if updatedByUserId is provided (backward compatibility)
+    if (updatedByUserId) {
+      updateData.lastStatusUpdatedBy = updatedByUserId;
+      console.log("Setting lastStatusUpdatedBy:", updatedByUserId, "for application:", applicationId);
+    } else {
+      console.warn("updateApplicationStatus: updatedByUserId not provided, lastStatusUpdatedBy will not be set");
+    }
+
+    // Update in activity's applications collection
+    await updateDoc(applicationRef, updateData);
     
     if (applicationData) {
       // Update in user's applications collection
@@ -180,11 +191,7 @@ export const updateApplicationStatus = async (activityId, applicationId, status,
       const userQuerySnapshot = await getDocs(userQuery);
       
       userQuerySnapshot.forEach(async (userDoc) => {
-        await updateDoc(userDoc.ref, {
-          status,
-          npoResponse,
-          updatedAt: new Date()
-        });
+        await updateDoc(userDoc.ref, updateData);
       });
 
       // Update in organization's applications collection
@@ -195,11 +202,7 @@ export const updateApplicationStatus = async (activityId, applicationId, status,
         const orgQuerySnapshot = await getDocs(orgQuery);
         
         orgQuerySnapshot.forEach(async (orgDoc) => {
-          await updateDoc(orgDoc.ref, {
-            status,
-            npoResponse,
-            updatedAt: new Date()
-          });
+          await updateDoc(orgDoc.ref, updateData);
         });
 
         // Update organization's totalNewApplications count when status changes from pending

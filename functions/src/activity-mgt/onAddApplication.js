@@ -73,7 +73,10 @@ export const updateApplicantsCountOnAdd = async (activityId) => {
       await Promise.all(promises);
     }
   } catch (notifError) {
-    console.error("Failed to create new application notifications:", notifError);
+    console.error(
+        "Failed to create new application notifications:",
+        notifError,
+    );
   }
 
   return result;
