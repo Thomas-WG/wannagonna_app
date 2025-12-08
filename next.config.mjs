@@ -28,12 +28,6 @@ const nextConfig = {
         pathname: '/**',
       },
     ],
-    // Keep domains for backward compatibility
-    domains: [
-      'localhost',
-      'firebasestorage.googleapis.com',
-      'storage.googleapis.com'
-    ],
   },
 };
 
