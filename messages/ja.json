@@ -41,7 +41,15 @@
         "logout": "ログアウト"
     },
     "Settings": {
-        "language": "言語を変更する"
+        "language": "言語を変更する",
+        "notifications": "通知",
+        "notificationDescription": "ゲーミフィケーションと活動の更新について、どのように通知を受け取るかを選択してください。",
+        "category": "カテゴリ",
+        "inApp": "アプリ内",
+        "push": "プッシュ通知",
+        "gamification": "ゲーミフィケーション（バッジ、XP、紹介など）",
+        "activities": "アクティビティ（応募と更新）",
+        "saving": "設定を保存しています..."
     },
     "ActivityCard": {
         "points": "点",

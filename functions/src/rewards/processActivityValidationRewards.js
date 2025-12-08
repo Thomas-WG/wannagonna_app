@@ -1,5 +1,6 @@
 import {db} from "../init.js";
 import {FieldValue, Timestamp} from "firebase-admin/firestore";
+import {sendUserNotification} from "../notifications/notificationService.js";
 
 /**
  * Continent mapping - matches client-side logic
@@ -621,6 +622,37 @@ export async function processActivityValidationRewards(
         `${allBadgesGranted.length} badges (${newBadges.length} regular, ` +
         `${completionBadges.length} completion)`,
     );
+
+    // Create a notification (in-app and/or push) for the validated user
+    try {
+      const hasBadges = allBadgesGranted.length > 0;
+      const xpPart = finalTotalXP > 0 ?
+        `${finalTotalXP} XP` :
+        "XP";
+      const badgesPart = hasBadges ?
+        ` and ${allBadgesGranted.length} badge` +
+          (allBadgesGranted.length > 1 ? "s" : "") :
+        "";
+
+      const title = "Activity validated";
+      const body = `You earned ${xpPart}${badgesPart}` +
+        ` for "${activity.title || "an activity"}".`;
+
+      await sendUserNotification({
+        userId,
+        type: "REWARD",
+        title,
+        body,
+        link: "/xp-history",
+        metadata: {
+          activityId,
+          validatedBy,
+          badgesGranted: allBadgesGranted,
+        },
+      });
+    } catch (notifError) {
+      console.error("Failed to send reward notification:", notifError);
+    }
 
     return {
       success: true,

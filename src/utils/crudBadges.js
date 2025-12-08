@@ -1,8 +1,9 @@
 import { collection, getDocs, getDoc, doc, updateDoc, arrayUnion, Timestamp, increment, setDoc } from 'firebase/firestore';
-import { db } from 'firebaseConfig';
+import { db, functions } from 'firebaseConfig';
 import { ref, getDownloadURL } from 'firebase/storage';
 import { storage } from 'firebaseConfig';
 import { logXpHistory } from './crudXpHistory';
+import { httpsCallable } from 'firebase/functions';
 
 /**
  * Fetch all badge categories (sdg, geography, general, etc.)
@@ -532,6 +533,18 @@ export async function handleReferralReward(referralCode) {
       console.log(`Granting ${badgeId} badge to referrer ${referrerId} for first referral`);
       const badgeDetails = await grantBadgeToUser(referrerId, badgeId);
       if (badgeDetails) {
+        // Notify referrer via Cloud Function (in-app + push)
+        try {
+          const notifyFn = httpsCallable(functions, 'notifyReferralReward');
+          await notifyFn({
+            referrerId,
+            mode: 'first',
+            badgeXP: badgeDetails.xp || 0,
+            referralCode: referralCode.toUpperCase().trim(),
+          });
+        } catch (notifyError) {
+          console.error('Failed to send referral notification (first):', notifyError);
+        }
         console.log(`Badge ${badgeId} granted successfully to ${referrerId}`);
       } else {
         console.error(`Failed to grant badge ${badgeId} to ${referrerId}`);
@@ -559,7 +572,6 @@ export async function handleReferralReward(referralCode) {
       console.log(`Badge XP value: ${badgeXP}`);
       
       if (badgeXP > 0) {
-        console.log(`Attempting to award ${badgeXP} XP to referrer ${referrerId}...`);
         const success = await awardXpToUser(
           referrerId,
           badgeXP,
@@ -567,9 +579,17 @@ export async function handleReferralReward(referralCode) {
           'referral'
         );
         if (success) {
-          console.log(`Successfully awarded ${badgeXP} XP to referrer ${referrerId} for referral`);
-        } else {
-          console.error(`Failed to award XP to referrer ${referrerId} - check awardXpToUser logs`);
+          try {
+            const notifyFn = httpsCallable(functions, 'notifyReferralReward');
+            await notifyFn({
+              referrerId,
+              mode: 'xp',
+              badgeXP,
+              referralCode: referralCode.toUpperCase().trim(),
+            });
+          } catch (notifyError) {
+            console.error('Failed to send referral notification (XP):', notifyError);
+          }
         }
       } else {
         console.warn(`Badge ${badgeId} has no XP value (xp=${badgeXP}), nothing to award`);

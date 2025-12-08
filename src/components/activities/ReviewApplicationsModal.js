@@ -10,7 +10,7 @@ import { useAuth } from "@/utils/auth/AuthContext";
 import { useTranslations } from "next-intl";
 
 export default function ReviewApplicationsModal({ isOpen, onClose, activity, onOrganizationDataUpdate }) {
-  const { claims } = useAuth();
+  const { claims, user } = useAuth();
   const t = useTranslations('MyNonProfit');
   const tStatus = useTranslations('Dashboard');
   const [applications, setApplications] = useState([]);
@@ -63,7 +63,12 @@ export default function ReviewApplicationsModal({ isOpen, onClose, activity, onO
     setShowConfirmation(false);
     
     try {
-      await updateApplicationStatus(activity.id, application.id, status, npoResponse);
+      // Pass the current user's UID to track who approved/rejected the application
+      const updatedByUserId = user?.uid || null;
+      if (!updatedByUserId) {
+        console.warn("ReviewApplicationsModal: user.uid is not available, lastStatusUpdatedBy will not be set");
+      }
+      await updateApplicationStatus(activity.id, application.id, status, npoResponse, updatedByUserId);
       
       // Update local state
       setApplications(prev => 

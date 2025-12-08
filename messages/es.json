@@ -41,7 +41,15 @@
         "logout": "Cerrar sesión"
     },
     "Settings": {
-        "language": "Cambiar el idioma"
+        "language": "Cambiar el idioma",
+        "notifications": "Notificaciones",
+        "notificationDescription": "Elige cómo quieres recibir notificaciones sobre gamificación y actualizaciones de actividades.",
+        "category": "Categoría",
+        "inApp": "En la aplicación",
+        "push": "Push",
+        "gamification": "Gamificación (insignias, XP, referidos)",
+        "activities": "Actividades (solicitudes y actualizaciones)",
+        "saving": "Guardando preferencias..."
     },
     "ActivityCard": {
         "points": "puntos",
