@@ -46,6 +46,7 @@ firestore-debug.log
 firebase-debug.log
 .firebase/emulator-data/
 functions/.runtimeconfig.json
+functions/.env
 
 # sample data
 sample-data/*

@@ -28,6 +28,8 @@ const nextConfig = {
         pathname: '/**',
       },
     ],
+    // Disable image optimization for localhost in development
+    unoptimized: process.env.NODE_ENV === 'development',
   },
 };
 

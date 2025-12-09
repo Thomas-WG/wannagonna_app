@@ -1,4 +1,12 @@
-import * as functions from "firebase-functions";
+import {defineString} from "firebase-functions/params";
+
+// Define Mailgun configuration parameters
+const mailgunApiKey = defineString("MAILGUN_API_KEY");
+const mailgunDomain = defineString("MAILGUN_DOMAIN");
+const mailgunBaseUrl = defineString("MAILGUN_BASE_URL", {
+  default: "https://api.mailgun.net/v3",
+});
+const mailgunFrom = defineString("MAILGUN_FROM");
 
 /**
  * Send an email via Mailgun API
@@ -17,16 +25,14 @@ export async function sendMailgunEmail({to, subject, text, html}) {
       subject,
       textLength: text?.length,
     });
-    const config = functions.config().mailgun;
 
-    if (!config) {
-      console.error("Mailgun configuration not found in functions.config()");
-      console.log("Available config keys:", Object.keys(functions.config()));
-      return;
-    }
+    // Get Mailgun configuration from environment parameters
+    const apiKey = mailgunApiKey.value();
+    const domain = mailgunDomain.value();
+    const baseUrl = mailgunBaseUrl.value();
+    const from = mailgunFrom.value();
 
     console.log("Mailgun config found, checking values...");
-    const {api_key: apiKey, domain, base_url: baseUrl, from} = config;
 
     if (!apiKey || !domain || !baseUrl || !from) {
       console.error("Missing required Mailgun configuration:", {
