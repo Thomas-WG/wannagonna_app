@@ -64,6 +64,7 @@
         "noDescription": "Aucune description fournie",
         "description": "Description",
         "skills": "Compétences",
+        "viewDetails": "Voir les détails",
         "status": {
             "Draft": "Brouillon",
             "Open": "Ouvert",

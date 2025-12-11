@@ -64,6 +64,7 @@
         "noDescription": "No description provided",
         "description": "Description",
         "skills": "Skills",
+        "viewDetails": "View Details",
         "status": {
             "Draft": "Draft",
             "Open": "Open",

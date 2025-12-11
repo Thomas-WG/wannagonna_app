@@ -64,6 +64,7 @@
         "noDescription": "No se proporcionó una descripción",
         "description": "Descripción",
         "skills": "Habilidades",
+        "viewDetails": "Ver detalles",
         "status": {
             "Draft": "Borrador",
             "Open": "Abierto",

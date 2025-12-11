@@ -64,6 +64,7 @@
         "noDescription": "説明が提供されていません",
         "description": "説明",
         "skills": "スキル",
+        "viewDetails": "詳細を見る",
         "status": {
             "Draft": "下書き",
             "Open": "公開中",

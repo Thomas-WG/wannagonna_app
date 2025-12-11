@@ -501,13 +501,15 @@ export default function ActivitiesPage() {
                   skills={activity.skills}
                   onClick={() => handleCardClick(activity)}
                 />
-                {/* Applied Badge */}
+                {/* Applied Badge - Ribbon Style */}
                 {applicationStatuses[activity.id] && (
-                  <div className="absolute top-3 left-3 z-10">
-                    <Badge color="green" className="flex items-center gap-1">
-                      <HiCheckCircle className="h-4 w-4" />
-                      Applied
-                    </Badge>
+                  <div className="absolute top-0 right-0 z-10">
+                    <div className="bg-green-500 text-white px-3 py-1 text-xs font-semibold rounded-bl-lg shadow-md flex items-center gap-1.5">
+                      <HiCheckCircle className="h-3.5 w-3.5" />
+                      <span>Applied</span>
+                    </div>
+                    {/* Ribbon tail effect */}
+                    <div className="absolute top-full right-0 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-t-[6px] border-t-green-600"></div>
                   </div>
                 )}
               </div>

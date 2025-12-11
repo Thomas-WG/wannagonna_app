@@ -263,7 +263,7 @@ export default function ActivityCard({
     <>
       <div
         onClick={onClick}
-        className={`cursor-pointer w-full sm:w-80 md:w-96 mx-auto p-3 sm:p-4 bg-white border-l-4 ${typeColorClass} border border-gray-200 rounded-xl shadow-md hover:shadow-lg hover:bg-gray-50 transition-all duration-300`}
+        className={`cursor-pointer w-full sm:w-80 md:w-96 mx-auto p-4 sm:p-5 bg-white border-l-4 ${typeColorClass} border border-gray-200 rounded-xl shadow-md hover:shadow-xl hover:bg-gray-50 hover:-translate-y-1 transition-all duration-300 transform`}
         role="button"
         aria-label={title}
       >
@@ -341,51 +341,60 @@ export default function ActivityCard({
         </div>
 
         {/* Title */}
-        <div className='mt-2 sm:mt-3 flex items-start gap-2'>
+        <div className='mt-3 sm:mt-4 flex items-start gap-2'>
           <div className='flex-1 min-w-0'>
-            <h2 className='text-lg sm:text-xl font-bold text-gray-900 leading-tight break-words'>{title}</h2>
+            <h2 className='text-xl sm:text-2xl font-bold text-gray-900 leading-tight break-words'>{title}</h2>
             {/* Description Preview */}
             {descriptionPreview && (
-              <p className='mt-1.5 text-xs sm:text-sm text-gray-600 line-clamp-2'>
+              <p className='mt-2 text-sm sm:text-base text-gray-600 line-clamp-2 leading-relaxed'>
                 {descriptionPreview}
               </p>
             )}
           </div>
         </div>
 
-        {/* Key Information Section (Middle) */}
-        <div className='mt-2 sm:mt-3 space-y-2'>
-          <div className='flex items-center justify-between gap-2'>
-            {/* Enhanced XP Reward Display */}
-            <div className='flex items-center px-2 py-1 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg border border-indigo-200'>
-              <HiStar className='mr-1.5 text-indigo-600 flex-shrink-0' />
+        {/* Key Information Section (Middle) - Grid Layout */}
+        <div className='mt-4 sm:mt-5 space-y-3'>
+          {/* Metrics Grid */}
+          <div className='grid grid-cols-3 gap-1.5'>
+            {/* XP Reward */}
+            <div className='flex flex-col items-center justify-center px-1.5 py-1.5 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-md border border-indigo-200'>
+              <HiStar className='h-3.5 w-3.5 text-indigo-600 mb-0.5' />
               <span className='text-sm sm:text-base font-bold text-indigo-700'>{xp_reward}</span>
-              <span className='ml-1 text-xs text-indigo-600'>{t('points')}</span>
+              <span className='text-[10px] sm:text-xs text-indigo-600 leading-tight'>{t('points')}</span>
             </div>
-            <div className='flex items-center text-xs sm:text-sm font-semibold text-gray-700 flex-shrink-0'>
-              <HiUserGroup className='mr-1 text-gray-600' />
-              <span>{applicants} {t('applied')}</span>
+            {/* Applicants */}
+            <div className='flex flex-col items-center justify-center px-1.5 py-1.5 bg-gray-50 rounded-md border border-gray-200'>
+              <HiUserGroup className='h-3.5 w-3.5 text-gray-600 mb-0.5' />
+              <span className='text-sm sm:text-base font-bold text-gray-700'>{applicants}</span>
+              <span className='text-[10px] sm:text-xs text-gray-600 leading-tight'>{t('applied')}</span>
             </div>
+            {/* Time Commitment */}
+            {timeCommitment ? (
+              <div className='flex flex-col items-center justify-center px-1.5 py-1.5 bg-gray-50 rounded-md border border-gray-200'>
+                <HiClock className='h-3.5 w-3.5 text-gray-600 mb-0.5' />
+                <span className='text-[10px] sm:text-xs font-semibold text-gray-700 text-center leading-tight'>
+                  {timeCommitment}
+                </span>
+              </div>
+            ) : (
+              <div className='flex flex-col items-center justify-center px-1.5 py-1.5 bg-gray-50 rounded-md border border-gray-200 opacity-50'>
+                <HiClock className='h-3.5 w-3.5 text-gray-400 mb-0.5' />
+                <span className='text-[10px] text-gray-400'>N/A</span>
+              </div>
+            )}
           </div>
-
-          {/* Time Commitment */}
-          {timeCommitment && (
-            <div className='flex items-center text-xs text-gray-600'>
-              <HiClock className='mr-1.5 h-3.5 w-3.5 flex-shrink-0' />
-              <span>{timeCommitment}</span>
-            </div>
-          )}
 
           {/* Skills with overflow indicator */}
           {skills?.length > 0 && (
-            <div className='flex flex-wrap items-center gap-1' aria-label={t('skills')}>
+            <div className='flex flex-wrap items-center gap-1.5' aria-label={t('skills')}>
               {visibleSkills.map((skill, index) => (
-                <span key={index} className='px-1.5 sm:px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-800'>
+                <span key={index} className='px-2 sm:px-2.5 py-1 text-xs rounded-full bg-gray-100 text-gray-800 font-medium'>
                   {skill}
                 </span>
               ))}
               {remainingSkillsCount > 0 && (
-                <span className='px-1.5 sm:px-2 py-0.5 text-xs rounded-full bg-gray-200 text-gray-600 font-medium'>
+                <span className='px-2 sm:px-2.5 py-1 text-xs rounded-full bg-gray-200 text-gray-600 font-medium'>
                   +{remainingSkillsCount} more
                 </span>
               )}
@@ -394,8 +403,8 @@ export default function ActivityCard({
         </div>
 
         {/* Footer Section (Bottom) */}
-        <div className='mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-gray-200'>
-          <div className='flex flex-col space-y-1'>
+        <div className='mt-4 sm:mt-5 pt-3 sm:pt-4 border-t border-gray-200'>
+          <div className='flex flex-col space-y-2'>
             <div className='flex items-center justify-between gap-2'>
               {/* SDG Icon on the left */}
               {sdg && (
@@ -412,7 +421,7 @@ export default function ActivityCard({
               
               {/* Location on the right */}
               <div className='flex items-center text-xs sm:text-sm text-gray-700 min-w-0 flex-1 justify-end'>
-                <HiLocationMarker className='mr-1 text-gray-500 flex-shrink-0' />
+                <HiLocationMarker className='mr-1.5 text-gray-500 flex-shrink-0' />
                 <span className='truncate'>
                   {type === 'online' 
                     ? `Online (${country})`
@@ -434,7 +443,6 @@ export default function ActivityCard({
               </div>
             )}
           </div>
-
         </div>
 
       </div>
