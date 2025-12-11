@@ -41,6 +41,23 @@ export function subscribeToActivities(callback) {
   });
 }
 
+// Subscribe to real-time updates of Open activities only (efficient server-side filtering)
+export function subscribeToOpenActivities(callback) {
+  const activitiesCollection = collection(db, 'activities');
+  const q = query(activitiesCollection, where('status', '==', 'Open'));
+  
+  // Return the unsubscribe function
+  return onSnapshot(q, (snapshot) => {
+    const activities = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    callback(activities);
+  }, (error) => {
+    console.error('Error listening to open activities:', error);
+  });
+}
+
 // Create a new activity in the Firestore database
 export async function createActivity(data) {
   try {
