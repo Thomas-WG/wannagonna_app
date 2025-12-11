@@ -8,6 +8,7 @@ import { formatDate } from "@/utils/dateUtils";
 import { fetchOrganizationById } from "@/utils/crudOrganizations";
 import { useAuth } from "@/utils/auth/AuthContext";
 import { useTranslations } from "next-intl";
+import PublicProfileModal from "@/components/profile/PublicProfileModal";
 
 export default function ReviewApplicationsModal({ isOpen, onClose, activity, onOrganizationDataUpdate }) {
   const { claims, user } = useAuth();
@@ -19,6 +20,8 @@ export default function ReviewApplicationsModal({ isOpen, onClose, activity, onO
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [confirmationData, setConfirmationData] = useState(null);
   const [npoResponse, setNpoResponse] = useState('');
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState(null);
 
   const fetchApplications = useCallback(async () => {
     if (!activity?.id) return;
@@ -154,14 +157,32 @@ export default function ReviewApplicationsModal({ isOpen, onClose, activity, onO
                   {/* Header with profile and status */}
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center space-x-3">
-                      <Avatar
-                        img={application.profilePicture || '/favicon.ico'}
-                        alt={application.displayName}
-                        size="md"
-                        rounded
-                      />
+                      <div
+                        className={application.userId ? "cursor-pointer" : ""}
+                        onClick={() => {
+                          if (application.userId) {
+                            setSelectedUserId(application.userId);
+                            setProfileModalOpen(true);
+                          }
+                        }}
+                      >
+                        <Avatar
+                          img={application.profilePicture || '/favicon.ico'}
+                          alt={application.displayName}
+                          size="md"
+                          rounded
+                        />
+                      </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium text-gray-900 truncate">
+                        <p
+                          className={`text-sm font-medium text-gray-900 truncate ${application.userId ? 'cursor-pointer hover:text-blue-600' : ''}`}
+                          onClick={() => {
+                            if (application.userId) {
+                              setSelectedUserId(application.userId);
+                              setProfileModalOpen(true);
+                            }
+                          }}
+                        >
                           {application.displayName}
                         </p>
                         <p className="text-xs text-gray-500">
@@ -319,6 +340,16 @@ export default function ReviewApplicationsModal({ isOpen, onClose, activity, onO
           </div>
         </Modal.Footer>
       </Modal>
+
+      {/* Public Profile Modal */}
+      <PublicProfileModal
+        isOpen={profileModalOpen}
+        onClose={() => {
+          setProfileModalOpen(false);
+          setSelectedUserId(null);
+        }}
+        userId={selectedUserId}
+      />
     </Modal>
   );
 }

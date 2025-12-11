@@ -56,6 +56,8 @@ export default function CompleteProfilePage() {
     displayName: auth.currentUser?.displayName || '',
     email: auth.currentUser?.email || '',
     bio: '',
+    cause: '',
+    hobbies: '',
     country: '',
     languages: [], // This will now store an array of { value, label } objects
     skills: [],
