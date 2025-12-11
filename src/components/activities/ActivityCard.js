@@ -263,7 +263,7 @@ export default function ActivityCard({
     <>
       <div
         onClick={onClick}
-        className={`cursor-pointer w-full sm:w-80 md:w-96 mx-auto p-4 sm:p-5 bg-white border-l-4 ${typeColorClass} border border-gray-200 rounded-xl shadow-md hover:shadow-xl hover:bg-gray-50 hover:-translate-y-1 transition-all duration-300 transform`}
+        className={`cursor-pointer w-full p-3 sm:p-4 bg-white border-l-4 ${typeColorClass} border border-gray-200 rounded-xl shadow-md hover:shadow-xl hover:bg-gray-50 hover:-translate-y-1 transition-all duration-300 transform`}
         role="button"
         aria-label={title}
       >

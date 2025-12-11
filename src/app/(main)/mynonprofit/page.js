@@ -465,9 +465,9 @@ export default function MyNonProfitDashboard() {
                 : t('noActivitiesFound')}
           </p>
         ) : (
-          <div className='flex flex-wrap justify-center gap-4 sm:gap-6'>
+          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5'>
             {orgActivities.map((activity) => (
-              <div key={activity.id} className="relative w-full sm:w-auto">
+              <div key={activity.id} className="relative">
                 <ActivityCard
                   id={activity.id}
                   organization_name={activity.organization_name}
@@ -485,6 +485,8 @@ export default function MyNonProfitDashboard() {
                   city={activity.city}
                   category={activity.category}
                   qrCodeToken={activity.qrCodeToken}
+                  frequency={activity.frequency}
+                  skills={activity.skills}
                   onClick={() => handleActivityCardClick(activity)}
                   canEditStatus={true}
                   onStatusChange={handleStatusChange}
@@ -493,61 +495,62 @@ export default function MyNonProfitDashboard() {
                 
                 {/* Overlay with action buttons */}
                 {selectedActivity && selectedActivity.id === activity.id && showActionModal && (
-                  <div className="absolute inset-0 bg-black bg-opacity-60 rounded-lg flex items-center justify-center z-10 p-3 sm:p-4">
-                    <div className="grid grid-cols-2 sm:flex sm:flex-row gap-3 sm:gap-4 md:gap-6 w-full sm:w-auto">
+                  <div className="absolute inset-0 bg-black bg-opacity-60 rounded-lg flex items-center justify-center z-10 p-3 sm:p-3">
+                    {/* Grid layout: Always 2x2 grid */}
+                    <div className="grid grid-cols-2 gap-3 sm:gap-2.5 md:gap-3 w-full max-w-xs sm:max-w-sm">
                       {/* Edit Button */}
                       <div className="flex flex-col items-center">
                         <button
                           onClick={handleEditActivity}
-                          className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-blue-500 text-white flex items-center justify-center shadow-lg hover:bg-blue-600 active:bg-blue-700 transition-colors touch-manipulation"
+                          className="w-16 h-16 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-blue-500 text-white flex items-center justify-center shadow-lg hover:bg-blue-600 active:bg-blue-700 transition-colors touch-manipulation"
                           aria-label="Edit Activity"
                         >
-                          <HiPencil className="h-6 w-6 sm:h-8 sm:w-8" />
+                          <HiPencil className="h-7 w-7 sm:h-6 sm:w-6 md:h-7 md:w-7" />
                         </button>
-                        <span className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-white font-medium">{t('edit')}</span>
+                        <span className="mt-1.5 text-xs sm:text-[11px] md:text-xs text-white font-medium text-center leading-tight px-0.5">{t('edit')}</span>
                       </div>
 
                       {/* Delete Button */}
                       <div className="flex flex-col items-center">
                         <button
                           onClick={handleDeleteActivity}
-                          className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-red-500 text-white flex items-center justify-center shadow-lg hover:bg-red-600 active:bg-red-700 transition-colors touch-manipulation"
+                          className="w-16 h-16 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-red-500 text-white flex items-center justify-center shadow-lg hover:bg-red-600 active:bg-red-700 transition-colors touch-manipulation"
                           aria-label="Delete Activity"
                         >
-                          <HiTrash className="h-6 w-6 sm:h-8 sm:w-8" />
+                          <HiTrash className="h-7 w-7 sm:h-6 sm:w-6 md:h-7 md:w-7" />
                         </button>
-                        <span className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-white font-medium">{t('delete')}</span>
+                        <span className="mt-1.5 text-xs sm:text-[11px] md:text-xs text-white font-medium text-center leading-tight px-0.5">{t('delete')}</span>
                       </div>
 
                       {/* View Activity Button */}
                       <div className="flex flex-col items-center">
                         <button
                           onClick={handleViewActivity}
-                          className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-purple-500 text-white flex items-center justify-center shadow-lg hover:bg-purple-600 active:bg-purple-700 transition-colors touch-manipulation"
+                          className="w-16 h-16 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-purple-500 text-white flex items-center justify-center shadow-lg hover:bg-purple-600 active:bg-purple-700 transition-colors touch-manipulation"
                           aria-label="View Activity"
                         >
-                          <HiEye className="h-6 w-6 sm:h-8 sm:w-8" />
+                          <HiEye className="h-7 w-7 sm:h-6 sm:w-6 md:h-7 md:w-7" />
                         </button>
-                        <span className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-white font-medium">{t('view')}</span>
+                        <span className="mt-1.5 text-xs sm:text-[11px] md:text-xs text-white font-medium text-center leading-tight px-0.5">{t('view')}</span>
                       </div>
 
                       {/* Review Applications Button */}
                       <div className="flex flex-col items-center">
                         <button
                           onClick={handleReviewApplications}
-                          className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-green-500 text-white flex items-center justify-center shadow-lg hover:bg-green-600 active:bg-green-700 transition-colors touch-manipulation"
+                          className="w-16 h-16 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-green-500 text-white flex items-center justify-center shadow-lg hover:bg-green-600 active:bg-green-700 transition-colors touch-manipulation"
                           aria-label="Review Applications"
                         >
-                          <HiUserGroup className="h-6 w-6 sm:h-8 sm:w-8" />
+                          <HiUserGroup className="h-7 w-7 sm:h-6 sm:w-6 md:h-7 md:w-7" />
                         </button>
-                        <span className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-white font-medium">{t('applications')}</span>
+                        <span className="mt-1.5 text-xs sm:text-[11px] md:text-xs text-white font-medium text-center leading-tight px-0.5">{t('applications')}</span>
                       </div>
                     </div>
                     
                     {/* Close button */}
                     <button
                       onClick={() => setShowActionModal(false)}
-                      className="absolute top-2 right-2 sm:top-3 sm:right-3 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gray-600 text-white flex items-center justify-center hover:bg-gray-700 active:bg-gray-800 transition-colors text-lg sm:text-xl touch-manipulation"
+                      className="absolute top-2 right-2 sm:top-2 sm:right-2 w-9 h-9 sm:w-8 sm:h-8 md:w-9 md:h-9 lg:w-10 lg:h-10 rounded-full bg-gray-600 text-white flex items-center justify-center hover:bg-gray-700 active:bg-gray-800 transition-colors text-xl sm:text-lg md:text-xl lg:text-2xl touch-manipulation"
                       aria-label="Close"
                     >
                       ×

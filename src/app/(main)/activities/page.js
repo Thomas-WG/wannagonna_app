@@ -477,7 +477,7 @@ export default function ActivitiesPage() {
 
         {/* Activities Grid */}
         {!loading && sortedActivities.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
             {sortedActivities.map((activity) => (
               <div key={activity.id} className="relative">
                 <ActivityCard
