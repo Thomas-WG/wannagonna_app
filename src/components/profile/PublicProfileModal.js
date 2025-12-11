@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Modal, Avatar, Badge, Spinner, Progress } from 'flowbite-react';
-import { HiUser, HiStar, HiBadgeCheck, HiCalendar, HiX, HiClock } from 'react-icons/hi';
+import { HiUser, HiBadgeCheck, HiCalendar, HiX, HiClock } from 'react-icons/hi';
 import { fetchPublicMemberProfile, formatJoinedDate } from '@/utils/crudMemberProfile';
 import { fetchUserBadges } from '@/utils/crudBadges';
 import { fetchHistoryActivities } from '@/utils/crudActivities';
@@ -210,7 +210,6 @@ export default function PublicProfileModal({ isOpen, onClose, userId, isOwnProfi
                 <div className="mb-4 w-full max-w-md px-2">
                   <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2 flex-wrap">
                     <div className="flex items-center gap-2">
-                      <HiStar className="w-5 h-5 text-yellow-500" />
                       <span className="text-base sm:text-lg font-bold text-gray-800">
                         {tProfile('level')} {level}
                       </span>
@@ -336,10 +335,10 @@ export default function PublicProfileModal({ isOpen, onClose, userId, isOwnProfi
                   <p className="text-gray-600">{tProfile('noBadges')}</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-4 justify-items-center w-full max-w-full">
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 sm:gap-3 justify-items-center w-full max-w-full">
                   {badges.map((badge) => (
-                    <div key={badge.id} className="w-full max-w-[112px] sm:max-w-[128px]">
-                      <BadgeDisplay badge={badge} />
+                    <div key={badge.id} className="w-full max-w-[80px] sm:max-w-[90px]">
+                      <BadgeDisplay badge={badge} size="small" />
                     </div>
                   ))}
                 </div>

@@ -174,17 +174,21 @@ export default function ReviewApplicationsModal({ isOpen, onClose, activity, onO
                         />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p
-                          className={`text-sm font-medium text-gray-900 truncate ${application.userId ? 'cursor-pointer hover:text-blue-600' : ''}`}
-                          onClick={() => {
-                            if (application.userId) {
-                              setSelectedUserId(application.userId);
-                              setProfileModalOpen(true);
-                            }
-                          }}
-                        >
+                        <p className="text-sm font-medium text-gray-900 truncate">
                           {application.displayName}
                         </p>
+                        {application.userId && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedUserId(application.userId);
+                              setProfileModalOpen(true);
+                            }}
+                            className="text-xs text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                          >
+                            {t('viewProfile') || 'View profile'}
+                          </button>
+                        )}
                         <p className="text-xs text-gray-500">
                           {formatDate(application.createdAt)}
                         </p>

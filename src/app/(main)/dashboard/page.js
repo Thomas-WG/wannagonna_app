@@ -6,7 +6,6 @@ import {
   HiOfficeBuilding, 
   HiCalendar, 
   HiDocumentText,
-  HiStar,
   HiBadgeCheck,
   HiLockClosed,
   HiCheck,
@@ -617,7 +616,6 @@ export default function DashboardPage() {
                   <div className="mb-4">
                     <div className="flex items-center justify-center sm:justify-start gap-3 mb-2">
                       <div className="flex items-center gap-2">
-                        <HiStar className="w-6 h-6 text-yellow-500" />
                         <span className="text-lg sm:text-xl font-bold text-gray-800">
                           Level {gamificationData.level}
                         </span>
