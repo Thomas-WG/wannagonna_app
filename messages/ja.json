@@ -63,6 +63,7 @@
         "cancel": "キャンセル",
         "noDescription": "説明が提供されていません",
         "description": "説明",
+        "skills": "スキル",
         "status": {
             "Draft": "下書き",
             "Open": "公開中",

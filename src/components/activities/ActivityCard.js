@@ -35,6 +35,7 @@ export default function ActivityCard({
   sdg,
   status,
   qrCodeToken,
+  frequency,
   onClick,
   onStatusChange,
   canEditStatus = false,
@@ -82,11 +83,32 @@ export default function ActivityCard({
   };
 
 
+  // Helper to convert Firestore date to Date object
+  const getDateFromFirestore = (dateValue) => {
+    if (!dateValue) return null;
+    try {
+      if (dateValue.seconds) {
+        return new Date(dateValue.seconds * 1000);
+      }
+      if (dateValue.toDate && typeof dateValue.toDate === 'function') {
+        return dateValue.toDate();
+      }
+      if (dateValue instanceof Date) {
+        return dateValue;
+      }
+      return new Date(dateValue);
+    } catch (e) {
+      return null;
+    }
+  };
+
   const formatDateTimeRange = (start, end) => {
     if (!start) return null;
     try {
-      const startDate = new Date(start);
-      const endDate = end ? new Date(end) : null;
+      const startDate = getDateFromFirestore(start);
+      const endDate = end ? getDateFromFirestore(end) : null;
+      
+      if (!startDate) return null;
 
       const dateFormatter = new Intl.DateTimeFormat(undefined, {
         month: 'short',
@@ -109,6 +131,68 @@ export default function ActivityCard({
   };
 
   const dateTimeLine = formatDateTimeRange(start_date, end_date);
+
+  // Format description preview (max 100 characters)
+  const getDescriptionPreview = () => {
+    if (!description) return null;
+    const maxLength = 100;
+    if (description.length <= maxLength) return description;
+    return description.substring(0, maxLength).trim() + '...';
+  };
+
+  // Format time commitment based on frequency
+  const getTimeCommitment = () => {
+    if (!frequency) return null;
+    const frequencyMap = {
+      'once': 'One-time',
+      'regular': 'Regular',
+      'role': 'Long-term'
+    };
+    return frequencyMap[frequency] || frequency;
+  };
+
+  // Format relative date
+  const getRelativeDate = () => {
+    if (!start_date) return null;
+    const startDate = getDateFromFirestore(start_date);
+    if (!startDate) return null;
+    
+    try {
+      const now = new Date();
+      const diffTime = startDate - now;
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      if (diffDays < 0) return null; // Past date
+      if (diffDays === 0) return 'Starts today';
+      if (diffDays === 1) return 'Starts tomorrow';
+      if (diffDays <= 7) return `Starts in ${diffDays} days`;
+      return null; // Use absolute date for dates > 7 days
+    } catch (e) {
+      return null;
+    }
+  };
+
+  // Get type-based color classes
+  const getTypeColorClasses = () => {
+    const typeColors = {
+      'online': 'border-l-blue-500',
+      'local': 'border-l-green-500',
+      'event': 'border-l-purple-500'
+    };
+    return typeColors[type] || 'border-l-gray-500';
+  };
+
+  // Limit skills display (show max 3, then "+X more")
+  const MAX_VISIBLE_SKILLS = 3;
+  const visibleSkills = skills?.slice(0, MAX_VISIBLE_SKILLS) || [];
+  const remainingSkillsCount = skills?.length > MAX_VISIBLE_SKILLS 
+    ? skills.length - MAX_VISIBLE_SKILLS 
+    : 0;
+
+  const descriptionPreview = getDescriptionPreview();
+  const timeCommitment = getTimeCommitment();
+  const relativeDate = getRelativeDate();
+  const typeColorClass = getTypeColorClasses();
 
   // Handle status update
   const handleStatusUpdate = async (newStatus) => {
@@ -179,7 +263,7 @@ export default function ActivityCard({
     <>
       <div
         onClick={onClick}
-        className="cursor-pointer w-full sm:w-80 md:w-96 mx-auto p-3 sm:p-4 bg-white border border-gray-200 rounded-xl shadow-md hover:bg-gray-50 transition-all duration-300"
+        className={`cursor-pointer w-full sm:w-80 md:w-96 mx-auto p-3 sm:p-4 bg-white border-l-4 ${typeColorClass} border border-gray-200 rounded-xl shadow-md hover:shadow-lg hover:bg-gray-50 transition-all duration-300`}
         role="button"
         aria-label={title}
       >
@@ -257,16 +341,26 @@ export default function ActivityCard({
         </div>
 
         {/* Title */}
-        <div className='mt-2 sm:mt-3 min-h-[3rem] sm:h-14 flex items-start'>
-          <h2 className='text-lg sm:text-xl font-bold text-gray-900 leading-tight break-words'>{title}</h2>
+        <div className='mt-2 sm:mt-3 flex items-start gap-2'>
+          <div className='flex-1 min-w-0'>
+            <h2 className='text-lg sm:text-xl font-bold text-gray-900 leading-tight break-words'>{title}</h2>
+            {/* Description Preview */}
+            {descriptionPreview && (
+              <p className='mt-1.5 text-xs sm:text-sm text-gray-600 line-clamp-2'>
+                {descriptionPreview}
+              </p>
+            )}
+          </div>
         </div>
 
         {/* Key Information Section (Middle) */}
         <div className='mt-2 sm:mt-3 space-y-2'>
           <div className='flex items-center justify-between gap-2'>
-            <div className='flex items-center text-sm sm:text-base font-semibold text-indigo-600'>
-              <HiStar className='mr-1 text-indigo-500 flex-shrink-0' />
-              <span className='truncate'>{xp_reward} {t('points')}</span>
+            {/* Enhanced XP Reward Display */}
+            <div className='flex items-center px-2 py-1 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg border border-indigo-200'>
+              <HiStar className='mr-1.5 text-indigo-600 flex-shrink-0' />
+              <span className='text-sm sm:text-base font-bold text-indigo-700'>{xp_reward}</span>
+              <span className='ml-1 text-xs text-indigo-600'>{t('points')}</span>
             </div>
             <div className='flex items-center text-xs sm:text-sm font-semibold text-gray-700 flex-shrink-0'>
               <HiUserGroup className='mr-1 text-gray-600' />
@@ -274,13 +368,27 @@ export default function ActivityCard({
             </div>
           </div>
 
+          {/* Time Commitment */}
+          {timeCommitment && (
+            <div className='flex items-center text-xs text-gray-600'>
+              <HiClock className='mr-1.5 h-3.5 w-3.5 flex-shrink-0' />
+              <span>{timeCommitment}</span>
+            </div>
+          )}
+
+          {/* Skills with overflow indicator */}
           {skills?.length > 0 && (
-            <div className='flex flex-wrap gap-1' aria-label={t('skills')}>
-              {skills.map((skill, index) => (
+            <div className='flex flex-wrap items-center gap-1' aria-label={t('skills')}>
+              {visibleSkills.map((skill, index) => (
                 <span key={index} className='px-1.5 sm:px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-800'>
                   {skill}
                 </span>
               ))}
+              {remainingSkillsCount > 0 && (
+                <span className='px-1.5 sm:px-2 py-0.5 text-xs rounded-full bg-gray-200 text-gray-600 font-medium'>
+                  +{remainingSkillsCount} more
+                </span>
+              )}
             </div>
           )}
         </div>
@@ -316,9 +424,13 @@ export default function ActivityCard({
                 </span>
               </div>
             </div>
-            {dateTimeLine && (
-              <div className='text-xs sm:text-sm text-gray-700 truncate'>
-                {dateTimeLine}
+            {/* Date with relative formatting */}
+            {(relativeDate || dateTimeLine) && (
+              <div className='flex items-center text-xs sm:text-sm text-gray-700'>
+                <HiClock className='mr-1.5 h-3.5 w-3.5 flex-shrink-0' />
+                <span className='truncate'>
+                  {relativeDate || dateTimeLine}
+                </span>
               </div>
             )}
           </div>

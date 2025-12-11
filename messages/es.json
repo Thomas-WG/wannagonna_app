@@ -63,6 +63,7 @@
         "cancel": "Cancelar",
         "noDescription": "No se proporcionó una descripción",
         "description": "Descripción",
+        "skills": "Habilidades",
         "status": {
             "Draft": "Borrador",
             "Open": "Abierto",

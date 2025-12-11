@@ -63,6 +63,7 @@
         "cancel": "Cancel",
         "noDescription": "No description provided",
         "description": "Description",
+        "skills": "Skills",
         "status": {
             "Draft": "Draft",
             "Open": "Open",

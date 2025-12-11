@@ -10,6 +10,7 @@ import { useTranslations } from 'next-intl';
 import {
   HiLocationMarker,
   HiUserGroup,
+  HiUsers,
   HiStar,
   HiCalendar,
   HiOfficeBuilding,
@@ -21,10 +22,13 @@ import {
 import { HiClock } from 'react-icons/hi2';
 import NPODetailsModal from './NPODetailsModal';
 import { categoryIcons } from '@/constant/categoryIcons';
+import { useRouter } from 'next/navigation';
+import { HiCheckCircle } from 'react-icons/hi';
 
-export default function ActivityDetailsModal({ isOpen, onClose, activityId }) {
+export default function ActivityDetailsModal({ isOpen, onClose, activityId, onApply, hasApplied = false }) {
   const t = useTranslations('ActivityCard');
   const tManage = useTranslations('ManageActivities');
+  const router = useRouter();
   
   const [activity, setActivity] = useState(null);
   const [organization, setOrganization] = useState(null);
@@ -396,9 +400,35 @@ export default function ActivityDetailsModal({ isOpen, onClose, activityId }) {
         </Modal.Body>
         
         <Modal.Footer>
-          <Button color="gray" onClick={onClose}>
-            Close
-          </Button>
+          {hasApplied ? (
+            <>
+              <Button
+                color="green"
+                onClick={() => {
+                  onClose();
+                  router.push('/dashboard');
+                }}
+                className="flex items-center gap-2"
+              >
+                <HiCheckCircle className="h-5 w-5" />
+                View Application Status
+              </Button>
+              <Button color="gray" onClick={onClose}>
+                Close
+              </Button>
+            </>
+          ) : (
+            <>
+              {onApply && (
+                <Button onClick={onApply} className="bg-blue-600 hover:bg-blue-700">
+                  Apply Now
+                </Button>
+              )}
+              <Button color="gray" onClick={onClose}>
+                Close
+              </Button>
+            </>
+          )}
         </Modal.Footer>
       </Modal>
 
