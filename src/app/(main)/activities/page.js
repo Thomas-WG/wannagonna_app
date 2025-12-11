@@ -31,9 +31,11 @@ import { useAuth } from '@/utils/auth/AuthContext';
 import BadgeAnimation from '@/components/badges/BadgeAnimation';
 import { HiSearch, HiX, HiCheckCircle } from 'react-icons/hi';
 import { useDebounce } from '@/hooks/useDebounce';
+import { useTranslations } from 'next-intl';
 
 // Main component to display activities
 export default function ActivitiesPage() {
+  const t = useTranslations('Activities');
   // Destructure `user`, `claims`, and `loading` state from `useAuth` to manage access control
   const { user, claims, loading: authLoading } = useAuth();
 
@@ -255,7 +257,7 @@ export default function ActivitiesPage() {
     if (applicationStatuses[selectedActivity.id]) {
       setToastMessage({
         type: 'warning',
-        message: 'You have already applied for this activity. Check your profile for the application status.',
+        message: t('toastAlreadyApplied'),
       });
       setShowToast(true);
       handleApplyModalClose();
@@ -280,7 +282,7 @@ export default function ActivitiesPage() {
         
         setToastMessage({
           type: 'success',
-          message: 'Your application has been successfully submitted!',
+          message: t('toastApplicationSuccess'),
         });
         setApplyMessage('');
         handleApplyModalClose();
@@ -293,7 +295,7 @@ export default function ActivitiesPage() {
       } else if (result.error === 'existing_application') {
         setToastMessage({
           type: 'warning',
-          message: 'You have already applied for this activity. Check your profile for the application status.',
+          message: t('toastAlreadyApplied'),
         });
         setApplicationStatuses((prev) => ({
           ...prev,
@@ -303,7 +305,7 @@ export default function ActivitiesPage() {
     } catch (error) {
       setToastMessage({
         type: 'error',
-        message: 'An error occurred while submitting your application. Please try again.',
+        message: t('toastApplicationError'),
       });
     } finally {
       setShowToast(true);
@@ -320,10 +322,10 @@ export default function ActivitiesPage() {
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-            Available Activities
+            {t('title')}
           </h1>
           <p className="text-gray-600">
-            Discover opportunities to make a difference
+            {t('subtitle')}
           </p>
         </div>
 
@@ -333,7 +335,7 @@ export default function ActivitiesPage() {
             <HiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
             <input
               type="text"
-              placeholder="Search activities by title, description, or organization..."
+              placeholder={t('searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -360,37 +362,37 @@ export default function ActivitiesPage() {
 
         {/* Color Legend */}
         <div className="mb-4 flex items-center justify-center sm:justify-start gap-4 text-xs text-gray-600">
-          <span className="font-medium">Activity types:</span>
+          <span className="font-medium">{t('activityTypes')}</span>
           <div className="flex items-center gap-1">
             <div className="w-3 h-3 rounded-sm bg-blue-500 border border-blue-600"></div>
-            <span>Online</span>
+            <span>{t('online')}</span>
           </div>
           <div className="flex items-center gap-1">
             <div className="w-3 h-3 rounded-sm bg-green-500 border border-green-600"></div>
-            <span>Local</span>
+            <span>{t('local')}</span>
           </div>
           <div className="flex items-center gap-1">
             <div className="w-3 h-3 rounded-sm bg-purple-500 border border-purple-600"></div>
-            <span>Event</span>
+            <span>{t('event')}</span>
           </div>
         </div>
 
         {/* Sort and Results Count */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div className="text-sm text-gray-600">
-            Showing <span className="font-semibold">{sortedActivities.length}</span> of{' '}
-            <span className="font-semibold">{allActivities.length}</span> activities
+            {t('showing')} <span className="font-semibold">{sortedActivities.length}</span> {t('of')}{' '}
+            <span className="font-semibold">{allActivities.length}</span> {t('activities')}
           </div>
           <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-gray-700">Sort by:</label>
+            <label className="text-sm font-medium text-gray-700">{t('sortBy')}</label>
             <Select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="w-full sm:w-auto">
-              <option value="newest">Newest First</option>
-              <option value="oldest">Oldest First</option>
-              <option value="xp_high">Highest XP Reward</option>
-              <option value="xp_low">Lowest XP Reward</option>
-              <option value="applicants_high">Most Applicants</option>
-              <option value="applicants_low">Least Applicants</option>
-              <option value="alphabetical">Alphabetical (A-Z)</option>
+              <option value="newest">{t('sortNewest')}</option>
+              <option value="oldest">{t('sortOldest')}</option>
+              <option value="xp_high">{t('sortXpHigh')}</option>
+              <option value="xp_low">{t('sortXpLow')}</option>
+              <option value="applicants_high">{t('sortApplicantsHigh')}</option>
+              <option value="applicants_low">{t('sortApplicantsLow')}</option>
+              <option value="alphabetical">{t('sortAlphabetical')}</option>
             </Select>
           </div>
         </div>
@@ -400,7 +402,7 @@ export default function ActivitiesPage() {
           <div className="flex flex-wrap gap-2 mb-4">
             {filters.type !== 'all' && (
               <Badge color="blue" className="flex items-center gap-1">
-                Type: {filters.type}
+                {t('filterType')} {filters.type}
                 <button
                   onClick={() => setFilters({ ...filters, type: 'all' })}
                   className="ml-1 hover:text-gray-800"
@@ -411,7 +413,7 @@ export default function ActivitiesPage() {
             )}
             {filters.category !== 'all' && (
               <Badge color="blue" className="flex items-center gap-1">
-                Category: {filters.category}
+                {t('filterCategory')} {filters.category}
                 <button
                   onClick={() => setFilters({ ...filters, category: 'all' })}
                   className="ml-1 hover:text-gray-800"
@@ -422,7 +424,7 @@ export default function ActivitiesPage() {
             )}
             {filters.country !== 'all' && (
               <Badge color="blue" className="flex items-center gap-1">
-                Location: {filters.country}
+                {t('filterLocation')} {filters.country}
                 <button
                   onClick={() => setFilters({ ...filters, country: 'all' })}
                   className="ml-1 hover:text-gray-800"
@@ -433,7 +435,7 @@ export default function ActivitiesPage() {
             )}
             {filters.sdg !== 'all' && (
               <Badge color="blue" className="flex items-center gap-1">
-                SDG: {filters.sdg}
+                {t('filterSdg')} {filters.sdg}
                 <button
                   onClick={() => setFilters({ ...filters, sdg: 'all' })}
                   className="ml-1 hover:text-gray-800"
@@ -444,7 +446,7 @@ export default function ActivitiesPage() {
             )}
             {filters.skill !== 'all' && (
               <Badge color="blue" className="flex items-center gap-1">
-                Skill: {filters.skill}
+                {t('filterSkill')} {filters.skill}
                 <button
                   onClick={() => setFilters({ ...filters, skill: 'all' })}
                   className="ml-1 hover:text-gray-800"
@@ -466,11 +468,11 @@ export default function ActivitiesPage() {
         {/* Empty State */}
         {!loading && sortedActivities.length === 0 && (
           <div className="text-center py-12 bg-white rounded-lg shadow-sm">
-            <p className="text-lg text-gray-600 mb-2">No activities found</p>
+            <p className="text-lg text-gray-600 mb-2">{t('noActivitiesFound')}</p>
             <p className="text-sm text-gray-500">
               {allActivities.length === 0
-                ? 'There are no open activities at the moment. Check back later!'
-                : 'Try adjusting your filters or search query.'}
+                ? t('noOpenActivities')
+                : t('tryAdjustingFilters')}
             </p>
           </div>
         )}
@@ -506,7 +508,7 @@ export default function ActivitiesPage() {
                   <div className="absolute top-0 right-0 z-10">
                     <div className="bg-green-500 text-white px-3 py-1 text-xs font-semibold rounded-bl-lg shadow-md flex items-center gap-1.5">
                       <HiCheckCircle className="h-3.5 w-3.5" />
-                      <span>Applied</span>
+                      <span>{t('applied')}</span>
                     </div>
                     {/* Ribbon tail effect */}
                     <div className="absolute top-full right-0 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-t-[6px] border-t-green-600"></div>
@@ -564,7 +566,7 @@ export default function ActivitiesPage() {
           <Modal.Header>
             <div className="flex items-center gap-3">
               <div>
-                <h3 className="text-xl font-semibold">Apply for Activity</h3>
+                <h3 className="text-xl font-semibold">{t('applyForActivity')}</h3>
                 {selectedActivity && (
                   <p className="text-sm text-gray-500 mt-1">{selectedActivity.title}</p>
                 )}
@@ -583,11 +585,11 @@ export default function ActivitiesPage() {
                       </h4>
                       <div className="flex flex-wrap gap-3 text-sm text-gray-600">
                         <div className="flex items-center gap-1">
-                          <span className="font-medium">Organization:</span>
+                          <span className="font-medium">{t('organization')}</span>
                           <span>{selectedActivity.organization_name}</span>
                         </div>
                         <div className="flex items-center gap-1">
-                          <span className="font-medium">XP Reward:</span>
+                          <span className="font-medium">{t('xpReward')}</span>
                           <span className="text-indigo-600 font-semibold">
                             {selectedActivity.xp_reward || 0}
                           </span>
@@ -599,10 +601,10 @@ export default function ActivitiesPage() {
 
                 {/* Description Preview */}
                 <div>
-                  <Label htmlFor="description" value="Activity Description" />
+                  <Label htmlFor="description" value={t('activityDescription')} />
                   <div className="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-200 max-h-32 overflow-y-auto">
                     <p className="text-sm text-gray-700 line-clamp-4">
-                      {selectedActivity.description || 'No description provided.'}
+                      {selectedActivity.description || t('noDescriptionProvided')}
                     </p>
                   </div>
                   <button
@@ -613,21 +615,21 @@ export default function ActivitiesPage() {
                     }}
                     className="mt-2 text-sm text-blue-600 hover:text-blue-800 underline"
                   >
-                    View full details
+                    {t('viewFullDetails')}
                   </button>
                 </div>
 
                 {/* Application Message */}
                 <div>
                   <div className="mb-2 flex items-center justify-between">
-                    <Label htmlFor="message" value="Why do you want to help? *" />
+                    <Label htmlFor="message" value={t('whyHelp')} />
                     <span className="text-xs text-gray-500">
-                      {applyMessage.length}/500 characters
+                      {applyMessage.length}/500 {t('characters')}
                     </span>
                   </div>
                   <Textarea
                     id="message"
-                    placeholder="Tell us why you're interested in this activity and what skills or experience you can bring..."
+                    placeholder={t('messagePlaceholder')}
                     required
                     rows={6}
                     maxLength={500}
@@ -636,7 +638,7 @@ export default function ActivitiesPage() {
                     className="resize-none"
                   />
                   <p className="mt-2 text-xs text-gray-500">
-                    Tip: Be specific about your interest and relevant experience. This helps organizations understand your motivation.
+                    {t('messageTip')}
                   </p>
                 </div>
               </div>
@@ -651,10 +653,10 @@ export default function ActivitiesPage() {
               {isSubmitting ? (
                 <>
                   <Spinner size="sm" className="mr-2" />
-                  Submitting...
+                  {t('submitting')}
                 </>
               ) : (
-                'Submit Application'
+                t('submitApplication')
               )}
             </Button>
             <Button
@@ -663,7 +665,7 @@ export default function ActivitiesPage() {
               disabled={isSubmitting}
               className="w-full sm:w-auto"
             >
-              Cancel
+              {t('cancel')}
             </Button>
           </Modal.Footer>
         </Modal>

@@ -14,7 +14,7 @@ export default function ActivityFilters({
   availableCategories,
   availableSkills,
 }) {
-  const t = useTranslations('ActivityCard');
+  const t = useTranslations('Activities');
   const tManage = useTranslations('ManageActivities');
   const [isOpen, setIsOpen] = useState(false);
 
@@ -72,10 +72,10 @@ export default function ActivityFilters({
         >
           <div className="flex items-center gap-2">
             <HiFilter className="h-5 w-5" />
-            <span className="font-medium">Filters</span>
+            <span className="font-medium">{t('filters')}</span>
             {hasActiveFilters && (
               <span className="ml-2 px-2 py-0.5 text-xs bg-blue-500 text-white rounded-full">
-                Active
+                {t('active')}
               </span>
             )}
           </div>
@@ -96,7 +96,7 @@ export default function ActivityFilters({
                 className="w-full"
               >
                 <HiX className="mr-2 h-4 w-4" />
-                Clear All Filters
+                {t('clearAllFilters')}
               </Button>
             )}
           </div>
@@ -113,7 +113,7 @@ export default function ActivityFilters({
             onClick={clearFilters}
           >
             <HiX className="mr-2 h-4 w-4" />
-            Clear All
+            {t('clearAll')}
           </Button>
         )}
       </div>
@@ -126,7 +126,7 @@ export default function ActivityFilters({
         {/* Type Filter */}
         <div className="flex-1 min-w-[150px]">
           <label className="block mb-1 text-sm font-medium text-gray-700">
-            Type
+            {t('filterTypeLabel')}
           </label>
           <Select
             value={filters.type}
@@ -140,17 +140,17 @@ export default function ActivityFilters({
             }}
             className="w-full"
           >
-            <option value="all">All Types</option>
-            <option value="online">Online</option>
-            <option value="local">Local</option>
-            <option value="event">Event</option>
+            <option value="all">{t('allTypes')}</option>
+            <option value="online">{t('online')}</option>
+            <option value="local">{t('local')}</option>
+            <option value="event">{t('event')}</option>
           </Select>
         </div>
 
         {/* Category Filter */}
         <div className="flex-1 min-w-[150px]">
           <label className="block mb-1 text-sm font-medium text-gray-700">
-            Category
+            {t('filterCategoryLabel')}
           </label>
           <Select
             value={filters.category}
@@ -158,7 +158,7 @@ export default function ActivityFilters({
             className="w-full"
             disabled={filters.type === 'all' && categoryOptions.length === 0}
           >
-            <option value="all">All Categories</option>
+            <option value="all">{t('allCategories')}</option>
             {categoryOptions.map((cat) => (
               <option key={cat.id} value={cat.id}>
                 {(() => {
@@ -177,14 +177,14 @@ export default function ActivityFilters({
         {availableCountries && availableCountries.length > 0 && (
           <div className="flex-1 min-w-[150px]">
             <label className="block mb-1 text-sm font-medium text-gray-700">
-              Location
+              {t('filterLocationLabel')}
             </label>
             <Select
               value={filters.country}
               onChange={(e) => handleFilterChange('country', e.target.value)}
               className="w-full"
             >
-              <option value="all">All Countries</option>
+              <option value="all">{t('allCountries')}</option>
               {availableCountries.map((country) => (
                 <option key={country} value={country}>
                   {country}
@@ -197,14 +197,14 @@ export default function ActivityFilters({
         {/* SDG Filter */}
         <div className="flex-1 min-w-[150px]">
           <label className="block mb-1 text-sm font-medium text-gray-700">
-            SDG
+            {t('filterSdgLabel')}
           </label>
           <Select
             value={filters.sdg}
             onChange={(e) => handleFilterChange('sdg', e.target.value)}
             className="w-full"
           >
-            <option value="all">All SDGs</option>
+            <option value="all">{t('allSdgs')}</option>
             {allSDGs.map((sdg) => (
               <option key={sdg.id} value={sdg.id}>
                 {sdg.id}: {sdgNames[sdg.id] || `SDG ${sdg.name}`}
@@ -217,14 +217,14 @@ export default function ActivityFilters({
         {availableSkills && availableSkills.length > 0 && (
           <div className="flex-1 min-w-[150px]">
             <label className="block mb-1 text-sm font-medium text-gray-700">
-              Skill
+              {t('filterSkillLabel')}
             </label>
             <Select
               value={filters.skill}
               onChange={(e) => handleFilterChange('skill', e.target.value)}
               className="w-full"
             >
-              <option value="all">All Skills</option>
+              <option value="all">{t('allSkills')}</option>
               {availableSkills.map((skill) => (
                 <option key={skill} value={skill}>
                   {skill}
