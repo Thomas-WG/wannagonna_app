@@ -120,15 +120,16 @@ export default function SkillsAndAvailability({ profileData, handleMultiSelectCh
 
   return (
     <Card className="w-full h-fit">
-              <div className="p-4">
-                <h5 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white mb-4">
-                    {t('skillsAvailable')}
-                </h5>
-                <div className="space-y-4">
-                  <div>
-                    <div className="mb-2 block">
-                      <Label htmlFor="skills">{t('skills')}</Label>
-                    </div>
+      <div className="p-4">
+        <h5 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white mb-4">
+          {t('skillsAvailable')}
+        </h5>
+        <div className="space-y-6">
+          {/* Skills Section */}
+          <div>
+            <div className="mb-2 block">
+              <Label htmlFor="skills">{t('skills')}</Label>
+            </div>
                     <Select
                       id="skills"
                       name="skills"
@@ -150,8 +151,12 @@ export default function SkillsAndAvailability({ profileData, handleMultiSelectCh
                         </div>
                       )}
                     />
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          </div>
+          
+          {/* Availability Section */}
+          <div>
+            <h6 className="text-lg font-semibold text-gray-800 mb-4">{t('availability') || 'Availability'}</h6>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div>
                       <div className="mb-2 block">
                         <Label>{t('frequency')}</Label>
@@ -286,9 +291,10 @@ export default function SkillsAndAvailability({ profileData, handleMultiSelectCh
                         </div>
                       </div>
                     </div>
-                  </div>
-                </div>
-              </div>
-            </Card>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Card>
   );
 }

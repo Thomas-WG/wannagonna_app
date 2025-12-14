@@ -78,7 +78,11 @@ export async function fetchMemberById(userId, setProfileData) {
         code: '',
         referredBy: '',
         cause: '',
-        hobbies: ''
+        hobbies: '',
+        website: '',
+        linkedin: '',
+        facebook: '',
+        instagram: ''
       };
       
       // Build the final data object with proper defaults
@@ -99,6 +103,10 @@ export async function fetchMemberById(userId, setProfileData) {
         referredBy: memberData.referredBy ?? defaultValues.referredBy,
         cause: memberData.cause ?? defaultValues.cause,
         hobbies: memberData.hobbies ?? defaultValues.hobbies,
+        website: memberData.website ?? defaultValues.website,
+        linkedin: memberData.linkedin ?? defaultValues.linkedin,
+        facebook: memberData.facebook ?? defaultValues.facebook,
+        instagram: memberData.instagram ?? defaultValues.instagram,
         timeCommitment: {
           ...defaultValues.timeCommitment,
           ...(memberData.timeCommitment || {})
@@ -169,6 +177,10 @@ export async function fetchPublicMemberProfile(userId) {
       badges: Array.isArray(memberData.badges) ? memberData.badges : [],
       cause: memberData.cause || '',
       hobbies: memberData.hobbies || '',
+      website: memberData.website || '',
+      linkedin: memberData.linkedin || '',
+      facebook: memberData.facebook || '',
+      instagram: memberData.instagram || '',
       createdAt: createdAt,
       timeCommitment: memberData.timeCommitment || {
         daily: false,

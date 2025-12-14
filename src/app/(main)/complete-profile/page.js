@@ -12,8 +12,10 @@ import { updateMember, fetchMemberById } from '@/utils/crudMemberProfile';
 import { uploadProfilePicture } from '@/utils/storage';
 import { isProfileComplete } from '@/utils/profileHelpers';
 import { grantBadgeToUser, userHasBadge } from '@/utils/crudBadges';
+import { normalizeUrl } from '@/utils/urlUtils';
 import ProfileInformation from '@/components/profile/ProfileInformation';
 import SkillsAndAvailability from '@/components/profile/SkillsAndAvailability';
+import ConnectLinks from '@/components/profile/ConnectLinks';
 import BadgeAnimation from '@/components/badges/BadgeAnimation';
 
 // Register the languages you want to use
@@ -58,6 +60,10 @@ export default function CompleteProfilePage() {
     bio: '',
     cause: '',
     hobbies: '',
+    website: '',
+    linkedin: '',
+    facebook: '',
+    instagram: '',
     country: '',
     languages: [], // This will now store an array of { value, label } objects
     skills: [],
@@ -104,6 +110,10 @@ export default function CompleteProfilePage() {
       // Handle multiple selections for languages
       const selectedOptions = Array.from(e.target.selectedOptions).map(option => option.value);
       setProfileData(prev => ({ ...prev, languages: selectedOptions }));
+    } else if (name === 'website' || name === 'linkedin' || name === 'facebook' || name === 'instagram') {
+      // Normalize URL fields on blur (when user finishes typing)
+      // Store the raw value for editing, normalize on save
+      setProfileData(prev => ({ ...prev, [name]: value }));
     } else {
       setProfileData(prev => ({ ...prev, [name]: value }));
     }
@@ -165,7 +175,21 @@ export default function CompleteProfilePage() {
         }
       }
       
+      // Normalize URL fields before saving
       const cleanedProfileData = cleanData(finalProfileData);
+      if (cleanedProfileData.website) {
+        cleanedProfileData.website = normalizeUrl(cleanedProfileData.website);
+      }
+      if (cleanedProfileData.linkedin) {
+        cleanedProfileData.linkedin = normalizeUrl(cleanedProfileData.linkedin);
+      }
+      if (cleanedProfileData.facebook) {
+        cleanedProfileData.facebook = normalizeUrl(cleanedProfileData.facebook);
+      }
+      if (cleanedProfileData.instagram) {
+        cleanedProfileData.instagram = normalizeUrl(cleanedProfileData.instagram);
+      }
+      
       await updateMember(user.uid, cleanedProfileData);
       console.log("Profile updated!");
       
@@ -223,20 +247,31 @@ export default function CompleteProfilePage() {
   return (
     <div className="space-y-6">
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <ProfileInformation
-            profileData={profileData}
-            handleProfilePictureChange={handleProfilePictureChange}
-            handleInputChange={handleInputChange}
-            handleMultiSelectChange={handleMultiSelectChange}
-            countryOptions={countryOptions}
-            languageOptions={languageOptions}
-          />
-          <SkillsAndAvailability
-            profileData={profileData}
-            handleMultiSelectChange={handleMultiSelectChange}
-            handleCheckboxChange={handleCheckboxChange}
-          />
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+          {/* Left Column - Profile Information (takes 3/5 of width) */}
+          <div className="lg:col-span-3">
+            <ProfileInformation
+              profileData={profileData}
+              handleProfilePictureChange={handleProfilePictureChange}
+              handleInputChange={handleInputChange}
+              handleMultiSelectChange={handleMultiSelectChange}
+              countryOptions={countryOptions}
+              languageOptions={languageOptions}
+            />
+          </div>
+          
+          {/* Right Column - Connect Links and Skills & Availability stacked (takes 2/5 of width) */}
+          <div className="lg:col-span-2 space-y-6">
+            <ConnectLinks
+              profileData={profileData}
+              handleInputChange={handleInputChange}
+            />
+            <SkillsAndAvailability
+              profileData={profileData}
+              handleMultiSelectChange={handleMultiSelectChange}
+              handleCheckboxChange={handleCheckboxChange}
+            />
+          </div>
         </div>
         <div className="flex justify-center pb-6">
           <Button type="submit" className="w-full md:w-auto md:min-w-[200px]">

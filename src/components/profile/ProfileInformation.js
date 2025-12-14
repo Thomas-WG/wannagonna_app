@@ -57,7 +57,7 @@ export default function ProfileInformation({ profileData, handleInputChange, han
                   </div>
                   <div>
                     <div className="mb-2 block">
-                      <Label htmlFor="cause">Cause I care about</Label>
+                      <Label htmlFor="cause">{t('cause')}</Label>
                     </div>
                     <Textarea 
                       id="cause" 
