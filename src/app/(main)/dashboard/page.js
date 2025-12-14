@@ -6,7 +6,6 @@ import {
   HiOfficeBuilding, 
   HiCalendar, 
   HiDocumentText,
-  HiStar,
   HiBadgeCheck,
   HiLockClosed,
   HiCheck,
@@ -31,6 +30,7 @@ import ViewApplicationModal from "@/components/activities/ViewApplicationModal";
 import BadgeList from "@/components/badges/BadgeList";
 import QRCodeScanner from "@/components/activities/QRCodeScanner";
 import ActivityValidationSuccessModal from "@/components/activities/ActivityValidationSuccessModal";
+import PublicProfileModal from "@/components/profile/PublicProfileModal";
 import { Alert } from "flowbite-react";
 import Image from "next/image";
 
@@ -70,6 +70,9 @@ export default function DashboardPage() {
   const [showValidationModal, setShowValidationModal] = useState(false);
   const [validationResult, setValidationResult] = useState(null);
   const validationProcessedRef = useRef(false);
+  
+  // Public profile modal state
+  const [showProfileModal, setShowProfileModal] = useState(false);
   
   // Gamification data (placeholder - can be enhanced later)
   const [gamificationData, setGamificationData] = useState({
@@ -563,7 +566,10 @@ export default function DashboardPage() {
             <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-indigo-200">
               <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
                 {/* Profile Picture */}
-                <div className="relative">
+                <div
+                  className="relative cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={() => user?.uid && setShowProfileModal(true)}
+                >
                   {profilePicture ? (
                     <Image
                       src={profilePicture}
@@ -581,7 +587,12 @@ export default function DashboardPage() {
 
                 {/* Profile Info and Gamification */}
                 <div className="flex-1 w-full sm:w-auto text-center sm:text-left">
-                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{displayName}</h1>
+                  <h1
+                    className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 cursor-pointer hover:text-blue-600 transition-colors"
+                    onClick={() => user?.uid && setShowProfileModal(true)}
+                  >
+                    {displayName}
+                  </h1>
                   
                   {/* User Code */}
                   {userCode && (
@@ -605,7 +616,6 @@ export default function DashboardPage() {
                   <div className="mb-4">
                     <div className="flex items-center justify-center sm:justify-start gap-3 mb-2">
                       <div className="flex items-center gap-2">
-                        <HiStar className="w-6 h-6 text-yellow-500" />
                         <span className="text-lg sm:text-xl font-bold text-gray-800">
                           Level {gamificationData.level}
                         </span>
@@ -1026,6 +1036,14 @@ export default function DashboardPage() {
             xpReward={validationResult?.xpReward || 0}
             badges={validationResult?.badges || []}
             activityTitle={validationResult?.activityTitle || ''}
+          />
+
+          {/* Public Profile Modal */}
+          <PublicProfileModal
+            isOpen={showProfileModal}
+            onClose={() => setShowProfileModal(false)}
+            userId={user?.uid}
+            isOwnProfile={true}
           />
         </>
       )}

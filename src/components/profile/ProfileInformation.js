@@ -57,6 +57,32 @@ export default function ProfileInformation({ profileData, handleInputChange, han
                   </div>
                   <div>
                     <div className="mb-2 block">
+                      <Label htmlFor="cause">{t('cause')}</Label>
+                    </div>
+                    <Textarea 
+                      id="cause" 
+                      name="cause"
+                      placeholder="What cause are you passionate about?" 
+                      value={profileData.cause || ''} 
+                      onChange={handleInputChange}
+                      rows={3}
+                    />
+                  </div>
+                  <div>
+                    <div className="mb-2 block">
+                      <Label htmlFor="hobbies">My Hobbies</Label>
+                    </div>
+                    <Textarea 
+                      id="hobbies" 
+                      name="hobbies"
+                      placeholder="What are your hobbies and interests?" 
+                      value={profileData.hobbies || ''} 
+                      onChange={handleInputChange}
+                      rows={3}
+                    />
+                  </div>
+                  <div>
+                    <div className="mb-2 block">
                       <Label htmlFor="country">{t('country')}</Label>
                     </div>
                     <FlowbiteSelect

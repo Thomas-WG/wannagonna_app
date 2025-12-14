@@ -9,8 +9,9 @@ import { getBadgeImageUrl } from '@/utils/crudBadges';
  * @param {string} badge.id - Badge ID (used to fetch image)
  * @param {string} badge.title - Badge title
  * @param {string} badge.description - Badge description (shown on hover)
+ * @param {string} size - Size variant: 'default' (112px) or 'small' (64px)
  */
-export default function BadgeDisplay({ badge }) {
+export default function BadgeDisplay({ badge, size = 'default' }) {
   const [imageUrl, setImageUrl] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showTooltip, setShowTooltip] = useState(false);
@@ -54,6 +55,12 @@ export default function BadgeDisplay({ badge }) {
     return null;
   }
 
+  const isSmall = size === 'small';
+  const imageWidth = isSmall ? '64px' : '112px';
+  const imageMaxWidth = isSmall ? '80px' : '128px';
+  const textMaxWidth = isSmall ? '80px' : '112px';
+  const textMaxWidthSm = isSmall ? '90px' : '128px';
+
   return (
     <div
       className="relative flex flex-col items-center group"
@@ -64,7 +71,7 @@ export default function BadgeDisplay({ badge }) {
       <div className="relative mb-2 flex items-center justify-center">
         {loading ? (
           <div className="bg-transparent animate-pulse flex items-center justify-center">
-            <div className="w-8 h-8 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+            <div className={`${isSmall ? 'w-6 h-6' : 'w-8 h-8'} border-2 border-gray-400 border-t-transparent rounded-full animate-spin`}></div>
           </div>
         ) : imageUrl ? (
           <img
@@ -72,9 +79,9 @@ export default function BadgeDisplay({ badge }) {
             alt={badge.title || 'Badge'}
             className="object-contain"
             style={{
-              width: '112px',
+              width: imageWidth,
               height: 'auto',
-              maxWidth: '128px',
+              maxWidth: imageMaxWidth,
               display: 'block'
             }}
             onError={(e) => {
@@ -84,14 +91,19 @@ export default function BadgeDisplay({ badge }) {
           />
         ) : (
           <div className="bg-transparent flex items-center justify-center">
-            <span className="text-gray-500 text-sm">?</span>
+            <span className={`text-gray-500 ${isSmall ? 'text-xs' : 'text-sm'}`}>?</span>
           </div>
         )}
       </div>
 
       {/* Badge Title */}
       <div className="text-center">
-        <p className="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 max-w-[112px] sm:max-w-[128px] truncate">
+        <p 
+          className={`${isSmall ? 'text-[10px] sm:text-xs' : 'text-xs sm:text-sm'} font-semibold text-gray-700 dark:text-gray-300 truncate`}
+          style={{
+            maxWidth: textMaxWidth
+          }}
+        >
           {badge.title || 'Badge'}
         </p>
       </div>

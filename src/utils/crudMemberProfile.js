@@ -76,7 +76,13 @@ export async function fetchMemberById(userId, setProfileData) {
         xp: 0,
         badges:[],
         code: '',
-        referredBy: ''
+        referredBy: '',
+        cause: '',
+        hobbies: '',
+        website: '',
+        linkedin: '',
+        facebook: '',
+        instagram: ''
       };
       
       // Build the final data object with proper defaults
@@ -95,6 +101,12 @@ export async function fetchMemberById(userId, setProfileData) {
         badges: Array.isArray(memberData.badges) ? memberData.badges : defaultValues.badges,
         code: memberData.code ?? defaultValues.code,
         referredBy: memberData.referredBy ?? defaultValues.referredBy,
+        cause: memberData.cause ?? defaultValues.cause,
+        hobbies: memberData.hobbies ?? defaultValues.hobbies,
+        website: memberData.website ?? defaultValues.website,
+        linkedin: memberData.linkedin ?? defaultValues.linkedin,
+        facebook: memberData.facebook ?? defaultValues.facebook,
+        instagram: memberData.instagram ?? defaultValues.instagram,
         timeCommitment: {
           ...defaultValues.timeCommitment,
           ...(memberData.timeCommitment || {})
@@ -115,6 +127,100 @@ export async function fetchMemberById(userId, setProfileData) {
     }
   } catch (error) {
     console.error("Error fetching member data:", error);
+  }
+}
+
+/**
+ * Fetch public member profile data (excludes sensitive information like email)
+ * @param {string} userId - The user ID of the member
+ * @returns {Promise<Object|null>} Public member profile object or null if not found
+ */
+export async function fetchPublicMemberProfile(userId) {
+  if (!userId) return null;
+  
+  try {
+    const memberDoc = doc(db, 'members', userId);
+    const docSnap = await getDoc(memberDoc);
+    
+    if (!docSnap.exists()) {
+      return null;
+    }
+    
+    const memberData = docSnap.data();
+    
+    // Convert createdAt timestamp if it exists
+    let createdAt = null;
+    if (memberData.createdAt) {
+      if (memberData.createdAt.toDate && typeof memberData.createdAt.toDate === 'function') {
+        createdAt = memberData.createdAt.toDate();
+      } else if (memberData.createdAt.seconds) {
+        createdAt = new Date(memberData.createdAt.seconds * 1000);
+      } else if (memberData.createdAt instanceof Date) {
+        createdAt = memberData.createdAt;
+      }
+    }
+    
+    // Calculate level from XP
+    const xp = memberData.xp || 0;
+    const level = Math.floor(xp / 100) + 1;
+    
+    // Return only public fields (exclude email, referredBy, code)
+    return {
+      displayName: memberData.displayName || '',
+      bio: memberData.bio || '',
+      country: memberData.country || '',
+      languages: Array.isArray(memberData.languages) ? memberData.languages : [],
+      skills: Array.isArray(memberData.skills) ? memberData.skills : [],
+      profilePicture: memberData.profilePicture || '',
+      xp: xp,
+      level: level,
+      badges: Array.isArray(memberData.badges) ? memberData.badges : [],
+      cause: memberData.cause || '',
+      hobbies: memberData.hobbies || '',
+      website: memberData.website || '',
+      linkedin: memberData.linkedin || '',
+      facebook: memberData.facebook || '',
+      instagram: memberData.instagram || '',
+      createdAt: createdAt,
+      timeCommitment: memberData.timeCommitment || {
+        daily: false,
+        weekly: false,
+        biweekly: false,
+        monthly: false,
+        occasional: false,
+        flexible: false
+      },
+      availabilities: memberData.availabilities || {
+        weekdays: false,
+        weekends: false,
+        mornings: false,
+        afternoons: false,
+        evenings: false,
+        flexible: false
+      }
+    };
+  } catch (error) {
+    console.error('Error fetching public member profile:', error);
+    return null;
+  }
+}
+
+/**
+ * Format creation date as "Month Year" (e.g., "January 2024")
+ * @param {Date} date - Date object
+ * @returns {string} Formatted date string
+ */
+export function formatJoinedDate(date) {
+  if (!date) return null;
+  
+  try {
+    return date.toLocaleDateString('en-US', {
+      month: 'long',
+      year: 'numeric'
+    });
+  } catch (error) {
+    console.error('Error formatting joined date:', error);
+    return null;
   }
 }
 
