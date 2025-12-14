@@ -1,9 +1,9 @@
 "use client";
 
-import { Card, Toast } from "flowbite-react";
-import { HiUsers, HiOfficeBuilding, HiCalendar, HiDocumentText, HiPencil, HiTrash, HiEye, HiUserGroup, HiCog, HiViewGrid, HiLockClosed } from "react-icons/hi";
+import { Card, Toast, Select } from "flowbite-react";
+import { HiUsers, HiOfficeBuilding, HiCalendar, HiDocumentText, HiPencil, HiTrash, HiEye, HiUserGroup, HiCog, HiViewGrid, HiLockClosed, HiQrcode } from "react-icons/hi";
 import { MdOutlineSocialDistance } from "react-icons/md";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useAuth } from "@/utils/auth/AuthContext";
 import { fetchOrganizationById } from "@/utils/crudOrganizations";
 import { useRouter } from "next/navigation";
@@ -14,9 +14,16 @@ import ActivityCard from "@/components/activities/ActivityCard";
 import DeleteActivityModal from "@/components/activities/DeleteActivityModal";
 import ReviewApplicationsModal from "@/components/activities/ReviewApplicationsModal";
 import ActivityDetailsModal from "@/components/activities/ActivityDetailsModal";
+import StatusUpdateModal from "@/components/activities/StatusUpdateModal";
+import QRCodeModal from "@/components/activities/QRCodeModal";
+import ActivityValidationModal from "@/components/activities/ActivityValidationModal";
+import { updateActivityStatus } from "@/utils/crudActivities";
+import ActivityFilters from "@/components/activities/ActivityFilters";
+import categories from "@/constant/categories";
 
 export default function MyNonProfitDashboard() {
   const t = useTranslations('MyNonProfit');
+  const tActivities = useTranslations('Activities');
   const { claims } = useAuth();
   const router = useRouter();
   const [orgData, setOrgData] = useState({
@@ -36,10 +43,18 @@ export default function MyNonProfitDashboard() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [showActivityDetailsModal, setShowActivityDetailsModal] = useState(false);
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [showQRModal, setShowQRModal] = useState(false);
+  const [showValidationModal, setShowValidationModal] = useState(false);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState({ type: '', message: '' });
-  const [selectedType, setSelectedType] = useState(null); // Track selected activity type for filtering (single selection)
-  const [showClosedOnly, setShowClosedOnly] = useState(false); // Track if showing only closed activities
+  const [filters, setFilters] = useState({
+    type: 'all',
+    category: 'all',
+    status: 'all',
+  });
+  const [sortBy, setSortBy] = useState('newest');
 
   // Auto-dismiss toast after 5 seconds
   useEffect(() => {
@@ -85,11 +100,9 @@ export default function MyNonProfitDashboard() {
         try {
           const results = await fetchActivitiesByCriteria(claims.npoId, 'any', 'any');
           setAllOrgActivities(results || []);
-          setOrgActivities(results || []);
         } catch (error) {
           console.error("Error fetching organization activities:", error);
           setAllOrgActivities([]);
-          setOrgActivities([]);
         } finally {
           setLoadingActivities(false);
         }
@@ -100,43 +113,86 @@ export default function MyNonProfitDashboard() {
     fetchActivities();
   }, [claims]);
 
-  // Filter activities based on selected type and status (closed/open)
-  useEffect(() => {
+  // Extract available categories from activities
+  const availableCategories = useMemo(() => {
+    const cats = new Set();
+    allOrgActivities.forEach((activity) => {
+      if (activity.category) cats.add(activity.category);
+    });
+    return Array.from(cats).sort();
+  }, [allOrgActivities]);
+
+  // Filter activities based on filters
+  const filteredActivities = useMemo(() => {
     let filtered = [...allOrgActivities];
 
-    // Filter by status first (closed vs open/draft)
-    if (showClosedOnly) {
-      // Show only closed activities
-      filtered = filtered.filter(activity => 
-        activity.status === 'Closed'
-      );
-    } else {
-      // By default, exclude closed activities (show only Draft and Open)
-      filtered = filtered.filter(activity => 
-        activity.status !== 'Closed'
-      );
+    // Filter by type
+    if (filters.type !== 'all') {
+      filtered = filtered.filter((activity) => activity.type === filters.type);
     }
 
-    // Then filter by type if selected
-    if (selectedType) {
-      filtered = filtered.filter(activity => 
-        activity.type === selectedType
-      );
+    // Filter by category
+    if (filters.category !== 'all') {
+      filtered = filtered.filter((activity) => activity.category === filters.category);
     }
 
-    setOrgActivities(filtered);
-  }, [selectedType, allOrgActivities, showClosedOnly]);
+    // Filter by status
+    if (filters.status !== 'all') {
+      filtered = filtered.filter((activity) => activity.status === filters.status);
+    }
+
+    return filtered;
+  }, [allOrgActivities, filters]);
+
+  // Sort activities
+  const sortedActivities = useMemo(() => {
+    const sorted = [...filteredActivities];
+
+    switch (sortBy) {
+      case 'newest':
+        return sorted.sort((a, b) => {
+          const getDate = (date) => {
+            if (!date) return new Date(0);
+            if (date.seconds) return new Date(date.seconds * 1000);
+            if (date.toDate) return date.toDate();
+            if (date instanceof Date) return date;
+            return new Date(date);
+          };
+          const dateA = getDate(a.start_date);
+          const dateB = getDate(b.start_date);
+          return dateB - dateA;
+        });
+      case 'oldest':
+        return sorted.sort((a, b) => {
+          const getDate = (date) => {
+            if (!date) return new Date(0);
+            if (date.seconds) return new Date(date.seconds * 1000);
+            if (date.toDate) return date.toDate();
+            if (date instanceof Date) return date;
+            return new Date(date);
+          };
+          const dateA = getDate(a.start_date);
+          const dateB = getDate(b.start_date);
+          return dateA - dateB;
+        });
+      case 'xp_high':
+        return sorted.sort((a, b) => (b.xp_reward || 0) - (a.xp_reward || 0));
+      case 'xp_low':
+        return sorted.sort((a, b) => (a.xp_reward || 0) - (b.xp_reward || 0));
+      case 'applicants_high':
+        return sorted.sort((a, b) => (b.applicants || 0) - (a.applicants || 0));
+      case 'applicants_low':
+        return sorted.sort((a, b) => (a.applicants || 0) - (b.applicants || 0));
+      case 'alphabetical':
+        return sorted.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+      default:
+        return sorted;
+    }
+  }, [filteredActivities, sortBy]);
 
   // Handle status change from activity card
   const handleStatusChange = (activityId, newStatus) => {
     setAllOrgActivities(prevActivities => 
-      prevActivities.map(activity => 
-        activity.id === activityId 
-          ? { ...activity, status: newStatus }
-          : activity
-      )
-    );
-    setOrgActivities(prevActivities => 
       prevActivities.map(activity => 
         activity.id === activityId 
           ? { ...activity, status: newStatus }
@@ -167,7 +223,6 @@ export default function MyNonProfitDashboard() {
       // Refresh activities list
       const results = await fetchActivitiesByCriteria(claims.npoId, 'any', 'any');
       setAllOrgActivities(results || []);
-      // Note: The useEffect hook will automatically apply filters (type and closed status) when allOrgActivities changes
       
       // Refresh organization data to update activity counts
       const orgData = await fetchOrganizationById(claims.npoId);
@@ -207,23 +262,53 @@ export default function MyNonProfitDashboard() {
     setShowActivityDetailsModal(true);
   };
 
-  // Handle type filter toggle - single selection with deselect option
-  const handleTypeFilterToggle = (type) => {
-    setSelectedType(prev => {
-      // If clicking the same type, deselect it
-      if (prev === type) {
-        return null;
-      }
-      // Otherwise, switch to the new type
-      return type;
-    });
+  const handleChangeStatus = () => {
+    setShowActionModal(false);
+    setShowStatusModal(true);
   };
 
-  // Handle closed activities filter toggle
-  const handleClosedFilterToggle = () => {
-    setShowClosedOnly(prev => !prev);
-    // Reset type filter when toggling closed filter to avoid confusion
-    setSelectedType(null);
+  const handleShowQRCode = () => {
+    setShowActionModal(false);
+    setShowQRModal(true);
+  };
+
+  const handleStatusUpdate = async (newStatus) => {
+    if (!selectedActivity) return;
+
+    // If trying to close the activity, open validation modal instead
+    if (newStatus === 'Closed') {
+      setShowStatusModal(false);
+      setShowValidationModal(true);
+      return;
+    }
+
+    // For other status changes, proceed normally
+    try {
+      setIsUpdatingStatus(true);
+      await updateActivityStatus(selectedActivity.id, newStatus);
+      handleStatusChange(selectedActivity.id, newStatus);
+      setShowStatusModal(false);
+    } catch (error) {
+      console.error('Error updating activity status:', error);
+      alert('Error updating activity status. Please try again.');
+    } finally {
+      setIsUpdatingStatus(false);
+    }
+  };
+
+  const handleValidationModalClose = async (shouldCloseActivity) => {
+    setShowValidationModal(false);
+    
+    // If all applicants are processed, close the activity
+    if (shouldCloseActivity && selectedActivity) {
+      try {
+        await updateActivityStatus(selectedActivity.id, 'Closed');
+        handleStatusChange(selectedActivity.id, 'Closed');
+      } catch (error) {
+        console.error('Error closing activity:', error);
+        alert('Failed to close activity');
+      }
+    }
   };
 
   // Calculate closed activities count
@@ -245,148 +330,70 @@ export default function MyNonProfitDashboard() {
             <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 px-1 text-gray-700">{t('metricsAndFilters')}</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
               {/* All Activities Card */}
-              <Card 
-                className={`hover:shadow-lg transition-all cursor-pointer touch-manipulation ${
-                  !selectedType && !showClosedOnly
-                    ? 'ring-4 ring-gray-400 shadow-xl scale-105' 
-                    : 'shadow-md'
-                }`}
-                onClick={() => {
-                  setSelectedType(null);
-                  setShowClosedOnly(false);
-                }}
-              >
-                <div className="flex flex-col items-center p-2 sm:p-3">
-                  <div className={`p-2 rounded-full mb-2 transition-colors ${
-                    !selectedType && !showClosedOnly
-                      ? 'bg-gray-500' 
-                      : 'bg-gray-100'
-                  }`}>
-                    <HiViewGrid className={`h-5 w-5 sm:h-6 sm:w-6 ${
-                      !selectedType && !showClosedOnly
-                        ? 'text-white' 
-                        : 'text-gray-600'
-                    }`} />
+              <div className="bg-white rounded-lg shadow-md">
+                <div className="flex items-center gap-2 sm:gap-3 py-1 sm:py-1.5 px-2 sm:px-2.5">
+                  <div className="bg-gray-100 p-2 rounded-full flex-shrink-0">
+                    <HiViewGrid className="h-5 w-5 sm:h-6 sm:w-6 text-gray-600" />
                   </div>
-                  <h2 className="text-xs sm:text-sm font-semibold mb-1 text-center">{t('allActivities')}</h2>
-                  <p className="text-xl sm:text-2xl font-bold text-gray-600 text-center">{allOrgActivities.length}</p>
+                  <h2 className="text-xs sm:text-sm font-semibold flex-1">{t('allActivities')}</h2>
+                  <p className="text-xl sm:text-2xl font-bold text-gray-600 flex-shrink-0">{allOrgActivities.length}</p>
                 </div>
-              </Card>
+              </div>
 
               {/* Online Activities Card */}
-              <Card 
-                className={`hover:shadow-lg transition-all cursor-pointer touch-manipulation ${
-                  selectedType === 'online' 
-                    ? 'ring-4 ring-blue-400 shadow-xl scale-105' 
-                    : 'shadow-md'
-                }`}
-                onClick={() => handleTypeFilterToggle('online')}
-              >
-                <div className="flex flex-col items-center p-2 sm:p-3">
-                  <div className={`p-2 rounded-full mb-2 transition-colors ${
-                    selectedType === 'online' 
-                      ? 'bg-blue-500' 
-                      : 'bg-blue-100'
-                  }`}>
-                    <MdOutlineSocialDistance className={`h-5 w-5 sm:h-6 sm:w-6 ${
-                      selectedType === 'online' 
-                        ? 'text-white' 
-                        : 'text-blue-600'
-                    }`} />
+              <div className="bg-white rounded-lg shadow-md">
+                <div className="flex items-center gap-2 sm:gap-3 py-1 sm:py-1.5 px-2 sm:px-2.5">
+                  <div className="bg-blue-100 p-2 rounded-full flex-shrink-0">
+                    <MdOutlineSocialDistance className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
                   </div>
-                  <h2 className="text-xs sm:text-sm font-semibold mb-1 text-center">{t('online')}</h2>
-                  <p className="text-xl sm:text-2xl font-bold text-blue-600 text-center">{orgData.totalOnlineActivities}</p>
+                  <h2 className="text-xs sm:text-sm font-semibold flex-1">{t('online')}</h2>
+                  <p className="text-xl sm:text-2xl font-bold text-blue-600 flex-shrink-0">{orgData.totalOnlineActivities}</p>
                 </div>
-              </Card>
+              </div>
 
               {/* Local Activities Card */}
-              <Card 
-                className={`hover:shadow-lg transition-all cursor-pointer touch-manipulation ${
-                  selectedType === 'local' 
-                    ? 'ring-4 ring-green-400 shadow-xl scale-105' 
-                    : 'shadow-md'
-                }`}
-                onClick={() => handleTypeFilterToggle('local')}
-              >
-                <div className="flex flex-col items-center p-2 sm:p-3">
-                  <div className={`p-2 rounded-full mb-2 transition-colors ${
-                    selectedType === 'local' 
-                      ? 'bg-green-500' 
-                      : 'bg-green-100'
-                  }`}>
-                    <HiOfficeBuilding className={`h-5 w-5 sm:h-6 sm:w-6 ${
-                      selectedType === 'local' 
-                        ? 'text-white' 
-                        : 'text-green-600'
-                    }`} />
+              <div className="bg-white rounded-lg shadow-md">
+                <div className="flex items-center gap-2 sm:gap-3 py-1 sm:py-1.5 px-2 sm:px-2.5">
+                  <div className="bg-green-100 p-2 rounded-full flex-shrink-0">
+                    <HiOfficeBuilding className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
                   </div>
-                  <h2 className="text-xs sm:text-sm font-semibold mb-1 text-center">{t('local')}</h2>
-                  <p className="text-xl sm:text-2xl font-bold text-green-600 text-center">{orgData.totalLocalActivities}</p>
+                  <h2 className="text-xs sm:text-sm font-semibold flex-1">{t('local')}</h2>
+                  <p className="text-xl sm:text-2xl font-bold text-green-600 flex-shrink-0">{orgData.totalLocalActivities}</p>
                 </div>
-              </Card>
+              </div>
 
               {/* Total Events Card */}
-              <Card 
-                className={`hover:shadow-lg transition-all cursor-pointer touch-manipulation ${
-                  selectedType === 'event' 
-                    ? 'ring-4 ring-purple-400 shadow-xl scale-105' 
-                    : 'shadow-md'
-                }`}
-                onClick={() => handleTypeFilterToggle('event')}
-              >
-                <div className="flex flex-col items-center p-2 sm:p-3">
-                  <div className={`p-2 rounded-full mb-2 transition-colors ${
-                    selectedType === 'event' 
-                      ? 'bg-purple-500' 
-                      : 'bg-purple-100'
-                  }`}>
-                    <HiCalendar className={`h-5 w-5 sm:h-6 sm:w-6 ${
-                      selectedType === 'event' 
-                        ? 'text-white' 
-                        : 'text-purple-600'
-                    }`} />
+              <div className="bg-white rounded-lg shadow-md">
+                <div className="flex items-center gap-2 sm:gap-3 py-1 sm:py-1.5 px-2 sm:px-2.5">
+                  <div className="bg-purple-100 p-2 rounded-full flex-shrink-0">
+                    <HiCalendar className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
                   </div>
-                  <h2 className="text-xs sm:text-sm font-semibold mb-1 text-center">{t('events')}</h2>
-                  <p className="text-xl sm:text-2xl font-bold text-purple-600 text-center">{orgData.totalEvents}</p>
+                  <h2 className="text-xs sm:text-sm font-semibold flex-1">{t('events')}</h2>
+                  <p className="text-xl sm:text-2xl font-bold text-purple-600 flex-shrink-0">{orgData.totalEvents}</p>
                 </div>
-              </Card>
+              </div>
 
               {/* Closed Activities Card */}
-              <Card 
-                className={`hover:shadow-lg transition-all cursor-pointer touch-manipulation ${
-                  showClosedOnly 
-                    ? 'ring-4 ring-orange-400 shadow-xl scale-105' 
-                    : 'shadow-md'
-                }`}
-                onClick={handleClosedFilterToggle}
-              >
-                <div className="flex flex-col items-center p-2 sm:p-3">
-                  <div className={`p-2 rounded-full mb-2 transition-colors ${
-                    showClosedOnly 
-                      ? 'bg-orange-500' 
-                      : 'bg-orange-100'
-                  }`}>
-                    <HiLockClosed className={`h-5 w-5 sm:h-6 sm:w-6 ${
-                      showClosedOnly 
-                        ? 'text-white' 
-                        : 'text-orange-600'
-                    }`} />
+              <div className="bg-white rounded-lg shadow-md">
+                <div className="flex items-center gap-2 sm:gap-3 py-1 sm:py-1.5 px-2 sm:px-2.5">
+                  <div className="bg-orange-100 p-2 rounded-full flex-shrink-0">
+                    <HiLockClosed className="h-5 w-5 sm:h-6 sm:w-6 text-orange-600" />
                   </div>
-                  <h2 className="text-xs sm:text-sm font-semibold mb-1 text-center">{t('closed')}</h2>
-                  <p className="text-xl sm:text-2xl font-bold text-orange-600 text-center">{closedActivitiesCount}</p>
+                  <h2 className="text-xs sm:text-sm font-semibold flex-1">{t('closed')}</h2>
+                  <p className="text-xl sm:text-2xl font-bold text-orange-600 flex-shrink-0">{closedActivitiesCount}</p>
                 </div>
-              </Card>
+              </div>
 
               {/* Total Participants Card */}
-              <Card className="hover:shadow-lg transition-shadow">
-                <div className="flex flex-col items-center p-2 sm:p-3">
-                  <div className="bg-red-100 p-2 rounded-full mb-2">
+              <div className="bg-white rounded-lg shadow-md">
+                <div className="flex items-center gap-2 sm:gap-3 py-1 sm:py-1.5 px-2 sm:px-2.5">
+                  <div className="bg-red-100 p-2 rounded-full flex-shrink-0">
                     <HiUsers className="h-5 w-5 sm:h-6 sm:w-6 text-red-600" />
                   </div>
-                  <h2 className="text-xs sm:text-sm font-semibold mb-1 text-center">{t('participants')}</h2>
-                  <p className="text-xl sm:text-2xl font-bold text-red-600 text-center">{orgData.totalParticipants}</p>
+                  <h2 className="text-xs sm:text-sm font-semibold flex-1">{t('participants')}</h2>
+                  <p className="text-xl sm:text-2xl font-bold text-red-600 flex-shrink-0">{orgData.totalParticipants}</p>
                 </div>
-              </Card>
+              </div>
             </div>
           </div>
 
@@ -399,14 +406,14 @@ export default function MyNonProfitDashboard() {
                 className="hover:shadow-lg transition-shadow cursor-pointer relative"
                 onClick={() => router.push('/mynonprofit/activities/applications')}
               >
-                <div className="flex flex-col items-center p-2 sm:p-3">
+                <div className="flex items-center gap-2 sm:gap-3 py-1 sm:py-1.5 px-2 sm:px-2.5">
                   {/* Badge indicator */}
                   {orgData.totalNewApplications > 0 && (
                     <div className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center text-xs sm:text-sm font-bold shadow-lg animate-pulse">
                       {orgData.totalNewApplications > 99 ? '99+' : orgData.totalNewApplications}
                     </div>
                   )}
-                  <div className={`p-2 rounded-full mb-2 transition-colors ${
+                  <div className={`p-2 rounded-full flex-shrink-0 transition-colors ${
                     orgData.totalNewApplications > 0 
                       ? 'bg-yellow-500' 
                       : 'bg-yellow-100'
@@ -417,17 +424,12 @@ export default function MyNonProfitDashboard() {
                         : 'text-yellow-600'
                     }`} />
                   </div>
-                  <h2 className="text-xs sm:text-sm font-semibold mb-1 text-center">{t('newApplications')}</h2>
-                  <p className={`text-xl sm:text-2xl font-bold text-center ${
-                    orgData.totalNewApplications > 0 
-                      ? 'text-red-600' 
-                      : 'text-yellow-600'
-                  }`}>
-                    {orgData.totalNewApplications}
-                  </p>
-                  {orgData.totalNewApplications > 0 && (
-                    <p className="text-xs text-gray-500 mt-1 text-center">{t('requiresAttention')}</p>
-                  )}
+                  <div className="flex-1 min-w-0">
+                    <h2 className="text-xs sm:text-sm font-semibold">{t('reviewApplications')}</h2>
+                    {orgData.totalNewApplications > 0 && (
+                      <p className="text-[10px] sm:text-xs text-gray-500 mt-0.5">{t('requiresAttention')}</p>
+                    )}
+                  </div>
                 </div>
               </Card>
 
@@ -436,12 +438,14 @@ export default function MyNonProfitDashboard() {
                 className="hover:shadow-lg transition-shadow cursor-pointer"
                 onClick={() => router.push('/mynonprofit/organization/edit')}
               >
-                <div className="flex flex-col items-center p-2 sm:p-3">
-                  <div className="bg-indigo-100 p-2 rounded-full mb-2">
+                <div className="flex items-center gap-2 sm:gap-3 py-1 sm:py-1.5 px-2 sm:px-2.5">
+                  <div className="bg-indigo-100 p-2 rounded-full flex-shrink-0">
                     <HiCog className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-600" />
                   </div>
-                  <h2 className="text-xs sm:text-sm font-semibold mb-1 text-center">{t('organization')}</h2>
-                  <p className="text-xs sm:text-sm text-indigo-600 text-center font-medium">{t('editInformation')}</p>
+                  <div className="flex-1 min-w-0">
+                    <h2 className="text-xs sm:text-sm font-semibold">{t('organization')}</h2>
+                    <p className="text-[10px] sm:text-xs text-indigo-600 font-medium mt-0.5">{t('editInformation')}</p>
+                  </div>
                 </div>
               </Card>
             </div>
@@ -452,21 +456,47 @@ export default function MyNonProfitDashboard() {
       {/* Organization Activities */}
       <div className="mt-6 sm:mt-10">
         <h2 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 px-1">{t('yourActivities')}</h2>
+        
+        {/* Filters */}
+        <ActivityFilters
+          filters={filters}
+          onFiltersChange={setFilters}
+          availableCountries={[]}
+          availableCategories={availableCategories}
+          availableSkills={[]}
+        />
+
+        {/* Sort and Results Count */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <div className="text-sm text-gray-600">
+            {tActivities('showing')} <span className="font-semibold">{sortedActivities.length}</span> {tActivities('of')}{' '}
+            <span className="font-semibold">{allOrgActivities.length}</span> {tActivities('activities')}
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-gray-700">{tActivities('sortBy')}</label>
+            <Select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="w-full sm:w-auto">
+              <option value="newest">{tActivities('sortNewest')}</option>
+              <option value="oldest">{tActivities('sortOldest')}</option>
+              <option value="xp_high">{tActivities('sortXpHigh')}</option>
+              <option value="xp_low">{tActivities('sortXpLow')}</option>
+              <option value="applicants_high">{tActivities('sortApplicantsHigh')}</option>
+              <option value="applicants_low">{tActivities('sortApplicantsLow')}</option>
+              <option value="alphabetical">{tActivities('sortAlphabetical')}</option>
+            </Select>
+          </div>
+        </div>
+
         {loadingActivities ? (
           <div className="flex justify-center items-center h-32">
             <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
           </div>
-        ) : orgActivities.length === 0 ? (
+        ) : sortedActivities.length === 0 ? (
           <p className="text-gray-600 px-1">
-            {showClosedOnly 
-              ? t('noClosedActivities') 
-              : selectedType 
-                ? t('noActivitiesMatchingFilter') 
-                : t('noActivitiesFound')}
+            {t('noActivitiesFound')}
           </p>
         ) : (
           <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5'>
-            {orgActivities.map((activity) => (
+            {sortedActivities.map((activity) => (
               <div key={activity.id} className="relative">
                 <ActivityCard
                   id={activity.id}
@@ -496,56 +526,88 @@ export default function MyNonProfitDashboard() {
                 {/* Overlay with action buttons */}
                 {selectedActivity && selectedActivity.id === activity.id && showActionModal && (
                   <div className="absolute inset-0 bg-black bg-opacity-60 rounded-lg flex items-center justify-center z-10 p-3 sm:p-3">
-                    {/* Grid layout: Always 2x2 grid */}
-                    <div className="grid grid-cols-2 gap-3 sm:gap-2.5 md:gap-3 w-full max-w-xs sm:max-w-sm">
-                      {/* Edit Button */}
-                      <div className="flex flex-col items-center">
-                        <button
-                          onClick={handleEditActivity}
-                          className="w-16 h-16 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-blue-500 text-white flex items-center justify-center shadow-lg hover:bg-blue-600 active:bg-blue-700 transition-colors touch-manipulation"
-                          aria-label="Edit Activity"
-                        >
-                          <HiPencil className="h-7 w-7 sm:h-6 sm:w-6 md:h-7 md:w-7" />
-                        </button>
-                        <span className="mt-1.5 text-xs sm:text-[11px] md:text-xs text-white font-medium text-center leading-tight px-0.5">{t('edit')}</span>
-                      </div>
+                    {/* Grid layout: 3 columns, flexible rows */}
+                    {(() => {
+                      const hasQRCode = activity.qrCodeToken && (activity.type === 'local' || activity.type === 'event');
+                      const buttonCount = hasQRCode ? 6 : 5;
+                      return (
+                        <div className={`grid ${buttonCount === 6 ? 'grid-cols-3' : 'grid-cols-3'} gap-3 sm:gap-2.5 md:gap-3 w-full max-w-xs sm:max-w-sm`}>
+                          {/* Change Status Button */}
+                          <div className="flex flex-col items-center">
+                            <button
+                              onClick={handleChangeStatus}
+                              className="w-16 h-16 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-orange-500 text-white flex items-center justify-center shadow-lg hover:bg-orange-600 active:bg-orange-700 transition-colors touch-manipulation"
+                              aria-label="Change Status"
+                            >
+                              <HiDocumentText className="h-7 w-7 sm:h-6 sm:w-6 md:h-7 md:w-7" />
+                            </button>
+                            <span className="mt-1.5 text-xs sm:text-[11px] md:text-xs text-white font-medium text-center leading-tight px-0.5">{t('changeStatus')}</span>
+                          </div>
 
-                      {/* Delete Button */}
-                      <div className="flex flex-col items-center">
-                        <button
-                          onClick={handleDeleteActivity}
-                          className="w-16 h-16 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-red-500 text-white flex items-center justify-center shadow-lg hover:bg-red-600 active:bg-red-700 transition-colors touch-manipulation"
-                          aria-label="Delete Activity"
-                        >
-                          <HiTrash className="h-7 w-7 sm:h-6 sm:w-6 md:h-7 md:w-7" />
-                        </button>
-                        <span className="mt-1.5 text-xs sm:text-[11px] md:text-xs text-white font-medium text-center leading-tight px-0.5">{t('delete')}</span>
-                      </div>
+                          {/* Edit Button */}
+                          <div className="flex flex-col items-center">
+                            <button
+                              onClick={handleEditActivity}
+                              className="w-16 h-16 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-blue-500 text-white flex items-center justify-center shadow-lg hover:bg-blue-600 active:bg-blue-700 transition-colors touch-manipulation"
+                              aria-label="Edit Activity"
+                            >
+                              <HiPencil className="h-7 w-7 sm:h-6 sm:w-6 md:h-7 md:w-7" />
+                            </button>
+                            <span className="mt-1.5 text-xs sm:text-[11px] md:text-xs text-white font-medium text-center leading-tight px-0.5">{t('edit')}</span>
+                          </div>
 
-                      {/* View Activity Button */}
-                      <div className="flex flex-col items-center">
-                        <button
-                          onClick={handleViewActivity}
-                          className="w-16 h-16 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-purple-500 text-white flex items-center justify-center shadow-lg hover:bg-purple-600 active:bg-purple-700 transition-colors touch-manipulation"
-                          aria-label="View Activity"
-                        >
-                          <HiEye className="h-7 w-7 sm:h-6 sm:w-6 md:h-7 md:w-7" />
-                        </button>
-                        <span className="mt-1.5 text-xs sm:text-[11px] md:text-xs text-white font-medium text-center leading-tight px-0.5">{t('view')}</span>
-                      </div>
+                          {/* Delete Button */}
+                          <div className="flex flex-col items-center">
+                            <button
+                              onClick={handleDeleteActivity}
+                              className="w-16 h-16 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-red-500 text-white flex items-center justify-center shadow-lg hover:bg-red-600 active:bg-red-700 transition-colors touch-manipulation"
+                              aria-label="Delete Activity"
+                            >
+                              <HiTrash className="h-7 w-7 sm:h-6 sm:w-6 md:h-7 md:w-7" />
+                            </button>
+                            <span className="mt-1.5 text-xs sm:text-[11px] md:text-xs text-white font-medium text-center leading-tight px-0.5">{t('delete')}</span>
+                          </div>
 
-                      {/* Review Applications Button */}
-                      <div className="flex flex-col items-center">
-                        <button
-                          onClick={handleReviewApplications}
-                          className="w-16 h-16 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-green-500 text-white flex items-center justify-center shadow-lg hover:bg-green-600 active:bg-green-700 transition-colors touch-manipulation"
-                          aria-label="Review Applications"
-                        >
-                          <HiUserGroup className="h-7 w-7 sm:h-6 sm:w-6 md:h-7 md:w-7" />
-                        </button>
-                        <span className="mt-1.5 text-xs sm:text-[11px] md:text-xs text-white font-medium text-center leading-tight px-0.5">{t('applications')}</span>
-                      </div>
-                    </div>
+                          {/* View Activity Button */}
+                          <div className="flex flex-col items-center">
+                            <button
+                              onClick={handleViewActivity}
+                              className="w-16 h-16 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-purple-500 text-white flex items-center justify-center shadow-lg hover:bg-purple-600 active:bg-purple-700 transition-colors touch-manipulation"
+                              aria-label="View Activity"
+                            >
+                              <HiEye className="h-7 w-7 sm:h-6 sm:w-6 md:h-7 md:w-7" />
+                            </button>
+                            <span className="mt-1.5 text-xs sm:text-[11px] md:text-xs text-white font-medium text-center leading-tight px-0.5">{t('view')}</span>
+                          </div>
+
+                          {/* Review Applications Button */}
+                          <div className="flex flex-col items-center">
+                            <button
+                              onClick={handleReviewApplications}
+                              className="w-16 h-16 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-green-500 text-white flex items-center justify-center shadow-lg hover:bg-green-600 active:bg-green-700 transition-colors touch-manipulation"
+                              aria-label="Review Applications"
+                            >
+                              <HiUserGroup className="h-7 w-7 sm:h-6 sm:w-6 md:h-7 md:w-7" />
+                            </button>
+                            <span className="mt-1.5 text-xs sm:text-[11px] md:text-xs text-white font-medium text-center leading-tight px-0.5">{t('applications')}</span>
+                          </div>
+
+                          {/* Show QR Code Button - Conditional */}
+                          {hasQRCode && (
+                            <div className="flex flex-col items-center">
+                              <button
+                                onClick={handleShowQRCode}
+                                className="w-16 h-16 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-indigo-500 text-white flex items-center justify-center shadow-lg hover:bg-indigo-600 active:bg-indigo-700 transition-colors touch-manipulation"
+                                aria-label="Show QR Code"
+                              >
+                                <HiQrcode className="h-7 w-7 sm:h-6 sm:w-6 md:h-7 md:w-7" />
+                              </button>
+                              <span className="mt-1.5 text-xs sm:text-[11px] md:text-xs text-white font-medium text-center leading-tight px-0.5">{t('showQRCode')}</span>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
                     
                     {/* Close button */}
                     <button
@@ -648,6 +710,42 @@ export default function MyNonProfitDashboard() {
         }}
         activityId={selectedActivity?.id}
       />
+
+      {/* Status Update Modal */}
+      <StatusUpdateModal
+        isOpen={showStatusModal}
+        onClose={() => setShowStatusModal(false)}
+        currentStatus={selectedActivity?.status}
+        onStatusUpdate={handleStatusUpdate}
+        isUpdating={isUpdatingStatus}
+      />
+
+      {/* QR Code Modal */}
+      {selectedActivity && (
+        <QRCodeModal
+          isOpen={showQRModal}
+          onClose={() => setShowQRModal(false)}
+          activityId={selectedActivity.id}
+          qrCodeToken={selectedActivity.qrCodeToken}
+          title={selectedActivity.title}
+          startDate={selectedActivity.start_date}
+        />
+      )}
+
+      {/* Activity Validation Modal */}
+      {selectedActivity && (
+        <ActivityValidationModal
+          isOpen={showValidationModal}
+          onClose={handleValidationModalClose}
+          activity={{
+            id: selectedActivity.id,
+            title: selectedActivity.title,
+            type: selectedActivity.type,
+            status: selectedActivity.status
+          }}
+          onStatusChange={handleStatusChange}
+        />
+      )}
 
       {/* Toast Notification */}
       {showToast && (

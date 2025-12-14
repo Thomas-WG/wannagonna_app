@@ -72,7 +72,8 @@ export default function ActivityValidationModal({
 
   // Check if all applicants are validated or rejected
   const allApplicantsProcessed = () => {
-    if (applications.length === 0) return false;
+    // If there are no applicants, consider it as "processed" (can close activity)
+    if (applications.length === 0) return true;
     return applications.every(app => {
       const status = getValidationStatus(app.userId);
       return status === 'validated' || status === 'rejected';
@@ -246,9 +247,14 @@ export default function ActivityValidationModal({
           </div>
         ) : applications.length === 0 ? (
           <div className="text-center py-8">
-            <p className="text-sm sm:text-base text-gray-500 px-2">
+            <p className="text-sm sm:text-base text-gray-500 px-2 mb-4">
               {t('noAcceptedApplicants') || 'No accepted applicants found for this activity.'}
             </p>
+            <div className="mt-4 p-3 sm:p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-xs sm:text-sm text-blue-800 text-center">
+                {t('noApplicantsCanClose') || 'You can close this activity since there are no applicants.'}
+              </p>
+            </div>
           </div>
         ) : (
           <div className="space-y-3 sm:space-y-4">

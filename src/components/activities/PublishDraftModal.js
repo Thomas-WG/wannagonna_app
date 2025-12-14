@@ -47,10 +47,13 @@ export default function PublishDraftModal({
               color="gray"
               onClick={handleDraft}
               disabled={isUpdating}
-              className="h-auto py-6 px-4 flex flex-col items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700"
+              className="h-auto py-6 px-4 hover:bg-gray-100 dark:hover:bg-gray-700"
             >
-              <HiDocument className="h-6 w-6 mb-3" />
-              <span className="font-medium text-base mb-1">{t('draft', { default: 'Keep as Draft' })}</span>
+              <div className="flex flex-col items-center justify-center w-full">
+                <HiDocument className="h-6 w-6 mb-3" />
+                <span className="font-medium text-base mb-2">{t('draft', { default: 'Keep as Draft' })}</span>
+                <span className="text-sm text-gray-600 dark:text-gray-300 text-center">{t('draftDescription', { default: 'Save for later editing' })}</span>
+              </div>
             </Button>
             
             {/* Publish Button */}
@@ -58,10 +61,13 @@ export default function PublishDraftModal({
               color="blue"
               onClick={handlePublish}
               disabled={isUpdating}
-              className="h-auto py-6 px-4 flex flex-col items-center justify-center hover:bg-blue-600 dark:hover:bg-blue-700"
+              className="h-auto py-6 px-4 hover:bg-blue-600 dark:hover:bg-blue-700"
             >
-              <HiGlobeAlt className="h-6 w-6 mb-3" />
-              <span className="font-medium text-base mb-1">{t('publish', { default: 'Publish Now' })}</span>
+              <div className="flex flex-col items-center justify-center w-full">
+                <HiGlobeAlt className="h-6 w-6 mb-3" />
+                <span className="font-medium text-base mb-2">{t('publish', { default: 'Publish Now' })}</span>
+                <span className="text-sm text-gray-600 dark:text-gray-300 text-center">{t('publishDescription', { default: 'Make it available to volunteers' })}</span>
+              </div>
             </Button>
           </div>
         </div>

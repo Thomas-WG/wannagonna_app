@@ -5,7 +5,6 @@ import { Button, Select } from 'flowbite-react';
 import { HiFilter, HiX, HiChevronDown, HiChevronUp } from 'react-icons/hi';
 import { useTranslations } from 'next-intl';
 import categories from '@/constant/categories';
-import { allSDGs, sdgNames } from '@/constant/sdgs';
 
 export default function ActivityFilters({
   filters,
@@ -16,6 +15,7 @@ export default function ActivityFilters({
 }) {
   const t = useTranslations('Activities');
   const tManage = useTranslations('ManageActivities');
+  const tStatus = useTranslations('StatusUpdateModal');
   const [isOpen, setIsOpen] = useState(false);
 
   const handleFilterChange = (filterKey, value) => {
@@ -30,8 +30,8 @@ export default function ActivityFilters({
       type: 'all',
       category: 'all',
       country: 'all',
-      sdg: 'all',
       skill: 'all',
+      status: 'all',
     });
   };
 
@@ -39,8 +39,8 @@ export default function ActivityFilters({
     filters.type !== 'all' ||
     filters.category !== 'all' ||
     filters.country !== 'all' ||
-    filters.sdg !== 'all' ||
-    filters.skill !== 'all';
+    filters.skill !== 'all' ||
+    (filters.status !== undefined && filters.status !== 'all');
 
   // Get categories based on selected type
   const getCategoriesForType = () => {
@@ -73,11 +73,6 @@ export default function ActivityFilters({
           <div className="flex items-center gap-2">
             <HiFilter className="h-5 w-5" />
             <span className="font-medium">{t('filters')}</span>
-            {hasActiveFilters && (
-              <span className="ml-2 px-2 py-0.5 text-xs bg-blue-500 text-white rounded-full">
-                {t('active')}
-              </span>
-            )}
           </div>
           {isOpen ? (
             <HiChevronUp className="h-5 w-5" />
@@ -194,25 +189,6 @@ export default function ActivityFilters({
           </div>
         )}
 
-        {/* SDG Filter */}
-        <div className="flex-1 min-w-[150px]">
-          <label className="block mb-1 text-sm font-medium text-gray-700">
-            {t('filterSdgLabel')}
-          </label>
-          <Select
-            value={filters.sdg}
-            onChange={(e) => handleFilterChange('sdg', e.target.value)}
-            className="w-full"
-          >
-            <option value="all">{t('allSdgs')}</option>
-            {allSDGs.map((sdg) => (
-              <option key={sdg.id} value={sdg.id}>
-                {sdg.id}: {sdgNames[sdg.id] || `SDG ${sdg.name}`}
-              </option>
-            ))}
-          </Select>
-        </div>
-
         {/* Skills Filter */}
         {availableSkills && availableSkills.length > 0 && (
           <div className="flex-1 min-w-[150px]">
@@ -230,6 +206,25 @@ export default function ActivityFilters({
                   {skill}
                 </option>
               ))}
+            </Select>
+          </div>
+        )}
+
+        {/* Status Filter */}
+        {filters.status !== undefined && (
+          <div className="flex-1 min-w-[150px]">
+            <label className="block mb-1 text-sm font-medium text-gray-700">
+              Status
+            </label>
+            <Select
+              value={filters.status || 'all'}
+              onChange={(e) => handleFilterChange('status', e.target.value)}
+              className="w-full"
+            >
+              <option value="all">All Statuses</option>
+              <option value="Draft">{tStatus('status.Draft')}</option>
+              <option value="Open">{tStatus('status.Open')}</option>
+              <option value="Closed">{tStatus('status.Closed')}</option>
             </Select>
           </div>
         )}
