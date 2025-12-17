@@ -444,7 +444,7 @@
         "localActivities": "Activités Locales",
         "onlineActivities": "Activités en Ligne",
         "events": "Événements",
-        "totalApplications": "Candidatures",
+        "totalApplications": "Total des candidatures",
         "inProgress": "En Cours",
         "closedActivities": "Fermées",
         "yourActivities": "Vos Activités",
@@ -480,6 +480,8 @@
         "statusRejected": "Rejetée",
         "statusCancelled": "Annulée",
         "statusPending": "En Attente",
+        "myApplications": "Mes Candidatures",
+        "pendingApplicationsDescription": "Candidatures en attente d'examen",
         "viewXpHistory": "Voir l'historique XP"
     },
     "XpHistory": {

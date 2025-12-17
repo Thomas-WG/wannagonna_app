@@ -444,7 +444,7 @@
         "localActivities": "ローカル活動",
         "onlineActivities": "オンライン活動",
         "events": "イベント",
-        "totalApplications": "申請",
+        "totalApplications": "申請総数",
         "inProgress": "進行中",
         "closedActivities": "閉鎖済み",
         "yourActivities": "あなたの活動",
@@ -480,6 +480,8 @@
         "statusRejected": "拒否済み",
         "statusCancelled": "キャンセル済み",
         "statusPending": "保留中",
+        "myApplications": "私の申請",
+        "pendingApplicationsDescription": "審査待ちの申請",
         "viewXpHistory": "XP履歴を表示"
     },
     "XpHistory": {

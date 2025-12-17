@@ -444,7 +444,7 @@
         "localActivities": "Local Activities",
         "onlineActivities": "Online Activities",
         "events": "Events",
-        "totalApplications": "Applications",
+        "totalApplications": "Total applications",
         "inProgress": "In Progress",
         "closedActivities": "Closed",
         "yourActivities": "Your Activities",
@@ -480,6 +480,8 @@
         "statusRejected": "Rejected",
         "statusCancelled": "Cancelled",
         "statusPending": "Pending",
+        "myApplications": "My Applications",
+        "pendingApplicationsDescription": "Applications awaiting review",
         "viewXpHistory": "View XP History"
     },
     "XpHistory": {

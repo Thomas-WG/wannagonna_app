@@ -438,7 +438,7 @@
         "localActivities": "Actividades Locales",
         "onlineActivities": "Actividades en Línea",
         "events": "Eventos",
-        "totalApplications": "Solicitudes",
+        "totalApplications": "Total de solicitudes",
         "inProgress": "En Progreso",
         "closedActivities": "Cerradas",
         "yourActivities": "Tus Actividades",
@@ -474,6 +474,8 @@
         "statusRejected": "Rechazada",
         "statusCancelled": "Cancelada",
         "statusPending": "Pendiente",
+        "myApplications": "Mis Solicitudes",
+        "pendingApplicationsDescription": "Solicitudes pendientes de revisión",
         "viewXpHistory": "Ver Historial de XP"
     },
     "XpHistory": {

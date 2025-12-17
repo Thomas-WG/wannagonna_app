@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, Progress, Toast, Badge, Button } from "flowbite-react";
+import { Card, Progress, Toast, Badge, Button, Select } from "flowbite-react";
 import { 
   HiUser, 
   HiOfficeBuilding, 
@@ -17,7 +17,7 @@ import {
   HiQrcode
 } from "react-icons/hi";
 import { MdOutlineSocialDistance } from "react-icons/md";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/utils/auth/AuthContext";
 import { fetchMemberById } from "@/utils/crudMemberProfile";
@@ -33,9 +33,12 @@ import ActivityValidationSuccessModal from "@/components/activities/ActivityVali
 import PublicProfileModal from "@/components/profile/PublicProfileModal";
 import { Alert } from "flowbite-react";
 import Image from "next/image";
+import ActivityFilters from "@/components/activities/ActivityFilters";
+import categories from "@/constant/categories";
 
 export default function DashboardPage() {
   const t = useTranslations('Dashboard');
+  const tActivities = useTranslations('Activities');
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, claims } = useAuth();
@@ -46,12 +49,10 @@ export default function DashboardPage() {
   const [historyActivities, setHistoryActivities] = useState([]);
   const [openActivities, setOpenActivities] = useState([]);
   const [allApplicationsActivities, setAllApplicationsActivities] = useState([]);
-  const [showClosedActivities, setShowClosedActivities] = useState(false);
   const [showApplications, setShowApplications] = useState(false);
   const [applicationsWithActivities, setApplicationsWithActivities] = useState([]);
   const [showActivityModal, setShowActivityModal] = useState(false);
   const [selectedActivityId, setSelectedActivityId] = useState(null);
-  const [selectedTypeFilter, setSelectedTypeFilter] = useState(null); // 'local', 'online', 'event', or null
   const [selectedApplicationActivity, setSelectedApplicationActivity] = useState(null);
   const [showApplicationModal, setShowApplicationModal] = useState(false);
   const [showActionModal, setShowActionModal] = useState(false);
@@ -65,6 +66,12 @@ export default function DashboardPage() {
   });
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState({ type: '', message: '' });
+  const [filters, setFilters] = useState({
+    type: 'all',
+    category: 'all',
+    status: 'all',
+  });
+  const [sortBy, setSortBy] = useState('newest');
   
   // Validation result modal state
   const [showValidationModal, setShowValidationModal] = useState(false);
@@ -232,7 +239,10 @@ export default function DashboardPage() {
         // Filter activities to show only Open activities with accepted applications
         const open = activities.filter(a => a.status === 'Open');
         setOpenActivities(open);
-        setVolunteerActivities(open);
+        
+        // Show all activities (Open and Closed) by default
+        const allActivitiesForDisplay = [...activities, ...history];
+        setVolunteerActivities(allActivitiesForDisplay);
 
         // Calculate stats from all activities (including closed)
         const allActivities = [...activities];
@@ -333,70 +343,126 @@ export default function DashboardPage() {
     }
   };
 
-  // Handle clicking on Closed card to show closed activities
-  const handleClosedCardClick = () => {
-    if (showClosedActivities) {
-      // Switch back to open activities
-      setVolunteerActivities(openActivities);
-      setShowClosedActivities(false);
-      setShowApplications(false);
-      setSelectedTypeFilter(null);
-    } else {
-      // Show closed activities from history
-      setVolunteerActivities(historyActivities);
-      setShowClosedActivities(true);
-      setShowApplications(false);
-      setSelectedTypeFilter(null);
-    }
-  };
-
-  // Handle clicking on type filter cards (Local, Online, Events)
+  // Handle clicking on type filter cards (Local, Online, Events) - removed filtering, cards are display-only
   const handleTypeFilterClick = (type) => {
-    // Determine source activities based on current view
-    let sourceActivities = [];
-    if (showApplications) {
-      sourceActivities = allApplicationsActivities;
-    } else if (showClosedActivities) {
-      sourceActivities = historyActivities;
-    } else {
-      sourceActivities = openActivities;
-    }
-
-    // Toggle filter: if clicking the same type, remove filter
-    if (selectedTypeFilter === type) {
-      setSelectedTypeFilter(null);
-      setVolunteerActivities(sourceActivities);
-    } else {
-      // Apply filter
-      setSelectedTypeFilter(type);
-      const filtered = sourceActivities.filter(a => a.type === type);
-      setVolunteerActivities(filtered);
-    }
+    // Cards are now display-only, no filtering action
   };
 
-  // Calculate dynamic stats based on current view
-  const getDynamicStats = () => {
-    let activitiesToCount = [];
-    if (showApplications) {
-      activitiesToCount = allApplicationsActivities;
-    } else if (showClosedActivities) {
-      activitiesToCount = historyActivities;
-    } else {
-      activitiesToCount = openActivities;
-    }
-
-    return {
-      local: activitiesToCount.filter(a => a.type === 'local').length,
-      online: activitiesToCount.filter(a => a.type === 'online').length,
-      event: activitiesToCount.filter(a => a.type === 'event').length
-    };
+  // Calculate dynamic stats - show closed activities count for each type
+  const dynamicStats = {
+    local: stats.totalLocalActivities,
+    online: stats.totalOnlineActivities,
+    event: stats.totalEvents
   };
 
-  const dynamicStats = getDynamicStats();
+  // Get all activities for current view - show Open and Closed activities
+  const allActivitiesForView = useMemo(() => {
+    if (showApplications) {
+      return allApplicationsActivities;
+    } else {
+      // Show all activities (Open and Closed) - combine openActivities and historyActivities
+      return [...openActivities, ...historyActivities];
+    }
+  }, [showApplications, allApplicationsActivities, openActivities, historyActivities]);
+
+  // Get pending applications for the sub-section
+  const pendingApplications = useMemo(() => {
+    if (showApplications) {
+      return []; // Don't show in applications view
+    }
+    // Filter applications to only show pending ones
+    return applicationsWithActivities
+      .filter(app => app.status === 'pending' && app.activity !== null)
+      .map(app => ({
+        ...app.activity,
+        applicationStatus: app.status,
+        applicationId: app.id,
+        applicationData: app,
+        appliedAt: app.createdAt
+      }));
+  }, [showApplications, applicationsWithActivities]);
+
+  // Extract available categories from activities
+  const availableCategories = useMemo(() => {
+    const cats = new Set();
+    allActivitiesForView.forEach((activity) => {
+      if (activity.category) cats.add(activity.category);
+    });
+    return Array.from(cats).sort();
+  }, [allActivitiesForView]);
+
+  // Filter activities based on filters
+  const filteredActivities = useMemo(() => {
+    let filtered = [...allActivitiesForView];
+
+    // Filter by type
+    if (filters.type !== 'all') {
+      filtered = filtered.filter((activity) => activity.type === filters.type);
+    }
+
+    // Filter by category
+    if (filters.category !== 'all') {
+      filtered = filtered.filter((activity) => activity.category === filters.category);
+    }
+
+    // Filter by status
+    if (filters.status !== 'all') {
+      filtered = filtered.filter((activity) => activity.status === filters.status);
+    }
+
+    return filtered;
+  }, [allActivitiesForView, filters]);
+
+  // Sort activities
+  const sortedActivities = useMemo(() => {
+    const sorted = [...filteredActivities];
+
+    switch (sortBy) {
+      case 'newest':
+        return sorted.sort((a, b) => {
+          const getDate = (date) => {
+            if (!date) return new Date(0);
+            if (date.seconds) return new Date(date.seconds * 1000);
+            if (date.toDate) return date.toDate();
+            if (date instanceof Date) return date;
+            return new Date(date);
+          };
+          const dateA = getDate(a.start_date);
+          const dateB = getDate(b.start_date);
+          return dateB - dateA;
+        });
+      case 'oldest':
+        return sorted.sort((a, b) => {
+          const getDate = (date) => {
+            if (!date) return new Date(0);
+            if (date.seconds) return new Date(date.seconds * 1000);
+            if (date.toDate) return date.toDate();
+            if (date instanceof Date) return date;
+            return new Date(date);
+          };
+          const dateA = getDate(a.start_date);
+          const dateB = getDate(b.start_date);
+          return dateA - dateB;
+        });
+      case 'xp_high':
+        return sorted.sort((a, b) => (b.xp_reward || 0) - (a.xp_reward || 0));
+      case 'xp_low':
+        return sorted.sort((a, b) => (a.xp_reward || 0) - (b.xp_reward || 0));
+      case 'applicants_high':
+        return sorted.sort((a, b) => (b.applicants || 0) - (a.applicants || 0));
+      case 'applicants_low':
+        return sorted.sort((a, b) => (a.applicants || 0) - (b.applicants || 0));
+      case 'alphabetical':
+        return sorted.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+      default:
+        return sorted;
+    }
+  }, [filteredActivities, sortBy]);
 
   // Handle application card click - show action buttons for applications
   const handleApplicationCardClick = (activity) => {
-    if (showApplications) {
+    // If activity has applicationStatus, it's an application (from applications view or pending sub-section)
+    if (activity.applicationStatus || showApplications) {
       setSelectedApplicationActivity(activity);
       setShowActionModal(true);
     } else {
@@ -514,11 +580,12 @@ export default function DashboardPage() {
   // Handle clicking on Applications card to show all applications
   const handleApplicationsCardClick = () => {
     if (showApplications) {
-      // Switch back to open activities
-      setVolunteerActivities(openActivities);
+      // Switch back to activities view
+      const allActivitiesForDisplay = [...openActivities, ...historyActivities];
+      setVolunteerActivities(allActivitiesForDisplay);
       setShowApplications(false);
-      setShowClosedActivities(false);
-      setSelectedTypeFilter(null);
+      // Reset filters
+      setFilters({ type: 'all', category: 'all', status: 'all' });
     } else {
       // Convert applications with activities to display format
       const activitiesToShow = applicationsWithActivities
@@ -534,8 +601,8 @@ export default function DashboardPage() {
       setAllApplicationsActivities(activitiesToShow);
       setVolunteerActivities(activitiesToShow);
       setShowApplications(true);
-      setShowClosedActivities(false);
-      setSelectedTypeFilter(null);
+      // Reset filters
+      setFilters({ type: 'all', category: 'all', status: 'all' });
     }
   };
 
@@ -661,176 +728,66 @@ export default function DashboardPage() {
             <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 px-1 text-gray-700">
               {t('yourStatistics') || 'Your Statistics'}
             </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               {/* Local Activities */}
-              <Card 
-                className={`hover:shadow-lg transition-all cursor-pointer touch-manipulation ${
-                  selectedTypeFilter === 'local' 
-                    ? 'ring-4 ring-green-400 shadow-xl scale-105' 
-                    : 'shadow-md'
-                }`}
-                onClick={() => handleTypeFilterClick('local')}
-              >
-                <div className="flex flex-col items-center p-2 sm:p-3">
-                  <div className={`p-2 rounded-full mb-2 transition-colors ${
-                    selectedTypeFilter === 'local' 
-                      ? 'bg-green-500' 
-                      : 'bg-green-100'
-                  }`}>
-                    <HiOfficeBuilding className={`h-5 w-5 sm:h-6 sm:w-6 ${
-                      selectedTypeFilter === 'local' 
-                        ? 'text-white' 
-                        : 'text-green-600'
-                    }`} />
+              <div className="bg-white rounded-lg shadow-md">
+                <div className="flex items-center gap-2 sm:gap-3 py-1 sm:py-1.5 px-2 sm:px-2.5">
+                  <div className="bg-green-100 p-2 rounded-full flex-shrink-0">
+                    <HiOfficeBuilding className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
                   </div>
-                  <h2 className="text-xs sm:text-sm font-semibold mb-1 text-center">
+                  <h2 className="text-xs sm:text-sm font-semibold flex-1">
                     {t('localActivities') || 'Local Activities'}
                   </h2>
-                  <p className={`text-xl sm:text-2xl font-bold text-center ${
-                    selectedTypeFilter === 'local' 
-                      ? 'text-green-800' 
-                      : 'text-green-600'
-                  }`}>
+                  <p className="text-xl sm:text-2xl font-bold text-green-600 flex-shrink-0">
                     {dynamicStats.local}
                   </p>
                 </div>
-              </Card>
+              </div>
 
               {/* Online Activities */}
-              <Card 
-                className={`hover:shadow-lg transition-all cursor-pointer touch-manipulation ${
-                  selectedTypeFilter === 'online' 
-                    ? 'ring-4 ring-blue-400 shadow-xl scale-105' 
-                    : 'shadow-md'
-                }`}
-                onClick={() => handleTypeFilterClick('online')}
-              >
-                <div className="flex flex-col items-center p-2 sm:p-3">
-                  <div className={`p-2 rounded-full mb-2 transition-colors ${
-                    selectedTypeFilter === 'online' 
-                      ? 'bg-blue-500' 
-                      : 'bg-blue-100'
-                  }`}>
-                    <MdOutlineSocialDistance className={`h-5 w-5 sm:h-6 sm:w-6 ${
-                      selectedTypeFilter === 'online' 
-                        ? 'text-white' 
-                        : 'text-blue-600'
-                    }`} />
+              <div className="bg-white rounded-lg shadow-md">
+                <div className="flex items-center gap-2 sm:gap-3 py-1 sm:py-1.5 px-2 sm:px-2.5">
+                  <div className="bg-blue-100 p-2 rounded-full flex-shrink-0">
+                    <MdOutlineSocialDistance className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
                   </div>
-                  <h2 className="text-xs sm:text-sm font-semibold mb-1 text-center">
+                  <h2 className="text-xs sm:text-sm font-semibold flex-1">
                     {t('onlineActivities') || 'Online Activities'}
                   </h2>
-                  <p className={`text-xl sm:text-2xl font-bold text-center ${
-                    selectedTypeFilter === 'online' 
-                      ? 'text-blue-800' 
-                      : 'text-blue-600'
-                  }`}>
+                  <p className="text-xl sm:text-2xl font-bold text-blue-600 flex-shrink-0">
                     {dynamicStats.online}
                   </p>
                 </div>
-              </Card>
+              </div>
 
               {/* Events */}
-              <Card 
-                className={`hover:shadow-lg transition-all cursor-pointer touch-manipulation ${
-                  selectedTypeFilter === 'event' 
-                    ? 'ring-4 ring-purple-400 shadow-xl scale-105' 
-                    : 'shadow-md'
-                }`}
-                onClick={() => handleTypeFilterClick('event')}
-              >
-                <div className="flex flex-col items-center p-2 sm:p-3">
-                  <div className={`p-2 rounded-full mb-2 transition-colors ${
-                    selectedTypeFilter === 'event' 
-                      ? 'bg-purple-500' 
-                      : 'bg-purple-100'
-                  }`}>
-                    <HiCalendar className={`h-5 w-5 sm:h-6 sm:w-6 ${
-                      selectedTypeFilter === 'event' 
-                        ? 'text-white' 
-                        : 'text-purple-600'
-                    }`} />
+              <div className="bg-white rounded-lg shadow-md">
+                <div className="flex items-center gap-2 sm:gap-3 py-1 sm:py-1.5 px-2 sm:px-2.5">
+                  <div className="bg-purple-100 p-2 rounded-full flex-shrink-0">
+                    <HiCalendar className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
                   </div>
-                  <h2 className="text-xs sm:text-sm font-semibold mb-1 text-center">
+                  <h2 className="text-xs sm:text-sm font-semibold flex-1">
                     {t('events') || 'Events'}
                   </h2>
-                  <p className={`text-xl sm:text-2xl font-bold text-center ${
-                    selectedTypeFilter === 'event' 
-                      ? 'text-purple-800' 
-                      : 'text-purple-600'
-                  }`}>
+                  <p className="text-xl sm:text-2xl font-bold text-purple-600 flex-shrink-0">
                     {dynamicStats.event}
                   </p>
                 </div>
-              </Card>
+              </div>
 
               {/* Total Applications */}
-              <Card 
-                className={`hover:shadow-lg transition-all cursor-pointer touch-manipulation ${
-                  showApplications 
-                    ? 'ring-4 ring-yellow-400 shadow-xl scale-105' 
-                    : 'shadow-md'
-                }`}
-                onClick={handleApplicationsCardClick}
-              >
-                <div className="flex flex-col items-center p-2 sm:p-3">
-                  <div className={`p-2 rounded-full mb-2 transition-colors ${
-                    showApplications 
-                      ? 'bg-yellow-500' 
-                      : 'bg-yellow-100'
-                  }`}>
-                    <HiDocumentText className={`h-5 w-5 sm:h-6 sm:w-6 ${
-                      showApplications 
-                        ? 'text-white' 
-                        : 'text-yellow-600'
-                    }`} />
+              <div className="bg-white rounded-lg shadow-md">
+                <div className="flex items-center gap-2 sm:gap-3 py-1 sm:py-1.5 px-2 sm:px-2.5">
+                  <div className="bg-yellow-100 p-2 rounded-full flex-shrink-0">
+                    <HiDocumentText className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-600" />
                   </div>
-                  <h2 className="text-xs sm:text-sm font-semibold mb-1 text-center">
-                    {t('totalApplications') || 'Applications'}
+                  <h2 className="text-xs sm:text-sm font-semibold flex-1">
+                    {t('totalApplications') || 'Total applications'}
                   </h2>
-                  <p className={`text-xl sm:text-2xl font-bold text-center ${
-                    showApplications 
-                      ? 'text-yellow-800' 
-                      : 'text-yellow-600'
-                  }`}>
+                  <p className="text-xl sm:text-2xl font-bold text-yellow-600 flex-shrink-0">
                     {stats.totalApplications}
                   </p>
                 </div>
-              </Card>
-
-              {/* Closed Activities */}
-              <Card 
-                className={`hover:shadow-lg transition-all cursor-pointer touch-manipulation ${
-                  showClosedActivities 
-                    ? 'ring-4 ring-gray-400 shadow-xl scale-105' 
-                    : 'shadow-md'
-                }`}
-                onClick={handleClosedCardClick}
-              >
-                <div className="flex flex-col items-center p-2 sm:p-3">
-                  <div className={`p-2 rounded-full mb-2 transition-colors ${
-                    showClosedActivities 
-                      ? 'bg-gray-500' 
-                      : 'bg-gray-100'
-                  }`}>
-                    <HiLockClosed className={`h-5 w-5 sm:h-6 sm:w-6 ${
-                      showClosedActivities 
-                        ? 'text-white' 
-                        : 'text-gray-600'
-                    }`} />
-                  </div>
-                  <h2 className="text-xs sm:text-sm font-semibold mb-1 text-center">
-                    {t('closedActivities') || 'Closed'}
-                  </h2>
-                  <p className={`text-xl sm:text-2xl font-bold text-center ${
-                    showClosedActivities 
-                      ? 'text-gray-800' 
-                      : 'text-gray-600'
-                  }`}>
-                    {stats.closedActivities}
-                  </p>
-                </div>
-        </Card>
+              </div>
             </div>
           </div>
 
@@ -839,23 +796,49 @@ export default function DashboardPage() {
             <h2 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 px-1">
               {showApplications
                 ? (t('yourApplications') || 'Your Applications')
-                : showClosedActivities 
-                  ? (t('closedActivities') || 'Closed Activities')
-                  : (t('yourActivities') || 'Your Activities')
+                : (t('yourActivities') || 'Your Activities')
               }
             </h2>
-            {volunteerActivities.length === 0 ? (
+            
+            {/* Filters */}
+            <ActivityFilters
+              filters={filters}
+              onFiltersChange={setFilters}
+              availableCountries={[]}
+              availableCategories={availableCategories}
+              availableSkills={[]}
+            />
+
+            {/* Sort and Results Count */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+              <div className="text-sm text-gray-600">
+                {tActivities('showing')} <span className="font-semibold">{sortedActivities.length}</span> {tActivities('of')}{' '}
+                <span className="font-semibold">{allActivitiesForView.length}</span> {tActivities('activities')}
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-700">{tActivities('sortBy')}</label>
+                <Select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="w-full sm:w-auto">
+                  <option value="newest">{tActivities('sortNewest')}</option>
+                  <option value="oldest">{tActivities('sortOldest')}</option>
+                  <option value="xp_high">{tActivities('sortXpHigh')}</option>
+                  <option value="xp_low">{tActivities('sortXpLow')}</option>
+                  <option value="applicants_high">{tActivities('sortApplicantsHigh')}</option>
+                  <option value="applicants_low">{tActivities('sortApplicantsLow')}</option>
+                  <option value="alphabetical">{tActivities('sortAlphabetical')}</option>
+                </Select>
+              </div>
+            </div>
+
+            {sortedActivities.length === 0 ? (
               <p className="text-gray-600 px-1">
                 {showApplications
                   ? (t('noApplicationsFound') || 'No applications found.')
-                  : showClosedActivities
-                    ? (t('noClosedActivitiesFound') || 'No closed activities found in your history.')
-                    : (t('noActivitiesFound') || 'No activities found. Start applying to activities to see them here!')
+                  : (t('noActivitiesFound') || 'No activities found. Start applying to activities to see them here!')
                 }
               </p>
             ) : (
-              <div className='flex flex-wrap justify-center gap-4 sm:gap-6'>
-                {volunteerActivities.map((activity) => {
+              <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5'>
+                {sortedActivities.map((activity) => {
                   // Find the application data for this activity if in applications view
                   const applicationData = showApplications 
                     ? applicationsWithActivities.find(app => app.id === activity.applicationId)
@@ -945,6 +928,100 @@ export default function DashboardPage() {
               </div>
             )}
           </div>
+
+          {/* My Applications Sub-section - Only show pending applications when not in applications view */}
+          {!showApplications && pendingApplications.length > 0 && (
+            <div className="mb-6 sm:mb-10">
+              <h2 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 px-1">
+                {t('myApplications') || 'My Applications'}
+              </h2>
+              <p className="text-sm text-gray-600 mb-4 px-1">
+                {t('pendingApplicationsDescription') || 'Applications awaiting review'}
+              </p>
+              
+              <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5'>
+                {pendingApplications.map((activity) => {
+                  const applicationData = applicationsWithActivities.find(app => app.id === activity.applicationId);
+
+                  return (
+                    <div key={activity.applicationId} className="relative">
+                      <ActivityCard
+                        id={activity.id}
+                        organization_name={activity.organization_name}
+                        organization_logo={activity.organization_logo}
+                        title={activity.title}
+                        type={activity.type}
+                        country={activity.country}
+                        start_date={activity.start_date}
+                        end_date={activity.end_date}
+                        sdg={activity.sdg}
+                        applicants={activity.applicants}
+                        xp_reward={activity.xp_reward}
+                        description={activity.description}
+                        status={activity.status}
+                        city={activity.city}
+                        category={activity.category}
+                        qrCodeToken={activity.qrCodeToken}
+                        onClick={() => {
+                          handleApplicationCardClick(activity);
+                        }}
+                        canEditStatus={false}
+                      />
+                      {/* Show pending status badge */}
+                      {activity.applicationStatus && (
+                        <div className="absolute top-3 right-3 z-10">
+                          {getApplicationStatusBadge(activity.applicationStatus)}
+                        </div>
+                      )}
+
+                      {/* Overlay with action buttons */}
+                      {selectedApplicationActivity && selectedApplicationActivity.id === activity.id && showActionModal && (
+                        <div className="absolute inset-0 bg-black bg-opacity-60 rounded-lg flex items-center justify-center z-10 p-3 sm:p-4">
+                          <div className="grid grid-cols-2 sm:flex sm:flex-row gap-3 sm:gap-4 md:gap-6 w-full sm:w-auto">
+                            {/* View Activity Button */}
+                            <div className="flex flex-col items-center">
+                              <button
+                                onClick={handleViewActivity}
+                                className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-purple-500 text-white flex items-center justify-center shadow-lg hover:bg-purple-600 active:bg-purple-700 transition-colors touch-manipulation"
+                                aria-label={t('viewActivity') || 'View Activity'}
+                              >
+                                <HiEye className="h-6 w-6 sm:h-8 sm:w-8" />
+                              </button>
+                              <span className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-white font-medium">{t('viewActivity') || 'View Activity'}</span>
+                            </div>
+
+                            {/* View Application Button */}
+                            <div className="flex flex-col items-center">
+                              <button
+                                onClick={handleViewApplication}
+                                className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-blue-500 text-white flex items-center justify-center shadow-lg hover:bg-blue-600 active:bg-blue-700 transition-colors touch-manipulation"
+                                aria-label={t('viewMyApplication') || 'View Application'}
+                              >
+                                <HiDocumentText className="h-6 w-6 sm:h-8 sm:w-8" />
+                              </button>
+                              <span className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-white font-medium">{t('viewMyApplication') || 'View Application'}</span>
+                            </div>
+                          </div>
+                          
+                          {/* Close button */}
+                          <button
+                            onClick={() => {
+                              setShowActionModal(false);
+                              setSelectedApplicationActivity(null);
+                            }}
+                            className="absolute top-2 right-2 sm:top-3 sm:right-3 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gray-600 text-white flex items-center justify-center hover:bg-gray-700 active:bg-gray-800 transition-colors text-lg sm:text-xl touch-manipulation"
+                            aria-label={t('close') || 'Close'}
+                          >
+                            ×
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Badges Section */}
           <div className="mb-6 sm:mb-10">
