@@ -10,7 +10,11 @@ export const checkExistingApplication = async (activityId, userId) => {
     const q = query(applicationsRef, where('userId', '==', userId));
     
     const querySnapshot = await getDocs(q);
-    return !querySnapshot.empty;
+    // Check if there's any application that is NOT cancelled
+    const hasNonCancelledApplication = querySnapshot.docs.some(
+      (doc) => doc.data().status !== 'cancelled'
+    );
+    return hasNonCancelledApplication;
   } catch (error) {
     console.error('Error checking existing application:', error);
     throw error;
