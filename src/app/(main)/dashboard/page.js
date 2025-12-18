@@ -863,6 +863,10 @@ export default function DashboardPage() {
                         city={activity.city}
                         category={activity.category}
                         qrCodeToken={activity.qrCodeToken}
+                        frequency={activity.frequency}
+                        skills={activity.skills}
+                        participantTarget={activity.participantTarget}
+                        acceptApplicationsWG={activity.acceptApplicationsWG}
                         onClick={() => {
                           if (showApplications) {
                             handleApplicationCardClick(activity);

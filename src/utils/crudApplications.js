@@ -32,10 +32,16 @@ export const createApplication = async ({ activityId, userId, userEmail, message
       };
     }
 
-    // Get activity details to get organization ID
+    // Get activity details to get organization ID and check auto-accept settings
     const activityRef = doc(db, 'activities', activityId);
     const activityDoc = await getDoc(activityRef);
-    const organizationId = activityDoc.data().organizationId;
+    const activityData = activityDoc.data();
+    const organizationId = activityData.organizationId;
+    
+    // Check if auto-accept is enabled
+    const shouldAutoAccept = activityData.autoAcceptApplications === true;
+    const defaultStatus = shouldAutoAccept ? 'accepted' : 'pending';
+    const defaultNpoResponse = shouldAutoAccept ? 'Your application has been automatically accepted.' : '';
 
     // Check if this is the user's first application (check BEFORE transaction)
     const userRef = doc(db, 'members', userId);
@@ -48,10 +54,11 @@ export const createApplication = async ({ activityId, userId, userEmail, message
     const applicationData = {
       userId,
       message,
-      status: 'pending',
+      status: defaultStatus,
       createdAt: new Date(),
       activityId,
-      organizationId: organizationId
+      organizationId: organizationId,
+      ...(shouldAutoAccept && { npoResponse: defaultNpoResponse })
     };
 
     // Use transaction to ensure all operations succeed or all fail
@@ -74,6 +81,13 @@ export const createApplication = async ({ activityId, userId, userEmail, message
         ...applicationData,
         applicationId: docRef.id,
       });
+
+      // If auto-accept is enabled, update organization's totalNewApplications count
+      // (since it's already accepted, we don't increment the pending count)
+      if (shouldAutoAccept) {
+        // No need to increment totalNewApplications for auto-accepted applications
+        // They bypass the pending queue
+      }
 
       return docRef.id;
     });

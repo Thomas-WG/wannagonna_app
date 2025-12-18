@@ -69,7 +69,12 @@
             "Draft": "Brouillon",
             "Open": "Ouvert",
             "Closed": "Fermé"
-        }
+        },
+        "participants": "participants",
+        "validated": "validés",
+        "externalPlatformLink": "Lien vers la Plateforme Externe",
+        "openLink": "Ouvrir le Lien",
+        "requiredSkills": "Compétences Requises"
     },
     "ManageActivities": {
         "create-activity": "Créer une activité",
@@ -143,7 +148,30 @@
         "health_screening": "Dépistage de santé",
         "blood_drive": "Collecte de sang",
         "food_fair": "Foire alimentaire",
-        "animal_adoption": "Événement d'adoption d'animaux"
+        "animal_adoption": "Événement d'adoption d'animaux",
+        "external-platform-link-title": "Lien vers la Plateforme Externe",
+        "external-platform-link-description-required": "Lien vers la plateforme d'inscription externe (requis lorsque les candidatures ne sont pas acceptées via WannaGonna)",
+        "external-platform-link-description-optional": "Lien vers l'événement ou votre système de gestion du bénévolat (optionnel)",
+        "external-platform-url-label": "URL de la Plateforme Externe",
+        "external-platform-url-helper-required": "Ce champ est requis lorsque les candidatures ne sont pas acceptées via WannaGonna",
+        "external-platform-url-helper-optional": "Fournissez un lien vers l'événement, la page d'inscription ou votre propre système de gestion du bénévolat",
+        "participant-target-title": "Objectif de Participants",
+        "participant-target-description": "Nombre de participants recherchés (optionnel)",
+        "participant-target-label": "Nombre de Participants",
+        "participant-target-helper": "Entrez le nombre cible de participants pour cette activité",
+        "application-settings-title": "Paramètres de Candidature",
+        "application-settings-description": "Configurez comment les participants peuvent postuler à cette activité",
+        "accept-applications-wg-label": "Accepter les candidatures via WannaGonna",
+        "accept-applications-wg-description": "Permettre aux volontaires de postuler directement via la plateforme WannaGonna",
+        "auto-accept-applications-label": "Accepter automatiquement les candidatures",
+        "auto-accept-applications-description": "Les candidatures seront automatiquement acceptées sans examen manuel",
+        "required-skills-title": "Compétences Requises",
+        "required-skills-description": "Sélectionnez les compétences requises pour cette activité (optionnel)",
+        "skills-label": "Compétences",
+        "skills-placeholder": "Sélectionnez les compétences requises...",
+        "skills-helper": "Sélectionnez une ou plusieurs compétences que les volontaires devraient avoir pour cette activité",
+        "location-label": "Lieu/Venue",
+        "location-helper": "Où cette activité aura-t-elle lieu ? (ex. : Centre communautaire, Nom du parc, Adresse spécifique)"
     },
     "DeleteActivity": {
         "delete-activity": "Supprimer l'activité",
@@ -387,6 +415,7 @@
         "events": "Événements",
         "closed": "Fermé",
         "participants": "Participants",
+        "peopleMax": "Personnes Max",
         "quickActions": "Actions Rapides",
         "newApplications": "Nouvelles Candidatures",
         "requiresAttention": "Nécessite une attention",
@@ -437,7 +466,11 @@
         "yes": "Oui",
         "close": "Fermer",
         "untitledActivity": "Activité sans titre",
-        "noApplicationsForActivity": "Aucune candidature trouvée pour cette activité."
+        "noApplicationsForActivity": "Aucune candidature trouvée pour cette activité.",
+        "viewParticipants": "Voir les Participants",
+        "noParticipants": "Aucun participant pour le moment",
+        "participantsTitle": "Participants",
+        "validatedAt": "Validé"
     },
     "Dashboard": {
         "yourStatistics": "Vos Statistiques",

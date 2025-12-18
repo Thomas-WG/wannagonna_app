@@ -1,8 +1,9 @@
-import { FloatingLabel, Textarea, Radio, Label, Datepicker, Card, TextInput, Select as FlowbiteSelect, Badge } from 'flowbite-react';
-import { useState } from 'react';
+import { FloatingLabel, Textarea, Radio, Label, Datepicker, Card, TextInput, Select as FlowbiteSelect, Badge, Checkbox } from 'flowbite-react';
+import { useState, useEffect } from 'react';
 import { useTranslations } from 'use-intl';
+import { useLocale } from 'next-intl';
 import Select from 'react-select';
-import { fetchSkills } from '@/utils/crudSkills';
+import { getSkillsForSelect } from '@/utils/crudSkills';
 import { 
   HiCalendar, 
   HiUsers, 
@@ -14,12 +15,14 @@ import {
   HiMapPin,
   HiShieldCheck,
   HiRefresh,
-  HiChevronDown
+  HiChevronDown,
+  HiExternalLink
 } from 'react-icons/hi';
 import { HiClock } from "react-icons/hi2";
 
 export default function ActivityDetailsForm({ formData, handleChange, setFormData }) {
   const t = useTranslations('ManageActivities');
+  const locale = useLocale();
   
   // Debug logging
   console.log('ActivityDetailsForm - formData dates:', {
@@ -36,6 +39,69 @@ export default function ActivityDetailsForm({ formData, handleChange, setFormDat
   const [skillOptions, setSkillOptions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedSkills, setSelectedSkills] = useState([]);
+
+  // Load skills from Firestore (for local and online activities)
+  useEffect(() => {
+    if (formData.type === 'local' || formData.type === 'online') {
+      const loadSkills = async () => {
+        try {
+          setIsLoading(true);
+          const options = await getSkillsForSelect(locale);
+          setSkillOptions(options);
+          
+          // Create a flat map of all skills for easy lookup
+          const allSkills = options.reduce((acc, group) => {
+            return [...acc, ...group.options];
+          }, []);
+          
+          // Update selected skills with current language labels
+          if (formData.skills && formData.skills.length > 0) {
+            const updatedSelectedSkills = formData.skills.map(skill => {
+              // Find the skill in our options
+              const foundSkill = allSkills.find(s => s.value === (skill.value || skill.id || skill));
+              return foundSkill || skill; // Use found skill or keep original if not found
+            });
+            setSelectedSkills(updatedSelectedSkills);
+          } else {
+            setSelectedSkills([]);
+          }
+        } catch (error) {
+          console.error('Error loading skills:', error);
+          setSelectedSkills([]);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      loadSkills();
+    } else {
+      setSkillOptions([]);
+      setSelectedSkills([]);
+      setIsLoading(false);
+    }
+  }, [locale, formData.type, formData.skills]);
+
+  // Handle skills selection change
+  const handleSkillsChange = (selectedOptions) => {
+    setSelectedSkills(selectedOptions || []);
+    setFormData((prev) => ({
+      ...prev,
+      skills: selectedOptions || []
+    }));
+  };
+
+  // Auto-set frequency to 'once' for events
+  useEffect(() => {
+    if (formData.type === 'event' && formData.frequency !== 'once') {
+      setFormData((prev) => ({ ...prev, frequency: 'once' }));
+    }
+  }, [formData.type, setFormData]);
+
+  // Get external platform link (use externalPlatformLink or fallback to activity_url for backward compatibility)
+  const externalLink = formData.externalPlatformLink || formData.activity_url || '';
+  
+  // Determine if external link is required (for local activities when not accepting WG applications)
+  const isExternalLinkRequired = formData.type === 'local' && formData.acceptApplicationsWG === false;
   
   return (
     <div className="w-full space-y-4 sm:space-y-6">
@@ -106,57 +172,74 @@ export default function ActivityDetailsForm({ formData, handleChange, setFormDat
             </div>
           </div>
           
-          {/* Frequency */}
-          <div className="lg:col-span-2 space-y-3">
-            <Label htmlFor='frequency' className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
-              <HiClock className="h-4 w-4" />
-              {t('frequency-label')}
-            </Label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div 
-                className={`flex items-center gap-3 p-3 sm:p-4 rounded-lg border-2 transition-all duration-200 cursor-pointer touch-manipulation ${
-                  formData.frequency === 'once' 
-                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 dark:border-blue-400 shadow-md' 
-                    : 'border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 hover:bg-gray-50 dark:hover:bg-gray-800 active:scale-95'
-                }`}
-                onClick={() => setFormData((prev) => ({ ...prev, frequency: 'once' }))}
-              >
-                <Radio
-                  id='once'
-                  name='frequency'
-                  value='once'
-                  checked={formData.frequency === 'once'}
-                  onChange={handleChange}
-                  className="text-blue-600 dark:text-blue-400"
-                />
-                <Label htmlFor='once' className="text-sm font-medium cursor-pointer flex-1 dark:text-gray-300">
-                  {t('frequency-once')}
-                </Label>
-              </div>  
-              {(formData.type === 'online' || formData.type === 'local') && (
+          {/* Frequency - Hidden for events, auto-set to 'once' */}
+          {formData.type !== 'event' && (
+            <div className="lg:col-span-2 space-y-3">
+              <Label htmlFor='frequency' className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                <HiClock className="h-4 w-4" />
+                {t('frequency-label')}
+              </Label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div 
                   className={`flex items-center gap-3 p-3 sm:p-4 rounded-lg border-2 transition-all duration-200 cursor-pointer touch-manipulation ${
-                    formData.frequency === 'role' 
+                    formData.frequency === 'once' 
                       ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 dark:border-blue-400 shadow-md' 
                       : 'border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 hover:bg-gray-50 dark:hover:bg-gray-800 active:scale-95'
                   }`}
-                  onClick={() => setFormData((prev) => ({ ...prev, frequency: 'role' }))}
+                  onClick={() => setFormData((prev) => ({ ...prev, frequency: 'once' }))}
                 >
                   <Radio
-                    id='role'
+                    id='once'
                     name='frequency'
-                    value='role'
-                    checked={formData.frequency === 'role'}
+                    value='once'
+                    checked={formData.frequency === 'once'}
                     onChange={handleChange}
                     className="text-blue-600 dark:text-blue-400"
                   />
-                  <Label htmlFor='role' className="text-sm font-medium cursor-pointer flex-1 dark:text-gray-300">
-                    {t('frequency-longterm')}
+                  <Label htmlFor='once' className="text-sm font-medium cursor-pointer flex-1 dark:text-gray-300">
+                    {t('frequency-once')}
                   </Label>
-                </div>
-              )}
+                </div>  
+                {(formData.type === 'online' || formData.type === 'local') && (
+                  <div 
+                    className={`flex items-center gap-3 p-3 sm:p-4 rounded-lg border-2 transition-all duration-200 cursor-pointer touch-manipulation ${
+                      formData.frequency === 'role' 
+                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 dark:border-blue-400 shadow-md' 
+                        : 'border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 hover:bg-gray-50 dark:hover:bg-gray-800 active:scale-95'
+                    }`}
+                    onClick={() => setFormData((prev) => ({ ...prev, frequency: 'role' }))}
+                  >
+                    <Radio
+                      id='role'
+                      name='frequency'
+                      value='role'
+                      checked={formData.frequency === 'role'}
+                      onChange={handleChange}
+                      className="text-blue-600 dark:text-blue-400"
+                    />
+                    <Label htmlFor='role' className="text-sm font-medium cursor-pointer flex-1 dark:text-gray-300">
+                      {t('frequency-longterm')}
+                    </Label>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* Location - For local and event activities */}
+          {(formData.type === 'local' || formData.type === 'event') && (
+            <div className="lg:col-span-2 space-y-2">
+              <FloatingLabel
+                variant='filled'
+                label={t('location-label')}
+                helperText={t('location-helper')}
+                name='location'
+                value={formData.location || ''}
+                onChange={handleChange}
+                className="text-base sm:text-lg"
+              />
+            </div>
+          )}
 
           {/* Dates */}
           <div className="lg:col-span-2 space-y-4">
@@ -206,15 +289,91 @@ export default function ActivityDetailsForm({ formData, handleChange, setFormDat
         </div>
       </Card>
 
-      {/* URL Field for Event Links or Volunteering Management System */}
+      {/* Local Activity Application Controls - BEFORE External Platform Link */}
+      {formData.type === 'local' && (
+        <Card className="p-4 sm:p-6 shadow-lg border-0 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900">
+          <div className="flex items-start sm:items-center gap-3 mb-6">
+            <div className="p-2 bg-green-100 dark:bg-green-900 rounded-lg shrink-0">
+              <HiCog className="h-5 w-5 sm:h-6 sm:w-6 text-green-600 dark:text-green-400" />
+            </div>
+            <div className="min-w-0">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">{t('application-settings-title')}</h2>
+              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">{t('application-settings-description')}</p>
+            </div>
+          </div>
+          
+          <div className="space-y-4">
+            {/* Accept applications through WannaGonna */}
+            <div className="flex items-start gap-3 p-4 rounded-lg border-2 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+              <Checkbox
+                id="acceptApplicationsWG"
+                checked={formData.acceptApplicationsWG !== false}
+                onChange={(e) => {
+                  const checked = e.target.checked;
+                  setFormData((prev) => ({
+                    ...prev,
+                    acceptApplicationsWG: checked,
+                    // Reset auto-accept if WG applications are disabled
+                    autoAcceptApplications: checked ? prev.autoAcceptApplications : false
+                  }));
+                }}
+                className="mt-1"
+              />
+              <div className="flex-1">
+                <Label htmlFor="acceptApplicationsWG" className="text-sm sm:text-base font-medium text-gray-900 dark:text-white cursor-pointer">
+                  {t('accept-applications-wg-label')}
+                </Label>
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  {t('accept-applications-wg-description')}
+                </p>
+              </div>
+            </div>
+
+            {/* Auto-accept checkbox - only shown when WG applications are enabled */}
+            {formData.acceptApplicationsWG !== false && (
+              <div className="flex items-start gap-3 p-4 rounded-lg border-2 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 ml-6">
+                <Checkbox
+                  id="autoAcceptApplications"
+                  checked={formData.autoAcceptApplications === true}
+                  onChange={(e) => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      autoAcceptApplications: e.target.checked
+                    }));
+                  }}
+                  className="mt-1"
+                />
+                <div className="flex-1">
+                  <Label htmlFor="autoAcceptApplications" className="text-sm sm:text-base font-medium text-gray-900 dark:text-white cursor-pointer">
+                    {t('auto-accept-applications-label')}
+                  </Label>
+                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    {t('auto-accept-applications-description')}
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        </Card>
+      )}
+
+      {/* External Platform Link - All Activity Types */}
       <Card className="p-4 sm:p-6 shadow-lg border-0 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900">
         <div className="flex items-start sm:items-center gap-3 mb-6">
           <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg shrink-0">
             <HiLink className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 dark:text-blue-400" />
           </div>
           <div className="min-w-0">
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">Activity Link</h2>
-            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Link to the event or your volunteering management system (optional)</p>
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">{t('external-platform-link-title')}</h2>
+            <p className={`text-xs sm:text-sm ${
+              isExternalLinkRequired && !externalLink.trim() 
+                ? 'text-red-600 dark:text-red-400 font-medium' 
+                : 'text-gray-600 dark:text-gray-400'
+            }`}>
+              {isExternalLinkRequired 
+                ? t('external-platform-link-description-required')
+                : t('external-platform-link-description-optional')}
+            </p>
           </div>
         </div>
         
@@ -222,16 +381,120 @@ export default function ActivityDetailsForm({ formData, handleChange, setFormDat
           <div>
             <FloatingLabel
               variant='filled'
-              label="Event or Management System URL"
-              helperText="Provide a link to the event, registration page, or your own volunteering management system"
-              name='activity_url'
-              value={formData.activity_url || ''}
-              onChange={handleChange}
+              label={t('external-platform-url-label')}
+              helperText={isExternalLinkRequired && !externalLink.trim()
+                ? '' // Don't show helper text when error is shown below
+                : (isExternalLinkRequired 
+                    ? t('external-platform-url-helper-required')
+                    : t('external-platform-url-helper-optional'))}
+              name='externalPlatformLink'
+              value={externalLink}
+              onChange={(e) => {
+                handleChange(e);
+                // Also update activity_url for backward compatibility
+                setFormData((prev) => ({
+                  ...prev,
+                  externalPlatformLink: e.target.value,
+                  activity_url: e.target.value
+                }));
+              }}
               type='url'
+              required={isExternalLinkRequired}
+              className={`text-base sm:text-lg ${isExternalLinkRequired && !externalLink.trim() ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
+            />
+            {/* Show error message in red when external link is required but missing */}
+            {isExternalLinkRequired && !externalLink.trim() && (
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400 font-medium">
+                {t('external-platform-url-helper-required')}
+              </p>
+            )}
+          </div>
+        </div>
+      </Card>
+
+      {/* Participant Target - All Activity Types */}
+      <Card className="p-4 sm:p-6 shadow-lg border-0 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900">
+        <div className="flex items-start sm:items-center gap-3 mb-6">
+          <div className="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg shrink-0">
+            <HiUsers className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600 dark:text-purple-400" />
+          </div>
+          <div className="min-w-0">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">{t('participant-target-title')}</h2>
+            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">{t('participant-target-description')}</p>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 gap-4">
+          <div>
+            <FloatingLabel
+              variant='filled'
+              label={t('participant-target-label')}
+              helperText={t('participant-target-helper')}
+              name='participantTarget'
+              value={formData.participantTarget || ''}
+              onChange={(e) => {
+                const value = e.target.value === '' ? null : parseInt(e.target.value, 10);
+                if (value === null || (!isNaN(value) && value > 0)) {
+                  setFormData((prev) => ({ ...prev, participantTarget: value }));
+                }
+              }}
+              type='number'
+              min="1"
+              className="text-base sm:text-lg"
             />
           </div>
         </div>
       </Card>
+
+      {/* Skills Selector - Local and Online Only */}
+      {(formData.type === 'local' || formData.type === 'online') && (
+        <Card className="p-4 sm:p-6 shadow-lg border-0 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900">
+          <div className="flex items-start sm:items-center gap-3 mb-6">
+            <div className="p-2 bg-indigo-100 dark:bg-indigo-900 rounded-lg shrink-0">
+              <HiUsers className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-600 dark:text-indigo-400" />
+            </div>
+            <div className="min-w-0">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">{t('required-skills-title')}</h2>
+              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">{t('required-skills-description')}</p>
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="skills" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              {t('skills-label')}
+            </Label>
+            <Select
+              id="skills"
+              name="skills"
+              isMulti
+              options={skillOptions}
+              value={selectedSkills}
+              onChange={handleSkillsChange}
+              placeholder={t('skills-placeholder')}
+              className="basic-multi-select"
+              classNamePrefix="select"
+              isLoading={isLoading}
+              isSearchable={true}
+              isClearable={true}
+              closeMenuOnSelect={false}
+              styles={{
+                control: (base) => ({
+                  ...base,
+                  minHeight: '48px',
+                  fontSize: '14px',
+                }),
+                menu: (base) => ({
+                  ...base,
+                  zIndex: 9999,
+                }),
+              }}
+            />
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              {t('skills-helper')}
+            </p>
+          </div>
+        </Card>
+      )}
     </div>
   );
 } 

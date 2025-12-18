@@ -1,6 +1,6 @@
 import { Tooltip, Button } from 'flowbite-react';
 import Image from 'next/image';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { useState, useEffect } from 'react';
 import {
   HiLocationMarker, HiUserGroup, HiStar,
@@ -13,8 +13,9 @@ import { FaRegCircle } from 'react-icons/fa';
 import StatusUpdateModal from './StatusUpdateModal';
 import QRCodeModal from './QRCodeModal';
 import ActivityValidationModal from './ActivityValidationModal';
-import { updateActivityStatus } from '@/utils/crudActivities';
+import { updateActivityStatus, getAcceptedApplicationsCount } from '@/utils/crudActivities';
 import { categoryIcons } from '@/constant/categoryIcons';
+import { getSkillsForSelect } from '@/utils/crudSkills';
 
 // Main component for displaying an activity card
 export default function ActivityCard({
@@ -40,9 +41,12 @@ export default function ActivityCard({
   onStatusChange,
   canEditStatus = false,
   showQRButton = false,
+  participantTarget,
+  acceptApplicationsWG,
 }) {
   const t = useTranslations('ActivityCard');
   const tManage = useTranslations('ManageActivities');
+  const locale = useLocale();
   
   // State for status update modal
   const [showStatusModal, setShowStatusModal] = useState(false);
@@ -50,11 +54,85 @@ export default function ActivityCard({
   const [localStatus, setLocalStatus] = useState(status);
   const [showQRModal, setShowQRModal] = useState(false);
   const [showValidationModal, setShowValidationModal] = useState(false);
+  const [validatedCount, setValidatedCount] = useState(null);
+  const [skillLabelsMap, setSkillLabelsMap] = useState({});
+
+  // Fetch accepted applications count for local/online activities (not for events)
+  useEffect(() => {
+    const shouldShowCounter = 
+      (type === 'local' && acceptApplicationsWG !== false) || 
+      type === 'online';
+    
+    if (shouldShowCounter && id) {
+      const fetchCount = async () => {
+        try {
+          const count = await getAcceptedApplicationsCount(id);
+          setValidatedCount(count);
+        } catch (error) {
+          console.error('Error fetching accepted applications count:', error);
+          setValidatedCount(0);
+        }
+      };
+      fetchCount();
+    } else if (type !== 'event') {
+      // Reset count for local/online activities when not needed
+      setValidatedCount(null);
+    }
+  }, [id, type, acceptApplicationsWG]);
 
   // Sync local status with prop changes
   useEffect(() => {
     setLocalStatus(status);
   }, [status]);
+
+  // Fetch skill labels based on current locale
+  useEffect(() => {
+    const loadSkillLabels = async () => {
+      if (!skills || skills.length === 0) {
+        setSkillLabelsMap({});
+        return;
+      }
+
+      try {
+        const skillOptions = await getSkillsForSelect(locale);
+        // Create a flat map of all skills for easy lookup
+        const allSkills = skillOptions.reduce((acc, group) => {
+          return [...acc, ...group.options];
+        }, []);
+
+        // Create a mapping from skill ID to label
+        const labelsMap = {};
+        skills.forEach(skill => {
+          const skillId = typeof skill === 'object' && skill !== null 
+            ? (skill.value || skill.id || skill)
+            : skill;
+          
+          const foundSkill = allSkills.find(s => s.value === skillId);
+          if (foundSkill) {
+            labelsMap[skillId] = foundSkill.label;
+          } else {
+            // Fallback to ID if not found
+            labelsMap[skillId] = skillId;
+          }
+        });
+
+        setSkillLabelsMap(labelsMap);
+      } catch (error) {
+        console.error('Error loading skill labels:', error);
+        // Fallback: create map with IDs as labels
+        const fallbackMap = {};
+        skills.forEach(skill => {
+          const skillId = typeof skill === 'object' && skill !== null 
+            ? (skill.value || skill.id || skill)
+            : skill;
+          fallbackMap[skillId] = skillId;
+        });
+        setSkillLabelsMap(fallbackMap);
+      }
+    };
+
+    loadSkillLabels();
+  }, [skills, locale]);
 
   // Status configuration
   const getStatusConfig = (status) => {
@@ -356,43 +434,83 @@ export default function ActivityCard({
         {/* Key Information Section (Middle) - Grid Layout */}
         <div className='mt-4 sm:mt-5 space-y-3'>
           {/* Metrics Grid */}
-          <div className='grid grid-cols-3 gap-1.5'>
+          <div className={`grid ${
+            type === 'event' && participantTarget !== null && participantTarget !== undefined
+              ? 'grid-cols-2'
+              : type === 'event'
+              ? 'grid-cols-2'
+              : ((type === 'local' && acceptApplicationsWG !== false) || type === 'online') && validatedCount !== null
+              ? 'grid-cols-2'
+              : 'grid-cols-2'
+          } gap-1.5`}>
             {/* XP Reward */}
             <div className='flex flex-col items-center justify-center px-1.5 py-1.5 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-md border border-indigo-200'>
               <HiStar className='h-3.5 w-3.5 text-indigo-600 mb-0.5' />
               <span className='text-sm sm:text-base font-bold text-indigo-700'>{xp_reward}</span>
               <span className='text-[10px] sm:text-xs text-indigo-600 leading-tight'>{t('points')}</span>
             </div>
-            {/* Applicants */}
-            <div className='flex flex-col items-center justify-center px-1.5 py-1.5 bg-gray-50 rounded-md border border-gray-200'>
-              <HiUserGroup className='h-3.5 w-3.5 text-gray-600 mb-0.5' />
-              <span className='text-sm sm:text-base font-bold text-gray-700'>{applicants}</span>
-              <span className='text-[10px] sm:text-xs text-gray-600 leading-tight'>{t('applied')}</span>
-            </div>
-            {/* Time Commitment */}
-            {timeCommitment ? (
-              <div className='flex flex-col items-center justify-center px-1.5 py-1.5 bg-gray-50 rounded-md border border-gray-200'>
-                <HiClock className='h-3.5 w-3.5 text-gray-600 mb-0.5' />
-                <span className='text-[10px] sm:text-xs font-semibold text-gray-700 text-center leading-tight'>
-                  {timeCommitment}
+            {/* Participant Counter - Show for local (when accepting WG) and online */}
+            {((type === 'local' && acceptApplicationsWG !== false) || type === 'online') && validatedCount !== null && (
+              <div className='flex flex-col items-center justify-center px-1.5 py-1.5 bg-green-50 rounded-md border border-green-200'>
+                <HiUserGroup className='h-3.5 w-3.5 text-green-600 mb-0.5' />
+                <span className='text-sm sm:text-base font-bold text-green-700'>
+                  {participantTarget ? `${validatedCount}/${participantTarget}` : validatedCount}
+                </span>
+                <span className='text-[10px] sm:text-xs text-green-600 leading-tight'>
+                  {participantTarget ? t('participants') : t('validated')}
                 </span>
               </div>
-            ) : (
-              <div className='flex flex-col items-center justify-center px-1.5 py-1.5 bg-gray-50 rounded-md border border-gray-200 opacity-50'>
-                <HiClock className='h-3.5 w-3.5 text-gray-400 mb-0.5' />
-                <span className='text-[10px] text-gray-400'>N/A</span>
+            )}
+            {/* People Max - Show for events when participantTarget is set */}
+            {type === 'event' && participantTarget !== null && participantTarget !== undefined && (
+              <div className='flex flex-col items-center justify-center px-1.5 py-1.5 bg-green-50 rounded-md border border-green-200'>
+                <HiUserGroup className='h-3.5 w-3.5 text-green-600 mb-0.5' />
+                <span className='text-sm sm:text-base font-bold text-green-700'>
+                  {participantTarget}
+                </span>
+                <span className='text-[10px] sm:text-xs text-green-600 leading-tight'>
+                  {t('peopleMax')}
+                </span>
               </div>
+            )}
+            {/* Time Commitment - Show for events if no participant target, or for local/online when no participant counter */}
+            {((type === 'event' && (participantTarget === null || participantTarget === undefined)) || 
+              ((type === 'local' && acceptApplicationsWG === false) || 
+               (type === 'online' && validatedCount === null))) && (
+              timeCommitment ? (
+                <div className='flex flex-col items-center justify-center px-1.5 py-1.5 bg-gray-50 rounded-md border border-gray-200'>
+                  <HiClock className='h-3.5 w-3.5 text-gray-600 mb-0.5' />
+                  <span className='text-[10px] sm:text-xs font-semibold text-gray-700 text-center leading-tight'>
+                    {timeCommitment}
+                  </span>
+                </div>
+              ) : (
+                <div className='flex flex-col items-center justify-center px-1.5 py-1.5 bg-gray-50 rounded-md border border-gray-200 opacity-50'>
+                  <HiClock className='h-3.5 w-3.5 text-gray-400 mb-0.5' />
+                  <span className='text-[10px] text-gray-400'>N/A</span>
+                </div>
+              )
             )}
           </div>
 
           {/* Skills with overflow indicator */}
           {skills?.length > 0 && (
             <div className='flex flex-wrap items-center gap-1.5' aria-label={t('skills')}>
-              {visibleSkills.map((skill, index) => (
-                <span key={index} className='px-2 sm:px-2.5 py-1 text-xs rounded-full bg-gray-100 text-gray-800 font-medium'>
-                  {skill}
-                </span>
-              ))}
+              {visibleSkills.map((skill, index) => {
+                // Get skill ID
+                const skillId = typeof skill === 'object' && skill !== null 
+                  ? (skill.value || skill.id || skill) 
+                  : skill;
+                
+                // Get translated label from map, fallback to ID if not found
+                const skillLabel = skillLabelsMap[skillId] || skillId;
+                
+                return (
+                  <span key={index} className='px-2 sm:px-2.5 py-1 text-xs rounded-full bg-gray-100 text-gray-800 font-medium'>
+                    {skillLabel}
+                  </span>
+                );
+              })}
               {remainingSkillsCount > 0 && (
                 <span className='px-2 sm:px-2.5 py-1 text-xs rounded-full bg-gray-200 text-gray-600 font-medium'>
                   +{remainingSkillsCount} more

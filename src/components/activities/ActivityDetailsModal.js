@@ -3,10 +3,11 @@
 import { useEffect, useState } from 'react';
 import { Modal, Badge, Button, Spinner } from 'flowbite-react';
 import Image from 'next/image';
-import { fetchActivityById } from '@/utils/crudActivities';
+import { fetchActivityById, getAcceptedApplicationsCount } from '@/utils/crudActivities';
 import { fetchOrganizationById } from '@/utils/crudOrganizations';
 import { formatDateOnly } from '@/utils/dateUtils';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
+import { getSkillsForSelect } from '@/utils/crudSkills';
 import {
   HiLocationMarker,
   HiUserGroup,
@@ -17,17 +18,19 @@ import {
   HiGlobeAlt,
   HiQuestionMarkCircle,
   HiTranslate,
-  HiLink
+  HiLink,
+  HiExternalLink,
+  HiCheckCircle
 } from 'react-icons/hi';
 import { HiClock } from 'react-icons/hi2';
 import NPODetailsModal from './NPODetailsModal';
 import { categoryIcons } from '@/constant/categoryIcons';
 import { useRouter } from 'next/navigation';
-import { HiCheckCircle } from 'react-icons/hi';
 
 export default function ActivityDetailsModal({ isOpen, onClose, activityId, onApply, hasApplied = false }) {
   const t = useTranslations('ActivityCard');
   const tManage = useTranslations('ManageActivities');
+  const locale = useLocale();
   const router = useRouter();
   
   const [activity, setActivity] = useState(null);
@@ -35,6 +38,82 @@ export default function ActivityDetailsModal({ isOpen, onClose, activityId, onAp
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showNPOModal, setShowNPOModal] = useState(false);
+  const [validatedCount, setValidatedCount] = useState(null);
+  const [skillLabelsMap, setSkillLabelsMap] = useState({});
+
+  // Fetch accepted applications count for local/online activities (not for events)
+  useEffect(() => {
+    const shouldFetchCount = 
+      (activity?.type === 'local' && activity?.acceptApplicationsWG !== false) ||
+      activity?.type === 'online';
+    
+    if (activity?.id && shouldFetchCount) {
+      const fetchCount = async () => {
+        try {
+          const count = await getAcceptedApplicationsCount(activity.id);
+          setValidatedCount(count);
+        } catch (error) {
+          console.error('Error fetching accepted applications count:', error);
+          setValidatedCount(0);
+        }
+      };
+      fetchCount();
+    } else if (activity?.type !== 'event') {
+      // Reset count for local/online activities when not needed
+      setValidatedCount(null);
+    }
+  }, [activity?.id, activity?.type, activity?.acceptApplicationsWG]);
+
+  // Fetch skill labels based on current locale
+  useEffect(() => {
+    const loadSkillLabels = async () => {
+      if (!activity?.skills || activity.skills.length === 0) {
+        setSkillLabelsMap({});
+        return;
+      }
+
+      try {
+        const skillOptions = await getSkillsForSelect(locale);
+        // Create a flat map of all skills for easy lookup
+        const allSkills = skillOptions.reduce((acc, group) => {
+          return [...acc, ...group.options];
+        }, []);
+
+        // Create a mapping from skill ID to label
+        const labelsMap = {};
+        activity.skills.forEach(skill => {
+          const skillId = typeof skill === 'object' && skill !== null 
+            ? (skill.value || skill.id || skill)
+            : skill;
+          
+          const foundSkill = allSkills.find(s => s.value === skillId);
+          if (foundSkill) {
+            labelsMap[skillId] = foundSkill.label;
+          } else {
+            // Fallback to ID if not found
+            labelsMap[skillId] = skillId;
+          }
+        });
+
+        setSkillLabelsMap(labelsMap);
+      } catch (error) {
+        console.error('Error loading skill labels:', error);
+        // Fallback: create map with IDs as labels
+        const fallbackMap = {};
+        activity.skills.forEach(skill => {
+          const skillId = typeof skill === 'object' && skill !== null 
+            ? (skill.value || skill.id || skill)
+            : skill;
+          fallbackMap[skillId] = skillId;
+        });
+        setSkillLabelsMap(fallbackMap);
+      }
+    };
+
+    if (activity) {
+      loadSkillLabels();
+    }
+  }, [activity?.skills, locale]);
 
   useEffect(() => {
     async function fetchData() {
@@ -191,7 +270,15 @@ export default function ActivityDetailsModal({ isOpen, onClose, activityId, onAp
               </div>
 
               {/* Key Stats */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 pt-4 border-t border-gray-200">
+              <div className={`grid ${
+                activity.type === 'event' && activity.participantTarget !== null && activity.participantTarget !== undefined
+                  ? 'grid-cols-2 sm:grid-cols-3'
+                  : activity.type === 'event'
+                  ? 'grid-cols-2 sm:grid-cols-2'
+                  : ((activity.type === 'local' && activity.acceptApplicationsWG !== false) || activity.type === 'online') && validatedCount !== null
+                  ? 'grid-cols-2 sm:grid-cols-3'
+                  : 'grid-cols-2 sm:grid-cols-2'
+              } gap-3 sm:gap-4 pt-4 border-t border-gray-200`}>
                 <div className="flex items-center gap-2">
                   <HiStar className="h-5 w-5 text-indigo-500 flex-shrink-0" />
                   <div className="min-w-0">
@@ -199,15 +286,31 @@ export default function ActivityDetailsModal({ isOpen, onClose, activityId, onAp
                     <p className="text-base sm:text-lg font-semibold text-indigo-600">{activity.xp_reward || 0}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <HiUserGroup className="h-5 w-5 text-gray-500 flex-shrink-0" />
-                  <div className="min-w-0">
-                    <p className="text-xs text-gray-500">Applicants</p>
-                    <p className="text-base sm:text-lg font-semibold text-gray-700">
-                      {activity.applicants || 0}
-                    </p>
+                {/* Participant Counter - Show for local (when accepting WG) and online */}
+                {((activity.type === 'local' && activity.acceptApplicationsWG !== false) || 
+                    activity.type === 'online') && validatedCount !== null && (
+                  <div className="flex items-center gap-2">
+                    <HiUsers className="h-5 w-5 text-green-500 flex-shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-xs text-gray-500">{t('participants')}</p>
+                      <p className="text-base sm:text-lg font-semibold text-green-600">
+                        {activity.participantTarget ? `${validatedCount}/${activity.participantTarget}` : validatedCount}
+                      </p>
+                    </div>
                   </div>
-                </div>
+                )}
+                {/* People Max - Show for events when participantTarget is set */}
+                {activity.type === 'event' && activity.participantTarget !== null && activity.participantTarget !== undefined && (
+                  <div className="flex items-center gap-2">
+                    <HiUsers className="h-5 w-5 text-green-500 flex-shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-xs text-gray-500">{t('peopleMax')}</p>
+                      <p className="text-base sm:text-lg font-semibold text-green-600">
+                        {activity.participantTarget}
+                      </p>
+                    </div>
+                  </div>
+                )}
                 <div className="flex items-center gap-2">
                   <HiLocationMarker className="h-5 w-5 text-gray-500 flex-shrink-0" />
                   <div className="min-w-0">
@@ -240,22 +343,39 @@ export default function ActivityDetailsModal({ isOpen, onClose, activityId, onAp
                 </p>
               </div>
 
-              {/* Activity URL */}
-              {activity.activity_url && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <div className="flex items-center gap-3">
-                    <HiLink className="h-5 w-5 text-blue-600 flex-shrink-0" />
+              {/* External Platform Link - Prominently Displayed */}
+              {(activity.externalPlatformLink || activity.activity_url) && (
+                <div className="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl p-4 sm:p-6 shadow-lg border-2 border-blue-400">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+                    <div className="flex-shrink-0 bg-white/20 rounded-full p-2">
+                      <HiExternalLink className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
+                    </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs text-gray-500 mb-1">Activity Link</p>
+                      <p className="text-white text-xs sm:text-sm font-medium mb-1 sm:mb-2">{t('externalPlatformLink')}</p>
                       <a
-                        href={activity.activity_url.startsWith('http') ? activity.activity_url : `https://${activity.activity_url}`}
+                        href={(activity.externalPlatformLink || activity.activity_url).startsWith('http') 
+                          ? (activity.externalPlatformLink || activity.activity_url) 
+                          : `https://${activity.externalPlatformLink || activity.activity_url}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-800 text-sm sm:text-base font-medium break-all underline decoration-2 underline-offset-2 hover:decoration-blue-800 transition-colors"
+                        className="text-white text-sm sm:text-base font-semibold break-all underline decoration-2 underline-offset-2 hover:decoration-white/80 transition-colors flex items-center gap-2"
                       >
-                        {activity.activity_url}
+                        <span className="truncate">{activity.externalPlatformLink || activity.activity_url}</span>
+                        <HiExternalLink className="h-4 w-4 flex-shrink-0" />
                       </a>
                     </div>
+                    <button
+                      onClick={() => {
+                        const url = (activity.externalPlatformLink || activity.activity_url).startsWith('http') 
+                          ? (activity.externalPlatformLink || activity.activity_url) 
+                          : `https://${activity.externalPlatformLink || activity.activity_url}`;
+                        window.open(url, '_blank', 'noopener,noreferrer');
+                      }}
+                      className="flex-shrink-0 bg-white text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-lg font-semibold text-sm sm:text-base transition-colors flex items-center gap-2 touch-manipulation"
+                    >
+                      Open Link
+                      <HiExternalLink className="h-4 w-4" />
+                    </button>
                   </div>
                 </div>
               )}
@@ -293,14 +413,24 @@ export default function ActivityDetailsModal({ isOpen, onClose, activityId, onAp
                   <div className="bg-gray-50 rounded-lg p-4">
                     <div className="flex items-center gap-2 mb-4">
                       <HiUsers className="h-5 w-5 text-purple-600" />
-                      <h2 className="text-lg font-semibold text-gray-900">Required Skills</h2>
+                      <h2 className="text-lg font-semibold text-gray-900">{t('requiredSkills')}</h2>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      {activity.skills.map((skill, index) => (
-                        <Badge key={index} color="purple" size="sm">
-                          {skill}
-                        </Badge>
-                      ))}
+                      {activity.skills.map((skill, index) => {
+                        // Get skill ID
+                        const skillId = typeof skill === 'object' && skill !== null 
+                          ? (skill.value || skill.id || skill) 
+                          : skill;
+                        
+                        // Get translated label from map, fallback to ID if not found
+                        const skillLabel = skillLabelsMap[skillId] || skillId;
+                        
+                        return (
+                          <Badge key={index} color="purple" size="sm">
+                            {skillLabel}
+                          </Badge>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -419,7 +549,10 @@ export default function ActivityDetailsModal({ isOpen, onClose, activityId, onAp
             </>
           ) : (
             <>
-              {onApply && (
+              {/* Hide Apply button for events or local activities with external platform only */}
+              {onApply && 
+               activity?.type !== 'event' && 
+               !(activity?.type === 'local' && activity?.acceptApplicationsWG === false) && (
                 <Button onClick={onApply} className="bg-blue-600 hover:bg-blue-700">
                   Apply Now
                 </Button>

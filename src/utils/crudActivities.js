@@ -3,6 +3,7 @@ import { db } from 'firebaseConfig';
 import { fetchApplicationsForActivity } from './crudApplications';
 import { grantActivityCompletionBadges, awardXpToUser } from './crudBadges';
 import { v4 as uuidv4 } from 'uuid';
+import { fetchValidationsForActivity } from './crudActivityValidation';
 
 // Fetch all activities from the Firestore database
 export async function fetchActivities() {
@@ -350,5 +351,39 @@ export async function deleteActivity(id) {
   } catch (error) {
     console.error('Error deleting activity:', error);
     throw error;
+  }
+}
+
+/**
+ * Get count of validated participants for an activity
+ * @param {string} activityId - Activity ID
+ * @returns {Promise<number>} Count of validated participants
+ */
+export async function getValidatedParticipantsCount(activityId) {
+  try {
+    const validations = await fetchValidationsForActivity(activityId);
+    // Filter to only validated participants (status === 'validated')
+    const validatedCount = validations.filter(v => v.status === 'validated').length;
+    return validatedCount;
+  } catch (error) {
+    console.error('Error getting validated participants count:', error);
+    return 0;
+  }
+}
+
+/**
+ * Get count of accepted applications for an activity
+ * @param {string} activityId - Activity ID
+ * @returns {Promise<number>} Count of accepted applications
+ */
+export async function getAcceptedApplicationsCount(activityId) {
+  try {
+    const applications = await fetchApplicationsForActivity(activityId);
+    // Filter to only accepted applications (status === 'accepted')
+    const acceptedCount = applications.filter(app => app.status === 'accepted').length;
+    return acceptedCount;
+  } catch (error) {
+    console.error('Error getting accepted applications count:', error);
+    return 0;
   }
 }

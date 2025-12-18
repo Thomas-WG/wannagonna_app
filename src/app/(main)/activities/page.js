@@ -130,7 +130,13 @@ export default function ActivitiesPage() {
       if (activity.category) categories.add(activity.category);
       if (activity.skills && Array.isArray(activity.skills)) {
         activity.skills.forEach(skill => {
-          if (skill) skills.add(skill);
+          if (skill) {
+            // Handle both object format {value, label} and string format
+            const skillValue = typeof skill === 'object' && skill !== null 
+              ? (skill.value || skill.id || skill.label) 
+              : skill;
+            if (skillValue) skills.add(skillValue);
+          }
         });
       }
     });
@@ -160,9 +166,16 @@ export default function ActivitiesPage() {
       filtered = filtered.filter((activity) => String(activity.sdg) === String(filters.sdg));
     }
     if (filters.skill !== 'all') {
-      filtered = filtered.filter((activity) => 
-        activity.skills && Array.isArray(activity.skills) && activity.skills.includes(filters.skill)
-      );
+      filtered = filtered.filter((activity) => {
+        if (!activity.skills || !Array.isArray(activity.skills)) return false;
+        return activity.skills.some(skill => {
+          // Handle both object format {value, label} and string format
+          const skillValue = typeof skill === 'object' && skill !== null 
+            ? (skill.value || skill.id || skill.label) 
+            : skill;
+          return skillValue === filters.skill;
+        });
+      });
     }
 
     // Apply search
@@ -235,9 +248,16 @@ export default function ActivitiesPage() {
   const handleApplyFromDetails = () => {
     const activity = allActivities.find((a) => a.id === selectedActivityId);
     if (activity) {
-      setSelectedActivity(activity);
-      setShowDetailsModal(false);
-      setOpenApplyModal(true);
+      // Check if applications are allowed
+      // Don't allow applications for events or local activities with external platform only
+      const canApply = activity.type !== 'event' && 
+                      !(activity.type === 'local' && activity.acceptApplicationsWG === false);
+      
+      if (canApply) {
+        setSelectedActivity(activity);
+        setShowDetailsModal(false);
+        setOpenApplyModal(true);
+      }
     }
   };
 
@@ -501,6 +521,8 @@ export default function ActivitiesPage() {
                   qrCodeToken={activity.qrCodeToken}
                   frequency={activity.frequency}
                   skills={activity.skills}
+                  participantTarget={activity.participantTarget}
+                  acceptApplicationsWG={activity.acceptApplicationsWG}
                   onClick={() => handleCardClick(activity)}
                 />
                 {/* Applied Badge - Ribbon Style */}

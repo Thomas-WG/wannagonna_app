@@ -17,6 +17,7 @@ import ActivityDetailsModal from "@/components/activities/ActivityDetailsModal";
 import StatusUpdateModal from "@/components/activities/StatusUpdateModal";
 import QRCodeModal from "@/components/activities/QRCodeModal";
 import ActivityValidationModal from "@/components/activities/ActivityValidationModal";
+import ParticipantListModal from "@/components/activities/ParticipantListModal";
 import { updateActivityStatus } from "@/utils/crudActivities";
 import ActivityFilters from "@/components/activities/ActivityFilters";
 import categories from "@/constant/categories";
@@ -46,6 +47,7 @@ export default function MyNonProfitDashboard() {
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [showQRModal, setShowQRModal] = useState(false);
   const [showValidationModal, setShowValidationModal] = useState(false);
+  const [showParticipantModal, setShowParticipantModal] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState({ type: '', message: '' });
@@ -270,6 +272,11 @@ export default function MyNonProfitDashboard() {
   const handleShowQRCode = () => {
     setShowActionModal(false);
     setShowQRModal(true);
+  };
+
+  const handleViewParticipants = () => {
+    setShowActionModal(false);
+    setShowParticipantModal(true);
   };
 
   const handleStatusUpdate = async (newStatus) => {
@@ -517,6 +524,8 @@ export default function MyNonProfitDashboard() {
                   qrCodeToken={activity.qrCodeToken}
                   frequency={activity.frequency}
                   skills={activity.skills}
+                  participantTarget={activity.participantTarget}
+                  acceptApplicationsWG={activity.acceptApplicationsWG}
                   onClick={() => handleActivityCardClick(activity)}
                   canEditStatus={true}
                   onStatusChange={handleStatusChange}
@@ -529,9 +538,9 @@ export default function MyNonProfitDashboard() {
                     {/* Grid layout: 3 columns, flexible rows */}
                     {(() => {
                       const hasQRCode = activity.qrCodeToken && (activity.type === 'local' || activity.type === 'event');
-                      const buttonCount = hasQRCode ? 6 : 5;
+                      const isEvent = activity.type === 'event';
                       return (
-                        <div className={`grid ${buttonCount === 6 ? 'grid-cols-3' : 'grid-cols-3'} gap-3 sm:gap-2.5 md:gap-3 w-full max-w-xs sm:max-w-sm`}>
+                        <div className="grid grid-cols-3 gap-3 sm:gap-2.5 md:gap-3 w-full max-w-xs sm:max-w-sm">
                           {/* Change Status Button */}
                           <div className="flex flex-col items-center">
                             <button
@@ -580,17 +589,33 @@ export default function MyNonProfitDashboard() {
                             <span className="mt-1.5 text-xs sm:text-[11px] md:text-xs text-white font-medium text-center leading-tight px-0.5">{t('view')}</span>
                           </div>
 
-                          {/* Review Applications Button */}
-                          <div className="flex flex-col items-center">
-                            <button
-                              onClick={handleReviewApplications}
-                              className="w-16 h-16 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-green-500 text-white flex items-center justify-center shadow-lg hover:bg-green-600 active:bg-green-700 transition-colors touch-manipulation"
-                              aria-label="Review Applications"
-                            >
-                              <HiUserGroup className="h-7 w-7 sm:h-6 sm:w-6 md:h-7 md:w-7" />
-                            </button>
-                            <span className="mt-1.5 text-xs sm:text-[11px] md:text-xs text-white font-medium text-center leading-tight px-0.5">{t('applications')}</span>
-                          </div>
+                          {/* Review Applications Button - Hidden for events */}
+                          {!isEvent && (
+                            <div className="flex flex-col items-center">
+                              <button
+                                onClick={handleReviewApplications}
+                                className="w-16 h-16 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-green-500 text-white flex items-center justify-center shadow-lg hover:bg-green-600 active:bg-green-700 transition-colors touch-manipulation"
+                                aria-label="Review Applications"
+                              >
+                                <HiUserGroup className="h-7 w-7 sm:h-6 sm:w-6 md:h-7 md:w-7" />
+                              </button>
+                              <span className="mt-1.5 text-xs sm:text-[11px] md:text-xs text-white font-medium text-center leading-tight px-0.5">{t('applications')}</span>
+                            </div>
+                          )}
+
+                          {/* View Participants Button - Hidden for events */}
+                          {!isEvent && (
+                            <div className="flex flex-col items-center">
+                              <button
+                                onClick={handleViewParticipants}
+                                className="w-16 h-16 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-teal-500 text-white flex items-center justify-center shadow-lg hover:bg-teal-600 active:bg-teal-700 transition-colors touch-manipulation"
+                                aria-label="View Participants"
+                              >
+                                <HiUsers className="h-7 w-7 sm:h-6 sm:w-6 md:h-7 md:w-7" />
+                              </button>
+                              <span className="mt-1.5 text-xs sm:text-[11px] md:text-xs text-white font-medium text-center leading-tight px-0.5">{t('viewParticipants') || 'Participants'}</span>
+                            </div>
+                          )}
 
                           {/* Show QR Code Button - Conditional */}
                           {hasQRCode && (
@@ -744,6 +769,17 @@ export default function MyNonProfitDashboard() {
             status: selectedActivity.status
           }}
           onStatusChange={handleStatusChange}
+        />
+      )}
+
+      {/* Participant List Modal */}
+      {selectedActivity && (
+        <ParticipantListModal
+          isOpen={showParticipantModal}
+          onClose={() => {
+            setShowParticipantModal(false);
+          }}
+          activityId={selectedActivity.id}
         />
       )}
 

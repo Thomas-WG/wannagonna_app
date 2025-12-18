@@ -69,7 +69,13 @@
             "Draft": "下書き",
             "Open": "公開中",
             "Closed": "閉鎖"
-        }
+        },
+        "participants": "参加者",
+        "peopleMax": "最大人数",
+        "validated": "承認済み",
+        "externalPlatformLink": "外部プラットフォームリンク",
+        "openLink": "リンクを開く",
+        "requiredSkills": "必要なスキル"
     },
     "ManageActivities": {
         "create-activity": "活動を作成する",
@@ -143,7 +149,30 @@
         "health_screening": "健康診断",
         "blood_drive": "献血活動",
         "food_fair": "フードフェア",
-        "animal_adoption": "動物譲渡イベント"
+        "animal_adoption": "動物譲渡イベント",
+        "external-platform-link-title": "外部プラットフォームリンク",
+        "external-platform-link-description-required": "外部登録プラットフォームへのリンク（WannaGonna経由で申請を受け付けない場合は必須）",
+        "external-platform-link-description-optional": "イベントまたはボランティア管理システムへのリンク（オプション）",
+        "external-platform-url-label": "外部プラットフォームURL",
+        "external-platform-url-helper-required": "WannaGonna経由で申請を受け付けない場合、このフィールドは必須です",
+        "external-platform-url-helper-optional": "イベント、登録ページ、または独自のボランティア管理システムへのリンクを提供してください",
+        "participant-target-title": "参加者目標",
+        "participant-target-description": "募集する参加者数（オプション）",
+        "participant-target-label": "参加者数",
+        "participant-target-helper": "この活動の目標参加者数を入力してください",
+        "application-settings-title": "申請設定",
+        "application-settings-description": "参加者がこの活動に応募する方法を設定",
+        "accept-applications-wg-label": "WannaGonna経由で申請を受け付ける",
+        "accept-applications-wg-description": "ボランティアがWannaGonnaプラットフォームから直接応募できるようにする",
+        "auto-accept-applications-label": "申請を自動承認する",
+        "auto-accept-applications-description": "申請は手動審査なしで自動的に承認されます",
+        "required-skills-title": "必要なスキル",
+        "required-skills-description": "この活動に必要なスキルを選択してください（オプション）",
+        "skills-label": "スキル",
+        "skills-placeholder": "必要なスキルを選択...",
+        "skills-helper": "この活動にボランティアが持つべきスキルを1つ以上選択してください",
+        "location-label": "場所/会場",
+        "location-helper": "この活動はどこで行われますか？（例：コミュニティセンター、公園名、具体的な住所）"
     },
     "DeleteActivity": {
         "delete-activity": "活動を削除",
@@ -387,6 +416,7 @@
         "events": "イベント",
         "closed": "閉鎖",
         "participants": "参加者",
+        "peopleMax": "最大人数",
         "quickActions": "クイックアクション",
         "newApplications": "新しい申請",
         "requiresAttention": "注意が必要です",
@@ -437,7 +467,11 @@
         "yes": "はい",
         "close": "閉じる",
         "untitledActivity": "タイトルなしの活動",
-        "noApplicationsForActivity": "この活動に対する申請が見つかりません。"
+        "noApplicationsForActivity": "この活動に対する申請が見つかりません。",
+        "viewParticipants": "参加者を表示",
+        "noParticipants": "まだ参加者はいません",
+        "participantsTitle": "参加者",
+        "validatedAt": "承認日"
     },
     "Dashboard": {
         "yourStatistics": "あなたの統計",

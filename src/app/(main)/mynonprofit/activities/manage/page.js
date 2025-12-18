@@ -43,6 +43,7 @@ export default function CreateUpdateActivityPage() {
     frequency: '',// once or regular activity
     country: '', // Default country
     city: '', // Default city
+    location: '', // Specific location/venue for local and event activities
     xp_reward: 20, // Default XP points
     sdg: '', // Sustainable Development Goal
     languages: ['English'],
@@ -52,7 +53,13 @@ export default function CreateUpdateActivityPage() {
     creation_date: new Date(),  // Current date and time as default
     start_date: new Date(),     // Default start date
     end_date: new Date(),        // Default end date
-    status: 'created'
+    status: 'created',
+    // New fields
+    externalPlatformLink: '', // External platform/event link
+    participantTarget: null, // Number of participants target
+    acceptApplicationsWG: true, // For local activities: accept applications through WG (default: true)
+    autoAcceptApplications: false, // Auto-accept applications when enabled
+    activity_url: '' // Legacy field name for external link (keeping for backward compatibility)
   });
 
   const [currentStep, setCurrentStep] = useState(1); // Track the current step
@@ -151,6 +158,16 @@ export default function CreateUpdateActivityPage() {
                   return new Date();
                 }
               })() : new Date(),
+              // Handle backward compatibility for external platform link
+              externalPlatformLink: data.externalPlatformLink || data.activity_url || '',
+              activity_url: data.activity_url || data.externalPlatformLink || '',
+              // Set defaults for new fields if not present
+              participantTarget: data.participantTarget || null,
+              acceptApplicationsWG: data.acceptApplicationsWG !== undefined ? data.acceptApplicationsWG : (data.type === 'local' ? true : undefined),
+              autoAcceptApplications: data.autoAcceptApplications || false,
+              location: data.location || '',
+              // Ensure frequency is 'once' for events
+              frequency: data.type === 'event' ? 'once' : (data.frequency || ''),
             };
             console.log('Processed form data:', processedData);
             setFormData(processedData);
@@ -168,11 +185,23 @@ export default function CreateUpdateActivityPage() {
     if (!isEditMode && prefillType) {
       const allowed = ['online', 'local', 'event'];
       if (allowed.includes(prefillType)) {
-        setFormData((prev) => ({ ...prev, type: prefillType }));
+        setFormData((prev) => ({ 
+          ...prev, 
+          type: prefillType,
+          // Auto-set frequency to 'once' for events
+          frequency: prefillType === 'event' ? 'once' : prev.frequency
+        }));
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [prefillType, isEditMode]);
+
+  // Auto-set frequency to 'once' for events
+  useEffect(() => {
+    if (formData.type === 'event' && formData.frequency !== 'once') {
+      setFormData((prev) => ({ ...prev, frequency: 'once' }));
+    }
+  }, [formData.type, formData.frequency]);
 
   // Handle form input changes
   const handleChange = (e) => {
@@ -196,11 +225,30 @@ export default function CreateUpdateActivityPage() {
       formData.end_date = null;
     }
 
+    // Normalize skills to store only values (IDs) for consistency
+    // This prevents storing full react-select objects which can't be rendered directly
+    const normalizedSkills = formData.skills && Array.isArray(formData.skills)
+      ? formData.skills.map(skill => {
+          // Extract value from react-select object format, or use string as-is
+          if (typeof skill === 'object' && skill !== null) {
+            return skill.value || skill.id || skill.label || skill;
+          }
+          return skill;
+        }).filter(Boolean) // Remove any null/undefined values
+      : [];
+
     const baseDataToSave = {
       ...formData,
       // Add automatic attributes here if needed (e.g., organizationId, creatorId)
       organizationId: claims?.npoId || formData.organizationId, // Ensure organizationId is set
-      creatorId: user?.uid // Add the creator's ID
+      creatorId: user?.uid, // Add the creator's ID
+      // Ensure frequency is 'once' for events
+      frequency: formData.type === 'event' ? 'once' : formData.frequency,
+      // Ensure both externalPlatformLink and activity_url are saved for backward compatibility
+      externalPlatformLink: formData.externalPlatformLink || formData.activity_url || '',
+      activity_url: formData.activity_url || formData.externalPlatformLink || '',
+      // Normalize skills to store only values
+      skills: normalizedSkills
     };
     
     try {

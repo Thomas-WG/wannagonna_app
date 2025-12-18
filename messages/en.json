@@ -69,7 +69,13 @@
             "Draft": "Draft",
             "Open": "Open",
             "Closed": "Closed"
-        }
+        },
+        "participants": "participants",
+        "peopleMax": "people max",
+        "validated": "validated",
+        "externalPlatformLink": "External Platform Link",
+        "openLink": "Open Link",
+        "requiredSkills": "Required Skills"
     },
     "ManageActivities": {
         "create-activity": "Create Activity",
@@ -143,7 +149,30 @@
         "health_screening": "Health Screening",
         "blood_drive": "Blood Donation Drive",
         "food_fair": "Food Fair",
-        "animal_adoption": "Animal Adoption Event"
+        "animal_adoption": "Animal Adoption Event",
+        "external-platform-link-title": "External Platform Link",
+        "external-platform-link-description-required": "Link to external registration platform (required when not accepting applications through WannaGonna)",
+        "external-platform-link-description-optional": "Link to the event or your volunteering management system (optional)",
+        "external-platform-url-label": "External Platform URL",
+        "external-platform-url-helper-required": "This field is required when not accepting applications through WannaGonna",
+        "external-platform-url-helper-optional": "Provide a link to the event, registration page, or your own volunteering management system",
+        "participant-target-title": "Participant Target",
+        "participant-target-description": "Number of participants you are looking for (optional)",
+        "participant-target-label": "Number of Participants",
+        "participant-target-helper": "Enter the target number of participants for this activity",
+        "application-settings-title": "Application Settings",
+        "application-settings-description": "Configure how participants can apply to this activity",
+        "accept-applications-wg-label": "Accept applications through WannaGonna",
+        "accept-applications-wg-description": "Allow volunteers to apply directly through the WannaGonna platform",
+        "auto-accept-applications-label": "Automatically accept applications",
+        "auto-accept-applications-description": "Applications will be automatically accepted without manual review",
+        "required-skills-title": "Required Skills",
+        "required-skills-description": "Select skills required for this activity (optional)",
+        "skills-label": "Skills",
+        "skills-placeholder": "Select required skills...",
+        "skills-helper": "Select one or more skills that volunteers should have for this activity",
+        "location-label": "Location/Venue",
+        "location-helper": "Where will this activity take place? (e.g., Community Center, Park Name, Specific Address)"
     },
     "DeleteActivity": {
         "delete-activity": "Delete Activity",
@@ -387,6 +416,7 @@
         "events": "Events",
         "closed": "Closed",
         "participants": "Participants",
+        "peopleMax": "People Max",
         "quickActions": "Quick Actions",
         "newApplications": "New Applications",
         "requiresAttention": "Requires attention",
@@ -437,7 +467,11 @@
         "yes": "Yes",
         "close": "Close",
         "untitledActivity": "Untitled activity",
-        "noApplicationsForActivity": "No applications found for this activity."
+        "noApplicationsForActivity": "No applications found for this activity.",
+        "viewParticipants": "View Participants",
+        "noParticipants": "No participants yet",
+        "participantsTitle": "Participants",
+        "validatedAt": "Validated"
     },
     "Dashboard": {
         "yourStatistics": "Your Statistics",

@@ -69,7 +69,13 @@
             "Draft": "Borrador",
             "Open": "Abierto",
             "Closed": "Cerrado"
-        }
+        },
+        "participants": "participantes",
+        "peopleMax": "personas máx",
+        "validated": "validados",
+        "externalPlatformLink": "Enlace a Plataforma Externa",
+        "openLink": "Abrir Enlace",
+        "requiredSkills": "Habilidades Requeridas"
     },
     "ManageActivities": {
         "create-activity": "Crear actividad",
@@ -137,7 +143,30 @@
         "health_screening": "Detección de salud",
         "blood_drive": "Donación de sangre",
         "food_fair": "Feria de alimentos",
-        "animal_adoption": "Evento de adopción de animales"
+        "animal_adoption": "Evento de adopción de animales",
+        "external-platform-link-title": "Enlace a Plataforma Externa",
+        "external-platform-link-description-required": "Enlace a la plataforma de registro externa (requerido cuando no se aceptan solicitudes a través de WannaGonna)",
+        "external-platform-link-description-optional": "Enlace al evento o su sistema de gestión de voluntariado (opcional)",
+        "external-platform-url-label": "URL de la Plataforma Externa",
+        "external-platform-url-helper-required": "Este campo es requerido cuando no se aceptan solicitudes a través de WannaGonna",
+        "external-platform-url-helper-optional": "Proporcione un enlace al evento, página de registro o su propio sistema de gestión de voluntariado",
+        "participant-target-title": "Objetivo de Participantes",
+        "participant-target-description": "Número de participantes que busca (opcional)",
+        "participant-target-label": "Número de Participantes",
+        "participant-target-helper": "Ingrese el número objetivo de participantes para esta actividad",
+        "application-settings-title": "Configuración de Solicitudes",
+        "application-settings-description": "Configure cómo los participantes pueden aplicar a esta actividad",
+        "accept-applications-wg-label": "Aceptar solicitudes a través de WannaGonna",
+        "accept-applications-wg-description": "Permitir que los voluntarios apliquen directamente a través de la plataforma WannaGonna",
+        "auto-accept-applications-label": "Aceptar automáticamente las solicitudes",
+        "auto-accept-applications-description": "Las solicitudes serán aceptadas automáticamente sin revisión manual",
+        "required-skills-title": "Habilidades Requeridas",
+        "required-skills-description": "Seleccione las habilidades requeridas para esta actividad (opcional)",
+        "skills-label": "Habilidades",
+        "skills-placeholder": "Seleccione las habilidades requeridas...",
+        "skills-helper": "Seleccione una o más habilidades que los voluntarios deben tener para esta actividad",
+        "location-label": "Ubicación/Lugar",
+        "location-helper": "¿Dónde tendrá lugar esta actividad? (ej.: Centro Comunitario, Nombre del Parque, Dirección Específica)"
     },
     "DeleteActivity": {
         "delete-activity": "Eliminar actividad",
@@ -381,6 +410,7 @@
         "events": "Eventos",
         "closed": "Cerrado",
         "participants": "Participantes",
+        "peopleMax": "Personas Máx",
         "quickActions": "Acciones Rápidas",
         "newApplications": "Nuevas Solicitudes",
         "requiresAttention": "Requiere atención",
@@ -431,7 +461,11 @@
         "yes": "Sí",
         "close": "Cerrar",
         "untitledActivity": "Actividad sin título",
-        "noApplicationsForActivity": "No se encontraron solicitudes para esta actividad."
+        "noApplicationsForActivity": "No se encontraron solicitudes para esta actividad.",
+        "viewParticipants": "Ver Participantes",
+        "noParticipants": "Aún no hay participantes",
+        "participantsTitle": "Participantes",
+        "validatedAt": "Validado"
     },
     "Dashboard": {
         "yourStatistics": "Tus Estadísticas",
