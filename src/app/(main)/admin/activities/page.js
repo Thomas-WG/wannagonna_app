@@ -6,6 +6,7 @@ import { MdOutlineSocialDistance } from "react-icons/md";
 import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { fetchActivities, deleteActivity, updateActivityStatus } from "@/utils/crudActivities";
+import { fetchOrganizations } from "@/utils/crudOrganizations";
 import { useTranslations } from "next-intl";
 import ActivityCard from "@/components/activities/ActivityCard";
 import DeleteActivityModal from "@/components/activities/DeleteActivityModal";
@@ -25,6 +26,7 @@ export default function AdminActivitiesPage() {
   
   const [allActivities, setAllActivities] = useState([]);
   const [loadingActivities, setLoadingActivities] = useState(true);
+  const [organizations, setOrganizations] = useState([]);
   const [selectedActivity, setSelectedActivity] = useState(null);
   const [showActionModal, setShowActionModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -69,6 +71,20 @@ export default function AdminActivitiesPage() {
     fetchAllActivities();
   }, []);
 
+  // Fetch all organizations
+  useEffect(() => {
+    const fetchAllOrganizations = async () => {
+      try {
+        const results = await fetchOrganizations();
+        setOrganizations(results || []);
+      } catch (error) {
+        console.error("Error fetching organizations:", error);
+        setOrganizations([]);
+      }
+    };
+    fetchAllOrganizations();
+  }, []);
+
   // Extract available categories, countries, skills, organizations from activities
   const availableCategories = useMemo(() => {
     const cats = new Set();
@@ -105,13 +121,23 @@ export default function AdminActivitiesPage() {
   }, [allActivities]);
 
   const availableOrganizations = useMemo(() => {
-    const orgs = new Set();
+    const orgMap = new Map();
     allActivities.forEach((activity) => {
-      if (activity.organizationId) orgs.add(activity.organizationId);
-      if (activity.organization_name) orgs.add(activity.organization_name);
+      if (activity.organizationId) {
+        // Find organization name from fetched organizations or use activity's organization_name
+        const org = organizations.find(o => o.id === activity.organizationId);
+        const orgName = org?.name || activity.organization_name || activity.organizationId;
+        orgMap.set(activity.organizationId, {
+          id: activity.organizationId,
+          name: orgName
+        });
+      }
     });
-    return Array.from(orgs).sort();
-  }, [allActivities]);
+    // Return array of organization objects sorted by name
+    return Array.from(orgMap.values()).sort((a, b) => 
+      (a.name || '').localeCompare(b.name || '')
+    );
+  }, [allActivities, organizations]);
 
   // Filter activities based on filters
   const filteredActivities = useMemo(() => {
@@ -436,7 +462,7 @@ export default function AdminActivitiesPage() {
             >
               <option value="all">{t('allOrganizations') || 'All Organizations'}</option>
               {availableOrganizations.map(org => (
-                <option key={org} value={org}>{org}</option>
+                <option key={org.id} value={org.id}>{org.name}</option>
               ))}
             </Select>
           </div>

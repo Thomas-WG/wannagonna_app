@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button, Select } from 'flowbite-react';
 import { HiFilter, HiX, HiChevronDown, HiChevronUp } from 'react-icons/hi';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import categories from '@/constant/categories';
+import { getSkillsForSelect } from '@/utils/crudSkills';
 
 export default function ActivityFilters({
   filters,
@@ -16,7 +17,55 @@ export default function ActivityFilters({
   const t = useTranslations('Activities');
   const tManage = useTranslations('ManageActivities');
   const tStatus = useTranslations('StatusUpdateModal');
+  const locale = useLocale();
   const [isOpen, setIsOpen] = useState(false);
+  const [skillLabelsMap, setSkillLabelsMap] = useState({});
+  const [isLoadingSkills, setIsLoadingSkills] = useState(false);
+
+  // Load skill labels for translation
+  useEffect(() => {
+    const loadSkillLabels = async () => {
+      if (!availableSkills || availableSkills.length === 0) {
+        setSkillLabelsMap({});
+        return;
+      }
+
+      try {
+        setIsLoadingSkills(true);
+        const skillOptions = await getSkillsForSelect(locale);
+        // Create a flat map of all skills for easy lookup
+        const allSkills = skillOptions.reduce((acc, group) => {
+          return [...acc, ...group.options];
+        }, []);
+
+        // Create a mapping from skill ID to label
+        const labelsMap = {};
+        availableSkills.forEach(skillId => {
+          const foundSkill = allSkills.find(s => s.value === skillId);
+          if (foundSkill) {
+            labelsMap[skillId] = foundSkill.label;
+          } else {
+            // Fallback to ID if not found
+            labelsMap[skillId] = skillId;
+          }
+        });
+
+        setSkillLabelsMap(labelsMap);
+      } catch (error) {
+        console.error('Error loading skill labels:', error);
+        // Fallback: create map with IDs as labels
+        const fallbackMap = {};
+        availableSkills.forEach(skillId => {
+          fallbackMap[skillId] = skillId;
+        });
+        setSkillLabelsMap(fallbackMap);
+      } finally {
+        setIsLoadingSkills(false);
+      }
+    };
+
+    loadSkillLabels();
+  }, [availableSkills, locale]);
 
   const handleFilterChange = (filterKey, value) => {
     onFiltersChange({
@@ -204,11 +253,12 @@ export default function ActivityFilters({
               value={filters.skill}
               onChange={(e) => handleFilterChange('skill', e.target.value)}
               className="w-full"
+              disabled={isLoadingSkills}
             >
               <option value="all">{t('allSkills')}</option>
-              {availableSkills.map((skill) => (
-                <option key={skill} value={skill}>
-                  {skill}
+              {availableSkills.map((skillId) => (
+                <option key={skillId} value={skillId}>
+                  {skillLabelsMap[skillId] || skillId}
                 </option>
               ))}
             </Select>

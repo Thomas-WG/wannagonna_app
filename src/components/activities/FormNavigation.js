@@ -58,13 +58,19 @@ export default function FormNavigation({ currentStep, prevStep, nextStep, formDa
             </Button>
           ) : (
             <Button 
-              type='submit' 
+              type='button' 
               pill 
               className={`min-w-[140px] h-11 sm:h-12 text-sm sm:text-base font-medium touch-manipulation ${
                 !canProceed ? 'opacity-50 cursor-not-allowed' : ''
               }`}
               disabled={!canProceed}
-              onClick={handleSubmit}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (canProceed) {
+                  handleSubmit(e);
+                }
+              }}
             >
               {isEditMode ? t('update') : t('create')}
             </Button>

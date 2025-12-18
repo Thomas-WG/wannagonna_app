@@ -10,6 +10,7 @@ import {
   updateActivity,
   fetchActivityById,
   updateActivityStatus,
+  deleteActivity,
 } from '@/utils/crudActivities';
 import {fetchOrganizationById} from '@/utils/crudOrganizations';
 import ProgressStepper from '@/components/layout/ProgressStepper';
@@ -254,15 +255,16 @@ export default function CreateUpdateActivityPage() {
     try {
         // Handle single activity
     if (isEditMode) {
+          // For updates, just save and navigate back (no status modal)
           await updateActivity(activityId, baseDataToSave);
-          setSavedActivityId(activityId);
+          router.back();
     } else {
-          const activityId = await createActivity(baseDataToSave);
-          setSavedActivityId(activityId);
+          // For new activities, create first, then show status modal
+          const newActivityId = await createActivity(baseDataToSave);
+          setSavedActivityId(newActivityId);
+          // Show status update modal
+          setShowStatusModal(true);
         }
-
-    // Show status update modal instead of navigating back
-    setShowStatusModal(true);
     } catch (error) {
       console.error('Error saving activity:', error);
       alert('Error saving activity. Please try again.');
@@ -315,6 +317,23 @@ export default function CreateUpdateActivityPage() {
     } finally {
       setIsUpdatingStatus(false);
     }
+  };
+
+  // Handle cancel action - delete the activity if it was just created
+  const handleCancel = async () => {
+    if (savedActivityId && !isEditMode) {
+      // Only delete if this was a new activity (not an update)
+      try {
+        await deleteActivity(savedActivityId);
+        console.log('Activity deleted after cancel');
+      } catch (error) {
+        console.error('Error deleting activity:', error);
+        // Still close the modal even if deletion fails
+      }
+    }
+    setShowStatusModal(false);
+    // Reset saved activity ID
+    setSavedActivityId(null);
   };
 
   // If there is no authenticated user, return null (no content rendered)
@@ -405,7 +424,7 @@ export default function CreateUpdateActivityPage() {
       {/* Publish/Draft Modal */}
       <PublishDraftModal
         isOpen={showStatusModal}
-        onClose={() => setShowStatusModal(false)}
+        onClose={handleCancel}
         onPublish={handlePublish}
         onDraft={handleDraft}
         isUpdating={isUpdatingStatus}
