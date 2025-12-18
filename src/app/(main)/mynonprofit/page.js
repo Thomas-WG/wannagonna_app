@@ -1,13 +1,13 @@
 "use client";
 
 import { Card, Toast, Select } from "flowbite-react";
-import { HiUsers, HiOfficeBuilding, HiCalendar, HiDocumentText, HiPencil, HiTrash, HiEye, HiUserGroup, HiCog, HiViewGrid, HiLockClosed, HiQrcode } from "react-icons/hi";
+import { HiUsers, HiOfficeBuilding, HiCalendar, HiDocumentText, HiPencil, HiTrash, HiEye, HiUserGroup, HiCog, HiViewGrid, HiLockClosed, HiQrcode, HiDuplicate } from "react-icons/hi";
 import { MdOutlineSocialDistance } from "react-icons/md";
 import { useEffect, useState, useMemo } from "react";
 import { useAuth } from "@/utils/auth/AuthContext";
 import { fetchOrganizationById } from "@/utils/crudOrganizations";
 import { useRouter } from "next/navigation";
-import { fetchActivitiesByCriteria, deleteActivity } from "@/utils/crudActivities";
+import { fetchActivitiesByCriteria, deleteActivity, duplicateActivity } from "@/utils/crudActivities";
 import { useTranslations } from "next-intl";
 import { countPendingApplicationsForOrganization } from "@/utils/crudApplications";
 import ActivityCard from "@/components/activities/ActivityCard";
@@ -277,6 +277,22 @@ export default function MyNonProfitDashboard() {
   const handleViewParticipants = () => {
     setShowActionModal(false);
     setShowParticipantModal(true);
+  };
+
+  const handleDuplicateActivity = async () => {
+    if (!selectedActivity) return;
+    
+    try {
+      setShowActionModal(false);
+      // Duplicate the activity
+      const newActivityId = await duplicateActivity(selectedActivity.id);
+      // Navigate to edit page for the new activity
+      router.push(`/mynonprofit/activities/manage?activityId=${newActivityId}`);
+    } catch (error) {
+      console.error('Error duplicating activity:', error);
+      setToastMessage({ type: 'error', message: t('errorDuplicating') || 'Error duplicating activity' });
+      setShowToast(true);
+    }
   };
 
   const handleStatusUpdate = async (newStatus) => {
@@ -563,6 +579,18 @@ export default function MyNonProfitDashboard() {
                               <HiPencil className="h-7 w-7 sm:h-6 sm:w-6 md:h-7 md:w-7" />
                             </button>
                             <span className="mt-1.5 text-xs sm:text-[11px] md:text-xs text-white font-medium text-center leading-tight px-0.5">{t('edit')}</span>
+                          </div>
+
+                          {/* Duplicate Button */}
+                          <div className="flex flex-col items-center">
+                            <button
+                              onClick={handleDuplicateActivity}
+                              className="w-16 h-16 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-yellow-500 text-white flex items-center justify-center shadow-lg hover:bg-yellow-600 active:bg-yellow-700 transition-colors touch-manipulation"
+                              aria-label="Duplicate Activity"
+                            >
+                              <HiDuplicate className="h-7 w-7 sm:h-6 sm:w-6 md:h-7 md:w-7" />
+                            </button>
+                            <span className="mt-1.5 text-xs sm:text-[11px] md:text-xs text-white font-medium text-center leading-tight px-0.5">{t('duplicate')}</span>
                           </div>
 
                           {/* Delete Button */}

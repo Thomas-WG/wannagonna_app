@@ -85,6 +85,45 @@ export async function createActivity(data) {
   }
 }
 
+// Duplicate an existing activity
+export async function duplicateActivity(activityId) {
+  try {
+    // Fetch the original activity
+    const originalActivity = await fetchActivityById(activityId);
+    if (!originalActivity) {
+      throw new Error('Activity not found');
+    }
+
+    // Prepare duplicate data - exclude fields that shouldn't be copied
+    const {
+      id,
+      applicants,
+      creation_date,
+      qrCodeToken,
+      ...duplicateData
+    } = originalActivity;
+
+    // Set status to 'created' (draft)
+    duplicateData.status = 'created';
+
+    // Set creation_date to current date
+    duplicateData.creation_date = new Date();
+
+    // Generate new QR code token for Event and Local activities
+    if (duplicateData.type === 'event' || duplicateData.type === 'local') {
+      duplicateData.qrCodeToken = uuidv4();
+    }
+
+    // Create the duplicate activity
+    const newActivityId = await createActivity(duplicateData);
+    console.log('Activity duplicated with new ID:', newActivityId);
+    return newActivityId;
+  } catch (error) {
+    console.error('Error duplicating activity:', error);
+    throw error;
+  }
+}
+
 // Update an existing activity in the Firestore database
 export async function updateActivity(id, data) {
   try {
