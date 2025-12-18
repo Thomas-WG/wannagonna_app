@@ -26,13 +26,18 @@ export default function ActivityFilters({
   };
 
   const clearFilters = () => {
-    onFiltersChange({
+    const clearedFilters = {
       type: 'all',
       category: 'all',
       country: 'all',
       skill: 'all',
       status: 'all',
-    });
+    };
+    // Preserve organization filter if it exists (for admin pages)
+    if (filters.organization !== undefined) {
+      clearedFilters.organization = 'all';
+    }
+    onFiltersChange(clearedFilters);
   };
 
   const hasActiveFilters = 
