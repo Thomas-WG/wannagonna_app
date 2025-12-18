@@ -1,4 +1,4 @@
-import { FloatingLabel, Textarea, Radio, Label, Datepicker, Card, TextInput, Select as FlowbiteSelect, Badge, Checkbox } from 'flowbite-react';
+import { FloatingLabel, Textarea, Radio, Label, Datepicker, Card, TextInput, Select as FlowbiteSelect, Badge, Checkbox, Tooltip, RangeSlider } from 'flowbite-react';
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'use-intl';
 import { useLocale } from 'next-intl';
@@ -16,7 +16,8 @@ import {
   HiShieldCheck,
   HiRefresh,
   HiChevronDown,
-  HiExternalLink
+  HiExternalLink,
+  HiQuestionMarkCircle
 } from 'react-icons/hi';
 import { HiClock } from "react-icons/hi2";
 
@@ -445,6 +446,103 @@ export default function ActivityDetailsForm({ formData, handleChange, setFormDat
           </div>
         </div>
       </Card>
+
+      {/* Activity Expectation Sliders - Local and Online Only */}
+      {(formData.type === 'local' || formData.type === 'online') && (
+        <Card className="p-4 sm:p-6 shadow-lg border-0 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900">
+          <div className="flex items-start sm:items-center gap-3 mb-6">
+            <div className="p-2 bg-yellow-100 dark:bg-yellow-900 rounded-lg shrink-0">
+              <HiClock className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-600 dark:text-yellow-400" />
+            </div>
+            <div className="min-w-0">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">{t('activity-expectation-title')}</h2>
+              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">{t('activity-expectation-description')}</p>
+            </div>
+          </div>
+          
+          <div className="space-y-6">
+            {/* Time Commitment Slider */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="timeCommitment" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {t('time-commitment-label')}
+                </Label>
+                <Tooltip content={(() => {
+                  const value = formData.timeCommitment ?? 50;
+                  if (value <= 20) return t('time-commitment-tooltip-very-quick');
+                  if (value <= 40) return t('time-commitment-tooltip-quick');
+                  if (value <= 60) return t('time-commitment-tooltip-standard');
+                  if (value <= 80) return t('time-commitment-tooltip-substantial');
+                  return t('time-commitment-tooltip-major');
+                })()}>
+                  <button type="button" className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                    <HiQuestionMarkCircle className="h-4 w-4" />
+                  </button>
+                </Tooltip>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-2">
+                  <span>{t('time-commitment-quick')}</span>
+                  <span>{t('time-commitment-takes-long')}</span>
+                </div>
+                <RangeSlider
+                  id="timeCommitment"
+                  min={0}
+                  max={100}
+                  value={formData.timeCommitment ?? 50}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value, 10);
+                    setFormData((prev) => ({ ...prev, timeCommitment: value }));
+                  }}
+                  className="w-full"
+                />
+                <div className="text-xs text-gray-500 dark:text-gray-400 text-center mt-1">
+                  {formData.timeCommitment ?? 50}%
+                </div>
+              </div>
+            </div>
+
+            {/* Complexity Slider */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="complexity" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {t('complexity-label')}
+                </Label>
+                <Tooltip content={(() => {
+                  const value = formData.complexity ?? 50;
+                  if (value <= 30) return t('complexity-tooltip-simple');
+                  if (value <= 60) return t('complexity-tooltip-moderate');
+                  return t('complexity-tooltip-complex');
+                })()}>
+                  <button type="button" className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                    <HiQuestionMarkCircle className="h-4 w-4" />
+                  </button>
+                </Tooltip>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-2">
+                  <span>{t('complexity-simple')}</span>
+                  <span>{t('complexity-very-complex')}</span>
+                </div>
+                <RangeSlider
+                  id="complexity"
+                  min={0}
+                  max={100}
+                  value={formData.complexity ?? 50}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value, 10);
+                    setFormData((prev) => ({ ...prev, complexity: value }));
+                  }}
+                  className="w-full"
+                />
+                <div className="text-xs text-gray-500 dark:text-gray-400 text-center mt-1">
+                  {formData.complexity ?? 50}%
+                </div>
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
 
       {/* Skills Selector - Local and Online Only */}
       {(formData.type === 'local' || formData.type === 'online') && (

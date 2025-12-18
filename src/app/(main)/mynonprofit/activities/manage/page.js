@@ -12,6 +12,7 @@ import {
   updateActivityStatus,
   deleteActivity,
 } from '@/utils/crudActivities';
+import { calculateActivityXP } from '@/utils/calculateActivityXP';
 import {fetchOrganizationById} from '@/utils/crudOrganizations';
 import ProgressStepper from '@/components/layout/ProgressStepper';
 import { useAuth } from '@/utils/auth/AuthContext'; // Hook for accessing user authentication status
@@ -45,7 +46,9 @@ export default function CreateUpdateActivityPage() {
     country: '', // Default country
     city: '', // Default city
     location: '', // Specific location/venue for local and event activities
-    xp_reward: 20, // Default XP points
+    xp_reward: 20, // Default XP points (will be auto-calculated)
+    timeCommitment: 50, // Time commitment slider value (0-100, default: 50 for standard)
+    complexity: 50, // Complexity slider value (0-100, default: 50 for moderate)
     sdg: '', // Sustainable Development Goal
     languages: ['English'],
     organization_logo: '/logo/Favicon.png', // Default NPO logo path
@@ -169,6 +172,9 @@ export default function CreateUpdateActivityPage() {
               location: data.location || '',
               // Ensure frequency is 'once' for events
               frequency: data.type === 'event' ? 'once' : (data.frequency || ''),
+              // Backward compatibility: default to 50 if fields are missing
+              timeCommitment: data.timeCommitment !== undefined ? data.timeCommitment : 50,
+              complexity: data.complexity !== undefined ? data.complexity : 50,
             };
             console.log('Processed form data:', processedData);
             setFormData(processedData);
@@ -203,6 +209,50 @@ export default function CreateUpdateActivityPage() {
       setFormData((prev) => ({ ...prev, frequency: 'once' }));
     }
   }, [formData.type, formData.frequency]);
+
+  // Auto-calculate XP when relevant fields change
+  useEffect(() => {
+    // For events, always set XP to 15
+    if (formData.type === 'event') {
+      setFormData((prev) => ({ ...prev, xp_reward: 15 }));
+      return;
+    }
+
+    // For online and local activities, calculate XP
+    if (formData.type === 'online' || formData.type === 'local') {
+      // Only calculate if we have a category selected
+      if (formData.category) {
+        const calculatedXP = calculateActivityXP({
+          type: formData.type,
+          category: formData.category,
+          timeCommitment: formData.timeCommitment ?? 50,
+          complexity: formData.complexity ?? 50,
+          frequency: formData.frequency || 'once',
+        });
+        setFormData((prev) => ({ ...prev, xp_reward: calculatedXP }));
+      }
+    }
+  }, [formData.type, formData.category, formData.timeCommitment, formData.complexity, formData.frequency]);
+
+  // Reset sliders to defaults when activity type changes
+  useEffect(() => {
+    if (formData.type === 'event') {
+      // Events don't use sliders, but we can reset them anyway
+      setFormData((prev) => ({ 
+        ...prev, 
+        timeCommitment: 50, 
+        complexity: 50 
+      }));
+    } else if (formData.type === 'online' || formData.type === 'local') {
+      // Only reset if they're not already set (to preserve values when editing)
+      if (formData.timeCommitment === undefined) {
+        setFormData((prev) => ({ ...prev, timeCommitment: 50 }));
+      }
+      if (formData.complexity === undefined) {
+        setFormData((prev) => ({ ...prev, complexity: 50 }));
+      }
+    }
+  }, [formData.type]);
 
   // Handle form input changes
   const handleChange = (e) => {
