@@ -444,5 +444,40 @@ export const notifyReferralReward = onCall(async (request) => {
   return {success: true};
 });
 
+/**
+ * Callable used by the client to send badge earned notifications.
+ * This wraps sendUserNotification so it can also send push
+ * based on user preferences.
+ */
+export const notifyBadgeEarned = onCall(async (request) => {
+  if (!request.auth) {
+    throw new Error("Unauthorized");
+  }
+
+  const {userId, badgeTitle, badgeXP, badgeId} = request.data || {};
+
+  if (!userId || !badgeTitle) {
+    throw new Error("userId and badgeTitle are required");
+  }
+
+  const xpPart = badgeXP > 0 ? ` and ${badgeXP} XP` : "";
+  const title = "Badge earned";
+  const body = `You earned the "${badgeTitle}" badge${xpPart}!`;
+
+  await sendUserNotification({
+    userId,
+    type: "REWARD",
+    title,
+    body,
+    link: "/badges",
+    metadata: {
+      badgeId: badgeId || null,
+      badgeXP: Number(badgeXP) || 0,
+    },
+  });
+
+  return {success: true};
+});
+
 // Export validation reward triggers
 export {onValidationCreated, onValidationUpdated};

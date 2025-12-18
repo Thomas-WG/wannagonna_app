@@ -1,9 +1,10 @@
-import { collection, getDocs, getDoc, doc, updateDoc, arrayUnion, Timestamp, increment, setDoc } from 'firebase/firestore';
+import { collection, getDocs, getDoc, doc, updateDoc, arrayUnion, arrayRemove, Timestamp, increment, setDoc, deleteDoc, addDoc } from 'firebase/firestore';
 import { db, functions } from 'firebaseConfig';
-import { ref, getDownloadURL } from 'firebase/storage';
+import { ref, getDownloadURL, deleteObject } from 'firebase/storage';
 import { storage } from 'firebaseConfig';
 import { logXpHistory } from './crudXpHistory';
 import { httpsCallable } from 'firebase/functions';
+import { uploadFile } from './storage';
 
 /**
  * Fetch all badge categories (sdg, geography, general, etc.)
@@ -314,10 +315,27 @@ export async function grantBadgeToUser(userId, badgeId) {
     
     console.log(`Badge ${badgeId} granted to user ${userId}${badgeXP > 0 ? ` with ${badgeXP} XP` : ''}`);
     
-    // Log XP history if XP was awarded
+    // Log XP history if XP was awarded (always log badge earning, even if XP is 0)
+    const historyTitle = `Badge Earned: ${badgeDetails.title}`;
     if (badgeXP > 0) {
-      const historyTitle = `Badge Earned: ${badgeDetails.title}`;
       await logXpHistory(userId, historyTitle, badgeXP, 'badge');
+    } else {
+      // Log badge earning even without XP for tracking purposes
+      await logXpHistory(userId, historyTitle, 0, 'badge');
+    }
+    
+    // Send notification to user (in-app and/or push based on preferences)
+    try {
+      const notifyFn = httpsCallable(functions, 'notifyBadgeEarned');
+      await notifyFn({
+        userId,
+        badgeTitle: badgeDetails.title,
+        badgeXP,
+        badgeId
+      });
+    } catch (notifyError) {
+      console.error(`Failed to send badge notification for ${badgeId}:`, notifyError);
+      // Don't fail the badge grant if notification fails
     }
     
     // Return badge details for animation/display
@@ -329,6 +347,64 @@ export async function grantBadgeToUser(userId, badgeId) {
     };
   } catch (error) {
     console.error(`Error granting badge ${badgeId} to user ${userId}:`, error);
+    return null;
+  }
+}
+
+/**
+ * Remove a badge from a user
+ * @param {string} userId - The user's ID
+ * @param {string} badgeId - The badge ID to remove
+ * @returns {Promise<Object|null>} Badge details object if successful, null otherwise
+ */
+export async function removeBadgeFromUser(userId, badgeId) {
+  try {
+    const memberDoc = doc(db, 'members', userId);
+    
+    // Get current member data to find the badge object
+    const memberSnap = await getDoc(memberDoc);
+    if (!memberSnap.exists()) {
+      console.error(`Member document ${userId} does not exist`);
+      return null;
+    }
+    
+    const memberData = memberSnap.data();
+    const existingBadges = memberData.badges || [];
+    
+    // Find the badge object to remove (need exact object for arrayRemove)
+    const badgeToRemove = existingBadges.find(badge => badge.id === badgeId);
+    if (!badgeToRemove) {
+      console.log(`User ${userId} does not have badge ${badgeId}`);
+      return null;
+    }
+    
+    // Get badge details to check XP value
+    const badgeDetails = await findBadgeById(badgeId);
+    const badgeXP = badgeDetails?.xp || 0;
+    
+    // Remove the badge from the array
+    await updateDoc(memberDoc, {
+      badges: arrayRemove(badgeToRemove)
+    });
+    
+    // Decrement XP if badge had XP value
+    if (badgeXP > 0) {
+      await updateDoc(memberDoc, {
+        xp: increment(-badgeXP)
+      });
+      console.log(`Removed ${badgeXP} XP for badge ${badgeId}`);
+    }
+    
+    console.log(`Badge ${badgeId} removed from user ${userId}`);
+    
+    return {
+      id: badgeId,
+      title: badgeDetails?.title || badgeId,
+      description: badgeDetails?.description || '',
+      xp: badgeXP
+    };
+  } catch (error) {
+    console.error(`Error removing badge ${badgeId} from user ${userId}:`, error);
     return null;
   }
 }
@@ -692,6 +768,164 @@ export async function grantActivityCompletionBadges(userId, activity) {
   } catch (error) {
     console.error(`Error granting activity completion badges to user ${userId}:`, error);
     return grantedBadges; // Return what we've granted so far
+  }
+}
+
+/**
+ * Create a new badge category
+ * @param {string} categoryId - The category ID
+ * @param {Object} categoryData - Category data (title, description, order)
+ * @returns {Promise<boolean>} True if successful
+ */
+export async function createBadgeCategory(categoryId, categoryData) {
+  try {
+    const categoryDoc = doc(db, 'badges', categoryId);
+    await setDoc(categoryDoc, {
+      title: categoryData.title || categoryId,
+      description: categoryData.description || '',
+      order: categoryData.order || 0,
+      ...categoryData
+    });
+    console.log(`Category ${categoryId} created successfully`);
+    return true;
+  } catch (error) {
+    console.error(`Error creating category ${categoryId}:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Delete a badge category
+ * @param {string} categoryId - The category ID to delete
+ * @returns {Promise<boolean>} True if successful
+ */
+export async function deleteBadgeCategory(categoryId) {
+  try {
+    // First, delete all badges in the category
+    const badges = await fetchBadgesByCategory(categoryId);
+    for (const badge of badges) {
+      await deleteBadge(categoryId, badge.id);
+    }
+    
+    // Then delete the category document
+    const categoryDoc = doc(db, 'badges', categoryId);
+    await deleteDoc(categoryDoc);
+    console.log(`Category ${categoryId} deleted successfully`);
+    return true;
+  } catch (error) {
+    console.error(`Error deleting category ${categoryId}:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Create a new badge
+ * @param {string} categoryId - The category ID
+ * @param {string} badgeId - The badge ID (will be used as document ID)
+ * @param {Object} badgeData - Badge data (title, description, xp)
+ * @param {File} imageFile - Optional image file to upload
+ * @returns {Promise<boolean>} True if successful
+ */
+export async function createBadge(categoryId, badgeId, badgeData, imageFile = null) {
+  try {
+    const categoryDoc = doc(db, 'badges', categoryId);
+    const badgesCollection = collection(categoryDoc, 'badges');
+    const badgeDoc = doc(badgesCollection, badgeId);
+    
+    // Create badge document
+    await setDoc(badgeDoc, {
+      title: badgeData.title || badgeId,
+      description: badgeData.description || '',
+      xp: badgeData.xp || 0,
+      ...badgeData
+    });
+    
+    // Upload image if provided
+    if (imageFile) {
+      // Use badgeId for image name (should match document ID)
+      // Get file extension
+      const fileExtension = imageFile.name.split('.').pop();
+      const imagePath = `badges/${categoryId}/${badgeId}.${fileExtension}`;
+      
+      await uploadFile(imageFile, imagePath);
+      console.log(`Badge image uploaded to ${imagePath}`);
+    }
+    
+    console.log(`Badge ${badgeId} created in category ${categoryId}`);
+    return true;
+  } catch (error) {
+    console.error(`Error creating badge ${badgeId}:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Update an existing badge
+ * @param {string} categoryId - The category ID
+ * @param {string} badgeId - The badge ID
+ * @param {Object} badgeData - Updated badge data
+ * @param {File} imageFile - Optional new image file to upload
+ * @returns {Promise<boolean>} True if successful
+ */
+export async function updateBadge(categoryId, badgeId, badgeData, imageFile = null) {
+  try {
+    const categoryDoc = doc(db, 'badges', categoryId);
+    const badgeDoc = doc(collection(categoryDoc, 'badges'), badgeId);
+    
+    // Update badge document
+    await updateDoc(badgeDoc, badgeData);
+    
+    // Upload new image if provided
+    if (imageFile) {
+      // Use badgeId for image name (should match document ID)
+      const fileExtension = imageFile.name.split('.').pop();
+      const imagePath = `badges/${categoryId}/${badgeId}.${fileExtension}`;
+      
+      await uploadFile(imageFile, imagePath);
+      console.log(`Badge image updated at ${imagePath}`);
+    }
+    
+    console.log(`Badge ${badgeId} updated in category ${categoryId}`);
+    return true;
+  } catch (error) {
+    console.error(`Error updating badge ${badgeId}:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Delete a badge
+ * @param {string} categoryId - The category ID
+ * @param {string} badgeId - The badge ID to delete
+ * @returns {Promise<boolean>} True if successful
+ */
+export async function deleteBadge(categoryId, badgeId) {
+  try {
+    // Delete badge document
+    const categoryDoc = doc(db, 'badges', categoryId);
+    const badgeDoc = doc(collection(categoryDoc, 'badges'), badgeId);
+    await deleteDoc(badgeDoc);
+    
+    // Try to delete badge image (may not exist, so catch errors)
+    const extensions = ['.svg', '.png', '.jpg', '.jpeg', '.webp'];
+    for (const ext of extensions) {
+      try {
+        const imagePath = `badges/${categoryId}/${badgeId}${ext}`;
+        const imageRef = ref(storage, imagePath);
+        await deleteObject(imageRef);
+        console.log(`Badge image deleted: ${imagePath}`);
+        break; // If one extension works, stop trying others
+      } catch (error) {
+        // Continue to next extension if not found
+        continue;
+      }
+    }
+    
+    console.log(`Badge ${badgeId} deleted from category ${categoryId}`);
+    return true;
+  } catch (error) {
+    console.error(`Error deleting badge ${badgeId}:`, error);
+    throw error;
   }
 }
 
