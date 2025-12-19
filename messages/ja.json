@@ -33,12 +33,21 @@
         "explore": "探す",
         "badges": "バッジ",
         "leaderboard": "リーダーボード",
+        "faq": "よくある質問",
         "myteam": "私のチーム",
         "mynonprofit": "私の非営利団体",
         "members": "メンバー",
         "donate": "寄付",
         "settings": "設定",
         "logout": "ログアウト"
+    },
+    "FAQ": {
+        "title": "よくある質問",
+        "subtitle": "Wanna Gonnaに関するよくある質問の回答を見つける",
+        "searchPlaceholder": "よくある質問を検索...",
+        "noResults": "検索に一致するよくある質問が見つかりませんでした。",
+        "noFaqs": "現在、よくある質問は利用できません。",
+        "resultsCount": "{count}件のよくある質問が見つかりました"
     },
     "Settings": {
         "language": "言語",

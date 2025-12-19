@@ -3,12 +3,13 @@
 import { useState, useEffect } from "react";
 import { Card, Spinner } from "flowbite-react";
 import Link from "next/link";
-import { HiUsers, HiOfficeBuilding, HiAcademicCap, HiBadgeCheck, HiCalendar } from "react-icons/hi";
+import { HiUsers, HiOfficeBuilding, HiAcademicCap, HiBadgeCheck, HiCalendar, HiQuestionMarkCircle } from "react-icons/hi";
 import { fetchMembers } from "@/utils/crudMemberProfile";
 import { fetchOrganizations } from "@/utils/crudOrganizations";
 import { fetchSkills } from "@/utils/crudSkills";
 import { fetchBadgeCategories, fetchAllBadges } from "@/utils/crudBadges";
 import { fetchActivities } from "@/utils/crudActivities";
+import { fetchFaqs } from "@/utils/crudFaq";
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
@@ -16,7 +17,8 @@ export default function AdminDashboard() {
     organizations: 0,
     skills: 0,
     badges: 0,
-    activities: 0
+    activities: 0,
+    faqs: 0
   });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -26,12 +28,13 @@ export default function AdminDashboard() {
         setIsLoading(true);
         
         // Fetch all counts in parallel
-        const [membersData, organizationsData, skillsData, badgesData, activitiesData] = await Promise.all([
+        const [membersData, organizationsData, skillsData, badgesData, activitiesData, faqsData] = await Promise.all([
           fetchMembers(),
           fetchOrganizations(),
           fetchSkills(),
           fetchAllBadges(),
-          fetchActivities()
+          fetchActivities(),
+          fetchFaqs()
         ]);
 
         setStats({
@@ -39,7 +42,8 @@ export default function AdminDashboard() {
           organizations: organizationsData?.length || 0,
           skills: skillsData?.length || 0,
           badges: badgesData?.length || 0,
-          activities: activitiesData?.length || 0
+          activities: activitiesData?.length || 0,
+          faqs: faqsData?.length || 0
         });
       } catch (error) {
         console.error('Error loading admin stats:', error);
@@ -56,7 +60,7 @@ export default function AdminDashboard() {
     <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 bg-background-page dark:bg-background-page min-h-screen">
       <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-4 sm:mb-6 md:mb-8 text-text-primary dark:text-text-primary">Admin Dashboard</h1>
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 md:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 md:gap-6">
         {/* Members Card */}
         <Link href="/admin/members">
           <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full bg-background-card dark:bg-background-card border-border-light dark:border-border-dark">
@@ -137,6 +141,23 @@ export default function AdminDashboard() {
                 <Spinner size="lg" className="text-activityType-online-600 dark:text-activityType-online-400" />
               ) : (
                 <p className="text-2xl sm:text-3xl font-bold text-activityType-online-600 dark:text-activityType-online-400">{stats.activities}</p>
+              )}
+            </div>
+          </Card>
+        </Link>
+
+        {/* FAQs Card */}
+        <Link href="/admin/faq">
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full bg-background-card dark:bg-background-card border-border-light dark:border-border-dark">
+            <div className="flex flex-col items-center p-4 sm:p-6">
+              <div className="bg-purple-100 dark:bg-purple-900 p-3 rounded-full mb-4">
+                <HiQuestionMarkCircle className="h-6 w-6 sm:h-8 sm:w-8 text-purple-600 dark:text-purple-400" />
+              </div>
+              <h2 className="text-lg sm:text-xl font-semibold mb-2 text-text-primary dark:text-text-primary">FAQs</h2>
+              {isLoading ? (
+                <Spinner size="lg" className="text-purple-600 dark:text-purple-400" />
+              ) : (
+                <p className="text-2xl sm:text-3xl font-bold text-purple-600 dark:text-purple-400">{stats.faqs}</p>
               )}
             </div>
           </Card>

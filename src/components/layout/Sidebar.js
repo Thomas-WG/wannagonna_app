@@ -20,7 +20,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { useAuth } from '@/utils/auth/AuthContext'; // Custom hook for Firebase authentication
 import { useTranslations } from 'use-intl';
 import { Sidebar } from 'flowbite-react';
-import { HiChartPie } from 'react-icons/hi';
+import { HiChartPie, HiQuestionMarkCircle } from 'react-icons/hi';
 import { MdOutlineExplore, MdOutlineLeaderboard } from 'react-icons/md';
 import { RiTeamLine } from 'react-icons/ri';
 import { BiDonateHeart } from 'react-icons/bi';
@@ -292,7 +292,13 @@ export default function Navbar() {
               >
                 {t('settings')}
               </Sidebar.Item>
-              
+              <Sidebar.Item
+                onClick={() => handleLinkClick('/faq')}
+                icon={HiQuestionMarkCircle}
+                className='cursor-pointer text-text-primary dark:text-text-primary hover:text-primary-600 dark:hover:text-primary-400 hover:bg-background-hover dark:hover:bg-background-hover transition-all duration-200 rounded-lg'
+              >
+                {t('faq')}
+              </Sidebar.Item>
               {/* Only show Administration item if user has admin role */}
               {isAdmin && (
                 <Sidebar.Item

@@ -33,12 +33,21 @@
         "explore": "Explorar",
         "badges": "Insignias",
         "leaderboard": "Clasificación",
+        "faq": "Preguntas Frecuentes",
         "myteam": "Mi Equipo",
         "mynonprofit": "Mi ONG",
         "members": "Miembros",
         "donate": "Donar",
         "settings": "Configuración",
         "logout": "Cerrar sesión"
+    },
+    "FAQ": {
+        "title": "Preguntas Frecuentes",
+        "subtitle": "Encuentra respuestas a preguntas comunes sobre Wanna Gonna",
+        "searchPlaceholder": "Buscar en las preguntas frecuentes...",
+        "noResults": "No se encontraron preguntas frecuentes que coincidan con tu búsqueda.",
+        "noFaqs": "No hay preguntas frecuentes disponibles en este momento.",
+        "resultsCount": "{count} pregunta frecuente{count, plural, one {} other {s}} encontrada{count, plural, one {} other {s}}"
     },
     "Settings": {
         "language": "Idioma",

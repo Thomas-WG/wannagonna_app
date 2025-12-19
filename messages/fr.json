@@ -33,12 +33,21 @@
         "explore": "Explorer",
         "badges": "Badges",
         "leaderboard": "Classement",
+        "faq": "FAQ",
         "myteam": "Mon Équipe",
         "mynonprofit": "Mon Association",
         "members": "Membres",
         "donate": "Faire un don",
         "settings": "Paramètres",
         "logout": "Déconnexion"
+    },
+    "FAQ": {
+        "title": "Questions Fréquemment Posées",
+        "subtitle": "Trouvez des réponses aux questions courantes sur Wanna Gonna",
+        "searchPlaceholder": "Rechercher dans les FAQ...",
+        "noResults": "Aucune FAQ ne correspond à votre recherche.",
+        "noFaqs": "Aucune FAQ disponible pour le moment.",
+        "resultsCount": "{count} FAQ trouvée{count, plural, one {} other {s}}"
     },
     "Settings": {
         "language": "Langue",
