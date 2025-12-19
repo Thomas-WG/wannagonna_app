@@ -34,6 +34,7 @@
         "badges": "バッジ",
         "leaderboard": "リーダーボード",
         "faq": "よくある質問",
+        "feedback": "フィードバック",
         "myteam": "私のチーム",
         "mynonprofit": "私の非営利団体",
         "members": "メンバー",
@@ -48,6 +49,19 @@
         "noResults": "検索に一致するよくある質問が見つかりませんでした。",
         "noFaqs": "現在、よくある質問は利用できません。",
         "resultsCount": "{count}件のよくある質問が見つかりました"
+    },
+    "Feedback": {
+        "title": "フィードバックを共有",
+        "subtitle": "アイデアがありますか、バグを見つけましたか、またはフィードバックを共有したいですか？お聞かせください！",
+        "contentLabel": "あなたのフィードバック",
+        "contentPlaceholder": "アイデアを共有したり、バグを報告したり、フィードバックを提供したりしてください...",
+        "submitButton": "フィードバックを送信",
+        "submitting": "送信中...",
+        "successMessage": "ありがとうございます！フィードバックが正常に送信されました。",
+        "errorMessage": "フィードバックの送信中にエラーが発生しました。もう一度お試しください。",
+        "contentRequired": "送信する前にフィードバックを提供してください。",
+        "contentMinLength": "少なくとも10文字のフィードバックを提供してください。",
+        "userRequired": "フィードバックを送信するにはログインする必要があります。"
     },
     "Settings": {
         "language": "言語",

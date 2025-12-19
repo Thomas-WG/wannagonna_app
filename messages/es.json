@@ -34,6 +34,7 @@
         "badges": "Insignias",
         "leaderboard": "Clasificación",
         "faq": "Preguntas Frecuentes",
+        "feedback": "Comentarios",
         "myteam": "Mi Equipo",
         "mynonprofit": "Mi ONG",
         "members": "Miembros",
@@ -48,6 +49,19 @@
         "noResults": "No se encontraron preguntas frecuentes que coincidan con tu búsqueda.",
         "noFaqs": "No hay preguntas frecuentes disponibles en este momento.",
         "resultsCount": "{count} pregunta frecuente{count, plural, one {} other {s}} encontrada{count, plural, one {} other {s}}"
+    },
+    "Feedback": {
+        "title": "Comparte tus comentarios",
+        "subtitle": "¿Tienes una idea, encontraste un error o quieres compartir comentarios? ¡Nos encantaría escucharte!",
+        "contentLabel": "Tus comentarios",
+        "contentPlaceholder": "Comparte tus ideas, reporta errores o proporciona cualquier comentario que tengas...",
+        "submitButton": "Enviar comentarios",
+        "submitting": "Enviando...",
+        "successMessage": "¡Gracias! Tus comentarios se han enviado correctamente.",
+        "errorMessage": "Ocurrió un error al enviar tus comentarios. Por favor, inténtalo de nuevo.",
+        "contentRequired": "Por favor, proporciona tus comentarios antes de enviar.",
+        "contentMinLength": "Por favor, proporciona al menos 10 caracteres de comentarios.",
+        "userRequired": "Debes iniciar sesión para enviar comentarios."
     },
     "Settings": {
         "language": "Idioma",

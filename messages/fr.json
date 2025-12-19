@@ -34,6 +34,7 @@
         "badges": "Badges",
         "leaderboard": "Classement",
         "faq": "FAQ",
+        "feedback": "Commentaires",
         "myteam": "Mon Équipe",
         "mynonprofit": "Mon Association",
         "members": "Membres",
@@ -48,6 +49,19 @@
         "noResults": "Aucune FAQ ne correspond à votre recherche.",
         "noFaqs": "Aucune FAQ disponible pour le moment.",
         "resultsCount": "{count} FAQ trouvée{count, plural, one {} other {s}}"
+    },
+    "Feedback": {
+        "title": "Partagez vos commentaires",
+        "subtitle": "Vous avez une idée, trouvé un bug ou souhaitez partager vos commentaires ? Nous aimerions vous entendre !",
+        "contentLabel": "Vos commentaires",
+        "contentPlaceholder": "Partagez vos idées, signalez des bugs ou fournissez tout commentaire que vous avez...",
+        "submitButton": "Envoyer les commentaires",
+        "submitting": "Envoi en cours...",
+        "successMessage": "Merci ! Vos commentaires ont été envoyés avec succès.",
+        "errorMessage": "Une erreur s'est produite lors de l'envoi de vos commentaires. Veuillez réessayer.",
+        "contentRequired": "Veuillez fournir vos commentaires avant d'envoyer.",
+        "contentMinLength": "Veuillez fournir au moins 10 caractères de commentaires.",
+        "userRequired": "Vous devez être connecté pour envoyer des commentaires."
     },
     "Settings": {
         "language": "Langue",

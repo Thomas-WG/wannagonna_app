@@ -42,6 +42,8 @@ import { setUserLocale } from '@/utils/locale'; // Import function to set the us
 import { useAuth } from '@/utils/auth/AuthContext';
 import { handleReferralReward } from '@/utils/crudBadges';
 import { useModal } from '@/utils/modal/useModal';
+import { getDownloadURL, ref } from 'firebase/storage';
+import { storage } from 'firebaseConfig';
 
 /**
  * LoginPage - Renders the login UI, with logo and Google sign-in functionality.
@@ -62,6 +64,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false); // State for loading
   const [error, setError] = useState(''); // State for error
   const [referralCode, setReferralCode] = useState(''); // Add state for referral code
+  const [logoUrl, setLogoUrl] = useState(''); // State for logo URL
   
   // Register modal with global modal manager
   const wrappedModalOnClose = useModal(modalOpen, () => setModalOpen(false), 'login-create-account-modal');
@@ -89,6 +92,40 @@ export default function LoginPage() {
       router.push('/dashboard');
     }
   }, [user, loading, router]);
+
+  // Fetch logo URL from Firebase Storage
+  useEffect(() => {
+    const fetchLogoUrl = async () => {
+      try {
+        // Check if we have a cached URL
+        const cachedUrl = localStorage.getItem('wannagonnaLogoUrl');
+        const cachedTimestamp = localStorage.getItem('wannagonnaLogoTimestamp');
+        
+        // If we have a cached URL less than 24 hours old, use it
+        if (cachedUrl && cachedTimestamp && (Date.now() - parseInt(cachedTimestamp)) < 24 * 60 * 60 * 1000) {
+          setLogoUrl(cachedUrl);
+          return;
+        }
+
+        const logoRef = ref(storage, 'logo/Favicon.png');
+        const url = await getDownloadURL(logoRef);
+        
+        // Cache the URL and timestamp
+        localStorage.setItem('wannagonnaLogoUrl', url);
+        localStorage.setItem('wannagonnaLogoTimestamp', Date.now().toString());
+        
+        setLogoUrl(url);
+      } catch (error) {
+        console.error('Error fetching logo URL:', error);
+        // If there's an error, try to use cached URL even if it's old
+        const cachedUrl = localStorage.getItem('wannagonnaLogoUrl');
+        if (cachedUrl) {
+          setLogoUrl(cachedUrl);
+        }
+      }
+    };
+    fetchLogoUrl();
+  }, []);
 
   /**
    * Validate referral code by checking if it exists in members collection
@@ -408,6 +445,19 @@ export default function LoginPage() {
           ))}
         </Dropdown>
       </div>
+      {/* Logo */}
+      {logoUrl && (
+        <div className="mb-8 flex justify-center">
+          <Image 
+            src={logoUrl} 
+            alt="Wannagonna Logo" 
+            width={120} 
+            height={120} 
+            className="object-contain"
+            priority
+          />
+        </div>
+      )}
       <div className="bg-background-card dark:bg-background-card p-6 rounded-lg shadow-lg max-w-md w-full border border-border-light dark:border-border-dark">
         <h2 className="text-2xl font-semibold text-center mb-6 text-text-primary dark:text-text-primary">{t('login')}</h2>
         <form className="flex max-w-md flex-col gap-4" onSubmit={handleEmailLogin}>

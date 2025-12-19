@@ -34,6 +34,7 @@
         "badges": "Badges",
         "leaderboard": "Leaderboard",
         "faq": "FAQ",
+        "feedback": "Feedback",
         "myteam": "My Team",
         "mynonprofit": "My Non-Profit",
         "members": "Members",
@@ -48,6 +49,19 @@
         "noResults": "No FAQs found matching your search.",
         "noFaqs": "No FAQs available at the moment.",
         "resultsCount": "{count} FAQ{count, plural, one {} other {s}} found"
+    },
+    "Feedback": {
+        "title": "Share Your Feedback",
+        "subtitle": "Have an idea, found a bug, or want to share feedback? We'd love to hear from you!",
+        "contentLabel": "Your Feedback",
+        "contentPlaceholder": "Share your ideas, report bugs, or provide any feedback you have...",
+        "submitButton": "Submit Feedback",
+        "submitting": "Submitting...",
+        "successMessage": "Thank you! Your feedback has been submitted successfully.",
+        "errorMessage": "An error occurred while submitting your feedback. Please try again.",
+        "contentRequired": "Please provide your feedback before submitting.",
+        "contentMinLength": "Please provide at least 10 characters of feedback.",
+        "userRequired": "You must be logged in to submit feedback."
     },
     "Settings": {
         "language": "Language",
