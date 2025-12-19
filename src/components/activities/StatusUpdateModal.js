@@ -34,7 +34,8 @@ export default function StatusUpdateModal({
   const getStatusButtons = () => {
     const status = currentStatus || 'Draft';
     
-    if (status === 'Draft') {
+    // Handle both 'Draft' and 'created' status (activities are created with 'created' status)
+    if (status === 'Draft' || status === 'created') {
       // Draft: Show Publish button
       return (
         <div className="grid grid-cols-1 gap-4">
