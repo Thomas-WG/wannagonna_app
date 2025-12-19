@@ -467,7 +467,9 @@ export default function DashboardPage() {
       setShowActionModal(true);
     } else {
       // For non-application views, just open activity modal
-      setSelectedActivityId(activity.id);
+      // Use activityId if available (for history activities), otherwise use id
+      const activityIdToUse = activity.activityId || activity.id;
+      setSelectedActivityId(activityIdToUse);
       setShowActivityModal(true);
     }
   };
@@ -475,7 +477,9 @@ export default function DashboardPage() {
   // Handle viewing activity from application
   const handleViewActivity = () => {
     if (selectedApplicationActivity) {
-      setSelectedActivityId(selectedApplicationActivity.id);
+      // Use activityId if available (for history activities), otherwise use id
+      const activityIdToUse = selectedApplicationActivity.activityId || selectedApplicationActivity.id;
+      setSelectedActivityId(activityIdToUse);
       setShowActivityModal(true);
       setShowActionModal(false);
     }
@@ -871,7 +875,9 @@ export default function DashboardPage() {
                           if (showApplications) {
                             handleApplicationCardClick(activity);
                           } else {
-                            setSelectedActivityId(activity.id);
+                            // Use activityId if available (for history activities), otherwise use id
+                            const activityIdToUse = activity.activityId || activity.id;
+                            setSelectedActivityId(activityIdToUse);
                             setShowActivityModal(true);
                           }
                         }}
