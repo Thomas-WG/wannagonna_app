@@ -693,7 +693,8 @@
         "allCategories": "すべてのカテゴリー",
         "allCountries": "すべての国",
         "allSdgs": "すべてのSDG",
-        "allSkills": "すべてのスキル"
+        "allSkills": "すべてのスキル",
+        "externalPlatformLink": "外部プラットフォームリンク"
     },
     "Members": {
         "title": "メンバー",

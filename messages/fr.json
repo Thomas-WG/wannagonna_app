@@ -692,7 +692,8 @@
         "allCategories": "Toutes les catégories",
         "allCountries": "Tous les pays",
         "allSdgs": "Tous les ODD",
-        "allSkills": "Toutes les compétences"
+        "allSkills": "Toutes les compétences",
+        "externalPlatformLink": "Lien de plateforme externe"
     },
     "Members": {
         "title": "Membres",

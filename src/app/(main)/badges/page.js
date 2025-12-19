@@ -33,19 +33,88 @@ function BadgeCard({ badge, imageUrl, isEarned = false }) {
   }, []);
 
   return (
-    <Card ref={cardRef} className={`h-full flex flex-col hover:shadow-lg transition-all relative bg-background-card dark:bg-background-card border-border-light dark:border-border-dark ${
+    <Card ref={cardRef} className={`hover:shadow-lg transition-all relative bg-background-card dark:bg-background-card border-border-light dark:border-border-dark ${
       !isEarned ? 'opacity-60' : ''
     }`}>
-      <div className="flex flex-col items-center text-center">
-        {/* Lock icon for unearned badges */}
-        {!isEarned && (
-          <div className="absolute top-3 right-3 z-10">
-            <svg className="w-5 h-5 text-text-tertiary dark:text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
-          </div>
-        )}
+      {/* Lock icon for unearned badges */}
+      {!isEarned && (
+        <div className="absolute top-3 right-3 z-10">
+          <svg className="w-5 h-5 text-text-tertiary dark:text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+        </div>
+      )}
 
+      {/* Mobile: Horizontal Layout (image on right) */}
+      <div className="flex md:hidden items-center gap-4">
+        {/* Left: Title and Description */}
+        <div className="flex-1 min-w-0 pr-2">
+          {/* Badge Title */}
+          <h3 className={`text-base font-semibold mb-1.5 line-clamp-2 ${
+            isEarned ? 'text-text-primary dark:text-text-primary' : 'text-text-tertiary dark:text-text-tertiary'
+          }`}>
+            {badge.title || badge.id}
+          </h3>
+
+          {/* Badge Description */}
+          {badge.description && (
+            <p className={`text-sm mb-2 line-clamp-2 ${
+              isEarned ? 'text-text-secondary dark:text-text-secondary' : 'text-text-tertiary dark:text-text-tertiary'
+            }`}>
+              {badge.description}
+            </p>
+          )}
+
+          {/* XP Value */}
+          {badge.xp !== undefined && badge.xp !== null && (
+            <div className="mt-2">
+              <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-bold rounded-full ${
+                isEarned 
+                  ? 'bg-gradient-to-r from-primary-500 to-primary-600 dark:from-primary-600 dark:to-primary-700 text-white' 
+                  : 'bg-neutral-200 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300'
+              }`}>
+                <HiStar className={`w-3 h-3 ${isEarned ? 'fill-current' : ''}`} />
+                <span>{badge.xp} XP</span>
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Right: Badge Image */}
+        <div className="flex-shrink-0 w-20 h-20 flex items-center justify-center relative">
+          {!isVisible || !imageUrl ? (
+            <div className="w-20 h-20 bg-background-hover dark:bg-background-hover rounded-full flex items-center justify-center animate-pulse">
+              <HiBadgeCheck className="w-10 h-10 text-text-tertiary dark:text-text-tertiary" />
+            </div>
+          ) : (
+            <>
+              {!imgLoaded && (
+                <div className="absolute w-20 h-20 bg-background-hover dark:bg-background-hover rounded-full flex items-center justify-center animate-pulse">
+                  <HiBadgeCheck className="w-10 h-10 text-text-tertiary dark:text-text-tertiary" />
+                </div>
+              )}
+              <img
+                src={imageUrl}
+                alt={badge.title || 'Badge'}
+                className={`object-contain w-20 h-20 transition-all duration-300 ${
+                  imgLoaded ? 'opacity-100' : 'opacity-0'
+                } ${!isEarned ? 'grayscale' : ''}`}
+                style={{
+                  filter: !isEarned ? 'grayscale(100%)' : 'none'
+                }}
+                onLoad={() => setImgLoaded(true)}
+                onError={() => {
+                  console.error(`Failed to load badge image: ${imageUrl}`);
+                  setImgLoaded(true); // Stop showing loading state
+                }}
+              />
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Desktop: Vertical Layout (centered) */}
+      <div className="hidden md:flex flex-col items-center text-center h-full">
         {/* Badge Image */}
         <div className="mb-4 flex items-center justify-center min-h-[120px] relative">
           {!isVisible || !imageUrl ? (
@@ -316,7 +385,7 @@ export default function BadgesPage() {
                 <span className="ml-3 text-text-secondary dark:text-text-secondary">Loading badge images...</span>
               </div>
             )}
-            <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6 ${showImageLoading ? 'opacity-50' : ''}`}>
+            <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 md:gap-6 ${showImageLoading ? 'opacity-50' : ''}`}>
               {sortedBadges.map((badge) => (
                 <BadgeCard 
                   key={badge.id} 

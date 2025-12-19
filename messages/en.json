@@ -693,7 +693,8 @@
         "allCategories": "All Categories",
         "allCountries": "All Countries",
         "allSdgs": "All SDGs",
-        "allSkills": "All Skills"
+        "allSkills": "All Skills",
+        "externalPlatformLink": "External Platform Link"
     },
     "Members": {
         "title": "Members",

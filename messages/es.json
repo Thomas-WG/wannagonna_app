@@ -687,7 +687,8 @@
         "allCategories": "Todas las categorías",
         "allCountries": "Todos los países",
         "allSdgs": "Todos los ODS",
-        "allSkills": "Todas las habilidades"
+        "allSkills": "Todas las habilidades",
+        "externalPlatformLink": "Enlace de plataforma externa"
     },
     "Members": {
         "title": "Miembros",
