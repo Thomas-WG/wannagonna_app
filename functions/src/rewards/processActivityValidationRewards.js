@@ -542,17 +542,15 @@ export async function processActivityValidationRewards(
       batch.update(userRef, updates);
     }
 
-    // Add to history
+    // Add to history - store only reference, not duplicated activity data
+    // Best practice: Store only activityId reference to prevent data inconsistency
     const historyRef = userRef.collection("history");
     const historyData = {
-      ...activity,
       activityId: activityId,
       addedToHistoryAt: FieldValue.serverTimestamp(),
       validatedViaQR: validatedBy === null,
       validatedViaManual: validatedBy !== null,
     };
-    // Remove id field if it exists to avoid conflicts
-    delete historyData.id;
     batch.set(historyRef.doc(), historyData);
 
     // Log XP history entries
