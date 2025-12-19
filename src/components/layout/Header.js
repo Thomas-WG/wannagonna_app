@@ -75,24 +75,24 @@ const Header = () => {
     setIsNotifOpen(false);
   };
 
-  // Simple mapping for type-based accent color (can be extended later)
+  // Simple mapping for type-based accent color using design tokens
   const getTypeAccentClass = (type) => {
     switch (type) {
       case 'REWARD':
-        return 'bg-green-100 text-green-600';
+        return 'bg-semantic-success-100 dark:bg-semantic-success-900 text-semantic-success-700 dark:text-semantic-success-300';
       case 'REMINDER':
-        return 'bg-yellow-100 text-yellow-600';
+        return 'bg-semantic-warning-100 dark:bg-semantic-warning-900 text-semantic-warning-700 dark:text-semantic-warning-300';
       case 'SYSTEM':
-        return 'bg-blue-100 text-blue-600';
+        return 'bg-semantic-info-100 dark:bg-semantic-info-900 text-semantic-info-700 dark:text-semantic-info-300';
       case 'REFERRAL':
-        return 'bg-purple-100 text-purple-600';
+        return 'bg-status-closed-100 dark:bg-status-closed-900 text-status-closed-700 dark:text-status-closed-300';
       default:
-        return 'bg-gray-100 text-gray-600';
+        return 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300';
     }
   };
 
   return (
-    <header className="w-full relative z-40 bg-gradient-to-b from-[rgb(243_244_246)] to-transparent">
+    <header className="w-full relative z-40 bg-gradient-to-b from-background-page dark:from-background-page to-transparent">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-end items-center p-2">
           <div className="flex space-x-2 items-center">
@@ -101,13 +101,13 @@ const Header = () => {
               <button
                 type="button"
                 onClick={toggleNotifications}
-                className="relative p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="relative p-2 rounded-full hover:bg-background-hover dark:hover:bg-background-hover focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 transition-all duration-200 hover:scale-110 active:scale-95"
                 aria-label="Notifications"
                 aria-haspopup="true"
                 aria-expanded={isNotifOpen}
               >
                 <svg
-                  className="h-6 w-6 text-gray-600"
+                  className="h-6 w-6 text-text-primary dark:text-text-primary"
                   fill="none"
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -118,7 +118,7 @@ const Header = () => {
                   <path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
                 </svg>
                 {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-semibold text-white">
+                  <span className="absolute -top-1 -right-1 inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-gradient-to-r from-semantic-error-500 to-semantic-error-600 px-1 text-[10px] font-semibold text-white shadow-md animate-pulse-warm">
                     {unreadCount > 9 ? '9+' : unreadCount}
                   </span>
                 )}
@@ -126,16 +126,16 @@ const Header = () => {
 
               {isNotifOpen && (
                 <div
-                  className="fixed inset-x-2 top-14 z-50 max-h-[calc(100vh-5rem)] overflow-y-auto rounded-lg bg-white shadow-lg ring-1 ring-black/5
-                             sm:absolute sm:inset-x-auto sm:right-0 sm:top-auto sm:mt-2 sm:w-80 sm:max-h-96"
+                  className="fixed inset-x-2 top-14 z-50 max-h-[calc(100vh-5rem)] overflow-y-auto rounded-xl bg-white dark:bg-[#1e293b] shadow-xl border border-border-light dark:border-border-dark
+                             sm:absolute sm:inset-x-auto sm:right-0 sm:top-auto sm:mt-2 sm:w-80 sm:max-h-96 animate-scale-in"
                 >
-                  <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between gap-2">
+                  <div className="px-4 py-3 border-b border-border-light dark:border-border-dark flex items-center justify-between gap-2">
                     <div className="flex flex-col">
-                      <span className="text-sm font-semibold text-gray-900">
+                      <span className="text-sm font-semibold text-text-primary dark:text-text-primary">
                         Notifications
                       </span>
                       {unreadCount > 0 && (
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-text-secondary dark:text-text-secondary">
                           {unreadCount} unread
                         </span>
                       )}
@@ -145,14 +145,14 @@ const Header = () => {
                         <button
                           type="button"
                           onClick={handleMarkAllAsRead}
-                          className="text-[11px] text-gray-500 hover:text-gray-700"
+                          className="text-[11px] text-text-secondary dark:text-text-secondary hover:text-primary-600 dark:hover:text-primary-400 transition-colors duration-200"
                         >
                           Mark all as read
                         </button>
                         <button
                           type="button"
                           onClick={handleClearAll}
-                          className="text-[11px] text-red-500 hover:text-red-600"
+                          className="text-[11px] text-semantic-error-500 dark:text-semantic-error-400 hover:text-semantic-error-600 dark:hover:text-semantic-error-300 transition-colors duration-200"
                         >
                           Clear
                         </button>
@@ -160,9 +160,9 @@ const Header = () => {
                     )}
                   </div>
 
-                  <div className="divide-y divide-gray-100">
+                  <div className="divide-y divide-border-light dark:divide-border-dark">
                     {notifications.length === 0 && (
-                      <div className="px-4 py-6 text-sm text-gray-500 text-center">
+                      <div className="px-4 py-6 text-sm text-text-tertiary dark:text-text-tertiary text-center">
                         You have no notifications yet.
                       </div>
                     )}
@@ -171,8 +171,8 @@ const Header = () => {
                       <button
                         key={notification.id}
                         type="button"
-                        className={`w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition flex items-start gap-3 ${
-                          !notification.readAt ? 'bg-gray-50' : ''
+                        className={`w-full text-left px-4 py-3 text-sm hover:bg-background-hover dark:hover:bg-background-hover transition-all duration-200 flex items-start gap-3 ${
+                          !notification.readAt ? 'bg-background-hover dark:bg-background-hover' : ''
                         }`}
                         onClick={() => handleNotificationClick(notification)}
                       >
@@ -183,23 +183,23 @@ const Header = () => {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-2">
-                            <p className="font-medium text-gray-900 truncate">
+                            <p className="font-medium text-text-primary dark:text-text-primary truncate">
                               {notification.title || 'Notification'}
                             </p>
-                            <span className="text-[11px] text-gray-400 shrink-0">
+                            <span className="text-[11px] text-text-tertiary dark:text-text-tertiary shrink-0">
                               {notification.createdAt
                                 ? getRelativeTime(notification.createdAt)
                                 : ''}
                             </span>
                           </div>
                           {notification.body && (
-                            <p className="mt-0.5 text-xs text-gray-600 line-clamp-2">
+                            <p className="mt-0.5 text-xs text-text-secondary dark:text-text-secondary line-clamp-2">
                               {notification.body}
                             </p>
                           )}
                         </div>
                         {!notification.readAt && (
-                          <span className="ml-2 mt-1 h-2 w-2 rounded-full bg-indigo-500" />
+                          <span className="ml-2 mt-1 h-2 w-2 rounded-full bg-primary-500 dark:bg-primary-400 animate-pulse-warm" />
                         )}
                       </button>
                     ))}
@@ -212,10 +212,10 @@ const Header = () => {
             {/* User menu */}
             <button
               onClick={() => handleMenuClick('/complete-profile')}
-              className="p-2 rounded-full hover:bg-gray-100 hover:scale-110 hover:shadow-md transition-all duration-200 focus:outline-none"
+              className="p-2 rounded-full hover:bg-background-hover dark:hover:bg-background-hover hover:scale-110 hover:shadow-warm-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400"
             >
               <svg
-                className="h-6 w-6 text-gray-600"
+                className="h-6 w-6 text-text-primary dark:text-text-primary"
                 fill="none"
                 strokeLinecap="round"
                 strokeLinejoin="round"

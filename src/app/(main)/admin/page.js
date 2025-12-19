@@ -53,22 +53,22 @@ export default function AdminDashboard() {
   }, []);
 
   return (
-    <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8">
-      <h1 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">Admin Dashboard</h1>
+    <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8 bg-background-page dark:bg-background-page min-h-screen">
+      <h1 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-text-primary dark:text-text-primary">Admin Dashboard</h1>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-6">
         {/* Members Card */}
         <Link href="/admin/members">
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full bg-background-card dark:bg-background-card border-border-light dark:border-border-dark">
             <div className="flex flex-col items-center p-4 sm:p-6">
-              <div className="bg-blue-100 p-3 rounded-full mb-4">
-                <HiUsers className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600" />
+              <div className="bg-semantic-info-100 dark:bg-semantic-info-900 p-3 rounded-full mb-4">
+                <HiUsers className="h-6 w-6 sm:h-8 sm:w-8 text-semantic-info-600 dark:text-semantic-info-400" />
               </div>
-              <h2 className="text-lg sm:text-xl font-semibold mb-2">Members</h2>
+              <h2 className="text-lg sm:text-xl font-semibold mb-2 text-text-primary dark:text-text-primary">Members</h2>
               {isLoading ? (
-                <Spinner size="lg" className="text-blue-600" />
+                <Spinner size="lg" className="text-semantic-info-600 dark:text-semantic-info-400" />
               ) : (
-                <p className="text-2xl sm:text-3xl font-bold text-blue-600">{stats.members}</p>
+                <p className="text-2xl sm:text-3xl font-bold text-semantic-info-600 dark:text-semantic-info-400">{stats.members}</p>
               )}
             </div>
           </Card>
@@ -76,16 +76,16 @@ export default function AdminDashboard() {
 
         {/* Organizations Card */}
         <Link href="/admin/organizations">
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full bg-background-card dark:bg-background-card border-border-light dark:border-border-dark">
             <div className="flex flex-col items-center p-4 sm:p-6">
-              <div className="bg-green-100 p-3 rounded-full mb-4">
-                <HiOfficeBuilding className="h-6 w-6 sm:h-8 sm:w-8 text-green-600" />
+              <div className="bg-semantic-success-100 dark:bg-semantic-success-900 p-3 rounded-full mb-4">
+                <HiOfficeBuilding className="h-6 w-6 sm:h-8 sm:w-8 text-semantic-success-600 dark:text-semantic-success-400" />
               </div>
-              <h2 className="text-lg sm:text-xl font-semibold mb-2">Organizations</h2>
+              <h2 className="text-lg sm:text-xl font-semibold mb-2 text-text-primary dark:text-text-primary">Organizations</h2>
               {isLoading ? (
-                <Spinner size="lg" className="text-green-600" />
+                <Spinner size="lg" className="text-semantic-success-600 dark:text-semantic-success-400" />
               ) : (
-                <p className="text-2xl sm:text-3xl font-bold text-green-600">{stats.organizations}</p>
+                <p className="text-2xl sm:text-3xl font-bold text-semantic-success-600 dark:text-semantic-success-400">{stats.organizations}</p>
               )}
             </div>
           </Card>
@@ -93,16 +93,16 @@ export default function AdminDashboard() {
 
         {/* Skills Card */}
         <Link href="/admin/skills">
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full bg-background-card dark:bg-background-card border-border-light dark:border-border-dark">
             <div className="flex flex-col items-center p-4 sm:p-6">
-              <div className="bg-purple-100 p-3 rounded-full mb-4">
-                <HiAcademicCap className="h-6 w-6 sm:h-8 sm:w-8 text-purple-600" />
+              <div className="bg-activityType-event-100 dark:bg-activityType-event-900 p-3 rounded-full mb-4">
+                <HiAcademicCap className="h-6 w-6 sm:h-8 sm:w-8 text-activityType-event-600 dark:text-activityType-event-400" />
               </div>
-              <h2 className="text-lg sm:text-xl font-semibold mb-2">Skills</h2>
+              <h2 className="text-lg sm:text-xl font-semibold mb-2 text-text-primary dark:text-text-primary">Skills</h2>
               {isLoading ? (
-                <Spinner size="lg" className="text-purple-600" />
+                <Spinner size="lg" className="text-activityType-event-600 dark:text-activityType-event-400" />
               ) : (
-                <p className="text-2xl sm:text-3xl font-bold text-purple-600">{stats.skills}</p>
+                <p className="text-2xl sm:text-3xl font-bold text-activityType-event-600 dark:text-activityType-event-400">{stats.skills}</p>
               )}
             </div>
           </Card>
@@ -110,16 +110,16 @@ export default function AdminDashboard() {
 
         {/* Badges Card */}
         <Link href="/admin/badges">
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full bg-background-card dark:bg-background-card border-border-light dark:border-border-dark">
             <div className="flex flex-col items-center p-4 sm:p-6">
-              <div className="bg-orange-100 p-3 rounded-full mb-4">
-                <HiBadgeCheck className="h-6 w-6 sm:h-8 sm:w-8 text-orange-600" />
+              <div className="bg-primary-100 dark:bg-primary-900 p-3 rounded-full mb-4">
+                <HiBadgeCheck className="h-6 w-6 sm:h-8 sm:w-8 text-primary-600 dark:text-primary-400" />
               </div>
-              <h2 className="text-lg sm:text-xl font-semibold mb-2">Badges</h2>
+              <h2 className="text-lg sm:text-xl font-semibold mb-2 text-text-primary dark:text-text-primary">Badges</h2>
               {isLoading ? (
-                <Spinner size="lg" className="text-orange-600" />
+                <Spinner size="lg" className="text-primary-600 dark:text-primary-400" />
               ) : (
-                <p className="text-2xl sm:text-3xl font-bold text-orange-600">{stats.badges}</p>
+                <p className="text-2xl sm:text-3xl font-bold text-primary-600 dark:text-primary-400">{stats.badges}</p>
               )}
             </div>
           </Card>
@@ -127,16 +127,16 @@ export default function AdminDashboard() {
 
         {/* Activities Card */}
         <Link href="/admin/activities">
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full bg-background-card dark:bg-background-card border-border-light dark:border-border-dark">
             <div className="flex flex-col items-center p-4 sm:p-6">
-              <div className="bg-indigo-100 p-3 rounded-full mb-4">
-                <HiCalendar className="h-6 w-6 sm:h-8 sm:w-8 text-indigo-600" />
+              <div className="bg-activityType-online-100 dark:bg-activityType-online-900 p-3 rounded-full mb-4">
+                <HiCalendar className="h-6 w-6 sm:h-8 sm:w-8 text-activityType-online-600 dark:text-activityType-online-400" />
               </div>
-              <h2 className="text-lg sm:text-xl font-semibold mb-2">Activities</h2>
+              <h2 className="text-lg sm:text-xl font-semibold mb-2 text-text-primary dark:text-text-primary">Activities</h2>
               {isLoading ? (
-                <Spinner size="lg" className="text-indigo-600" />
+                <Spinner size="lg" className="text-activityType-online-600 dark:text-activityType-online-400" />
               ) : (
-                <p className="text-2xl sm:text-3xl font-bold text-indigo-600">{stats.activities}</p>
+                <p className="text-2xl sm:text-3xl font-bold text-activityType-online-600 dark:text-activityType-online-400">{stats.activities}</p>
               )}
             </div>
           </Card>

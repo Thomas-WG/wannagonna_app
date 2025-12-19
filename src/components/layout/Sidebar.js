@@ -181,7 +181,7 @@ export default function Navbar() {
           aria-controls='logo-sidebar'
           type='button'
           onClick={toggleSidebar}
-          className='fixed top-4 left-4 z-50 inline-flex items-center p-2 text-sm text-orange-500 hover:text-gray-100 rounded-lg sm:hidden hover:bg-orange-500 focus:outline-none focus:ring-2 focus:ring-gray-200'
+          className='fixed top-4 left-4 z-50 inline-flex items-center p-2 text-sm text-primary-500 dark:text-primary-400 hover:text-white dark:hover:text-primary-100 rounded-lg sm:hidden hover:bg-gradient-to-r hover:from-primary-500 hover:to-primary-600 dark:hover:from-primary-600 dark:hover:to-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 transition-all duration-200 hover:scale-105 active:scale-95'
           style={{ marginLeft: '0' }}
         >
           <span className='sr-only'>Open sidebar</span>
@@ -209,13 +209,13 @@ export default function Navbar() {
         } sm:static sm:translate-x-0`}
         aria-label='Sidebar'
       >
-        <Sidebar aria-label='Sidebar' className='bg-orange-100'>
+        <Sidebar aria-label='Sidebar' className='bg-background-sidebar dark:bg-background-sidebar border-r border-border-light dark:border-border-dark'>
           {logoUrl ? (
-            <Sidebar.Logo img={logoUrl} imgAlt='WannaGonna logo' className='text-gray-900'> 
+            <Sidebar.Logo img={logoUrl} imgAlt='WannaGonna logo' className='text-text-primary dark:text-text-primary font-semibold'> 
               Wanna Gonna
             </Sidebar.Logo>
           ) : (
-            <Sidebar.Logo className='text-gray-900'> 
+            <Sidebar.Logo className='text-text-primary dark:text-text-primary font-semibold'> 
               Wanna Gonna
             </Sidebar.Logo>
           )}
@@ -224,27 +224,27 @@ export default function Navbar() {
               <Sidebar.Item 
                 onClick={() => handleLinkClick('/dashboard')} 
                 icon={HiChartPie}
-                className='cursor-pointer'>
+                className='cursor-pointer text-text-primary dark:text-text-primary hover:text-primary-600 dark:hover:text-primary-400 hover:bg-background-hover dark:hover:bg-background-hover transition-all duration-200 rounded-lg'>
                 {t('dashboard')}
               </Sidebar.Item>
               <Sidebar.Item
                 onClick={() => handleLinkClick('/activities')}
                 icon={MdOutlineExplore}
-                className='cursor-pointer'
+                className='cursor-pointer text-text-primary dark:text-text-primary hover:text-primary-600 dark:hover:text-primary-400 hover:bg-background-hover dark:hover:bg-background-hover transition-all duration-200 rounded-lg'
               >
                 {t('explore')}
               </Sidebar.Item>
               <Sidebar.Item
                 onClick={() => handleLinkClick('/badges')}
                 icon={LuFileBadge2}
-                className='cursor-pointer'
+                className='cursor-pointer text-text-primary dark:text-text-primary hover:text-primary-600 dark:hover:text-primary-400 hover:bg-background-hover dark:hover:bg-background-hover transition-all duration-200 rounded-lg'
               >
                 {t('badges')}
               </Sidebar.Item>
               <Sidebar.Item
                 onClick={() => handleLinkClick('/leaderboard')}
                 icon={MdOutlineLeaderboard }
-                className='cursor-pointer'
+                className='cursor-pointer text-text-primary dark:text-text-primary hover:text-primary-600 dark:hover:text-primary-400 hover:bg-background-hover dark:hover:bg-background-hover transition-all duration-200 rounded-lg'
               >
                 {t('leaderboard')}
               </Sidebar.Item>
@@ -252,7 +252,7 @@ export default function Navbar() {
                 <Sidebar.Item
                   onClick={() => handleLinkClick('/myteam')}
                   icon={FaPeopleCarryBox}
-                  className='cursor-pointer'
+                  className='cursor-pointer text-text-primary dark:text-text-primary hover:text-primary-600 dark:hover:text-primary-400 hover:bg-background-hover dark:hover:bg-background-hover transition-all duration-200 rounded-lg'
               >
                   {t('myteam')}
                 </Sidebar.Item>
@@ -261,7 +261,7 @@ export default function Navbar() {
                 <Sidebar.Item
                   onClick={() => handleLinkClick('/mynonprofit')}
                   icon={GoOrganization}
-                  className='cursor-pointer'
+                  className='cursor-pointer text-text-primary dark:text-text-primary hover:text-primary-600 dark:hover:text-primary-400 hover:bg-background-hover dark:hover:bg-background-hover transition-all duration-200 rounded-lg'
               >
                 {t('mynonprofit')}
               </Sidebar.Item>
@@ -269,7 +269,7 @@ export default function Navbar() {
               <Sidebar.Item
                 onClick={() => handleLinkClick('/members')}
                 icon={RiTeamLine}
-                className='cursor-pointer'
+                className='cursor-pointer text-text-primary dark:text-text-primary hover:text-primary-600 dark:hover:text-primary-400 hover:bg-background-hover dark:hover:bg-background-hover transition-all duration-200 rounded-lg'
               >
                 {t('members')}
               </Sidebar.Item>
@@ -279,7 +279,7 @@ export default function Navbar() {
                 <Sidebar.Item
                   onClick={() => handleLinkClick('/donate')}
                   icon={BiDonateHeart}
-                  className='cursor-pointer'
+                  className='cursor-pointer text-text-primary dark:text-text-primary hover:text-primary-600 dark:hover:text-primary-400 hover:bg-background-hover dark:hover:bg-background-hover transition-all duration-200 rounded-lg'
               >
                 {t('donate')}
               </Sidebar.Item>
@@ -288,7 +288,7 @@ export default function Navbar() {
               <Sidebar.Item
                 onClick={() => handleLinkClick('/settings')}
                 icon={IoSettingsOutline}
-                className='cursor-pointer'
+                className='cursor-pointer text-text-primary dark:text-text-primary hover:text-primary-600 dark:hover:text-primary-400 hover:bg-background-hover dark:hover:bg-background-hover transition-all duration-200 rounded-lg'
               >
                 {t('settings')}
               </Sidebar.Item>
@@ -298,7 +298,7 @@ export default function Navbar() {
                 <Sidebar.Item
                   onClick={() => handleLinkClick('/admin')}
                   icon={FaUserShield}
-                  className='cursor-pointer'
+                  className='cursor-pointer text-text-primary dark:text-text-primary hover:text-primary-600 dark:hover:text-primary-400 hover:bg-background-hover dark:hover:bg-background-hover transition-all duration-200 rounded-lg'
                 >
                   Administration
                 </Sidebar.Item>
@@ -311,7 +311,7 @@ export default function Navbar() {
                   handleLogout(); // Call logout function
                 }}
                 icon={IoLogOut}
-                className='cursor-pointer'
+                className='cursor-pointer text-text-primary dark:text-text-primary hover:text-semantic-error-600 dark:hover:text-semantic-error-400 hover:bg-background-hover dark:hover:bg-background-hover transition-all duration-200 rounded-lg'
               >
                 {t('logout')}
               </Sidebar.Item>

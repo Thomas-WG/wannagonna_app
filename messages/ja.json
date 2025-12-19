@@ -41,7 +41,16 @@
         "logout": "ログアウト"
     },
     "Settings": {
-        "language": "言語を変更する",
+        "language": "言語",
+        "languageDescription": "お好みの言語を選択してください",
+        "selectLanguage": "言語",
+        "currentLanguage": "現在",
+        "appearance": "外観",
+        "appearanceDescription": "ライトモードとダークモードを選択",
+        "darkMode": "ダークモード",
+        "lightMode": "ライトモード",
+        "toggleDarkMode": "ライトモードに切り替え",
+        "toggleLightMode": "ダークモードに切り替え",
         "notifications": "通知",
         "notificationDescription": "ゲーミフィケーションと活動の更新について、どのように通知を受け取るかを選択してください。",
         "category": "カテゴリ",
@@ -49,7 +58,12 @@
         "push": "プッシュ通知",
         "gamification": "ゲーミフィケーション（バッジ、XP、紹介など）",
         "activities": "アクティビティ（応募と更新）",
-        "saving": "設定を保存しています..."
+        "saving": "設定を保存しています...",
+        "loading": "読み込み中...",
+        "errorLoadingPreferences": "通知設定の読み込みに失敗しました。",
+        "errorEnablePushBrowser": "このブラウザではプッシュ通知を有効にできません。",
+        "errorEnablePush": "プッシュ通知の有効化に失敗しました。",
+        "errorSavePreferences": "通知設定の保存に失敗しました。"
     },
     "ActivityCard": {
         "points": "点",

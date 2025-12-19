@@ -340,81 +340,81 @@ export default function MyNonProfitDashboard() {
   ).length;
 
   return (
-    <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
+    <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 bg-background-page dark:bg-background-page min-h-screen">
       
       {loading ? (
         <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500 dark:border-primary-400"></div>
         </div>
       ) : (
         <>
           {/* Primary Metrics Section */}
           <div className="mb-6 sm:mb-8">
-            <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 px-1 text-gray-700">{t('metricsAndFilters')}</h2>
+            <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 px-1 text-text-primary dark:text-text-primary">{t('metricsAndFilters')}</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
               {/* All Activities Card */}
-              <div className="bg-white rounded-lg shadow-md">
+              <div className="bg-background-card dark:bg-background-card rounded-lg shadow-md border border-border-light dark:border-border-dark hover:shadow-lg transition-shadow">
                 <div className="flex items-center gap-2 sm:gap-3 py-1 sm:py-1.5 px-2 sm:px-2.5">
-                  <div className="bg-gray-100 p-2 rounded-full flex-shrink-0">
-                    <HiViewGrid className="h-5 w-5 sm:h-6 sm:w-6 text-gray-600" />
+                  <div className="bg-neutral-100 dark:bg-neutral-800 p-2 rounded-full flex-shrink-0">
+                    <HiViewGrid className="h-5 w-5 sm:h-6 sm:w-6 text-neutral-600 dark:text-neutral-400" />
                   </div>
-                  <h2 className="text-xs sm:text-sm font-semibold flex-1">{t('allActivities')}</h2>
-                  <p className="text-xl sm:text-2xl font-bold text-gray-600 flex-shrink-0">{allOrgActivities.length}</p>
+                  <h2 className="text-xs sm:text-sm font-semibold flex-1 text-text-primary dark:text-text-primary">{t('allActivities')}</h2>
+                  <p className="text-xl sm:text-2xl font-bold text-neutral-600 dark:text-neutral-400 flex-shrink-0">{allOrgActivities.length}</p>
                 </div>
               </div>
 
               {/* Online Activities Card */}
-              <div className="bg-white rounded-lg shadow-md">
+              <div className="bg-background-card dark:bg-background-card rounded-lg shadow-md border border-border-light dark:border-border-dark hover:shadow-lg transition-shadow">
                 <div className="flex items-center gap-2 sm:gap-3 py-1 sm:py-1.5 px-2 sm:px-2.5">
-                  <div className="bg-blue-100 p-2 rounded-full flex-shrink-0">
-                    <MdOutlineSocialDistance className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
+                  <div className="bg-activityType-online-100 dark:bg-activityType-online-900 p-2 rounded-full flex-shrink-0">
+                    <MdOutlineSocialDistance className="h-5 w-5 sm:h-6 sm:w-6 text-activityType-online-600 dark:text-activityType-online-400" />
                   </div>
-                  <h2 className="text-xs sm:text-sm font-semibold flex-1">{t('online')}</h2>
-                  <p className="text-xl sm:text-2xl font-bold text-blue-600 flex-shrink-0">{orgData.totalOnlineActivities}</p>
+                  <h2 className="text-xs sm:text-sm font-semibold flex-1 text-text-primary dark:text-text-primary">{t('online')}</h2>
+                  <p className="text-xl sm:text-2xl font-bold text-activityType-online-600 dark:text-activityType-online-400 flex-shrink-0">{orgData.totalOnlineActivities}</p>
                 </div>
               </div>
 
               {/* Local Activities Card */}
-              <div className="bg-white rounded-lg shadow-md">
+              <div className="bg-background-card dark:bg-background-card rounded-lg shadow-md border border-border-light dark:border-border-dark hover:shadow-lg transition-shadow">
                 <div className="flex items-center gap-2 sm:gap-3 py-1 sm:py-1.5 px-2 sm:px-2.5">
-                  <div className="bg-green-100 p-2 rounded-full flex-shrink-0">
-                    <HiOfficeBuilding className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
+                  <div className="bg-activityType-local-100 dark:bg-activityType-local-900 p-2 rounded-full flex-shrink-0">
+                    <HiOfficeBuilding className="h-5 w-5 sm:h-6 sm:w-6 text-activityType-local-600 dark:text-activityType-local-400" />
                   </div>
-                  <h2 className="text-xs sm:text-sm font-semibold flex-1">{t('local')}</h2>
-                  <p className="text-xl sm:text-2xl font-bold text-green-600 flex-shrink-0">{orgData.totalLocalActivities}</p>
+                  <h2 className="text-xs sm:text-sm font-semibold flex-1 text-text-primary dark:text-text-primary">{t('local')}</h2>
+                  <p className="text-xl sm:text-2xl font-bold text-activityType-local-600 dark:text-activityType-local-400 flex-shrink-0">{orgData.totalLocalActivities}</p>
                 </div>
               </div>
 
               {/* Total Events Card */}
-              <div className="bg-white rounded-lg shadow-md">
+              <div className="bg-background-card dark:bg-background-card rounded-lg shadow-md border border-border-light dark:border-border-dark hover:shadow-lg transition-shadow">
                 <div className="flex items-center gap-2 sm:gap-3 py-1 sm:py-1.5 px-2 sm:px-2.5">
-                  <div className="bg-purple-100 p-2 rounded-full flex-shrink-0">
-                    <HiCalendar className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
+                  <div className="bg-activityType-event-100 dark:bg-activityType-event-900 p-2 rounded-full flex-shrink-0">
+                    <HiCalendar className="h-5 w-5 sm:h-6 sm:w-6 text-activityType-event-600 dark:text-activityType-event-400" />
                   </div>
-                  <h2 className="text-xs sm:text-sm font-semibold flex-1">{t('events')}</h2>
-                  <p className="text-xl sm:text-2xl font-bold text-purple-600 flex-shrink-0">{orgData.totalEvents}</p>
+                  <h2 className="text-xs sm:text-sm font-semibold flex-1 text-text-primary dark:text-text-primary">{t('events')}</h2>
+                  <p className="text-xl sm:text-2xl font-bold text-activityType-event-600 dark:text-activityType-event-400 flex-shrink-0">{orgData.totalEvents}</p>
                 </div>
               </div>
 
               {/* Closed Activities Card */}
-              <div className="bg-white rounded-lg shadow-md">
+              <div className="bg-background-card dark:bg-background-card rounded-lg shadow-md border border-border-light dark:border-border-dark hover:shadow-lg transition-shadow">
                 <div className="flex items-center gap-2 sm:gap-3 py-1 sm:py-1.5 px-2 sm:px-2.5">
-                  <div className="bg-orange-100 p-2 rounded-full flex-shrink-0">
-                    <HiLockClosed className="h-5 w-5 sm:h-6 sm:w-6 text-orange-600" />
+                  <div className="bg-primary-100 dark:bg-primary-900 p-2 rounded-full flex-shrink-0">
+                    <HiLockClosed className="h-5 w-5 sm:h-6 sm:w-6 text-primary-600 dark:text-primary-400" />
                   </div>
-                  <h2 className="text-xs sm:text-sm font-semibold flex-1">{t('closed')}</h2>
-                  <p className="text-xl sm:text-2xl font-bold text-orange-600 flex-shrink-0">{closedActivitiesCount}</p>
+                  <h2 className="text-xs sm:text-sm font-semibold flex-1 text-text-primary dark:text-text-primary">{t('closed')}</h2>
+                  <p className="text-xl sm:text-2xl font-bold text-primary-600 dark:text-primary-400 flex-shrink-0">{closedActivitiesCount}</p>
                 </div>
               </div>
 
               {/* Total Participants Card */}
-              <div className="bg-white rounded-lg shadow-md">
+              <div className="bg-background-card dark:bg-background-card rounded-lg shadow-md border border-border-light dark:border-border-dark hover:shadow-lg transition-shadow">
                 <div className="flex items-center gap-2 sm:gap-3 py-1 sm:py-1.5 px-2 sm:px-2.5">
-                  <div className="bg-red-100 p-2 rounded-full flex-shrink-0">
-                    <HiUsers className="h-5 w-5 sm:h-6 sm:w-6 text-red-600" />
+                  <div className="bg-semantic-error-100 dark:bg-semantic-error-900 p-2 rounded-full flex-shrink-0">
+                    <HiUsers className="h-5 w-5 sm:h-6 sm:w-6 text-semantic-error-600 dark:text-semantic-error-400" />
                   </div>
-                  <h2 className="text-xs sm:text-sm font-semibold flex-1">{t('participants')}</h2>
-                  <p className="text-xl sm:text-2xl font-bold text-red-600 flex-shrink-0">{orgData.totalParticipants}</p>
+                  <h2 className="text-xs sm:text-sm font-semibold flex-1 text-text-primary dark:text-text-primary">{t('participants')}</h2>
+                  <p className="text-xl sm:text-2xl font-bold text-semantic-error-600 dark:text-semantic-error-400 flex-shrink-0">{orgData.totalParticipants}</p>
                 </div>
               </div>
             </div>
@@ -422,7 +422,7 @@ export default function MyNonProfitDashboard() {
 
           {/* Actions & Alerts Section */}
           <div className="mb-6 sm:mb-8">
-            <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 px-1 text-gray-700">{t('quickActions')}</h2>
+            <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 px-1 text-text-primary dark:text-text-primary">{t('quickActions')}</h2>
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 gap-3 sm:gap-4">
               {/* New Applications Card - With Badge */}
               <Card 
@@ -448,9 +448,9 @@ export default function MyNonProfitDashboard() {
                     }`} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h2 className="text-xs sm:text-sm font-semibold">{t('reviewApplications')}</h2>
+                    <h2 className="text-xs sm:text-sm font-semibold text-text-primary dark:text-text-primary">{t('reviewApplications')}</h2>
                     {orgData.totalNewApplications > 0 && (
-                      <p className="text-[10px] sm:text-xs text-gray-500 mt-0.5">{t('requiresAttention')}</p>
+                      <p className="text-[10px] sm:text-xs text-text-tertiary dark:text-text-tertiary mt-0.5">{t('requiresAttention')}</p>
                     )}
                   </div>
                 </div>
@@ -458,16 +458,16 @@ export default function MyNonProfitDashboard() {
 
               {/* Edit Organization Card */}
               <Card 
-                className="hover:shadow-lg transition-shadow cursor-pointer"
+                className="hover:shadow-lg transition-shadow cursor-pointer bg-background-card dark:bg-background-card border-border-light dark:border-border-dark"
                 onClick={() => router.push('/mynonprofit/organization/edit')}
               >
                 <div className="flex items-center gap-2 sm:gap-3 py-1 sm:py-1.5 px-2 sm:px-2.5">
-                  <div className="bg-indigo-100 p-2 rounded-full flex-shrink-0">
-                    <HiCog className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-600" />
+                  <div className="bg-semantic-info-100 dark:bg-semantic-info-900 p-2 rounded-full flex-shrink-0">
+                    <HiCog className="h-5 w-5 sm:h-6 sm:w-6 text-semantic-info-600 dark:text-semantic-info-400" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h2 className="text-xs sm:text-sm font-semibold">{t('organization')}</h2>
-                    <p className="text-[10px] sm:text-xs text-indigo-600 font-medium mt-0.5">{t('editInformation')}</p>
+                    <h2 className="text-xs sm:text-sm font-semibold text-text-primary dark:text-text-primary">{t('organization')}</h2>
+                    <p className="text-[10px] sm:text-xs text-semantic-info-600 dark:text-semantic-info-400 font-medium mt-0.5">{t('editInformation')}</p>
                   </div>
                 </div>
               </Card>
@@ -478,7 +478,7 @@ export default function MyNonProfitDashboard() {
 
       {/* Organization Activities */}
       <div className="mt-6 sm:mt-10">
-        <h2 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 px-1">{t('yourActivities')}</h2>
+        <h2 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 px-1 text-text-primary dark:text-text-primary">{t('yourActivities')}</h2>
         
         {/* Filters */}
         <ActivityFilters
@@ -491,13 +491,13 @@ export default function MyNonProfitDashboard() {
 
         {/* Sort and Results Count */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-text-secondary dark:text-text-secondary">
             {tActivities('showing')} <span className="font-semibold">{sortedActivities.length}</span> {tActivities('of')}{' '}
             <span className="font-semibold">{allOrgActivities.length}</span> {tActivities('activities')}
           </div>
           <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-gray-700">{tActivities('sortBy')}</label>
-            <Select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="w-full sm:w-auto">
+            <label className="text-sm font-medium text-text-primary dark:text-text-primary">{tActivities('sortBy')}</label>
+            <Select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="w-full sm:w-auto bg-background-card dark:bg-background-card text-text-primary dark:text-text-primary border-border-light dark:border-border-dark">
               <option value="newest">{tActivities('sortNewest')}</option>
               <option value="oldest">{tActivities('sortOldest')}</option>
               <option value="xp_high">{tActivities('sortXpHigh')}</option>
@@ -511,10 +511,10 @@ export default function MyNonProfitDashboard() {
 
         {loadingActivities ? (
           <div className="flex justify-center items-center h-32">
-            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
+            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary-500 dark:border-primary-400"></div>
           </div>
         ) : sortedActivities.length === 0 ? (
-          <p className="text-gray-600 px-1">
+          <p className="text-text-secondary dark:text-text-secondary px-1">
             {t('noActivitiesFound')}
           </p>
         ) : (

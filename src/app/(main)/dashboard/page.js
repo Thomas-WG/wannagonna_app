@@ -621,16 +621,16 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
+    <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 bg-background-page dark:bg-background-page min-h-screen">
       {loading ? (
         <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500 dark:border-primary-400"></div>
         </div>
       ) : (
         <>
           {/* Profile Section with Gamification */}
           <div className="mb-6 sm:mb-8">
-            <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-indigo-200">
+            <Card className="bg-background-card dark:bg-background-card border-2 border-primary-200 dark:border-primary-700 shadow-lg">
               <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
                 {/* Profile Picture */}
                 <div
@@ -646,7 +646,7 @@ export default function DashboardPage() {
                       className="rounded-full border-4 border-white shadow-lg"
                     />
                   ) : (
-                    <div className="rounded-full bg-indigo-500 w-24 h-24 flex items-center justify-center border-4 border-white shadow-lg">
+                    <div className="rounded-full bg-primary-500 dark:bg-primary-600 w-24 h-24 flex items-center justify-center border-4 border-white dark:border-neutral-800 shadow-lg">
                       <HiUser className="w-12 h-12 text-white" />
                     </div>
                   )}
@@ -655,7 +655,7 @@ export default function DashboardPage() {
                 {/* Profile Info and Gamification */}
                 <div className="flex-1 w-full sm:w-auto text-center sm:text-left">
                   <h1
-                    className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 cursor-pointer hover:text-blue-600 transition-colors"
+                    className="text-2xl sm:text-3xl font-bold text-text-primary dark:text-text-primary mb-2 cursor-pointer hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
                     onClick={() => user?.uid && setShowProfileModal(true)}
                   >
                     {displayName}
@@ -664,7 +664,7 @@ export default function DashboardPage() {
                   {/* User Code */}
                   {userCode && (
                     <div className="mb-4 flex items-center justify-center sm:justify-start gap-2">
-                      <span className="text-sm sm:text-base text-gray-600 font-mono font-semibold">
+                      <span className="text-sm sm:text-base text-text-secondary dark:text-text-secondary font-mono font-semibold">
                         {t('code') || 'Code'}: {userCode}
                       </span>
                       <Button
@@ -683,11 +683,11 @@ export default function DashboardPage() {
                   <div className="mb-4">
                     <div className="flex items-center justify-center sm:justify-start gap-3 mb-2">
                       <div className="flex items-center gap-2">
-                        <span className="text-lg sm:text-xl font-bold text-gray-800">
+                        <span className="text-lg sm:text-xl font-bold text-text-primary dark:text-text-primary">
                           Level {gamificationData.level}
                         </span>
                       </div>
-                      <div className="flex items-center gap-1 text-sm text-gray-600">
+                      <div className="flex items-center gap-1 text-sm text-text-secondary dark:text-text-secondary">
                         <span>{gamificationData.totalXP} XP</span>
                       </div>
                     </div>
@@ -698,7 +698,7 @@ export default function DashboardPage() {
                       onClick={() => router.push('/xp-history')}
                       title={t('viewXpHistory') || 'View XP History'}
                     >
-                      <div className="flex justify-between text-xs text-gray-600 mb-1">
+                      <div className="flex justify-between text-xs text-text-secondary dark:text-text-secondary mb-1">
                         <span>{gamificationData.currentXP} / 100 XP</span>
                         <span>{100 - gamificationData.currentXP} XP to next level</span>
                       </div>
@@ -713,8 +713,8 @@ export default function DashboardPage() {
 
                   {/* Badges Count */}
                   <div className="flex items-center justify-center sm:justify-start gap-2">
-                    <HiBadgeCheck className="w-5 h-5 text-purple-600" />
-                    <span className="text-sm sm:text-base text-gray-700">
+                    <HiBadgeCheck className="w-5 h-5 text-activityType-event-500 dark:text-activityType-event-400" />
+                    <span className="text-sm sm:text-base text-text-primary dark:text-text-primary">
                       <span className="font-semibold">{gamificationData.badgesCount}</span> Badges earned
                     </span>
                   </div>
@@ -725,65 +725,65 @@ export default function DashboardPage() {
 
           {/* Stats Section */}
           <div className="mb-6 sm:mb-8">
-            <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 px-1 text-gray-700">
+            <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 px-1 text-text-primary dark:text-text-primary">
               {t('yourStatistics') || 'Your Statistics'}
             </h2>
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               {/* Local Activities */}
-              <div className="bg-white rounded-lg shadow-md">
+              <div className="bg-background-card dark:bg-background-card rounded-lg shadow-md border border-border-light dark:border-border-dark hover:shadow-lg transition-shadow">
                 <div className="flex items-center gap-2 sm:gap-3 py-1 sm:py-1.5 px-2 sm:px-2.5">
-                  <div className="bg-green-100 p-2 rounded-full flex-shrink-0">
-                    <HiOfficeBuilding className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
+                  <div className="bg-activityType-local-100 dark:bg-activityType-local-900 p-2 rounded-full flex-shrink-0">
+                    <HiOfficeBuilding className="h-5 w-5 sm:h-6 sm:w-6 text-activityType-local-600 dark:text-activityType-local-400" />
                   </div>
-                  <h2 className="text-xs sm:text-sm font-semibold flex-1">
+                  <h2 className="text-xs sm:text-sm font-semibold flex-1 text-text-primary dark:text-text-primary">
                     {t('localActivities') || 'Local Activities'}
                   </h2>
-                  <p className="text-xl sm:text-2xl font-bold text-green-600 flex-shrink-0">
+                  <p className="text-xl sm:text-2xl font-bold text-activityType-local-600 dark:text-activityType-local-400 flex-shrink-0">
                     {dynamicStats.local}
                   </p>
                 </div>
               </div>
 
               {/* Online Activities */}
-              <div className="bg-white rounded-lg shadow-md">
+              <div className="bg-background-card dark:bg-background-card rounded-lg shadow-md border border-border-light dark:border-border-dark hover:shadow-lg transition-shadow">
                 <div className="flex items-center gap-2 sm:gap-3 py-1 sm:py-1.5 px-2 sm:px-2.5">
-                  <div className="bg-blue-100 p-2 rounded-full flex-shrink-0">
-                    <MdOutlineSocialDistance className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
+                  <div className="bg-activityType-online-100 dark:bg-activityType-online-900 p-2 rounded-full flex-shrink-0">
+                    <MdOutlineSocialDistance className="h-5 w-5 sm:h-6 sm:w-6 text-activityType-online-600 dark:text-activityType-online-400" />
                   </div>
-                  <h2 className="text-xs sm:text-sm font-semibold flex-1">
+                  <h2 className="text-xs sm:text-sm font-semibold flex-1 text-text-primary dark:text-text-primary">
                     {t('onlineActivities') || 'Online Activities'}
                   </h2>
-                  <p className="text-xl sm:text-2xl font-bold text-blue-600 flex-shrink-0">
+                  <p className="text-xl sm:text-2xl font-bold text-activityType-online-600 dark:text-activityType-online-400 flex-shrink-0">
                     {dynamicStats.online}
                   </p>
                 </div>
               </div>
 
               {/* Events */}
-              <div className="bg-white rounded-lg shadow-md">
+              <div className="bg-background-card dark:bg-background-card rounded-lg shadow-md border border-border-light dark:border-border-dark hover:shadow-lg transition-shadow">
                 <div className="flex items-center gap-2 sm:gap-3 py-1 sm:py-1.5 px-2 sm:px-2.5">
-                  <div className="bg-purple-100 p-2 rounded-full flex-shrink-0">
-                    <HiCalendar className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
+                  <div className="bg-activityType-event-100 dark:bg-activityType-event-900 p-2 rounded-full flex-shrink-0">
+                    <HiCalendar className="h-5 w-5 sm:h-6 sm:w-6 text-activityType-event-600 dark:text-activityType-event-400" />
                   </div>
-                  <h2 className="text-xs sm:text-sm font-semibold flex-1">
+                  <h2 className="text-xs sm:text-sm font-semibold flex-1 text-text-primary dark:text-text-primary">
                     {t('events') || 'Events'}
                   </h2>
-                  <p className="text-xl sm:text-2xl font-bold text-purple-600 flex-shrink-0">
+                  <p className="text-xl sm:text-2xl font-bold text-activityType-event-600 dark:text-activityType-event-400 flex-shrink-0">
                     {dynamicStats.event}
                   </p>
                 </div>
               </div>
 
               {/* Total Applications */}
-              <div className="bg-white rounded-lg shadow-md">
+              <div className="bg-background-card dark:bg-background-card rounded-lg shadow-md border border-border-light dark:border-border-dark hover:shadow-lg transition-shadow">
                 <div className="flex items-center gap-2 sm:gap-3 py-1 sm:py-1.5 px-2 sm:px-2.5">
-                  <div className="bg-yellow-100 p-2 rounded-full flex-shrink-0">
-                    <HiDocumentText className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-600" />
+                  <div className="bg-semantic-warning-100 dark:bg-semantic-warning-900 p-2 rounded-full flex-shrink-0">
+                    <HiDocumentText className="h-5 w-5 sm:h-6 sm:w-6 text-semantic-warning-600 dark:text-semantic-warning-400" />
                   </div>
-                  <h2 className="text-xs sm:text-sm font-semibold flex-1">
+                  <h2 className="text-xs sm:text-sm font-semibold flex-1 text-text-primary dark:text-text-primary">
                     {t('totalApplications') || 'Total applications'}
                   </h2>
-                  <p className="text-xl sm:text-2xl font-bold text-yellow-600 flex-shrink-0">
+                  <p className="text-xl sm:text-2xl font-bold text-semantic-warning-600 dark:text-semantic-warning-400 flex-shrink-0">
                     {stats.totalApplications}
                   </p>
                 </div>
@@ -793,7 +793,7 @@ export default function DashboardPage() {
 
           {/* Activities Section */}
           <div className="mb-6 sm:mb-10">
-            <h2 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 px-1">
+            <h2 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 px-1 text-text-primary dark:text-text-primary">
               {showApplications
                 ? (t('yourApplications') || 'Your Applications')
                 : (t('yourActivities') || 'Your Activities')
@@ -811,13 +811,13 @@ export default function DashboardPage() {
 
             {/* Sort and Results Count */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-text-secondary dark:text-text-secondary">
                 {tActivities('showing')} <span className="font-semibold">{sortedActivities.length}</span> {tActivities('of')}{' '}
                 <span className="font-semibold">{allActivitiesForView.length}</span> {tActivities('activities')}
               </div>
               <div className="flex items-center gap-2">
-                <label className="text-sm font-medium text-gray-700">{tActivities('sortBy')}</label>
-                <Select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="w-full sm:w-auto">
+                <label className="text-sm font-medium text-text-primary dark:text-text-primary">{tActivities('sortBy')}</label>
+                <Select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="w-full sm:w-auto bg-background-card dark:bg-background-card text-text-primary dark:text-text-primary border-border-light dark:border-border-dark">
                   <option value="newest">{tActivities('sortNewest')}</option>
                   <option value="oldest">{tActivities('sortOldest')}</option>
                   <option value="xp_high">{tActivities('sortXpHigh')}</option>
@@ -830,7 +830,7 @@ export default function DashboardPage() {
             </div>
 
             {sortedActivities.length === 0 ? (
-              <p className="text-gray-600 px-1">
+              <p className="text-text-secondary dark:text-text-secondary px-1">
                 {showApplications
                   ? (t('noApplicationsFound') || 'No applications found.')
                   : (t('noActivitiesFound') || 'No activities found. Start applying to activities to see them here!')

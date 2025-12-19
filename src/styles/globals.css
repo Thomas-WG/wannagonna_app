@@ -5,18 +5,81 @@
 @tailwind utilities;
 
 :root {
-  --background: rgb(243 244 246);;
-  --foreground: #171717;
+  /* Legacy support */
+  --background: rgb(248 250 252);
+  --foreground: #0f172a;
+
+  /* Design Token CSS Variables - Light Mode */
+  /* Primary Colors */
+  --color-primary-50: #fff7ed;
+  --color-primary-100: #ffedd5;
+  --color-primary-200: #fed7aa;
+  --color-primary-300: #fdba74;
+  --color-primary-400: #fb923c;
+  --color-primary-500: #f97316;
+  --color-primary-600: #ea580c;
+  --color-primary-700: #c2410c;
+  --color-primary-800: #9a3412;
+  --color-primary-900: #7c2d12;
+
+  /* Background Colors */
+  --bg-page: #f8fafc;
+  --bg-card: #ffffff;
+  --bg-modal: #ffffff;
+  --bg-sidebar: #fff7ed;
+  --bg-hover: #f1f5f9;
+
+  /* Text Colors */
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-tertiary: #64748b;
+  --text-disabled: #94a3b8;
+
+  /* Border Colors */
+  --border-light: #e2e8f0;
+  --border-focus: #f97316;
+
+  /* Transitions */
+  --transition-fast: 150ms;
+  --transition-normal: 200ms;
+  --transition-slow: 300ms;
+  --transition-slower: 500ms;
+  --easing-default: cubic-bezier(0.4, 0, 0.2, 1);
+  --easing-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+.dark {
+  /* Design Token CSS Variables - Dark Mode */
+  --background: #0f172a;
+  --foreground: #f8fafc;
+
+  /* Background Colors */
+  --bg-page: #0f172a;
+  --bg-card: #1e293b;
+  --bg-modal: #1e293b;
+  --bg-sidebar: #1e293b;
+  --bg-hover: #334155;
+
+  /* Text Colors */
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-tertiary: #94a3b8;
+  --text-disabled: #475569;
+
+  /* Border Colors */
+  --border-light: #334155;
+  --border-focus: #fb923c;
+}
 
 body {
   color: var(--foreground);
-  background: var(--background);
-  font-family: Roboto, Helvetica, sans-serif, ;
+  background: var(--bg-page);
+  font-family: Roboto, Helvetica, sans-serif;
+  transition: background-color var(--transition-normal) var(--easing-default),
+              color var(--transition-normal) var(--easing-default);
 }
 
-/* Custom animations */
+/* Custom animations - Joyful and Dynamic */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -29,7 +92,51 @@ body {
 }
 
 .animate-fadeIn {
-  animation: fadeIn 0.3s ease-out;
+  animation: fadeIn var(--transition-slow) var(--easing-bounce);
+}
+
+/* Joyful bounce animation */
+@keyframes bounceJoyful {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-bounce-joyful {
+  animation: bounceJoyful 0.6s var(--easing-bounce);
+}
+
+/* Warm pulse animation */
+@keyframes pulseWarm {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.animate-pulse-warm {
+  animation: pulseWarm 2s var(--easing-default) infinite;
+}
+
+/* Smooth scale hover effect */
+@keyframes scaleIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-scale-in {
+  animation: scaleIn var(--transition-normal) var(--easing-bounce);
 }
 
 /* Badge animation - confetti effect */
@@ -48,7 +155,7 @@ body {
   animation: confetti linear forwards;
 }
 
-/* Badge animation - pop effect */
+/* Badge animation - pop effect (joyful bounce) */
 @keyframes badge-pop {
   0% {
     transform: scale(0) rotate(-180deg);
@@ -64,11 +171,106 @@ body {
 }
 
 .animate-badge-pop {
-  animation: badge-pop 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  animation: badge-pop 0.8s var(--easing-bounce) forwards;
 }
 
 /* Touch-friendly optimizations */
 .touch-manipulation {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
+}
+
+/* React-Select Dark Mode Support */
+.basic-multi-select .select__control {
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-light) !important;
+  color: var(--text-primary) !important;
+}
+
+.dark .basic-multi-select .select__control {
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-light) !important;
+}
+
+.basic-multi-select .select__menu {
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-light) !important;
+}
+
+.dark .basic-multi-select .select__menu {
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-light) !important;
+}
+
+.basic-multi-select .select__input {
+  color: var(--text-primary) !important;
+}
+
+.basic-multi-select .select__placeholder {
+  color: var(--text-tertiary) !important;
+}
+
+.basic-multi-select .select__single-value {
+  color: var(--text-primary) !important;
+}
+
+.basic-multi-select .select__indicator {
+  color: var(--text-tertiary) !important;
+}
+
+.basic-multi-select .select__indicator:hover {
+  color: var(--text-primary) !important;
+}
+
+/* Flowbite TextInput and Textarea Dark Mode Support */
+.dark input[type="text"],
+.dark input[type="email"],
+.dark textarea {
+  color: var(--text-primary) !important;
+  background-color: var(--bg-card) !important;
+}
+
+.dark input[type="text"]::placeholder,
+.dark input[type="email"]::placeholder,
+.dark textarea::placeholder {
+  color: var(--text-tertiary) !important;
+}
+
+/* Ensure Flowbite components use correct colors */
+.dark .flowbite-textinput input,
+.dark .flowbite-textarea textarea {
+  color: var(--text-primary) !important;
+  background-color: var(--bg-card) !important;
+}
+
+.dark .flowbite-textinput input::placeholder,
+.dark .flowbite-textarea textarea::placeholder {
+  color: var(--text-tertiary) !important;
+}
+
+/* Flowbite Select Dark Mode Support */
+.dark select,
+.dark .flowbite-select select {
+  color: var(--text-primary) !important;
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-light) !important;
+}
+
+.dark select option,
+.dark .flowbite-select option {
+  background-color: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+}
+
+select,
+.flowbite-select select {
+  color: var(--text-primary);
+  background-color: var(--bg-card);
+  border-color: var(--border-light);
+}
+
+select option,
+.flowbite-select option {
+  background-color: var(--bg-card);
+  color: var(--text-primary);
 }

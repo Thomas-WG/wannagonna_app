@@ -134,25 +134,25 @@ export default function ActivityCard({
     loadSkillLabels();
   }, [skills, locale]);
 
-  // Status configuration
+  // Status configuration using design tokens - improved visibility for dark mode
   const getStatusConfig = (status) => {
     const statusConfigs = {
       'Draft': {
         icon: HiDocument,
-        color: 'bg-gray-100 text-gray-800',
-        borderColor: 'border-gray-300',
+        color: 'bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-200',
+        borderColor: 'border-neutral-300 dark:border-neutral-600',
         label: t('status.Draft')
       },
       'Open': {
         icon: FaRegCircle,
-        color: 'bg-green-100 text-green-800',
-        borderColor: 'border-green-300',
+        color: 'bg-semantic-success-100 dark:bg-semantic-success-800 text-semantic-success-700 dark:text-semantic-success-200',
+        borderColor: 'border-semantic-success-300 dark:border-semantic-success-600',
         label: t('status.Open')
       },
       'Closed': {
         icon: HiCheckCircle,
-        color: 'bg-purple-100 text-purple-800',
-        borderColor: 'border-purple-300',
+        color: 'bg-semantic-info-100 dark:bg-semantic-info-800 text-semantic-info-700 dark:text-semantic-info-200',
+        borderColor: 'border-semantic-info-300 dark:border-semantic-info-600',
         label: t('status.Closed')
       }
     };
@@ -250,14 +250,14 @@ export default function ActivityCard({
     }
   };
 
-  // Get type-based color classes
+  // Get type-based color classes using design tokens
   const getTypeColorClasses = () => {
     const typeColors = {
-      'online': 'border-l-blue-500',
-      'local': 'border-l-green-500',
-      'event': 'border-l-purple-500'
+      'online': 'border-l-activityType-online-500 dark:border-l-activityType-online-400',
+      'local': 'border-l-activityType-local-500 dark:border-l-activityType-local-400',
+      'event': 'border-l-activityType-event-500 dark:border-l-activityType-event-400'
     };
-    return typeColors[type] || 'border-l-gray-500';
+    return typeColors[type] || 'border-l-neutral-500 dark:border-l-neutral-400';
   };
 
   // Limit skills display (show max 3, then "+X more")
@@ -341,7 +341,7 @@ export default function ActivityCard({
     <>
       <div
         onClick={onClick}
-        className={`cursor-pointer w-full p-3 sm:p-4 bg-white border-l-4 ${typeColorClass} border border-gray-200 rounded-xl shadow-md hover:shadow-xl hover:bg-gray-50 hover:-translate-y-1 transition-all duration-300 transform`}
+        className={`cursor-pointer w-full p-3 sm:p-4 bg-background-card dark:bg-background-card border-l-4 ${typeColorClass} border border-border-light dark:border-border-dark rounded-xl shadow-md hover:shadow-lg hover:bg-background-hover dark:hover:bg-background-hover hover:-translate-y-1 transition-all duration-300 transform`}
         role="button"
         aria-label={title}
       >
@@ -355,7 +355,7 @@ export default function ActivityCard({
               height={40}
               className='rounded-full flex-shrink-0'
             />
-            <span className='text-xs text-gray-500 truncate' aria-label={organization_name}>{organization_name}</span>
+            <span className='text-xs text-text-secondary dark:text-text-secondary truncate' aria-label={organization_name}>{organization_name}</span>
           </div>
           <div className='flex items-center space-x-1.5 sm:space-x-2 flex-shrink-0'>
             {/* Status Badge */}
@@ -421,10 +421,10 @@ export default function ActivityCard({
         {/* Title */}
         <div className='mt-3 sm:mt-4 flex items-start gap-2'>
           <div className='flex-1 min-w-0'>
-            <h2 className='text-xl sm:text-2xl font-bold text-gray-900 leading-tight break-words'>{title}</h2>
+            <h2 className='text-xl sm:text-2xl font-bold text-text-primary dark:text-text-primary leading-tight break-words'>{title}</h2>
             {/* Description Preview */}
             {descriptionPreview && (
-              <p className='mt-2 text-sm sm:text-base text-gray-600 line-clamp-2 leading-relaxed'>
+              <p className='mt-2 text-sm sm:text-base text-text-secondary dark:text-text-secondary line-clamp-2 leading-relaxed'>
                 {descriptionPreview}
               </p>
             )}
@@ -444,31 +444,31 @@ export default function ActivityCard({
               : 'grid-cols-2'
           } gap-1.5`}>
             {/* XP Reward */}
-            <div className='flex flex-col items-center justify-center px-1.5 py-1.5 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-md border border-indigo-200'>
-              <HiStar className='h-3.5 w-3.5 text-indigo-600 mb-0.5' />
-              <span className='text-sm sm:text-base font-bold text-indigo-700'>{xp_reward}</span>
-              <span className='text-[10px] sm:text-xs text-indigo-600 leading-tight'>{t('points')}</span>
+            <div className='flex flex-col items-center justify-center px-1.5 py-1.5 bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-800 dark:to-primary-700 rounded-lg border border-primary-300 dark:border-primary-600'>
+              <HiStar className='h-3.5 w-3.5 text-primary-600 dark:text-primary-400 mb-0.5' />
+              <span className='text-sm sm:text-base font-bold text-primary-700 dark:text-primary-200'>{xp_reward}</span>
+              <span className='text-[10px] sm:text-xs text-primary-600 dark:text-primary-300 leading-tight'>{t('points')}</span>
             </div>
             {/* Participant Counter - Show for local (when accepting WG) and online */}
             {((type === 'local' && acceptApplicationsWG !== false) || type === 'online') && validatedCount !== null && (
-              <div className='flex flex-col items-center justify-center px-1.5 py-1.5 bg-green-50 rounded-md border border-green-200'>
-                <HiUserGroup className='h-3.5 w-3.5 text-green-600 mb-0.5' />
-                <span className='text-sm sm:text-base font-bold text-green-700'>
+              <div className='flex flex-col items-center justify-center px-1.5 py-1.5 bg-semantic-info-50 dark:bg-semantic-info-900 rounded-lg border border-semantic-info-200 dark:border-semantic-info-700'>
+                <HiUserGroup className='h-3.5 w-3.5 text-semantic-info-600 dark:text-semantic-info-400 mb-0.5' />
+                <span className='text-sm sm:text-base font-bold text-semantic-info-700 dark:text-semantic-info-200'>
                   {participantTarget ? `${validatedCount}/${participantTarget}` : validatedCount}
                 </span>
-                <span className='text-[10px] sm:text-xs text-green-600 leading-tight'>
+                <span className='text-[10px] sm:text-xs text-semantic-info-600 dark:text-semantic-info-300 leading-tight'>
                   {participantTarget ? t('participants') : t('validated')}
                 </span>
               </div>
             )}
             {/* People Max - Show for events when participantTarget is set */}
             {type === 'event' && participantTarget !== null && participantTarget !== undefined && (
-              <div className='flex flex-col items-center justify-center px-1.5 py-1.5 bg-green-50 rounded-md border border-green-200'>
-                <HiUserGroup className='h-3.5 w-3.5 text-green-600 mb-0.5' />
-                <span className='text-sm sm:text-base font-bold text-green-700'>
+              <div className='flex flex-col items-center justify-center px-1.5 py-1.5 bg-semantic-info-50 dark:bg-semantic-info-900 rounded-lg border border-semantic-info-200 dark:border-semantic-info-700'>
+                <HiUserGroup className='h-3.5 w-3.5 text-semantic-info-600 dark:text-semantic-info-400 mb-0.5' />
+                <span className='text-sm sm:text-base font-bold text-semantic-info-700 dark:text-semantic-info-200'>
                   {participantTarget}
                 </span>
-                <span className='text-[10px] sm:text-xs text-green-600 leading-tight'>
+                <span className='text-[10px] sm:text-xs text-semantic-info-600 dark:text-semantic-info-300 leading-tight'>
                   {t('peopleMax')}
                 </span>
               </div>
@@ -478,16 +478,16 @@ export default function ActivityCard({
               ((type === 'local' && acceptApplicationsWG === false) || 
                (type === 'online' && validatedCount === null))) && (
               timeCommitment ? (
-                <div className='flex flex-col items-center justify-center px-1.5 py-1.5 bg-gray-50 rounded-md border border-gray-200'>
-                  <HiClock className='h-3.5 w-3.5 text-gray-600 mb-0.5' />
-                  <span className='text-[10px] sm:text-xs font-semibold text-gray-700 text-center leading-tight'>
+                <div className='flex flex-col items-center justify-center px-1.5 py-1.5 bg-neutral-50 dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700'>
+                  <HiClock className='h-3.5 w-3.5 text-neutral-600 dark:text-neutral-400 mb-0.5' />
+                  <span className='text-[10px] sm:text-xs font-semibold text-neutral-700 dark:text-neutral-300 text-center leading-tight'>
                     {timeCommitment}
                   </span>
                 </div>
               ) : (
-                <div className='flex flex-col items-center justify-center px-1.5 py-1.5 bg-gray-50 rounded-md border border-gray-200 opacity-50'>
-                  <HiClock className='h-3.5 w-3.5 text-gray-400 mb-0.5' />
-                  <span className='text-[10px] text-gray-400'>N/A</span>
+                <div className='flex flex-col items-center justify-center px-1.5 py-1.5 bg-neutral-50 dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 opacity-50'>
+                  <HiClock className='h-3.5 w-3.5 text-neutral-400 dark:text-neutral-500 mb-0.5' />
+                  <span className='text-[10px] text-neutral-400 dark:text-neutral-500'>N/A</span>
                 </div>
               )
             )}
@@ -506,13 +506,13 @@ export default function ActivityCard({
                 const skillLabel = skillLabelsMap[skillId] || skillId;
                 
                 return (
-                  <span key={index} className='px-2 sm:px-2.5 py-1 text-xs rounded-full bg-gray-100 text-gray-800 font-medium'>
+                  <span key={index} className='px-2 sm:px-2.5 py-1 text-xs rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 font-medium border border-neutral-200 dark:border-neutral-700'>
                     {skillLabel}
                   </span>
                 );
               })}
               {remainingSkillsCount > 0 && (
-                <span className='px-2 sm:px-2.5 py-1 text-xs rounded-full bg-gray-200 text-gray-600 font-medium'>
+                <span className='px-2 sm:px-2.5 py-1 text-xs rounded-full bg-neutral-200 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300 font-medium border border-neutral-300 dark:border-neutral-600'>
                   +{remainingSkillsCount} more
                 </span>
               )}
@@ -521,7 +521,7 @@ export default function ActivityCard({
         </div>
 
         {/* Footer Section (Bottom) */}
-        <div className='mt-4 sm:mt-5 pt-3 sm:pt-4 border-t border-gray-200'>
+        <div className='mt-4 sm:mt-5 pt-3 sm:pt-4 border-t border-border-light dark:border-border-dark'>
           <div className='flex flex-col space-y-2'>
             <div className='flex items-center justify-between gap-2'>
               {/* SDG Icon on the left */}
@@ -538,8 +538,8 @@ export default function ActivityCard({
               )}
               
               {/* Location on the right */}
-              <div className='flex items-center text-xs sm:text-sm text-gray-700 min-w-0 flex-1 justify-end'>
-                <HiLocationMarker className='mr-1.5 text-gray-500 flex-shrink-0' />
+              <div className='flex items-center text-xs sm:text-sm text-text-secondary dark:text-text-secondary min-w-0 flex-1 justify-end'>
+                <HiLocationMarker className='mr-1.5 text-text-tertiary dark:text-text-tertiary flex-shrink-0' />
                 <span className='truncate'>
                   {type === 'online' 
                     ? `Online (${country})`
@@ -553,8 +553,8 @@ export default function ActivityCard({
             </div>
             {/* Date with relative formatting */}
             {(relativeDate || dateTimeLine) && (
-              <div className='flex items-center text-xs sm:text-sm text-gray-700'>
-                <HiClock className='mr-1.5 h-3.5 w-3.5 flex-shrink-0' />
+              <div className='flex items-center text-xs sm:text-sm text-text-secondary dark:text-text-secondary'>
+                <HiClock className='mr-1.5 h-3.5 w-3.5 text-text-tertiary dark:text-text-tertiary flex-shrink-0' />
                 <span className='truncate'>
                   {relativeDate || dateTimeLine}
                 </span>

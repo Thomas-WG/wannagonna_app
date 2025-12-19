@@ -29,13 +29,15 @@ import { Modal, Button, Label, Textarea, Toast, Select, Spinner, Badge } from 'f
 import { createApplication, checkExistingApplication } from '@/utils/crudApplications';
 import { useAuth } from '@/utils/auth/AuthContext';
 import BadgeAnimation from '@/components/badges/BadgeAnimation';
-import { HiSearch, HiX, HiCheckCircle } from 'react-icons/hi';
+import { HiSearch, HiX, HiCheckCircle, HiExternalLink } from 'react-icons/hi';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useTranslations } from 'next-intl';
+import { useTheme } from '@/utils/theme/ThemeContext';
 
 // Main component to display activities
 export default function ActivitiesPage() {
   const t = useTranslations('Activities');
+  const { isDark } = useTheme();
   // Destructure `user`, `claims`, and `loading` state from `useAuth` to manage access control
   const { user, claims, loading: authLoading } = useAuth();
 
@@ -337,14 +339,14 @@ export default function ActivitiesPage() {
   if (!user && !authLoading) return null;
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-background-page dark:bg-background-page">
       <div className="container mx-auto px-4 py-6 max-w-7xl">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-2xl sm:text-3xl font-bold text-text-primary dark:text-text-primary mb-2">
             {t('title')}
           </h1>
-          <p className="text-gray-600">
+          <p className="text-text-secondary dark:text-text-secondary">
             {t('subtitle')}
           </p>
         </div>
@@ -352,18 +354,18 @@ export default function ActivitiesPage() {
         {/* Search Bar */}
         <div className="mb-4">
           <div className="relative">
-            <HiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <HiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-text-tertiary dark:text-text-tertiary" />
             <input
               type="text"
               placeholder={t('searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-border-light dark:border-border-dark rounded-lg bg-background-card dark:bg-background-card text-text-primary dark:text-text-primary focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 focus:border-primary-500 dark:focus:border-primary-400 transition-all duration-200"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-text-tertiary dark:text-text-tertiary hover:text-text-primary dark:hover:text-text-primary transition-colors duration-200"
               >
                 <HiX className="h-5 w-5" />
               </button>
@@ -381,7 +383,7 @@ export default function ActivitiesPage() {
         />
 
         {/* Color Legend */}
-        <div className="mb-4 flex items-center justify-center sm:justify-start gap-4 text-xs text-gray-600">
+        <div className="mb-4 flex items-center justify-center sm:justify-start gap-4 text-xs text-text-secondary dark:text-text-secondary">
           <span className="font-medium">{t('activityTypes')}</span>
           <div className="flex items-center gap-1">
             <div className="w-3 h-3 rounded-sm bg-blue-500 border border-blue-600"></div>
@@ -599,20 +601,20 @@ export default function ActivitiesPage() {
             {selectedActivity && (
               <div className="space-y-6">
                 {/* Activity Summary */}
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-200">
+                <div className="bg-gradient-to-r from-semantic-info-50 to-semantic-info-100 dark:from-semantic-info-900 dark:to-semantic-info-800 rounded-lg p-4 border-2 border-semantic-info-200 dark:border-semantic-info-700">
                   <div className="flex items-start gap-4">
                     <div className="flex-1">
-                      <h4 className="font-semibold text-gray-900 mb-2">
+                      <h4 className="font-semibold text-text-primary dark:text-text-primary mb-2">
                         {selectedActivity.title}
                       </h4>
-                      <div className="flex flex-wrap gap-3 text-sm text-gray-600">
+                      <div className="flex flex-wrap gap-3 text-sm text-text-secondary dark:text-text-secondary">
                         <div className="flex items-center gap-1">
                           <span className="font-medium">{t('organization')}</span>
                           <span>{selectedActivity.organization_name}</span>
                         </div>
                         <div className="flex items-center gap-1">
                           <span className="font-medium">{t('xpReward')}</span>
-                          <span className="text-indigo-600 font-semibold">
+                          <span className="text-primary-600 dark:text-primary-400 font-semibold">
                             {selectedActivity.xp_reward || 0}
                           </span>
                         </div>
@@ -623,9 +625,9 @@ export default function ActivitiesPage() {
 
                 {/* Description Preview */}
                 <div>
-                  <Label htmlFor="description" value={t('activityDescription')} />
-                  <div className="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-200 max-h-32 overflow-y-auto">
-                    <p className="text-sm text-gray-700 line-clamp-4">
+                  <Label htmlFor="description" value={t('activityDescription')} className="text-text-primary dark:text-text-primary" />
+                  <div className="mt-2 p-3 bg-background-hover dark:bg-background-hover rounded-lg border-2 border-border-light dark:border-[#475569] max-h-32 overflow-y-auto">
+                    <p className="text-sm text-text-secondary dark:text-text-secondary line-clamp-4">
                       {selectedActivity.description || t('noDescriptionProvided')}
                     </p>
                   </div>
@@ -635,17 +637,39 @@ export default function ActivitiesPage() {
                       setSelectedActivityId(selectedActivity.id);
                       setShowDetailsModal(true);
                     }}
-                    className="mt-2 text-sm text-blue-600 hover:text-blue-800 underline"
+                    className="mt-2 text-sm text-semantic-info-600 dark:text-semantic-info-400 hover:text-semantic-info-700 dark:hover:text-semantic-info-300 underline"
                   >
                     {t('viewFullDetails')}
                   </button>
                 </div>
 
+                {/* External Platform Link */}
+                {(selectedActivity.externalPlatformLink || selectedActivity.activity_url) && (
+                  <div className="flex items-center gap-4 p-4 bg-background-hover dark:bg-background-hover rounded-xl border-2 border-border-light dark:border-[#475569] hover:shadow-md transition-all">
+                    <div className="bg-semantic-info-100 dark:bg-semantic-info-900 p-3 rounded-full">
+                      <HiExternalLink className="h-6 w-6 text-semantic-info-600 dark:text-semantic-info-400 flex-shrink-0" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium text-text-tertiary dark:text-text-tertiary mb-1 uppercase tracking-wide">{t('externalPlatformLink')}</p>
+                      <a
+                        href={(selectedActivity.externalPlatformLink || selectedActivity.activity_url).startsWith('http') 
+                          ? (selectedActivity.externalPlatformLink || selectedActivity.activity_url) 
+                          : `https://${selectedActivity.externalPlatformLink || selectedActivity.activity_url}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-semantic-info-600 dark:text-semantic-info-400 hover:text-semantic-info-700 dark:hover:text-semantic-info-300 text-sm font-medium break-all hover:underline"
+                      >
+                        {selectedActivity.externalPlatformLink || selectedActivity.activity_url}
+                      </a>
+                    </div>
+                  </div>
+                )}
+
                 {/* Application Message */}
                 <div>
                   <div className="mb-2 flex items-center justify-between">
-                    <Label htmlFor="message" value={t('whyHelp')} />
-                    <span className="text-xs text-gray-500">
+                    <Label htmlFor="message" value={t('whyHelp')} className="text-text-primary dark:text-text-primary" />
+                    <span className="text-xs text-text-tertiary dark:text-text-tertiary">
                       {applyMessage.length}/500 {t('characters')}
                     </span>
                   </div>
@@ -657,20 +681,20 @@ export default function ActivitiesPage() {
                     maxLength={500}
                     value={applyMessage}
                     onChange={(e) => setApplyMessage(e.target.value)}
-                    className="resize-none"
+                    className="resize-none bg-background-card dark:bg-background-card !text-text-primary dark:!text-text-primary border-border-light dark:border-border-dark placeholder:text-text-tertiary dark:placeholder:text-text-tertiary"
                   />
-                  <p className="mt-2 text-xs text-gray-500">
+                  <p className="mt-2 text-xs text-text-tertiary dark:text-text-tertiary">
                     {t('messageTip')}
                   </p>
                 </div>
               </div>
             )}
           </Modal.Body>
-          <Modal.Footer>
+          <Modal.Footer className="bg-background-card dark:bg-background-card border-t-2 border-border-light dark:border-[#475569]">
             <Button
               onClick={handleSubmitApplication}
               disabled={isSubmitting || !applyMessage.trim() || applyMessage.length < 10}
-              className="w-full sm:w-auto"
+              className="w-full sm:w-auto bg-primary-500 hover:bg-primary-600 dark:bg-primary-600 dark:hover:bg-primary-700 text-white"
             >
               {isSubmitting ? (
                 <>
@@ -685,7 +709,7 @@ export default function ActivitiesPage() {
               color="gray"
               onClick={handleApplyModalClose}
               disabled={isSubmitting}
-              className="w-full sm:w-auto"
+              className="w-full sm:w-auto bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-300 dark:hover:bg-neutral-600"
             >
               {t('cancel')}
             </Button>

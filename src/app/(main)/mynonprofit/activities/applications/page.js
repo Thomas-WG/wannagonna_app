@@ -164,15 +164,15 @@ export default function ReviewApplicationsPage() {
   if (!user) return null
 
   return (
-    <div className="p-4 max-w-5xl mx-auto">
+    <div className="p-4 max-w-5xl mx-auto bg-background-page dark:bg-background-page min-h-screen">
       <div className="mb-4">
-        <h1 className="text-2xl font-bold">{t('reviewApplications') || 'Review Applications'}</h1>
-        <p className="text-sm text-gray-500">
+        <h1 className="text-2xl font-bold text-text-primary dark:text-text-primary">{t('reviewApplications') || 'Review Applications'}</h1>
+        <p className="text-sm text-text-secondary dark:text-text-secondary">
           {loading ? (t('loading') || 'Loading…') : (
             <>
               {sortedActivities.length} {t('activities') || 'activities'} • {totalApplications} {t('applications') || 'applications'}
               {totalPendingApplications > 0 && (
-                <span className="ml-2 text-yellow-600 font-semibold">
+                <span className="ml-2 text-semantic-warning-600 dark:text-semantic-warning-400 font-semibold">
                   • {totalPendingApplications} {t('pending') || 'pending'}
                 </span>
               )}
@@ -183,11 +183,11 @@ export default function ReviewApplicationsPage() {
 
       {loading ? (
         <div className="flex justify-center items-center h-40">
-          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
+          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary-500 dark:border-primary-400"></div>
         </div>
       ) : sortedActivities.length === 0 ? (
         <div className="text-center py-10">
-          <p className="text-gray-500">{t('noActivitiesFound') || 'No activities found for your organization.'}</p>
+          <p className="text-text-secondary dark:text-text-secondary">{t('noActivitiesFound') || 'No activities found for your organization.'}</p>
         </div>
       ) : (
         <div className="space-y-6">
@@ -197,12 +197,12 @@ export default function ReviewApplicationsPage() {
             const hasPending = pendingCount > 0
             
             return (
-              <div key={activity.id} className={`border rounded-lg ${hasPending ? 'border-yellow-300 shadow-md' : 'border-gray-200'}`}>
-                <div className={`p-4 rounded-t-lg ${hasPending ? 'bg-yellow-50' : 'bg-gray-50'}`}>
+              <div key={activity.id} className={`border rounded-lg ${hasPending ? 'border-semantic-warning-300 dark:border-semantic-warning-700 shadow-md' : 'border-border-light dark:border-border-dark'} bg-background-card dark:bg-background-card`}>
+                <div className={`p-4 rounded-t-lg ${hasPending ? 'bg-semantic-warning-50 dark:bg-semantic-warning-900' : 'bg-background-hover dark:bg-background-hover'}`}>
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                     <div className="min-w-0">
-                      <h2 className="text-lg font-semibold truncate">{activity.title || (t('untitledActivity') || 'Untitled activity')}</h2>
-                      <p className="text-xs text-gray-500 truncate">{activity.city ? `${activity.city}${activity.country ? `, ${activity.country}` : ''}` : activity.country || ''}</p>
+                      <h2 className="text-lg font-semibold truncate text-text-primary dark:text-text-primary">{activity.title || (t('untitledActivity') || 'Untitled activity')}</h2>
+                      <p className="text-xs text-text-secondary dark:text-text-secondary truncate">{activity.city ? `${activity.city}${activity.country ? `, ${activity.country}` : ''}` : activity.country || ''}</p>
                     </div>
                     <div className="flex items-center gap-2">
                       {pendingCount > 0 && (
@@ -210,7 +210,7 @@ export default function ReviewApplicationsPage() {
                           {pendingCount} {t('pending') || 'pending'}
                         </Badge>
                       )}
-                      <span className="text-sm text-gray-600">
+                      <span className="text-sm text-text-secondary dark:text-text-secondary">
                         {applications.length} {applications.length !== 1 ? (t('applications') || 'applications') : (t('application') || 'application')}
                       </span>
                     </div>
@@ -219,10 +219,10 @@ export default function ReviewApplicationsPage() {
 
                 {applications.length === 0 ? (
                   <div className="p-4">
-                    <p className="text-gray-500 text-sm">{t('noApplicationsYet') || 'No applications yet.'}</p>
+                    <p className="text-text-secondary dark:text-text-secondary text-sm">{t('noApplicationsYet') || 'No applications yet.'}</p>
                   </div>
                 ) : (
-                  <div className="divide-y divide-gray-100">
+                  <div className="divide-y divide-border-light dark:divide-border-dark">
                     {applications.map((application) => (
                       <div key={application.id} className="p-4">
                         <div className="flex items-start justify-between mb-3">
@@ -239,7 +239,7 @@ export default function ReviewApplicationsPage() {
                               <Avatar img={application.profilePicture || '/favicon.ico'} alt={application.displayName} size="md" rounded />
                             </div>
                             <div className="min-w-0">
-                              <p className="text-sm font-medium text-gray-900 truncate">
+                              <p className="text-sm font-medium text-text-primary dark:text-text-primary truncate">
                                 {application.displayName}
                               </p>
                               {application.userId && (
@@ -249,29 +249,29 @@ export default function ReviewApplicationsPage() {
                                     setSelectedUserId(application.userId);
                                     setProfileModalOpen(true);
                                   }}
-                                  className="text-xs text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                                  className="text-xs text-semantic-info-600 dark:text-semantic-info-400 hover:text-semantic-info-700 dark:hover:text-semantic-info-300 hover:underline transition-colors"
                                 >
                                   {t('viewProfile') || 'View profile'}
                                 </button>
                               )}
-                              <p className="text-xs text-gray-500">{formatDate(application.createdAt)}</p>
+                              <p className="text-xs text-text-tertiary dark:text-text-tertiary">{formatDate(application.createdAt)}</p>
                             </div>
                           </div>
                           <div className="flex-shrink-0">{getStatusBadge(application.status)}</div>
                         </div>
 
                         <div className="mb-3">
-                          <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded">{application.message || (t('noMessageProvided') || 'No message provided')}</p>
+                          <p className="text-sm text-text-secondary dark:text-text-secondary bg-background-hover dark:bg-background-hover p-3 rounded">{application.message || (t('noMessageProvided') || 'No message provided')}</p>
                           {application.npoResponse && (
                             <div className="mt-2">
-                              <p className="text-xs font-medium text-blue-700 mb-1">{t('npoResponse') || 'NPO Response'}:</p>
-                              <p className="text-xs text-blue-700 bg-blue-50 p-2 rounded">{application.npoResponse}</p>
+                              <p className="text-xs font-medium text-semantic-info-700 dark:text-semantic-info-300 mb-1">{t('npoResponse') || 'NPO Response'}:</p>
+                              <p className="text-xs text-semantic-info-700 dark:text-semantic-info-300 bg-semantic-info-50 dark:bg-semantic-info-900 p-2 rounded">{application.npoResponse}</p>
                             </div>
                           )}
                         </div>
 
                         {application.status === 'pending' && (
-                          <div className="flex flex-col sm:flex-row gap-2 pt-2 border-t border-gray-100">
+                          <div className="flex flex-col sm:flex-row gap-2 pt-2 border-t border-border-light dark:border-border-dark">
                             <Button
                               size="sm"
                               color="success"
@@ -305,37 +305,39 @@ export default function ReviewApplicationsPage() {
       )}
 
       <Modal show={confirmationOpen} onClose={closeConfirm} size="md">
-        <Modal.Header>{t('confirmAction') || 'Confirm Action'}</Modal.Header>
+        <Modal.Header className="border-b border-border-light dark:border-border-dark">
+          <span className="text-text-primary dark:text-text-primary">{t('confirmAction') || 'Confirm Action'}</span>
+        </Modal.Header>
         <Modal.Body>
           <div className="text-center">
-            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 mb-4">
+            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-semantic-warning-100 dark:bg-semantic-warning-900 mb-4">
               {confirmation?.nextStatus === 'accepted' ? (
-                <HiCheck className="h-6 w-6 text-green-600" />
+                <HiCheck className="h-6 w-6 text-semantic-success-600 dark:text-semantic-success-400" />
               ) : (
-                <HiX className="h-6 w-6 text-red-600" />
+                <HiX className="h-6 w-6 text-semantic-error-600 dark:text-semantic-error-400" />
               )}
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <h3 className="text-lg font-medium text-text-primary dark:text-text-primary mb-2">
               {confirmation?.nextStatus === 'accepted' ? (t('acceptApplication') || 'Accept Application') : (t('rejectApplication') || 'Reject Application')}
             </h3>
-            <p className="text-sm text-gray-500 mb-4">
+            <p className="text-sm text-text-secondary dark:text-text-secondary mb-4">
               {t('confirmActionMessage') || 'Are you sure you want to'} {confirmation?.nextStatus === 'accepted' ? (t('accept').toLowerCase() || 'accept') : (t('reject').toLowerCase() || 'reject')} {t('theApplicationFrom') || 'the application from'}{' '}
               <span className="font-medium">{confirmation?.application?.displayName}</span>?
             </p>
-            <div className="bg-gray-50 p-3 rounded-lg text-left">
-              <p className="text-xs text-gray-600 mb-1">
-                <strong>{t('activity') || 'Activity'}:</strong> {activities.find((a) => a.id === confirmation?.activityId)?.title || (t('untitledActivity') || 'Untitled activity')}
+            <div className="bg-background-hover dark:bg-background-hover p-3 rounded-lg text-left">
+              <p className="text-xs text-text-secondary dark:text-text-secondary mb-1">
+                <strong className="text-text-primary dark:text-text-primary">{t('activity') || 'Activity'}:</strong> {activities.find((a) => a.id === confirmation?.activityId)?.title || (t('untitledActivity') || 'Untitled activity')}
               </p>
-              <p className="text-xs text-gray-600 mb-1">
-                <strong>{t('applicant') || 'Applicant'}:</strong> {confirmation?.application?.displayName}
+              <p className="text-xs text-text-secondary dark:text-text-secondary mb-1">
+                <strong className="text-text-primary dark:text-text-primary">{t('applicant') || 'Applicant'}:</strong> {confirmation?.application?.displayName}
               </p>
-              <p className="text-xs text-gray-600">
-                <strong>{t('message') || 'Message'}:</strong> {confirmation?.application?.message || (t('noMessageProvided') || 'No message provided')}
+              <p className="text-xs text-text-secondary dark:text-text-secondary">
+                <strong className="text-text-primary dark:text-text-primary">{t('message') || 'Message'}:</strong> {confirmation?.application?.message || (t('noMessageProvided') || 'No message provided')}
               </p>
             </div>
 
             <div className="mt-4">
-              <label htmlFor="npoResponse" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="npoResponse" className="block text-sm font-medium text-text-primary dark:text-text-primary mb-2">
                 {t('messageToVolunteer') || 'Message to volunteer (optional)'}
               </label>
               <textarea
@@ -344,15 +346,15 @@ export default function ReviewApplicationsPage() {
                 value={npoResponse}
                 onChange={(e) => setNpoResponse(e.target.value)}
                 placeholder={t('addPersonalMessagePlaceholder', { name: confirmation?.application?.displayName || t('theVolunteer') || 'the volunteer' }) || `Add a personal message for ${confirmation?.application?.displayName || 'the volunteer'}...`}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                className="w-full px-3 py-2 border border-border-light dark:border-border-dark rounded-md shadow-sm bg-background-card dark:bg-background-card text-text-primary dark:text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 focus:border-primary-500 dark:focus:border-primary-400 text-sm"
                 maxLength={500}
               />
-              <p className="text-xs text-gray-500 mt-1">{npoResponse.length}/500 {t('characters') || 'characters'}</p>
+              <p className="text-xs text-text-tertiary dark:text-text-tertiary mt-1">{npoResponse.length}/500 {t('characters') || 'characters'}</p>
             </div>
-            <p className="text-xs text-red-600 mt-3">{t('actionCannotBeUndone') || '⚠️ This action cannot be undone and will notify the volunteer.'}</p>
+            <p className="text-xs text-semantic-error-600 dark:text-semantic-error-400 mt-3">{t('actionCannotBeUndone') || '⚠️ This action cannot be undone and will notify the volunteer.'}</p>
           </div>
         </Modal.Body>
-        <Modal.Footer>
+        <Modal.Footer className="border-t border-border-light dark:border-border-dark">
           <div className="flex flex-col sm:flex-row gap-2 sm:justify-end w-full">
             <Button color="gray" onClick={closeConfirm} className="w-full sm:w-auto">{t('cancel') || 'Cancel'}</Button>
             <Button

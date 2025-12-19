@@ -41,7 +41,16 @@
         "logout": "Cerrar sesión"
     },
     "Settings": {
-        "language": "Cambiar el idioma",
+        "language": "Idioma",
+        "languageDescription": "Selecciona tu idioma preferido",
+        "selectLanguage": "Idioma",
+        "currentLanguage": "Actual",
+        "appearance": "Apariencia",
+        "appearanceDescription": "Elige entre modo claro y modo oscuro",
+        "darkMode": "Modo oscuro",
+        "lightMode": "Modo claro",
+        "toggleDarkMode": "Cambiar a modo claro",
+        "toggleLightMode": "Cambiar a modo oscuro",
         "notifications": "Notificaciones",
         "notificationDescription": "Elige cómo quieres recibir notificaciones sobre gamificación y actualizaciones de actividades.",
         "category": "Categoría",
@@ -49,7 +58,12 @@
         "push": "Push",
         "gamification": "Gamificación (insignias, XP, referidos)",
         "activities": "Actividades (solicitudes y actualizaciones)",
-        "saving": "Guardando preferencias..."
+        "saving": "Guardando preferencias...",
+        "loading": "Cargando...",
+        "errorLoadingPreferences": "Error al cargar las preferencias de notificación.",
+        "errorEnablePushBrowser": "No se pueden habilitar las notificaciones push en este navegador.",
+        "errorEnablePush": "Error al habilitar las notificaciones push.",
+        "errorSavePreferences": "Error al guardar las preferencias de notificación."
     },
     "ActivityCard": {
         "points": "puntos",

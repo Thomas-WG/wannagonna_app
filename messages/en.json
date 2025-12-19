@@ -41,7 +41,16 @@
         "logout": "Logout"
     },
     "Settings": {
-        "language": "Change the language",
+        "language": "Language",
+        "languageDescription": "Select your preferred language",
+        "selectLanguage": "Language",
+        "currentLanguage": "Current",
+        "appearance": "Appearance",
+        "appearanceDescription": "Choose between light and dark mode",
+        "darkMode": "Dark Mode",
+        "lightMode": "Light Mode",
+        "toggleDarkMode": "Switch to light mode",
+        "toggleLightMode": "Switch to dark mode",
         "notifications": "Notifications",
         "notificationDescription": "Choose how you want to be notified for gamification and activity updates.",
         "category": "Category",
@@ -49,7 +58,12 @@
         "push": "Push",
         "gamification": "Gamification (badges, XP, referrals)",
         "activities": "Activities (applications & updates)",
-        "saving": "Saving preferences..."
+        "saving": "Saving preferences...",
+        "loading": "Loading...",
+        "errorLoadingPreferences": "Failed to load notification preferences.",
+        "errorEnablePushBrowser": "Unable to enable push notifications in this browser.",
+        "errorEnablePush": "Failed to enable push notifications.",
+        "errorSavePreferences": "Failed to save notification preferences."
     },
     "ActivityCard": {
         "points": "points",
