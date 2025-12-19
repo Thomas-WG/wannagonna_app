@@ -13,6 +13,7 @@ import { countries } from 'countries-list';
 import languages from '@cospired/i18n-iso-languages';
 import { sdgNames, getSDGNumber } from '@/constant/sdgs';
 import { useTheme } from '@/utils/theme/ThemeContext';
+import { useModal } from '@/utils/modal/useModal';
 
 // Register the languages you want to use
 languages.registerLocale(require("@cospired/i18n-iso-languages/langs/en.json"));
@@ -34,6 +35,9 @@ const formatDate = (dateString) => {
 
 export default function NPODetailsModal({ isOpen, onClose, organization }) {
   const { isDark } = useTheme();
+  // Register this modal with the global modal manager for ESC key and browser back button support
+  // Use the wrapped onClose returned by useModal
+  const wrappedOnClose = useModal(isOpen, onClose, 'npo-details-modal');
   
   if (!organization) return null;
 
@@ -48,7 +52,7 @@ export default function NPODetailsModal({ isOpen, onClose, organization }) {
   ) || [];
 
   return (
-    <Modal show={isOpen} onClose={onClose} size="xl" className="z-50">
+    <Modal show={isOpen} onClose={wrappedOnClose} size="xl" className="z-50">
       <Modal.Header className="bg-gradient-to-r from-semantic-info-500 to-semantic-info-600 dark:from-semantic-info-600 dark:to-semantic-info-700 text-white border-b border-border-light dark:border-border-dark">
         <div className="flex items-center gap-3">
           <HiOfficeBuilding className="h-6 w-6" />
@@ -230,7 +234,7 @@ export default function NPODetailsModal({ isOpen, onClose, organization }) {
       </Modal.Body>
       <Modal.Footer className="bg-background-card dark:bg-background-card border-t-2 border-border-light dark:border-[#475569]">
         <button
-          onClick={onClose}
+          onClick={wrappedOnClose}
           className="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-semantic-info-500 to-semantic-info-600 dark:from-semantic-info-600 dark:to-semantic-info-700 text-white rounded-lg hover:from-semantic-info-600 hover:to-semantic-info-700 dark:hover:from-semantic-info-700 dark:hover:to-semantic-info-800 transition-all shadow-md hover:shadow-lg font-medium text-sm"
         >
           Close

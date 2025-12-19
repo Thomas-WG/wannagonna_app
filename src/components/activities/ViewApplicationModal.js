@@ -7,12 +7,15 @@ import { updateApplicationStatus } from "@/utils/crudApplications";
 import { formatDate } from "@/utils/dateUtils";
 import { useTranslations } from "next-intl";
 import { useTheme } from '@/utils/theme/ThemeContext';
+import { useModal } from '@/utils/modal/useModal';
 
 export default function ViewApplicationModal({ isOpen, onClose, application, activityId, onApplicationUpdated }) {
   const t = useTranslations('Dashboard');
   const { isDark } = useTheme();
   const [isCancelling, setIsCancelling] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const wrappedOnClose = useModal(isOpen, onClose, 'view-application-modal');
+  const wrappedCancelConfirmOnClose = useModal(showCancelConfirm, () => setShowCancelConfirm(false), 'cancel-confirm-modal');
 
   const getStatusBadge = (status) => {
     switch (status) {
@@ -43,7 +46,7 @@ export default function ViewApplicationModal({ isOpen, onClose, application, act
       }
       
       setShowCancelConfirm(false);
-      onClose();
+      wrappedOnClose();
     } catch (error) {
       console.error('Error cancelling application:', error);
       alert(t('errorCancellingApplication') || 'Failed to cancel application. Please try again.');
@@ -56,7 +59,7 @@ export default function ViewApplicationModal({ isOpen, onClose, application, act
 
   return (
     <>
-      <Modal show={isOpen} onClose={onClose} size="xl" className="z-50">
+      <Modal show={isOpen} onClose={wrappedOnClose} size="xl" className="z-50">
         <Modal.Header className="bg-gradient-to-r from-primary-400 to-primary-600 dark:from-primary-600 dark:to-primary-700 text-white border-b border-border-light dark:border-border-dark">
           <div className="flex items-center gap-3">
             <HiDocumentText className="h-6 w-6 text-white" />
@@ -130,7 +133,7 @@ export default function ViewApplicationModal({ isOpen, onClose, application, act
         <Modal.Footer className="bg-background-card dark:bg-background-card border-t-2 border-border-light dark:border-[#475569]">
           <Button 
             color="gray" 
-            onClick={onClose}
+            onClick={wrappedOnClose}
             className="bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-300 dark:hover:bg-neutral-600"
           >
             {t('close') || 'Close'}
@@ -139,7 +142,7 @@ export default function ViewApplicationModal({ isOpen, onClose, application, act
       </Modal>
 
       {/* Cancel Confirmation Modal */}
-      <Modal show={showCancelConfirm} onClose={() => setShowCancelConfirm(false)} size="md" className="z-50">
+      <Modal show={showCancelConfirm} onClose={wrappedCancelConfirmOnClose} size="md" className="z-50">
         <Modal.Header className="bg-gradient-to-r from-semantic-error-500 to-semantic-error-600 dark:from-semantic-error-600 dark:to-semantic-error-700 text-white border-b border-border-light dark:border-border-dark">
           {t('confirmCancelApplication') || 'Confirm Cancellation'}
         </Modal.Header>
@@ -162,7 +165,7 @@ export default function ViewApplicationModal({ isOpen, onClose, application, act
           </Button>
           <Button 
             color="gray" 
-            onClick={() => setShowCancelConfirm(false)} 
+            onClick={wrappedCancelConfirmOnClose} 
             disabled={isCancelling}
             className="bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-300 dark:hover:bg-neutral-600"
           >

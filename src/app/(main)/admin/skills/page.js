@@ -14,6 +14,7 @@ import {
   deleteSkillCategory,
   deleteSkill
 } from '@/utils/crudSkills';
+import { useModal } from '@/utils/modal/useModal';
 
 export default function SkillsManagementPage() {
   const t = useTranslations('Admin');
@@ -25,6 +26,12 @@ export default function SkillsManagementPage() {
   const [showSkillModal, setShowSkillModal] = useState(false);
   const [showDeleteCategoryModal, setShowDeleteCategoryModal] = useState(false);
   const [showDeleteSkillModal, setShowDeleteSkillModal] = useState(false);
+  
+  // Register modals with global modal manager
+  const wrappedCategoryModalOnClose = useModal(showCategoryModal, () => setShowCategoryModal(false), 'skill-category-modal');
+  const wrappedSkillModalOnClose = useModal(showSkillModal, () => setShowSkillModal(false), 'skill-modal');
+  const wrappedDeleteCategoryModalOnClose = useModal(showDeleteCategoryModal, () => setShowDeleteCategoryModal(false), 'delete-skill-category-modal');
+  const wrappedDeleteSkillModalOnClose = useModal(showDeleteSkillModal, () => setShowDeleteSkillModal(false), 'delete-skill-modal');
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedSkill, setSelectedSkill] = useState(null);
   const [categoryForm, setCategoryForm] = useState({
@@ -363,7 +370,7 @@ export default function SkillsManagementPage() {
       </Card>
       
       {/* Category Modal */}
-      <Modal show={showCategoryModal} onClose={() => setShowCategoryModal(false)} size="xl">
+      <Modal show={showCategoryModal} onClose={wrappedCategoryModalOnClose} size="xl">
         <Modal.Header className="text-base sm:text-lg px-4 sm:px-6">
           {selectedCategory ? t('editCategory') : t('addCategory')}
         </Modal.Header>
@@ -438,7 +445,7 @@ export default function SkillsManagementPage() {
             <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:space-x-2 pt-2">
               <Button 
                 color="gray" 
-                onClick={() => setShowCategoryModal(false)}
+                onClick={wrappedCategoryModalOnClose}
                 className="w-full sm:w-auto text-sm sm:text-base"
               >
                 {t('cancel')}
@@ -455,7 +462,7 @@ export default function SkillsManagementPage() {
       </Modal>
       
       {/* Skill Modal */}
-      <Modal show={showSkillModal} onClose={() => setShowSkillModal(false)} size="xl">
+      <Modal show={showSkillModal} onClose={wrappedSkillModalOnClose} size="xl">
         <Modal.Header className="text-base sm:text-lg px-4 sm:px-6">
           {skillForm.id ? t('editSkill') : t('addSkill')}
         </Modal.Header>
@@ -550,7 +557,7 @@ export default function SkillsManagementPage() {
             <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:space-x-2 pt-2">
               <Button 
                 color="gray" 
-                onClick={() => setShowSkillModal(false)}
+                onClick={wrappedSkillModalOnClose}
                 className="w-full sm:w-auto text-sm sm:text-base"
               >
                 {t('cancel')}
@@ -567,7 +574,7 @@ export default function SkillsManagementPage() {
       </Modal>
       
       {/* Delete Category Confirmation Modal */}
-      <Modal show={showDeleteCategoryModal} onClose={() => setShowDeleteCategoryModal(false)}>
+      <Modal show={showDeleteCategoryModal} onClose={wrappedDeleteCategoryModalOnClose}>
         <Modal.Header className="text-base sm:text-lg px-4 sm:px-6">{t('deleteCategory')}</Modal.Header>
         <Modal.Body className="px-4 sm:px-6">
           <p className="text-sm sm:text-base">{t('confirmDeleteCategory')}</p>
@@ -576,7 +583,7 @@ export default function SkillsManagementPage() {
           <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:space-x-2 w-full sm:w-auto">
             <Button 
               color="gray" 
-              onClick={() => setShowDeleteCategoryModal(false)}
+              onClick={wrappedDeleteCategoryModalOnClose}
               className="w-full sm:w-auto text-sm sm:text-base"
             >
               {t('cancel')}
@@ -593,7 +600,7 @@ export default function SkillsManagementPage() {
       </Modal>
 
       {/* Delete Skill Confirmation Modal */}
-      <Modal show={showDeleteSkillModal} onClose={() => setShowDeleteSkillModal(false)}>
+      <Modal show={showDeleteSkillModal} onClose={wrappedDeleteSkillModalOnClose}>
         <Modal.Header className="text-base sm:text-lg px-4 sm:px-6">{t('deleteSkill')}</Modal.Header>
         <Modal.Body className="px-4 sm:px-6">
           <p className="text-sm sm:text-base">{t('confirmDeleteSkill')}</p>
@@ -602,7 +609,7 @@ export default function SkillsManagementPage() {
           <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:space-x-2 w-full sm:w-auto">
             <Button 
               color="gray" 
-              onClick={() => setShowDeleteSkillModal(false)}
+              onClick={wrappedDeleteSkillModalOnClose}
               className="w-full sm:w-auto text-sm sm:text-base"
             >
               {t('cancel')}

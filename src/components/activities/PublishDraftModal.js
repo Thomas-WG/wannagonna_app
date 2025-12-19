@@ -3,6 +3,7 @@ import React from 'react';
 import { Modal, Button } from 'flowbite-react';
 import { useTranslations } from 'next-intl';
 import { useTheme } from '@/utils/theme/ThemeContext';
+import { useModal } from '@/utils/modal/useModal';
 import { HiDocument, HiGlobeAlt } from 'react-icons/hi';
 
 export default function PublishDraftModal({
@@ -14,6 +15,7 @@ export default function PublishDraftModal({
 }) {
   const t = useTranslations('PublishDraftModal');
   const { isDark } = useTheme();
+  const wrappedOnClose = useModal(isOpen, onClose, 'publish-draft-modal');
   
   const handlePublish = () => {
     if (onPublish) {
@@ -28,7 +30,7 @@ export default function PublishDraftModal({
   };
 
   return (
-    <Modal show={isOpen} onClose={onClose} size="md" className="z-50">
+    <Modal show={isOpen} onClose={wrappedOnClose} size="md" className="z-50">
       <Modal.Header className="bg-gradient-to-r from-primary-400 to-primary-600 dark:from-primary-600 dark:to-primary-700 text-white border-b border-border-light dark:border-border-dark">
         <div className="flex items-center space-x-2">
           <span className="text-lg font-semibold text-white">
@@ -79,7 +81,7 @@ export default function PublishDraftModal({
         <div className="flex justify-end w-full">
           <Button
             color="gray"
-            onClick={onClose}
+            onClick={wrappedOnClose}
             disabled={isUpdating}
             className="bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-300 dark:hover:bg-neutral-600"
           >

@@ -41,6 +41,7 @@ import { useTranslations } from "use-intl"; // Import hook to handle translation
 import { setUserLocale } from '@/utils/locale'; // Import function to set the user's preferred locale
 import { useAuth } from '@/utils/auth/AuthContext';
 import { handleReferralReward } from '@/utils/crudBadges';
+import { useModal } from '@/utils/modal/useModal';
 
 /**
  * LoginPage - Renders the login UI, with logo and Google sign-in functionality.
@@ -61,6 +62,9 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false); // State for loading
   const [error, setError] = useState(''); // State for error
   const [referralCode, setReferralCode] = useState(''); // Add state for referral code
+  
+  // Register modal with global modal manager
+  const wrappedModalOnClose = useModal(modalOpen, () => setModalOpen(false), 'login-create-account-modal');
   const [googleReferralCode, setGoogleReferralCode] = useState(''); // Add state for Google sign-in referral code
 
   const t = useTranslations('Login');
@@ -494,7 +498,7 @@ export default function LoginPage() {
       </div>
 
       {/* Modal for account creation */}
-      <Modal show={modalOpen} onClose={() => setModalOpen(false)} size="md" className="flex items-center justify-center h-full">
+      <Modal show={modalOpen} onClose={wrappedModalOnClose} size="md" className="flex items-center justify-center h-full">
         <Modal.Header className="bg-background-card dark:bg-background-card border-b border-border-light dark:border-border-dark text-text-primary dark:text-text-primary">{t('createtitle')}</Modal.Header>
         <Modal.Body className="bg-background-card dark:bg-background-card">
           <form className="flex flex-col gap-4 w-full max-w-sm mx-auto" onSubmit={handleCreateAccount}>

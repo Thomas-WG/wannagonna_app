@@ -15,8 +15,11 @@ import { useTranslations } from 'next-intl';
 import { useLocale } from 'next-intl';
 import { countries } from 'countries-list';
 import { getSkillsForSelect } from '@/utils/crudSkills';
+import { useModal } from '@/utils/modal/useModal';
 
 export default function PublicProfileModal({ isOpen, onClose, userId, isOwnProfile = false }) {
+  // Register this modal with the global modal manager for ESC key and browser back button support
+  useModal(isOpen, onClose, 'public-profile-modal');
   const t = useTranslations('CompleteProfile');
   const tProfile = useTranslations('PublicProfile');
   const locale = useLocale();

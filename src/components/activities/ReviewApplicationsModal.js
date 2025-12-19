@@ -8,6 +8,7 @@ import { formatDate } from "@/utils/dateUtils";
 import { fetchOrganizationById } from "@/utils/crudOrganizations";
 import { useAuth } from "@/utils/auth/AuthContext";
 import { useTranslations } from "next-intl";
+import { useModal } from '@/utils/modal/useModal';
 import PublicProfileModal from "@/components/profile/PublicProfileModal";
 
 export default function ReviewApplicationsModal({ isOpen, onClose, activity, onOrganizationDataUpdate }) {
@@ -22,6 +23,7 @@ export default function ReviewApplicationsModal({ isOpen, onClose, activity, onO
   const [npoResponse, setNpoResponse] = useState('');
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState(null);
+  const wrappedOnClose = useModal(isOpen, onClose, 'review-applications-modal');
 
   const fetchApplications = useCallback(async () => {
     if (!activity?.id) return;
@@ -108,6 +110,9 @@ export default function ReviewApplicationsModal({ isOpen, onClose, activity, onO
     setConfirmationData(null);
     setNpoResponse('');
   };
+  
+  // Wrapped confirmation modal close handler
+  const wrappedConfirmationOnClose = useModal(showConfirmation, handleCancelAction, 'review-confirmation-modal');
 
 
   const getStatusBadge = (status) => {
@@ -129,7 +134,7 @@ export default function ReviewApplicationsModal({ isOpen, onClose, activity, onO
   }
 
   return (
-    <Modal show={isOpen} onClose={onClose} size="4xl">
+    <Modal show={isOpen} onClose={wrappedOnClose} size="4xl">
       <Modal.Header className="border-b border-border-light dark:border-border-dark">
         <div className="flex flex-col">
           <span className="text-lg font-semibold text-text-primary dark:text-text-primary">{t('reviewApplications') || 'Review Applications'}</span>
@@ -252,7 +257,7 @@ export default function ReviewApplicationsModal({ isOpen, onClose, activity, onO
         <div className="flex justify-center sm:justify-end">
           <Button 
             color="gray" 
-            onClick={onClose}
+            onClick={wrappedOnClose}
             className="w-full sm:w-auto"
           >
             {t('close') || 'Close'}
@@ -261,7 +266,7 @@ export default function ReviewApplicationsModal({ isOpen, onClose, activity, onO
       </Modal.Footer>
 
       {/* Confirmation Modal */}
-      <Modal show={showConfirmation} onClose={handleCancelAction} size="md">
+      <Modal show={showConfirmation} onClose={wrappedConfirmationOnClose} size="md">
         <Modal.Header className="border-b border-border-light dark:border-border-dark">
           <span className="text-text-primary dark:text-text-primary">{t('confirmAction') || 'Confirm Action'}</span>
         </Modal.Header>
@@ -321,7 +326,7 @@ export default function ReviewApplicationsModal({ isOpen, onClose, activity, onO
           <div className="flex flex-col sm:flex-row gap-2 sm:justify-end">
             <Button 
               color="gray" 
-              onClick={handleCancelAction}
+              onClick={wrappedConfirmationOnClose}
               className="w-full sm:w-auto"
             >
               {t('cancel') || 'Cancel'}

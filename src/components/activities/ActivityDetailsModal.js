@@ -27,8 +27,12 @@ import { HiClock } from 'react-icons/hi2';
 import NPODetailsModal from './NPODetailsModal';
 import { categoryIcons } from '@/constant/categoryIcons';
 import { useRouter } from 'next/navigation';
+import { useModal } from '@/utils/modal/useModal';
 
 export default function ActivityDetailsModal({ isOpen, onClose, activityId, onApply, hasApplied = false }) {
+  // Register this modal with the global modal manager for ESC key and browser back button support
+  // Use the wrapped onClose returned by useModal
+  const wrappedOnClose = useModal(isOpen, onClose, 'activity-details-modal');
   const t = useTranslations('ActivityCard');
   const tManage = useTranslations('ManageActivities');
   const locale = useLocale();
@@ -197,7 +201,7 @@ export default function ActivityDetailsModal({ isOpen, onClose, activityId, onAp
 
   return (
     <>
-      <Modal show={isOpen} onClose={onClose} size="4xl" className="z-50">
+      <Modal show={isOpen} onClose={wrappedOnClose} size="4xl" className="z-50">
         <Modal.Header className="bg-gradient-to-r from-primary-400 to-primary-600 dark:from-primary-600 dark:to-primary-700 text-white border-b border-border-light dark:border-border-dark">
           <div className="flex items-center gap-3">
             <h3 className="text-xl font-semibold">Activity Details</h3>
@@ -214,7 +218,7 @@ export default function ActivityDetailsModal({ isOpen, onClose, activityId, onAp
           {error && (
             <div className="text-center py-8">
               <p className="text-semantic-error-600 dark:text-semantic-error-400 mb-4">{error}</p>
-              <Button color="gray" onClick={onClose} className="bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-300 dark:hover:bg-neutral-600">
+              <Button color="gray" onClick={wrappedOnClose} className="bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-300 dark:hover:bg-neutral-600">
                 Close
               </Button>
             </div>
@@ -522,7 +526,7 @@ export default function ActivityDetailsModal({ isOpen, onClose, activityId, onAp
               <Button
                 color="green"
                 onClick={() => {
-                  onClose();
+                  wrappedOnClose();
                   router.push('/dashboard');
                 }}
                 className="flex items-center gap-2 bg-semantic-success-600 hover:bg-semantic-success-700 dark:bg-semantic-success-500 dark:hover:bg-semantic-success-600"
@@ -530,7 +534,7 @@ export default function ActivityDetailsModal({ isOpen, onClose, activityId, onAp
                 <HiCheckCircle className="h-5 w-5" />
                 View Application Status
               </Button>
-              <Button color="gray" onClick={onClose} className="bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-300 dark:hover:bg-neutral-600">
+              <Button color="gray" onClick={wrappedOnClose} className="bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-300 dark:hover:bg-neutral-600">
                 Close
               </Button>
             </>
@@ -544,7 +548,7 @@ export default function ActivityDetailsModal({ isOpen, onClose, activityId, onAp
                   Apply Now
                 </Button>
               )}
-              <Button color="gray" onClick={onClose} className="bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-300 dark:hover:bg-neutral-600">
+              <Button color="gray" onClick={wrappedOnClose} className="bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-300 dark:hover:bg-neutral-600">
                 Close
               </Button>
             </>

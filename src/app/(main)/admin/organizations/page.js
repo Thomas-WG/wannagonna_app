@@ -22,6 +22,7 @@ import Select from 'react-select';
 import Image from 'next/image';
 import { sdgOptions } from '@/constant/sdgs';
 import { useTheme } from '@/utils/theme/ThemeContext';
+import { useModal } from '@/utils/modal/useModal';
 
 // Register the languages you want to use
 languages.registerLocale(require("@cospired/i18n-iso-languages/langs/en.json"));
@@ -41,6 +42,10 @@ export default function OrganizationsManagementPage() {
   const [showModal, setShowModal] = useState(false); // Controls visibility of add/edit modal
   const [showDeleteModal, setShowDeleteModal] = useState(false); // Controls visibility of delete confirmation modal
   const [selectedOrganization, setSelectedOrganization] = useState(null); // Currently selected organization for edit/delete
+  
+  // Register modals with global modal manager
+  const wrappedModalOnClose = useModal(showModal, () => setShowModal(false), 'org-add-edit-modal');
+  const wrappedDeleteModalOnClose = useModal(showDeleteModal, () => setShowDeleteModal(false), 'org-delete-modal');
   const [organizationForm, setOrganizationForm] = useState({
     name: '',
     logo: '',
@@ -467,7 +472,7 @@ export default function OrganizationsManagementPage() {
       {/* Organization Add/Edit Modal */}
       <Modal 
         show={showModal} 
-        onClose={() => setShowModal(false)} 
+        onClose={wrappedModalOnClose} 
         size="xl"
         className="z-50 max-w-[95vw] sm:max-w-none"
         dismissible={true}
@@ -693,7 +698,7 @@ export default function OrganizationsManagementPage() {
             <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 pt-3 sm:pt-4 border-t border-gray-200 dark:border-gray-700 mt-4 sm:mt-6">
               <Button 
                 color="gray" 
-                onClick={() => setShowModal(false)}
+                onClick={wrappedModalOnClose}
                 className="w-full sm:w-auto text-sm sm:text-base py-2.5 sm:py-2 min-h-[44px] sm:min-h-0"
               >
                 Cancel
@@ -710,7 +715,7 @@ export default function OrganizationsManagementPage() {
       </Modal>
       
       {/* Delete Confirmation Modal */}
-      <Modal show={showDeleteModal} onClose={() => setShowDeleteModal(false)} className="max-w-[95vw] sm:max-w-none">
+      <Modal show={showDeleteModal} onClose={wrappedDeleteModalOnClose} className="max-w-[95vw] sm:max-w-none">
         <Modal.Header className="text-base sm:text-lg px-3 sm:px-4 md:px-6">Delete Organization</Modal.Header>
         <Modal.Body className="px-3 sm:px-4 md:px-6">
           <p className="text-sm sm:text-base">Are you sure you want to delete this organization? This action cannot be undone.</p>
@@ -719,7 +724,7 @@ export default function OrganizationsManagementPage() {
           <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:space-x-2 w-full sm:w-auto">
             <Button 
               color="gray" 
-              onClick={() => setShowDeleteModal(false)}
+              onClick={wrappedDeleteModalOnClose}
               className="w-full sm:w-auto text-sm sm:text-base"
             >
               Cancel

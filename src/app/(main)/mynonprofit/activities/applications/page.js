@@ -8,6 +8,7 @@ import { fetchActivitiesByCriteria } from '@/utils/crudActivities'
 import { fetchApplicationsForActivity, updateApplicationStatus } from '@/utils/crudApplications'
 import { formatDate } from '@/utils/dateUtils'
 import { useTranslations } from 'next-intl'
+import { useModal } from '@/utils/modal/useModal'
 import PublicProfileModal from '@/components/profile/PublicProfileModal'
 
 export default function ReviewApplicationsPage() {
@@ -23,6 +24,9 @@ export default function ReviewApplicationsPage() {
   const [npoResponse, setNpoResponse] = useState('')
   const [profileModalOpen, setProfileModalOpen] = useState(false)
   const [selectedUserId, setSelectedUserId] = useState(null)
+  
+  // Register confirmation modal with global modal manager
+  const wrappedConfirmationOnClose = useModal(confirmationOpen, closeConfirm, 'applications-confirmation-modal')
 
   const organizationId = claims?.npoId || null
 
@@ -356,7 +360,7 @@ export default function ReviewApplicationsPage() {
         </Modal.Body>
         <Modal.Footer className="border-t border-border-light dark:border-border-dark">
           <div className="flex flex-col sm:flex-row gap-2 sm:justify-end w-full">
-            <Button color="gray" onClick={closeConfirm} className="w-full sm:w-auto">{t('cancel') || 'Cancel'}</Button>
+            <Button color="gray" onClick={wrappedConfirmationOnClose} className="w-full sm:w-auto">{t('cancel') || 'Cancel'}</Button>
             <Button
               color={confirmation?.nextStatus === 'accepted' ? 'success' : 'failure'}
               onClick={confirmAction}

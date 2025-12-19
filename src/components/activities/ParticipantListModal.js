@@ -6,6 +6,7 @@ import { fetchValidationsForActivity } from '@/utils/crudActivityValidation';
 import { getDoc, doc } from 'firebase/firestore';
 import { db } from 'firebaseConfig';
 import { useTranslations } from 'next-intl';
+import { useModal } from '@/utils/modal/useModal';
 import PublicProfileModal from '@/components/profile/PublicProfileModal';
 import Image from 'next/image';
 
@@ -15,6 +16,7 @@ export default function ParticipantListModal({ isOpen, onClose, activityId }) {
   const [loading, setLoading] = useState(false);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState(null);
+  const wrappedOnClose = useModal(isOpen, onClose, 'participant-list-modal');
 
   const fetchParticipants = useCallback(async () => {
     if (!activityId) return;
@@ -100,7 +102,7 @@ export default function ParticipantListModal({ isOpen, onClose, activityId }) {
 
   return (
     <>
-      <Modal show={isOpen} onClose={onClose} size="md" className="z-50">
+      <Modal show={isOpen} onClose={wrappedOnClose} size="md" className="z-50">
         <Modal.Header className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white">
           <div className="flex items-center gap-3">
             <h3 className="text-lg sm:text-xl font-semibold">{t('participantsTitle')}</h3>

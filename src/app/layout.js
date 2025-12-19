@@ -24,6 +24,7 @@
 import '@/styles/globals.css'; // Global styles for the entire application
 import { AuthProvider } from '@/utils/auth/AuthContext'; // Authentication context provider
 import { ThemeProvider } from '@/utils/theme/ThemeContext'; // Theme context provider
+import ModalProviderWrapper from '@/components/modal/ModalProviderWrapper'; // Modal management provider
 import { Roboto } from 'next/font/google'; // Roboto font from Google Fonts
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
@@ -51,8 +52,11 @@ export default async function RootLayout({ children }) {
           <AuthProvider>
             {/* Wrap the entire app in ThemeProvider for theme management (needs AuthProvider for user context) */}
             <ThemeProvider>
-              {/* Main content area, which displays the child components */}
-              <main className='flex-1'>{children}</main>
+              {/* Wrap the entire app in ModalProviderWrapper for global modal management (ESC key, browser back button) */}
+              <ModalProviderWrapper>
+                {/* Main content area, which displays the child components */}
+                <main className='flex-1'>{children}</main>
+              </ModalProviderWrapper>
             </ThemeProvider>
           </AuthProvider>
         </NextIntlClientProvider>

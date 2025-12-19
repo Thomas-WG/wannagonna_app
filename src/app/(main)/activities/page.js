@@ -33,6 +33,7 @@ import { HiSearch, HiX, HiCheckCircle, HiExternalLink } from 'react-icons/hi';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useTranslations } from 'next-intl';
 import { useTheme } from '@/utils/theme/ThemeContext';
+import { useModal } from '@/utils/modal/useModal';
 
 // Main component to display activities
 export default function ActivitiesPage() {
@@ -269,6 +270,9 @@ export default function ActivitiesPage() {
     setApplyMessage('');
     setSelectedActivity(null);
   };
+  
+  // Register apply modal with global modal manager
+  const wrappedApplyModalOnClose = useModal(openApplyModal, handleApplyModalClose, 'apply-activity-modal');
 
   // Handle submit application
   const handleSubmitApplication = async (e) => {
@@ -583,7 +587,7 @@ export default function ActivitiesPage() {
         {/* Enhanced Apply Modal */}
         <Modal
           show={openApplyModal}
-          onClose={handleApplyModalClose}
+          onClose={wrappedApplyModalOnClose}
           size="2xl"
           className="z-50"
         >
@@ -633,7 +637,7 @@ export default function ActivitiesPage() {
                   </div>
                   <button
                     onClick={() => {
-                      handleApplyModalClose();
+                      wrappedApplyModalOnClose();
                       setSelectedActivityId(selectedActivity.id);
                       setShowDetailsModal(true);
                     }}
@@ -707,7 +711,7 @@ export default function ActivitiesPage() {
             </Button>
             <Button
               color="gray"
-              onClick={handleApplyModalClose}
+              onClick={wrappedApplyModalOnClose}
               disabled={isSubmitting}
               className="w-full sm:w-auto bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-300 dark:hover:bg-neutral-600"
             >

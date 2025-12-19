@@ -26,6 +26,7 @@ import {
 } from '@/utils/crudBadges';
 import { HiBadgeCheck, HiPlus, HiTrash, HiPencil } from 'react-icons/hi';
 import Image from 'next/image';
+import { useModal } from '@/utils/modal/useModal';
 
 export default function AdminBadgesPage() {
   const t = useTranslations('Admin');
@@ -40,6 +41,12 @@ export default function AdminBadgesPage() {
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [showDeleteBadgeModal, setShowDeleteBadgeModal] = useState(false);
   const [showDeleteCategoryModal, setShowDeleteCategoryModal] = useState(false);
+  
+  // Register modals with global modal manager
+  const wrappedBadgeModalOnClose = useModal(showBadgeModal, () => setShowBadgeModal(false), 'badge-modal');
+  const wrappedCategoryModalOnClose = useModal(showCategoryModal, () => setShowCategoryModal(false), 'badge-category-modal');
+  const wrappedDeleteBadgeModalOnClose = useModal(showDeleteBadgeModal, () => setShowDeleteBadgeModal(false), 'delete-badge-modal');
+  const wrappedDeleteCategoryModalOnClose = useModal(showDeleteCategoryModal, () => setShowDeleteCategoryModal(false), 'delete-badge-category-modal');
   const [editingBadge, setEditingBadge] = useState(null);
   const [deletingBadge, setDeletingBadge] = useState(null);
   const [deletingCategory, setDeletingCategory] = useState(null);
@@ -458,7 +465,7 @@ export default function AdminBadgesPage() {
       </Card>
 
       {/* Add/Edit Badge Modal */}
-      <Modal show={showBadgeModal} onClose={() => setShowBadgeModal(false)} size="lg">
+      <Modal show={showBadgeModal} onClose={wrappedBadgeModalOnClose} size="lg">
         <Modal.Header className="text-base sm:text-lg px-4 sm:px-6">
           {editingBadge ? t('editBadge') || 'Edit Badge' : t('addBadge') || 'Add Badge'}
         </Modal.Header>
@@ -605,7 +612,7 @@ export default function AdminBadgesPage() {
             </div>
 
             <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-4">
-              <Button color="gray" onClick={() => setShowCategoryModal(false)} className="w-full sm:w-auto text-sm sm:text-base">
+              <Button color="gray" onClick={wrappedCategoryModalOnClose} className="w-full sm:w-auto text-sm sm:text-base">
                 {t('cancel') || 'Cancel'}
               </Button>
               <Button type="submit" className="w-full sm:w-auto text-sm sm:text-base">
@@ -617,7 +624,7 @@ export default function AdminBadgesPage() {
       </Modal>
 
       {/* Delete Badge Confirmation Modal */}
-      <Modal show={showDeleteBadgeModal} onClose={() => setShowDeleteBadgeModal(false)} size="md">
+      <Modal show={showDeleteBadgeModal} onClose={wrappedDeleteBadgeModalOnClose} size="md">
         <Modal.Header className="text-base sm:text-lg px-4 sm:px-6">{t('deleteBadge') || 'Delete Badge'}</Modal.Header>
         <Modal.Body className="px-4 sm:px-6">
           <p className="text-sm sm:text-base">{t('confirmDeleteBadge') || 'Are you sure you want to delete this badge?'}</p>
@@ -627,7 +634,7 @@ export default function AdminBadgesPage() {
         </Modal.Body>
         <Modal.Footer className="px-4 sm:px-6">
           <div className="flex flex-col-reverse sm:flex-row gap-2 w-full sm:w-auto">
-            <Button color="gray" onClick={() => setShowDeleteBadgeModal(false)} className="w-full sm:w-auto text-sm sm:text-base">
+            <Button color="gray" onClick={wrappedDeleteBadgeModalOnClose} className="w-full sm:w-auto text-sm sm:text-base">
               {t('cancel') || 'Cancel'}
             </Button>
             <Button color="failure" onClick={handleDeleteBadge} className="w-full sm:w-auto text-sm sm:text-base">
@@ -638,7 +645,7 @@ export default function AdminBadgesPage() {
       </Modal>
 
       {/* Delete Category Confirmation Modal */}
-      <Modal show={showDeleteCategoryModal} onClose={() => setShowDeleteCategoryModal(false)} size="md">
+      <Modal show={showDeleteCategoryModal} onClose={wrappedDeleteCategoryModalOnClose} size="md">
         <Modal.Header className="text-base sm:text-lg px-4 sm:px-6">{t('deleteCategory') || 'Delete Category'}</Modal.Header>
         <Modal.Body className="px-4 sm:px-6">
           <p className="text-sm sm:text-base">{t('confirmDeleteCategory') || 'Are you sure you want to delete this category? All badges in this category will also be deleted.'}</p>
@@ -648,7 +655,7 @@ export default function AdminBadgesPage() {
         </Modal.Body>
         <Modal.Footer className="px-4 sm:px-6">
           <div className="flex flex-col-reverse sm:flex-row gap-2 w-full sm:w-auto">
-            <Button color="gray" onClick={() => setShowDeleteCategoryModal(false)} className="w-full sm:w-auto text-sm sm:text-base">
+            <Button color="gray" onClick={wrappedDeleteCategoryModalOnClose} className="w-full sm:w-auto text-sm sm:text-base">
               {t('cancel') || 'Cancel'}
             </Button>
             <Button color="failure" onClick={handleDeleteCategory} className="w-full sm:w-auto text-sm sm:text-base">

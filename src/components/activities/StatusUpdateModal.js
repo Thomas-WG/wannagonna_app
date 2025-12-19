@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Modal, Button } from 'flowbite-react';
 import { useTranslations } from 'next-intl';
 import { useTheme } from '@/utils/theme/ThemeContext';
+import { useModal } from '@/utils/modal/useModal';
 import {
   HiDocument, HiCheckCircle, HiGlobeAlt
 } from 'react-icons/hi';
@@ -17,6 +18,7 @@ export default function StatusUpdateModal({
 }) {
   const t = useTranslations('StatusUpdateModal');
   const { isDark } = useTheme();
+  const wrappedOnClose = useModal(isOpen, onClose, 'status-update-modal');
   
   const handleStatusChange = (newStatus) => {
     if (onStatusUpdate) {
@@ -27,7 +29,7 @@ export default function StatusUpdateModal({
   };
 
   const handleClose = () => {
-    onClose();
+    wrappedOnClose();
   };
 
   // Determine which buttons to show based on current status
@@ -107,7 +109,7 @@ export default function StatusUpdateModal({
   };
 
   return (
-    <Modal show={isOpen} onClose={handleClose} size="md" className="z-50">
+    <Modal show={isOpen} onClose={wrappedOnClose} size="md" className="z-50">
       <Modal.Header className="bg-gradient-to-r from-primary-400 to-primary-600 dark:from-primary-600 dark:to-primary-700 text-white border-b border-border-light dark:border-border-dark">
         <div className="flex items-center space-x-2">
           <span className="text-lg font-semibold text-white">

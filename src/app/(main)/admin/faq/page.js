@@ -18,6 +18,7 @@ import {
 } from '@/utils/crudFaq';
 import { useTheme } from '@/utils/theme/ThemeContext';
 import { useTranslations } from 'next-intl';
+import { useModal } from '@/utils/modal/useModal';
 import { HiSearch } from 'react-icons/hi';
 import { useDebounce } from '@/hooks/useDebounce';
 
@@ -45,6 +46,10 @@ export default function FAQManagementPage() {
   const [showModal, setShowModal] = useState(false); // Controls visibility of add/edit modal
   const [showDeleteModal, setShowDeleteModal] = useState(false); // Controls visibility of delete confirmation modal
   const [selectedFaq, setSelectedFaq] = useState(null); // Currently selected FAQ for edit/delete
+  
+  // Register modals with global modal manager
+  const wrappedModalOnClose = useModal(showModal, () => setShowModal(false), 'faq-add-edit-modal');
+  const wrappedDeleteModalOnClose = useModal(showDeleteModal, () => setShowDeleteModal(false), 'faq-delete-modal');
   const [faqForm, setFaqForm] = useState({
     question: { en: '', fr: '', es: '', ja: '' },
     answer: { en: '', fr: '', es: '', ja: '' },
@@ -347,7 +352,7 @@ export default function FAQManagementPage() {
       {/* FAQ Add/Edit Modal */}
       <Modal 
         show={showModal} 
-        onClose={() => setShowModal(false)} 
+        onClose={wrappedModalOnClose} 
         size="4xl"
         className="z-50 max-w-[95vw] sm:max-w-none"
         dismissible={true}
@@ -422,7 +427,7 @@ export default function FAQManagementPage() {
             <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 pt-3 sm:pt-4 border-t border-gray-200 dark:border-gray-700 mt-4 sm:mt-6">
               <Button 
                 color="gray" 
-                onClick={() => setShowModal(false)}
+                onClick={wrappedModalOnClose}
                 className="w-full sm:w-auto text-sm sm:text-base py-2.5 sm:py-2 min-h-[44px] sm:min-h-0"
               >
                 {t('cancel')}
@@ -439,7 +444,7 @@ export default function FAQManagementPage() {
       </Modal>
       
       {/* Delete Confirmation Modal */}
-      <Modal show={showDeleteModal} onClose={() => setShowDeleteModal(false)} className="max-w-[95vw] sm:max-w-none">
+      <Modal show={showDeleteModal} onClose={wrappedDeleteModalOnClose} className="max-w-[95vw] sm:max-w-none">
         <Modal.Header className="text-base sm:text-lg px-3 sm:px-4 md:px-6">{t('deleteFaq')}</Modal.Header>
         <Modal.Body className="px-3 sm:px-4 md:px-6">
           <p className="text-sm sm:text-base">{t('confirmDeleteFaq')}</p>
@@ -448,7 +453,7 @@ export default function FAQManagementPage() {
           <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:space-x-2 w-full sm:w-auto">
             <Button 
               color="gray" 
-              onClick={() => setShowDeleteModal(false)}
+              onClick={wrappedDeleteModalOnClose}
               className="w-full sm:w-auto text-sm sm:text-base"
             >
               {t('cancel')}
