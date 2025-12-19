@@ -292,15 +292,15 @@ export default function MembersManagementPage() {
   }, [members, searchQuery, organizations, t]);
 
   return (
-    <div className="container mx-auto p-2 sm:p-4 space-y-4 sm:space-y-6">
+    <div className="container mx-auto p-3 sm:p-4 space-y-3 sm:space-y-4 md:space-y-6">
       {/* Page Header */}
-      <h1 className="text-xl sm:text-2xl font-bold px-2 sm:px-0">{t('membersManagement')}</h1>
+      <h1 className="text-lg sm:text-xl md:text-2xl font-bold px-1 sm:px-0">{t('membersManagement')}</h1>
       
       {/* Search Field */}
       {!isLoading && (
-        <Card className="px-4 py-3">
+        <Card className="px-3 sm:px-4 py-2 sm:py-3">
           <div className="w-full">
-            <Label htmlFor="search" className="mb-2 block text-sm font-medium">
+            <Label htmlFor="search" className="mb-2 block text-xs sm:text-sm font-medium">
               {t('searchMembers') || 'Search Members'}
             </Label>
             <TextInput
@@ -309,10 +309,10 @@ export default function MembersManagementPage() {
               placeholder={t('searchPlaceholder') || 'Search by name, email, role, or organization...'}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full"
+              className="w-full text-sm sm:text-base"
             />
             {searchQuery && (
-              <div className="mt-2 text-sm text-gray-500">
+              <div className="mt-2 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                 {filteredMembers.length === 0 ? (
                   <span>{t('noResults') || 'No members found'}</span>
                 ) : (
@@ -337,22 +337,22 @@ export default function MembersManagementPage() {
 
       {/* Members Table Card - Desktop */}
       {!isLoading && (
-        <Card className="hidden md:block">
+        <Card className="hidden lg:block">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg sm:text-xl font-semibold">{t('members')}</h2>
+            <h2 className="text-base sm:text-lg md:text-xl font-semibold">{t('members')}</h2>
           </div>
           
           {/* Members Table */}
           <div className="overflow-x-auto">
             <Table>
             <Table.Head>
-              <Table.HeadCell>{t('profilePicture')}</Table.HeadCell>
-              <Table.HeadCell>{t('displayName')}</Table.HeadCell>
-              <Table.HeadCell>{t('email')}</Table.HeadCell>
-              <Table.HeadCell>{t('role')}</Table.HeadCell>
-              <Table.HeadCell>{t('organization')}</Table.HeadCell>
-              <Table.HeadCell>{t('badges') || 'Badges'}</Table.HeadCell>
-              <Table.HeadCell>{t('actions')}</Table.HeadCell>
+              <Table.HeadCell className="text-xs sm:text-sm">{t('profilePicture')}</Table.HeadCell>
+              <Table.HeadCell className="text-xs sm:text-sm">{t('displayName')}</Table.HeadCell>
+              <Table.HeadCell className="text-xs sm:text-sm">{t('email')}</Table.HeadCell>
+              <Table.HeadCell className="text-xs sm:text-sm">{t('role')}</Table.HeadCell>
+              <Table.HeadCell className="text-xs sm:text-sm">{t('organization')}</Table.HeadCell>
+              <Table.HeadCell className="text-xs sm:text-sm">{t('badges') || 'Badges'}</Table.HeadCell>
+              <Table.HeadCell className="text-xs sm:text-sm">{t('actions')}</Table.HeadCell>
             </Table.Head>
             <Table.Body>
               {/* Member Rows */}
@@ -407,7 +407,7 @@ export default function MembersManagementPage() {
 
       {/* Members Cards - Mobile */}
       {!isLoading && (
-        <div className="md:hidden space-y-3">
+        <div className="lg:hidden space-y-3">
         {filteredMembers.length === 0 ? (
           <Card>
             <div className="text-center py-8 text-gray-500">
@@ -443,19 +443,19 @@ export default function MembersManagementPage() {
                     </div>
                   )}
                 </div>
-                <div className="flex flex-col sm:flex-row gap-2 mt-3">
+                <div className="flex flex-col gap-2 mt-3">
                   <Button 
                     size="sm" 
                     color="purple" 
                     onClick={() => openBadgeModal(member)}
-                    className="w-full sm:w-auto"
+                    className="w-full text-xs sm:text-sm"
                   >
                     {t('manageBadges') || 'Manage Badges'}
                   </Button>
                   <Button 
                     size="sm" 
                     onClick={() => openRoleModal(member)}
-                    className="w-full sm:w-auto"
+                    className="w-full text-xs sm:text-sm"
                   >
                     {t('edit')}
                   </Button>

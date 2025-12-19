@@ -53,10 +53,10 @@ export default function AdminDashboard() {
   }, []);
 
   return (
-    <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8 bg-background-page dark:bg-background-page min-h-screen">
-      <h1 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-text-primary dark:text-text-primary">Admin Dashboard</h1>
+    <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 bg-background-page dark:bg-background-page min-h-screen">
+      <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-4 sm:mb-6 md:mb-8 text-text-primary dark:text-text-primary">Admin Dashboard</h1>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 md:gap-6">
         {/* Members Card */}
         <Link href="/admin/members">
           <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full bg-background-card dark:bg-background-card border-border-light dark:border-border-dark">

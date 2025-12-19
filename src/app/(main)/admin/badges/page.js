@@ -262,19 +262,19 @@ export default function AdminBadgesPage() {
   }
 
   return (
-    <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8">
+    <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-        <div className="flex items-center gap-3">
-          <HiBadgeCheck className="w-8 h-8 text-orange-500" />
-          <h1 className="text-2xl sm:text-3xl font-bold">{t('badges') || 'Badges Management'}</h1>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 gap-3 sm:gap-4">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <HiBadgeCheck className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-orange-500 flex-shrink-0" />
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">{t('badges') || 'Badges Management'}</h1>
         </div>
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-          <Button onClick={openAddCategoryModal} className="w-full sm:w-auto">
+          <Button onClick={openAddCategoryModal} className="w-full sm:w-auto text-sm sm:text-base" size="sm">
             <HiPlus className="mr-2 h-4 w-4" />
             {t('addCategory') || 'Add Category'}
           </Button>
-          <Button onClick={openAddBadgeModal} color="purple" className="w-full sm:w-auto">
+          <Button onClick={openAddBadgeModal} color="purple" className="w-full sm:w-auto text-sm sm:text-base" size="sm">
             <HiPlus className="mr-2 h-4 w-4" />
             {t('addBadge') || 'Add Badge'}
           </Button>
@@ -282,35 +282,36 @@ export default function AdminBadgesPage() {
       </div>
 
       {/* Categories Section */}
-      <Card className="mb-6">
-        <h2 className="text-xl font-semibold mb-4">{t('categories') || 'Categories'}</h2>
+      <Card className="mb-4 sm:mb-6">
+        <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">{t('categories') || 'Categories'}</h2>
         {categories.length === 0 ? (
-          <p className="text-gray-500">{t('noCategories') || 'No categories found'}</p>
+          <p className="text-sm sm:text-base text-gray-500">{t('noCategories') || 'No categories found'}</p>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
             {categories.map((category) => {
               const categoryBadges = badges.filter(b => b.categoryId === category.id);
               return (
                 <Card key={category.id} className="relative">
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-lg">{category.title || category.id}</h3>
+                  <div className="flex justify-between items-start gap-2">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-base sm:text-lg truncate">{category.title || category.id}</h3>
                       {category.description && (
-                        <p className="text-sm text-gray-600 mt-1">{category.description}</p>
+                        <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">{category.description}</p>
                       )}
-                      <p className="text-sm text-gray-500 mt-2">
+                      <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-2">
                         {categoryBadges.length} {t('badges') || 'badges'}
                       </p>
                     </div>
                     <Button
-                      size="sm"
+                      size="xs"
                       color="failure"
                       onClick={() => {
                         setDeletingCategory(category);
                         setShowDeleteCategoryModal(true);
                       }}
+                      className="flex-shrink-0"
                     >
-                      <HiTrash className="h-4 w-4" />
+                      <HiTrash className="h-3 w-3 sm:h-4 sm:w-4" />
                     </Button>
                   </div>
                 </Card>
@@ -322,92 +323,156 @@ export default function AdminBadgesPage() {
 
       {/* Badges Table */}
       <Card>
-        <h2 className="text-xl font-semibold mb-4">{t('allBadges') || 'All Badges'}</h2>
+        <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">{t('allBadges') || 'All Badges'}</h2>
         {badges.length === 0 ? (
-          <p className="text-gray-500">{t('noBadges') || 'No badges found'}</p>
+          <p className="text-sm sm:text-base text-gray-500">{t('noBadges') || 'No badges found'}</p>
         ) : (
-          <div className="overflow-x-auto">
-            <Table>
-              <Table.Head>
-                <Table.HeadCell>{t('image') || 'Image'}</Table.HeadCell>
-                <Table.HeadCell>{t('category') || 'Category'}</Table.HeadCell>
-                <Table.HeadCell>{t('title') || 'Title'}</Table.HeadCell>
-                <Table.HeadCell>{t('description') || 'Description'}</Table.HeadCell>
-                <Table.HeadCell>{t('xp') || 'XP'}</Table.HeadCell>
-                <Table.HeadCell>{t('actions') || 'Actions'}</Table.HeadCell>
-              </Table.Head>
-              <Table.Body className="divide-y">
-                {badges.map((badge) => (
-                  <Table.Row key={`${badge.categoryId}-${badge.id}`}>
-                    <Table.Cell>
-                      {imagesLoading ? (
-                        <Spinner size="sm" />
-                      ) : badgeImageUrls[badge.id] ? (
-                        <Image
-                          src={badgeImageUrls[badge.id]}
-                          alt={badge.title || badge.id}
-                          width={40}
-                          height={40}
-                          className="object-contain"
-                        />
-                      ) : (
-                        <div className="w-10 h-10 bg-gray-200 rounded flex items-center justify-center">
-                          <HiBadgeCheck className="w-6 h-6 text-gray-400" />
+          <>
+            {/* Desktop Table */}
+            <div className="hidden md:block overflow-x-auto">
+              <Table>
+                <Table.Head>
+                  <Table.HeadCell>{t('image') || 'Image'}</Table.HeadCell>
+                  <Table.HeadCell>{t('category') || 'Category'}</Table.HeadCell>
+                  <Table.HeadCell>{t('title') || 'Title'}</Table.HeadCell>
+                  <Table.HeadCell>{t('description') || 'Description'}</Table.HeadCell>
+                  <Table.HeadCell>{t('xp') || 'XP'}</Table.HeadCell>
+                  <Table.HeadCell>{t('actions') || 'Actions'}</Table.HeadCell>
+                </Table.Head>
+                <Table.Body className="divide-y">
+                  {badges.map((badge) => (
+                    <Table.Row key={`${badge.categoryId}-${badge.id}`}>
+                      <Table.Cell>
+                        {imagesLoading ? (
+                          <Spinner size="sm" />
+                        ) : badgeImageUrls[badge.id] ? (
+                          <Image
+                            src={badgeImageUrls[badge.id]}
+                            alt={badge.title || badge.id}
+                            width={40}
+                            height={40}
+                            className="object-contain"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center">
+                            <HiBadgeCheck className="w-6 h-6 text-gray-400" />
+                          </div>
+                        )}
+                      </Table.Cell>
+                      <Table.Cell className="font-medium">
+                        {getCategoryName(badge.categoryId)}
+                      </Table.Cell>
+                      <Table.Cell>{badge.title || badge.id}</Table.Cell>
+                      <Table.Cell className="max-w-xs truncate">
+                        {badge.description || '-'}
+                      </Table.Cell>
+                      <Table.Cell>{badge.xp || 0}</Table.Cell>
+                      <Table.Cell>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            color="purple"
+                            onClick={() => openEditBadgeModal(badge)}
+                          >
+                            <HiPencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            color="failure"
+                            onClick={() => {
+                              setDeletingBadge(badge);
+                              setShowDeleteBadgeModal(true);
+                            }}
+                          >
+                            <HiTrash className="h-4 w-4" />
+                          </Button>
                         </div>
+                      </Table.Cell>
+                    </Table.Row>
+                  ))}
+                </Table.Body>
+              </Table>
+            </div>
+
+            {/* Mobile Cards */}
+            <div className="md:hidden space-y-3">
+              {badges.map((badge) => (
+                <Card key={`${badge.categoryId}-${badge.id}`} className="p-4">
+                  <div className="flex items-start gap-3">
+                    {imagesLoading ? (
+                      <Spinner size="sm" />
+                    ) : badgeImageUrls[badge.id] ? (
+                      <Image
+                        src={badgeImageUrls[badge.id]}
+                        alt={badge.title || badge.id}
+                        width={50}
+                        height={50}
+                        className="object-contain flex-shrink-0 rounded"
+                      />
+                    ) : (
+                      <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center flex-shrink-0">
+                        <HiBadgeCheck className="w-6 h-6 text-gray-400" />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-base truncate">{badge.title || badge.id}</h3>
+                      <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                        <span className="font-medium">{t('category') || 'Category'}:</span> {getCategoryName(badge.categoryId)}
+                      </p>
+                      {badge.description && (
+                        <p className="text-xs text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">{badge.description}</p>
                       )}
-                    </Table.Cell>
-                    <Table.Cell className="font-medium">
-                      {getCategoryName(badge.categoryId)}
-                    </Table.Cell>
-                    <Table.Cell>{badge.title || badge.id}</Table.Cell>
-                    <Table.Cell className="max-w-xs truncate">
-                      {badge.description || '-'}
-                    </Table.Cell>
-                    <Table.Cell>{badge.xp || 0}</Table.Cell>
-                    <Table.Cell>
-                      <div className="flex gap-2">
+                      <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                        <span className="font-medium">{t('xp') || 'XP'}:</span> {badge.xp || 0}
+                      </p>
+                      <div className="flex gap-2 mt-3">
                         <Button
-                          size="sm"
+                          size="xs"
                           color="purple"
                           onClick={() => openEditBadgeModal(badge)}
+                          className="flex-1"
                         >
-                          <HiPencil className="h-4 w-4" />
+                          <HiPencil className="h-3 w-3 mr-1" />
+                          {t('edit') || 'Edit'}
                         </Button>
                         <Button
-                          size="sm"
+                          size="xs"
                           color="failure"
                           onClick={() => {
                             setDeletingBadge(badge);
                             setShowDeleteBadgeModal(true);
                           }}
+                          className="flex-1"
                         >
-                          <HiTrash className="h-4 w-4" />
+                          <HiTrash className="h-3 w-3 mr-1" />
+                          {t('delete') || 'Delete'}
                         </Button>
                       </div>
-                    </Table.Cell>
-                  </Table.Row>
-                ))}
-              </Table.Body>
-            </Table>
-          </div>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </>
         )}
       </Card>
 
       {/* Add/Edit Badge Modal */}
       <Modal show={showBadgeModal} onClose={() => setShowBadgeModal(false)} size="lg">
-        <Modal.Header>
+        <Modal.Header className="text-base sm:text-lg px-4 sm:px-6">
           {editingBadge ? t('editBadge') || 'Edit Badge' : t('addBadge') || 'Add Badge'}
         </Modal.Header>
-        <Modal.Body>
+        <Modal.Body className="px-4 sm:px-6 max-h-[80vh] overflow-y-auto">
           <form onSubmit={handleBadgeSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="categoryId">{t('category') || 'Category'} *</Label>
+              <Label htmlFor="categoryId" className="text-sm sm:text-base">{t('category') || 'Category'} *</Label>
               <Select
                 id="categoryId"
                 value={badgeForm.categoryId}
                 onChange={(e) => setBadgeForm({ ...badgeForm, categoryId: e.target.value })}
                 required
                 disabled={!!editingBadge}
+                className="text-sm sm:text-base"
               >
                 <option value="">{t('selectCategory') || 'Select category'}</option>
                 {categories.map(cat => (
@@ -418,65 +483,70 @@ export default function AdminBadgesPage() {
 
             {!editingBadge && (
               <div>
-                <Label htmlFor="badgeId">{t('badgeId') || 'Badge ID'}</Label>
+                <Label htmlFor="badgeId" className="text-sm sm:text-base">{t('badgeId') || 'Badge ID'}</Label>
                 <TextInput
                   id="badgeId"
                   value={badgeForm.badgeId}
                   onChange={(e) => setBadgeForm({ ...badgeForm, badgeId: e.target.value })}
                   placeholder={t('autoGenerated') || 'Auto-generated from title if empty'}
+                  className="text-sm sm:text-base"
                 />
               </div>
             )}
 
             <div>
-              <Label htmlFor="title">{t('title') || 'Title'} *</Label>
+              <Label htmlFor="title" className="text-sm sm:text-base">{t('title') || 'Title'} *</Label>
               <TextInput
                 id="title"
                 value={badgeForm.title}
                 onChange={(e) => setBadgeForm({ ...badgeForm, title: e.target.value })}
                 required
+                className="text-sm sm:text-base"
               />
             </div>
 
             <div>
-              <Label htmlFor="description">{t('description') || 'Description'}</Label>
+              <Label htmlFor="description" className="text-sm sm:text-base">{t('description') || 'Description'}</Label>
               <Textarea
                 id="description"
                 value={badgeForm.description}
                 onChange={(e) => setBadgeForm({ ...badgeForm, description: e.target.value })}
                 rows={3}
+                className="text-sm sm:text-base"
               />
             </div>
 
             <div>
-              <Label htmlFor="xp">{t('xp') || 'XP Points'}</Label>
+              <Label htmlFor="xp" className="text-sm sm:text-base">{t('xp') || 'XP Points'}</Label>
               <TextInput
                 id="xp"
                 type="number"
                 min="0"
                 value={badgeForm.xp}
                 onChange={(e) => setBadgeForm({ ...badgeForm, xp: e.target.value })}
+                className="text-sm sm:text-base"
               />
             </div>
 
             <div>
-              <Label htmlFor="image">{t('image') || 'Image'}</Label>
+              <Label htmlFor="image" className="text-sm sm:text-base">{t('image') || 'Image'}</Label>
               <TextInput
                 id="image"
                 type="file"
                 accept="image/*"
                 onChange={(e) => setBadgeForm({ ...badgeForm, imageFile: e.target.files[0] || null })}
+                className="text-xs sm:text-sm"
               />
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 {t('imageUploadHint') || 'Image will be uploaded with the same name as the title'}
               </p>
             </div>
 
-            <div className="flex justify-end gap-2 pt-4">
-              <Button color="gray" onClick={() => setShowBadgeModal(false)}>
+            <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-4">
+              <Button color="gray" onClick={() => setShowBadgeModal(false)} className="w-full sm:w-auto text-sm sm:text-base">
                 {t('cancel') || 'Cancel'}
               </Button>
-              <Button type="submit">
+              <Button type="submit" className="w-full sm:w-auto text-sm sm:text-base">
                 {editingBadge ? t('update') || 'Update' : t('create') || 'Create'}
               </Button>
             </div>
@@ -486,55 +556,59 @@ export default function AdminBadgesPage() {
 
       {/* Add Category Modal */}
       <Modal show={showCategoryModal} onClose={() => setShowCategoryModal(false)}>
-        <Modal.Header>{t('addCategory') || 'Add Category'}</Modal.Header>
-        <Modal.Body>
+        <Modal.Header className="text-base sm:text-lg px-4 sm:px-6">{t('addCategory') || 'Add Category'}</Modal.Header>
+        <Modal.Body className="px-4 sm:px-6 max-h-[80vh] overflow-y-auto">
           <form onSubmit={handleCategorySubmit} className="space-y-4">
             <div>
-              <Label htmlFor="categoryId">{t('categoryId') || 'Category ID'} *</Label>
+              <Label htmlFor="categoryId" className="text-sm sm:text-base">{t('categoryId') || 'Category ID'} *</Label>
               <TextInput
                 id="categoryId"
                 value={categoryForm.categoryId}
                 onChange={(e) => setCategoryForm({ ...categoryForm, categoryId: e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '-') })}
                 required
                 placeholder="e.g., sdg, geography"
+                className="text-sm sm:text-base"
               />
             </div>
 
             <div>
-              <Label htmlFor="categoryTitle">{t('title') || 'Title'} *</Label>
+              <Label htmlFor="categoryTitle" className="text-sm sm:text-base">{t('title') || 'Title'} *</Label>
               <TextInput
                 id="categoryTitle"
                 value={categoryForm.title}
                 onChange={(e) => setCategoryForm({ ...categoryForm, title: e.target.value })}
                 required
+                className="text-sm sm:text-base"
               />
             </div>
 
             <div>
-              <Label htmlFor="categoryDescription">{t('description') || 'Description'}</Label>
+              <Label htmlFor="categoryDescription" className="text-sm sm:text-base">{t('description') || 'Description'}</Label>
               <Textarea
                 id="categoryDescription"
                 value={categoryForm.description}
                 onChange={(e) => setCategoryForm({ ...categoryForm, description: e.target.value })}
                 rows={3}
+                className="text-sm sm:text-base"
               />
             </div>
 
             <div>
-              <Label htmlFor="categoryOrder">{t('order') || 'Order'}</Label>
+              <Label htmlFor="categoryOrder" className="text-sm sm:text-base">{t('order') || 'Order'}</Label>
               <TextInput
                 id="categoryOrder"
                 type="number"
                 value={categoryForm.order}
                 onChange={(e) => setCategoryForm({ ...categoryForm, order: e.target.value })}
+                className="text-sm sm:text-base"
               />
             </div>
 
-            <div className="flex justify-end gap-2 pt-4">
-              <Button color="gray" onClick={() => setShowCategoryModal(false)}>
+            <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-4">
+              <Button color="gray" onClick={() => setShowCategoryModal(false)} className="w-full sm:w-auto text-sm sm:text-base">
                 {t('cancel') || 'Cancel'}
               </Button>
-              <Button type="submit">
+              <Button type="submit" className="w-full sm:w-auto text-sm sm:text-base">
                 {t('create') || 'Create'}
               </Button>
             </div>
@@ -544,50 +618,56 @@ export default function AdminBadgesPage() {
 
       {/* Delete Badge Confirmation Modal */}
       <Modal show={showDeleteBadgeModal} onClose={() => setShowDeleteBadgeModal(false)} size="md">
-        <Modal.Header>{t('deleteBadge') || 'Delete Badge'}</Modal.Header>
-        <Modal.Body>
-          <p>{t('confirmDeleteBadge') || 'Are you sure you want to delete this badge?'}</p>
+        <Modal.Header className="text-base sm:text-lg px-4 sm:px-6">{t('deleteBadge') || 'Delete Badge'}</Modal.Header>
+        <Modal.Body className="px-4 sm:px-6">
+          <p className="text-sm sm:text-base">{t('confirmDeleteBadge') || 'Are you sure you want to delete this badge?'}</p>
           {deletingBadge && (
-            <p className="mt-2 font-semibold">{deletingBadge.title || deletingBadge.id}</p>
+            <p className="mt-2 font-semibold text-sm sm:text-base">{deletingBadge.title || deletingBadge.id}</p>
           )}
         </Modal.Body>
-        <Modal.Footer>
-          <Button color="gray" onClick={() => setShowDeleteBadgeModal(false)}>
-            {t('cancel') || 'Cancel'}
-          </Button>
-          <Button color="failure" onClick={handleDeleteBadge}>
-            {t('delete') || 'Delete'}
-          </Button>
+        <Modal.Footer className="px-4 sm:px-6">
+          <div className="flex flex-col-reverse sm:flex-row gap-2 w-full sm:w-auto">
+            <Button color="gray" onClick={() => setShowDeleteBadgeModal(false)} className="w-full sm:w-auto text-sm sm:text-base">
+              {t('cancel') || 'Cancel'}
+            </Button>
+            <Button color="failure" onClick={handleDeleteBadge} className="w-full sm:w-auto text-sm sm:text-base">
+              {t('delete') || 'Delete'}
+            </Button>
+          </div>
         </Modal.Footer>
       </Modal>
 
       {/* Delete Category Confirmation Modal */}
       <Modal show={showDeleteCategoryModal} onClose={() => setShowDeleteCategoryModal(false)} size="md">
-        <Modal.Header>{t('deleteCategory') || 'Delete Category'}</Modal.Header>
-        <Modal.Body>
-          <p>{t('confirmDeleteCategory') || 'Are you sure you want to delete this category? All badges in this category will also be deleted.'}</p>
+        <Modal.Header className="text-base sm:text-lg px-4 sm:px-6">{t('deleteCategory') || 'Delete Category'}</Modal.Header>
+        <Modal.Body className="px-4 sm:px-6">
+          <p className="text-sm sm:text-base">{t('confirmDeleteCategory') || 'Are you sure you want to delete this category? All badges in this category will also be deleted.'}</p>
           {deletingCategory && (
-            <p className="mt-2 font-semibold">{deletingCategory.title || deletingCategory.id}</p>
+            <p className="mt-2 font-semibold text-sm sm:text-base">{deletingCategory.title || deletingCategory.id}</p>
           )}
         </Modal.Body>
-        <Modal.Footer>
-          <Button color="gray" onClick={() => setShowDeleteCategoryModal(false)}>
-            {t('cancel') || 'Cancel'}
-          </Button>
-          <Button color="failure" onClick={handleDeleteCategory}>
-            {t('delete') || 'Delete'}
-          </Button>
+        <Modal.Footer className="px-4 sm:px-6">
+          <div className="flex flex-col-reverse sm:flex-row gap-2 w-full sm:w-auto">
+            <Button color="gray" onClick={() => setShowDeleteCategoryModal(false)} className="w-full sm:w-auto text-sm sm:text-base">
+              {t('cancel') || 'Cancel'}
+            </Button>
+            <Button color="failure" onClick={handleDeleteCategory} className="w-full sm:w-auto text-sm sm:text-base">
+              {t('delete') || 'Delete'}
+            </Button>
+          </div>
         </Modal.Footer>
       </Modal>
 
       {/* Toast Notification */}
       {toast.show && (
-        <Toast className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-4 z-50">
-          <div className={`ml-3 text-sm font-normal ${toast.type === 'success' ? 'text-green-500' : 'text-red-500'}`}>
-            {toast.message}
-          </div>
-          <Toast.Toggle onClick={() => setToast({ show: false, message: '', type: 'success' })} />
-        </Toast>
+        <div className="fixed bottom-4 right-4 left-4 sm:left-auto z-50 max-w-sm sm:max-w-none">
+          <Toast className="w-full sm:w-auto">
+            <div className={`ml-2 sm:ml-3 text-xs sm:text-sm font-normal ${toast.type === 'success' ? 'text-green-500' : 'text-red-500'}`}>
+              {toast.message}
+            </div>
+            <Toast.Toggle onClick={() => setToast({ show: false, message: '', type: 'success' })} />
+          </Toast>
+        </div>
       )}
     </div>
   );

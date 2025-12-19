@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { fetchActivities, deleteActivity, updateActivityStatus } from "@/utils/crudActivities";
 import { fetchOrganizations } from "@/utils/crudOrganizations";
 import { useTranslations } from "next-intl";
+import { useTheme } from '@/utils/theme/ThemeContext';
 import ActivityCard from "@/components/activities/ActivityCard";
 import DeleteActivityModal from "@/components/activities/DeleteActivityModal";
 import ReviewApplicationsModal from "@/components/activities/ReviewApplicationsModal";
@@ -22,6 +23,7 @@ import categories from "@/constant/categories";
 export default function AdminActivitiesPage() {
   const t = useTranslations('Admin');
   const tActivities = useTranslations('Activities');
+  const { isDark } = useTheme();
   const router = useRouter();
   
   const [allActivities, setAllActivities] = useState([]);
@@ -355,99 +357,99 @@ export default function AdminActivitiesPage() {
   };
 
   return (
-    <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
+    <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 bg-background-page dark:bg-background-page min-h-screen">
       {/* Header */}
-      <div className="mb-6 sm:mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold mb-2">{t('activitiesManagement') || 'Activities Management'}</h1>
-        <p className="text-sm sm:text-base text-gray-600">{t('allActivitiesDescription') || 'Manage all activities from all organizations'}</p>
+      <div className="mb-4 sm:mb-6 md:mb-8">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2 text-text-primary dark:text-text-primary">{t('activitiesManagement') || 'Activities Management'}</h1>
+        <p className="text-xs sm:text-sm md:text-base text-text-secondary dark:text-text-secondary">{t('allActivitiesDescription') || 'Manage all activities from all organizations'}</p>
       </div>
 
       {/* Metrics Section */}
-      <div className="mb-6 sm:mb-8">
-        <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 px-1 text-gray-700">{t('metrics') || 'Metrics'}</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3 sm:gap-4">
+      <div className="mb-4 sm:mb-6 md:mb-8">
+        <h2 className="text-base sm:text-lg md:text-xl font-semibold mb-2 sm:mb-3 md:mb-4 px-1 text-text-primary dark:text-text-primary">{t('metrics') || 'Metrics'}</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2 sm:gap-3 md:gap-4">
           {/* All Activities Card */}
-          <div className="bg-white rounded-lg shadow-md">
-            <div className="flex items-center gap-2 sm:gap-3 py-1 sm:py-1.5 px-2 sm:px-2.5">
-              <div className="bg-gray-100 p-2 rounded-full flex-shrink-0">
-                <HiViewGrid className="h-5 w-5 sm:h-6 sm:w-6 text-gray-600" />
+          <div className="bg-background-card dark:bg-background-card rounded-lg shadow-md border border-border-light dark:border-border-dark">
+            <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 py-1.5 sm:py-2 px-2 sm:px-2.5">
+              <div className="bg-background-hover dark:bg-background-hover p-1.5 sm:p-2 rounded-full flex-shrink-0">
+                <HiViewGrid className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-text-secondary dark:text-text-secondary" />
               </div>
-              <h2 className="text-xs sm:text-sm font-semibold flex-1">{t('all') || 'All'}</h2>
-              <p className="text-xl sm:text-2xl font-bold text-gray-600 flex-shrink-0">{metrics.total}</p>
+              <h2 className="text-[10px] xs:text-xs sm:text-sm font-semibold flex-1 text-text-primary dark:text-text-primary truncate">{t('all') || 'All'}</h2>
+              <p className="text-lg sm:text-xl md:text-2xl font-bold text-text-primary dark:text-text-primary flex-shrink-0">{metrics.total}</p>
             </div>
           </div>
 
           {/* Online Activities Card */}
-          <div className="bg-white rounded-lg shadow-md">
-            <div className="flex items-center gap-2 sm:gap-3 py-1 sm:py-1.5 px-2 sm:px-2.5">
-              <div className="bg-blue-100 p-2 rounded-full flex-shrink-0">
-                <MdOutlineSocialDistance className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
+          <div className="bg-background-card dark:bg-background-card rounded-lg shadow-md border border-border-light dark:border-border-dark">
+            <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 py-1.5 sm:py-2 px-2 sm:px-2.5">
+              <div className="bg-semantic-info-100 dark:bg-semantic-info-900 p-1.5 sm:p-2 rounded-full flex-shrink-0">
+                <MdOutlineSocialDistance className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-semantic-info-600 dark:text-semantic-info-400" />
               </div>
-              <h2 className="text-xs sm:text-sm font-semibold flex-1">{t('online') || 'Online'}</h2>
-              <p className="text-xl sm:text-2xl font-bold text-blue-600 flex-shrink-0">{metrics.online}</p>
+              <h2 className="text-[10px] xs:text-xs sm:text-sm font-semibold flex-1 text-text-primary dark:text-text-primary truncate">{t('online') || 'Online'}</h2>
+              <p className="text-lg sm:text-xl md:text-2xl font-bold text-semantic-info-600 dark:text-semantic-info-400 flex-shrink-0">{metrics.online}</p>
             </div>
           </div>
 
           {/* Local Activities Card */}
-          <div className="bg-white rounded-lg shadow-md">
-            <div className="flex items-center gap-2 sm:gap-3 py-1 sm:py-1.5 px-2 sm:px-2.5">
-              <div className="bg-green-100 p-2 rounded-full flex-shrink-0">
-                <HiOfficeBuilding className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
+          <div className="bg-background-card dark:bg-background-card rounded-lg shadow-md border border-border-light dark:border-border-dark">
+            <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 py-1.5 sm:py-2 px-2 sm:px-2.5">
+              <div className="bg-semantic-success-100 dark:bg-semantic-success-900 p-1.5 sm:p-2 rounded-full flex-shrink-0">
+                <HiOfficeBuilding className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-semantic-success-600 dark:text-semantic-success-400" />
               </div>
-              <h2 className="text-xs sm:text-sm font-semibold flex-1">{t('local') || 'Local'}</h2>
-              <p className="text-xl sm:text-2xl font-bold text-green-600 flex-shrink-0">{metrics.local}</p>
+              <h2 className="text-[10px] xs:text-xs sm:text-sm font-semibold flex-1 text-text-primary dark:text-text-primary truncate">{t('local') || 'Local'}</h2>
+              <p className="text-lg sm:text-xl md:text-2xl font-bold text-semantic-success-600 dark:text-semantic-success-400 flex-shrink-0">{metrics.local}</p>
             </div>
           </div>
 
           {/* Events Card */}
-          <div className="bg-white rounded-lg shadow-md">
-            <div className="flex items-center gap-2 sm:gap-3 py-1 sm:py-1.5 px-2 sm:px-2.5">
-              <div className="bg-purple-100 p-2 rounded-full flex-shrink-0">
-                <HiCalendar className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
+          <div className="bg-background-card dark:bg-background-card rounded-lg shadow-md border border-border-light dark:border-border-dark">
+            <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 py-1.5 sm:py-2 px-2 sm:px-2.5">
+              <div className="bg-activityType-event-100 dark:bg-activityType-event-900 p-1.5 sm:p-2 rounded-full flex-shrink-0">
+                <HiCalendar className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-activityType-event-500 dark:text-activityType-event-400" />
               </div>
-              <h2 className="text-xs sm:text-sm font-semibold flex-1">{t('events') || 'Events'}</h2>
-              <p className="text-xl sm:text-2xl font-bold text-purple-600 flex-shrink-0">{metrics.events}</p>
+              <h2 className="text-[10px] xs:text-xs sm:text-sm font-semibold flex-1 text-text-primary dark:text-text-primary truncate">{t('events') || 'Events'}</h2>
+              <p className="text-lg sm:text-xl md:text-2xl font-bold text-activityType-event-500 dark:text-activityType-event-400 flex-shrink-0">{metrics.events}</p>
             </div>
           </div>
 
           {/* Open Activities Card */}
-          <div className="bg-white rounded-lg shadow-md">
-            <div className="flex items-center gap-2 sm:gap-3 py-1 sm:py-1.5 px-2 sm:px-2.5">
-              <div className="bg-green-100 p-2 rounded-full flex-shrink-0">
-                <HiCalendar className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
+          <div className="bg-background-card dark:bg-background-card rounded-lg shadow-md border border-border-light dark:border-border-dark">
+            <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 py-1.5 sm:py-2 px-2 sm:px-2.5">
+              <div className="bg-semantic-success-100 dark:bg-semantic-success-900 p-1.5 sm:p-2 rounded-full flex-shrink-0">
+                <HiCalendar className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-semantic-success-600 dark:text-semantic-success-400" />
               </div>
-              <h2 className="text-xs sm:text-sm font-semibold flex-1">{t('open') || 'Open'}</h2>
-              <p className="text-xl sm:text-2xl font-bold text-green-600 flex-shrink-0">{metrics.open}</p>
+              <h2 className="text-[10px] xs:text-xs sm:text-sm font-semibold flex-1 text-text-primary dark:text-text-primary truncate">{t('open') || 'Open'}</h2>
+              <p className="text-lg sm:text-xl md:text-2xl font-bold text-semantic-success-600 dark:text-semantic-success-400 flex-shrink-0">{metrics.open}</p>
             </div>
           </div>
 
           {/* Draft Activities Card */}
-          <div className="bg-white rounded-lg shadow-md">
-            <div className="flex items-center gap-2 sm:gap-3 py-1 sm:py-1.5 px-2 sm:px-2.5">
-              <div className="bg-yellow-100 p-2 rounded-full flex-shrink-0">
-                <HiDocumentText className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-600" />
+          <div className="bg-background-card dark:bg-background-card rounded-lg shadow-md border border-border-light dark:border-border-dark">
+            <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 py-1.5 sm:py-2 px-2 sm:px-2.5">
+              <div className="bg-semantic-warning-100 dark:bg-semantic-warning-900 p-1.5 sm:p-2 rounded-full flex-shrink-0">
+                <HiDocumentText className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-semantic-warning-600 dark:text-semantic-warning-400" />
               </div>
-              <h2 className="text-xs sm:text-sm font-semibold flex-1">{t('draft') || 'Draft'}</h2>
-              <p className="text-xl sm:text-2xl font-bold text-yellow-600 flex-shrink-0">{metrics.draft}</p>
+              <h2 className="text-[10px] xs:text-xs sm:text-sm font-semibold flex-1 text-text-primary dark:text-text-primary truncate">{t('draft') || 'Draft'}</h2>
+              <p className="text-lg sm:text-xl md:text-2xl font-bold text-semantic-warning-600 dark:text-semantic-warning-400 flex-shrink-0">{metrics.draft}</p>
             </div>
           </div>
 
           {/* Closed Activities Card */}
-          <div className="bg-white rounded-lg shadow-md">
-            <div className="flex items-center gap-2 sm:gap-3 py-1 sm:py-1.5 px-2 sm:px-2.5">
-              <div className="bg-orange-100 p-2 rounded-full flex-shrink-0">
-                <HiLockClosed className="h-5 w-5 sm:h-6 sm:w-6 text-orange-600" />
+          <div className="bg-background-card dark:bg-background-card rounded-lg shadow-md border border-border-light dark:border-border-dark">
+            <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 py-1.5 sm:py-2 px-2 sm:px-2.5">
+              <div className="bg-primary-100 dark:bg-primary-900 p-1.5 sm:p-2 rounded-full flex-shrink-0">
+                <HiLockClosed className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-primary-600 dark:text-primary-400" />
               </div>
-              <h2 className="text-xs sm:text-sm font-semibold flex-1">{t('closed') || 'Closed'}</h2>
-              <p className="text-xl sm:text-2xl font-bold text-orange-600 flex-shrink-0">{metrics.closed}</p>
+              <h2 className="text-[10px] xs:text-xs sm:text-sm font-semibold flex-1 text-text-primary dark:text-text-primary truncate">{t('closed') || 'Closed'}</h2>
+              <p className="text-lg sm:text-xl md:text-2xl font-bold text-primary-600 dark:text-primary-400 flex-shrink-0">{metrics.closed}</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Activities List */}
-      <div className="mt-6 sm:mt-10">
-        <h2 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 px-1">{t('allActivities') || 'All Activities'}</h2>
+      <div className="mt-4 sm:mt-6 md:mt-10">
+        <h2 className="text-lg sm:text-xl md:text-2xl font-semibold mb-3 sm:mb-4 px-1 text-text-primary dark:text-text-primary">{t('allActivities') || 'All Activities'}</h2>
         
         {/* Filters */}
         <ActivityFilters
@@ -469,12 +471,12 @@ export default function AdminActivitiesPage() {
 
         {/* Organization Filter (Admin specific) */}
         {availableOrganizations.length > 0 && (
-          <div className="mb-4 p-4 bg-white rounded-lg shadow-sm border border-gray-200">
-            <label className="block text-sm font-medium text-gray-700 mb-2">{t('filterByOrganization') || 'Filter by Organization'}</label>
+          <div className="mb-4 p-3 sm:p-4 bg-background-card dark:bg-background-card rounded-lg shadow-sm border border-border-light dark:border-border-dark">
+            <label className="block text-xs sm:text-sm font-medium text-text-primary dark:text-text-primary mb-2">{t('filterByOrganization') || 'Filter by Organization'}</label>
             <Select
               value={filters.organization}
               onChange={(e) => setFilters({ ...filters, organization: e.target.value })}
-              className="w-full sm:w-auto"
+              className="w-full sm:w-auto text-sm sm:text-base bg-background-card dark:bg-background-card border-border-light dark:border-border-dark text-text-primary dark:text-text-primary"
             >
               <option value="all">{t('allOrganizations') || 'All Organizations'}</option>
               {availableOrganizations.map(org => (
@@ -485,14 +487,18 @@ export default function AdminActivitiesPage() {
         )}
 
         {/* Sort and Results Count */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-          <div className="text-sm text-gray-600">
-            {tActivities('showing') || 'Showing'} <span className="font-semibold">{sortedActivities.length}</span> {tActivities('of') || 'of'}{' '}
-            <span className="font-semibold">{allActivities.length}</span> {tActivities('activities') || 'activities'}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
+          <div className="text-xs sm:text-sm text-text-secondary dark:text-text-secondary">
+            {tActivities('showing') || 'Showing'} <span className="font-semibold text-text-primary dark:text-text-primary">{sortedActivities.length}</span> {tActivities('of') || 'of'}{' '}
+            <span className="font-semibold text-text-primary dark:text-text-primary">{allActivities.length}</span> {tActivities('activities') || 'activities'}
           </div>
-          <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-gray-700">{tActivities('sortBy') || 'Sort by'}</label>
-            <Select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="w-full sm:w-auto">
+          <div className="flex flex-col xs:flex-row items-start xs:items-center gap-2">
+            <label className="text-xs sm:text-sm font-medium text-text-primary dark:text-text-primary whitespace-nowrap">{tActivities('sortBy') || 'Sort by'}</label>
+            <Select 
+              value={sortBy} 
+              onChange={(e) => setSortBy(e.target.value)} 
+              className="w-full xs:w-auto text-sm sm:text-base bg-background-card dark:bg-background-card border-border-light dark:border-border-dark text-text-primary dark:text-text-primary"
+            >
               <option value="newest">{tActivities('sortNewest') || 'Newest'}</option>
               <option value="oldest">{tActivities('sortOldest') || 'Oldest'}</option>
               <option value="xp_high">{tActivities('sortXpHigh') || 'XP: High to Low'}</option>
@@ -506,14 +512,14 @@ export default function AdminActivitiesPage() {
 
         {loadingActivities ? (
           <div className="flex justify-center items-center h-32">
-            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
+            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary-500 dark:border-primary-400"></div>
           </div>
         ) : sortedActivities.length === 0 ? (
-          <p className="text-gray-600 px-1">
+          <p className="text-text-secondary dark:text-text-secondary px-1">
             {t('noActivitiesFound') || 'No activities found'}
           </p>
         ) : (
-          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5'>
+          <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-5'>
             {sortedActivities.map((activity) => (
               <div key={activity.id} className="relative">
                 <ActivityCard
@@ -659,7 +665,7 @@ export default function AdminActivitiesPage() {
                     {/* Close button */}
                     <button
                       onClick={() => setShowActionModal(false)}
-                      className="absolute top-2 right-2 sm:top-2 sm:right-2 w-9 h-9 sm:w-8 sm:h-8 md:w-9 md:h-9 lg:w-10 lg:h-10 rounded-full bg-gray-600 text-white flex items-center justify-center hover:bg-gray-700 active:bg-gray-800 transition-colors text-xl sm:text-lg md:text-xl lg:text-2xl touch-manipulation"
+                      className="absolute top-2 right-2 w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-full bg-gray-600 text-white flex items-center justify-center hover:bg-gray-700 active:bg-gray-800 transition-colors text-lg sm:text-xl md:text-2xl touch-manipulation"
                       aria-label="Close"
                     >
                       ×
@@ -746,13 +752,13 @@ export default function AdminActivitiesPage() {
 
       {/* Toast Notification */}
       {showToast && (
-        <div className="fixed bottom-16 sm:bottom-5 right-4 sm:right-5 left-4 sm:left-auto z-[60] max-w-sm sm:max-w-none">
-          <Toast onClose={() => setShowToast(false)}>
-            {toastMessage.type === 'success' && <div className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-green-100 text-green-500">✓</div>}
-            {toastMessage.type === 'warning' && <div className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-orange-100 text-orange-500">!</div>}
-            {toastMessage.type === 'error' && <div className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-100 text-red-500">!</div>}
-            <div className="ml-3 text-sm font-normal break-words">{toastMessage.message}</div>
-            <Toast.Toggle onClose={() => setShowToast(false)} />
+        <div className="fixed bottom-4 right-4 left-4 sm:left-auto z-[60] max-w-sm sm:max-w-none">
+          <Toast onClose={() => setShowToast(false)} className="bg-background-card dark:bg-background-card border border-border-light dark:border-border-dark">
+            {toastMessage.type === 'success' && <div className="inline-flex h-6 w-6 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-lg bg-semantic-success-100 dark:bg-semantic-success-900 text-semantic-success-600 dark:text-semantic-success-400 text-xs sm:text-base">✓</div>}
+            {toastMessage.type === 'warning' && <div className="inline-flex h-6 w-6 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-lg bg-semantic-warning-100 dark:bg-semantic-warning-900 text-semantic-warning-600 dark:text-semantic-warning-400 text-xs sm:text-base">!</div>}
+            {toastMessage.type === 'error' && <div className="inline-flex h-6 w-6 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-lg bg-semantic-error-100 dark:bg-semantic-error-900 text-semantic-error-600 dark:text-semantic-error-400 text-xs sm:text-base">!</div>}
+            <div className="ml-2 sm:ml-3 text-xs sm:text-sm font-normal break-words text-text-primary dark:text-text-primary">{toastMessage.message}</div>
+            <Toast.Toggle onClose={() => setShowToast(false)} className="text-text-tertiary dark:text-text-tertiary" />
           </Toast>
         </div>
       )}
