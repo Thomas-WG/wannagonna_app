@@ -625,7 +625,18 @@
         "viewParticipants": "Ver Participantes",
         "noParticipants": "Aún no hay participantes",
         "participantsTitle": "Participantes",
-        "validatedAt": "Validado"
+        "validatedAt": "Validado",
+        "rejectedAt": "Rechazado en",
+        "validateParticipant": "Validar",
+        "rejectParticipant": "Rechazar",
+        "pendingValidation": "Pendiente",
+        "validated": "Validado",
+        "rejected": "Rechazado",
+        "validateActivityCompletion": "Use los botones a continuación para validar si cada participante realmente completó la actividad.",
+        "processingValidation": "Procesando...",
+        "processingRejection": "Procesando...",
+        "errorValidating": "Error al validar participante",
+        "errorRejecting": "Error al rechazar participante"
     },
     "Dashboard": {
         "yourStatistics": "Tus Estadísticas",

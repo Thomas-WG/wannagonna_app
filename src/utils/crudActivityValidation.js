@@ -56,15 +56,21 @@ async function recordValidation(userId, activityId, token, validatedBy = null) {
     if (!querySnapshot.empty) {
       // Update existing validation
       const existingValidation = querySnapshot.docs[0];
+      const existingData = existingValidation.data();
       const updateData = {
         status: 'validated',
         validatedAt: Timestamp.now(),
-        token: token || existingValidation.data().token,
-        validatedBy: validatedBy || existingValidation.data().validatedBy,
+        validatedBy: validatedBy || existingData.validatedBy || null,
         // Clear rejection fields if they exist
         rejectedAt: null,
         rejectedBy: null,
       };
+      // Only include token if it exists in existing data or if we're providing a new token
+      if (token) {
+        updateData.token = token;
+      } else if (existingData.token !== undefined) {
+        updateData.token = existingData.token;
+      }
       await updateDoc(existingValidation.ref, updateData);
     } else {
       // Create new validation
@@ -201,6 +207,52 @@ export async function validateActivityByQR(userId, activityId, token) {
 }
 
 /**
+ * Initialize a validation document with pending status when an application is accepted
+ * @param {string} activityId - Activity ID
+ * @param {string} userId - User ID of the accepted volunteer
+ * @returns {Promise<Object>} Result object with success status
+ */
+export async function initializeValidationDocument(activityId, userId) {
+  try {
+    const activityDoc = doc(db, 'activities', activityId);
+    const validationsRef = collection(activityDoc, 'validations');
+    
+    // Check if validation already exists to avoid duplicates
+    const q = query(validationsRef, where('userId', '==', userId));
+    const querySnapshot = await getDocs(q);
+    
+    if (!querySnapshot.empty) {
+      // Validation already exists, don't create duplicate
+      console.log(`Validation document already exists for user ${userId} on activity ${activityId}`);
+      return {
+        success: true,
+        message: 'Validation document already exists'
+      };
+    }
+    
+    // Create new validation document with pending status
+    await addDoc(validationsRef, {
+      userId,
+      status: 'pending',
+      createdAt: Timestamp.now(),
+    });
+    
+    console.log(`Validation document initialized for user ${userId} on activity ${activityId} with status 'pending'`);
+    return {
+      success: true,
+      message: 'Validation document initialized successfully'
+    };
+  } catch (error) {
+    console.error('Error initializing validation document:', error);
+    return {
+      success: false,
+      error: 'INITIALIZATION_ERROR',
+      message: error.message || 'An error occurred while initializing validation document.'
+    };
+  }
+}
+
+/**
  * Fetch all validations for an activity
  * @param {string} activityId - Activity ID
  * @returns {Promise<Array>} Array of validation objects with userId and status
@@ -313,6 +365,7 @@ export async function rejectApplicant(activityId, userId, rejectedBy) {
     if (!querySnapshot.empty) {
       // Update existing validation
       const existingValidation = querySnapshot.docs[0];
+      const existingData = existingValidation.data();
       const updateData = {
         status: 'rejected',
         rejectedAt: Timestamp.now(),
@@ -320,8 +373,12 @@ export async function rejectApplicant(activityId, userId, rejectedBy) {
         // Clear validation fields if they exist
         validatedAt: null,
         validatedBy: null,
-        token: null,
       };
+      // Only set token to null if it exists in the document (to clear it)
+      // Don't set it if it doesn't exist to avoid undefined
+      if (existingData.token !== undefined) {
+        updateData.token = null;
+      }
       await updateDoc(existingValidation.ref, updateData);
     } else {
       // Create new rejection record

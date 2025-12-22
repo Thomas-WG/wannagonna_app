@@ -1,37 +1,41 @@
 'use client';
 
-import { Modal, Avatar, Spinner } from 'flowbite-react';
+import { Modal, Avatar, Spinner, Button, Badge } from 'flowbite-react';
 import { useEffect, useState, useCallback } from 'react';
-import { fetchValidationsForActivity } from '@/utils/crudActivityValidation';
+import { fetchValidationsForActivity, validateApplicant, rejectApplicant } from '@/utils/crudActivityValidation';
 import { getDoc, doc } from 'firebase/firestore';
 import { db } from 'firebaseConfig';
 import { useTranslations } from 'next-intl';
 import { useModal } from '@/utils/modal/useModal';
+import { useAuth } from '@/utils/auth/AuthContext';
 import PublicProfileModal from '@/components/profile/PublicProfileModal';
 import Image from 'next/image';
+import { HiCheck, HiX } from 'react-icons/hi';
 
-export default function ParticipantListModal({ isOpen, onClose, activityId }) {
+export default function ParticipantListModal({ isOpen, onClose, activity, activityId }) {
   const t = useTranslations('MyNonProfit');
+  const { user } = useAuth();
   const [participants, setParticipants] = useState([]);
   const [loading, setLoading] = useState(false);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState(null);
+  const [processing, setProcessing] = useState({}); // Track which user is being processed
   const wrappedOnClose = useModal(isOpen, onClose, 'participant-list-modal');
+  
+  // Use activityId from activity prop if available, otherwise use activityId prop (backward compatibility)
+  const effectiveActivityId = activity?.id || activityId;
 
   const fetchParticipants = useCallback(async () => {
-    if (!activityId) return;
+    if (!effectiveActivityId) return;
     
     setLoading(true);
     try {
-      // Fetch all validations for the activity
-      const validations = await fetchValidationsForActivity(activityId);
+      // Fetch all validations for the activity (pending, validated, rejected)
+      const validations = await fetchValidationsForActivity(effectiveActivityId);
       
-      // Filter to only validated participants (status === 'validated')
-      const validatedValidations = validations.filter(v => v.status === 'validated');
-      
-      // Fetch user profile data for each validated participant
+      // Fetch user profile data for all validations
       const participantsData = await Promise.all(
-        validatedValidations.map(async (validation) => {
+        validations.map(async (validation) => {
           try {
             const userRef = doc(db, 'members', validation.userId);
             const userDoc = await getDoc(userRef);
@@ -42,7 +46,9 @@ export default function ParticipantListModal({ isOpen, onClose, activityId }) {
                 userId: validation.userId,
                 displayName: userData.displayName || userData.name || 'Unknown User',
                 profilePicture: userData.profilePicture || userData.photoURL || null,
-                validatedAt: validation.validatedAt
+                status: validation.status || 'validated', // Default to 'validated' for backward compatibility
+                validatedAt: validation.validatedAt,
+                rejectedAt: validation.rejectedAt
               };
             }
             return null;
@@ -52,7 +58,9 @@ export default function ParticipantListModal({ isOpen, onClose, activityId }) {
               userId: validation.userId,
               displayName: 'Unknown User',
               profilePicture: null,
-              validatedAt: validation.validatedAt
+              status: validation.status || 'validated',
+              validatedAt: validation.validatedAt,
+              rejectedAt: validation.rejectedAt
             };
           }
         })
@@ -66,18 +74,19 @@ export default function ParticipantListModal({ isOpen, onClose, activityId }) {
     } finally {
       setLoading(false);
     }
-  }, [activityId]);
+  }, [effectiveActivityId]);
 
   useEffect(() => {
-    if (isOpen && activityId) {
+    if (isOpen && effectiveActivityId) {
       fetchParticipants();
     } else if (!isOpen) {
       // Reset state when modal closes
       setParticipants([]);
       setProfileModalOpen(false);
       setSelectedUserId(null);
+      setProcessing({});
     }
-  }, [isOpen, activityId, fetchParticipants]);
+  }, [isOpen, effectiveActivityId, fetchParticipants]);
 
   const handleParticipantClick = (userId) => {
     setSelectedUserId(userId);
@@ -100,9 +109,72 @@ export default function ParticipantListModal({ isOpen, onClose, activityId }) {
     }
   };
 
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case 'validated':
+        return <Badge color="success" icon={HiCheck}>{t('validated') || 'Validated'}</Badge>;
+      case 'rejected':
+        return <Badge color="failure" icon={HiX}>{t('rejected') || 'Rejected'}</Badge>;
+      case 'pending':
+        return <Badge color="warning">{t('pendingValidation') || 'Pending'}</Badge>;
+      default:
+        return null;
+    }
+  };
+
+  const handleValidate = async (userId) => {
+    if (!user?.uid || !effectiveActivityId) return;
+    
+    setProcessing(prev => ({ ...prev, [userId]: true }));
+    try {
+      const result = await validateApplicant(effectiveActivityId, userId, user.uid);
+      if (result.success) {
+        // Refresh participants list
+        await fetchParticipants();
+      } else {
+        console.error('Validation error:', result.message);
+        alert(result.message || t('errorValidating') || 'Failed to validate participant');
+      }
+    } catch (error) {
+      console.error('Error validating participant:', error);
+      alert(t('errorValidating') || 'An error occurred while validating the participant');
+    } finally {
+      setProcessing(prev => {
+        const newProcessing = { ...prev };
+        delete newProcessing[userId];
+        return newProcessing;
+      });
+    }
+  };
+
+  const handleReject = async (userId) => {
+    if (!user?.uid || !effectiveActivityId) return;
+    
+    setProcessing(prev => ({ ...prev, [userId]: true }));
+    try {
+      const result = await rejectApplicant(effectiveActivityId, userId, user.uid);
+      if (result.success) {
+        // Refresh participants list
+        await fetchParticipants();
+      } else {
+        console.error('Rejection error:', result.message);
+        alert(result.message || t('errorRejecting') || 'Failed to reject participant');
+      }
+    } catch (error) {
+      console.error('Error rejecting participant:', error);
+      alert(t('errorRejecting') || 'An error occurred while rejecting the participant');
+    } finally {
+      setProcessing(prev => {
+        const newProcessing = { ...prev };
+        delete newProcessing[userId];
+        return newProcessing;
+      });
+    }
+  };
+
   return (
     <>
-      <Modal show={isOpen} onClose={wrappedOnClose} size="md" className="z-50">
+      <Modal show={isOpen} onClose={wrappedOnClose} size="lg" className="z-50">
         <Modal.Header className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white">
           <div className="flex items-center gap-3">
             <h3 className="text-lg sm:text-xl font-semibold">{t('participantsTitle')}</h3>
@@ -126,68 +198,129 @@ export default function ParticipantListModal({ isOpen, onClose, activityId }) {
               </p>
             </div>
           ) : (
-            <div className="space-y-3">
-              {participants.map((participant) => (
+            <div className="space-y-3 sm:space-y-4">
+              {/* Info message for validation */}
+              {participants.some(p => p.status === 'pending') && (
+                <div className="mb-3 sm:mb-4 p-3 sm:p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                  <p className="text-xs sm:text-sm text-blue-800 dark:text-blue-200 text-center">
+                    {t('validateActivityCompletion') || 'Use the buttons below to validate if each participant actually completed the activity.'}
+                  </p>
+                </div>
+              )}
+              
+              {participants.map((participant) => {
+                const isProcessing = processing[participant.userId] || false;
+                const isPending = participant.status === 'pending';
+                const showButtons = isPending;
+                
+                return (
                 <div
                   key={participant.userId}
-                  onClick={() => handleParticipantClick(participant.userId)}
-                  className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors touch-manipulation active:scale-[0.98]"
-                >
-                  {/* Avatar */}
-                  <div className="flex-shrink-0">
-                    {participant.profilePicture ? (
-                      <Image
-                        src={participant.profilePicture}
-                        alt={participant.displayName}
-                        width={48}
-                        height={48}
-                        className="rounded-full w-12 h-12 object-cover"
-                      />
-                    ) : (
-                      <Avatar
-                        img=""
-                        alt={participant.displayName}
-                        rounded
-                        size="md"
-                        className="bg-gray-300 dark:bg-gray-600"
+                    className="border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                      {/* Avatar and Info */}
+                      <div 
+                        className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0"
                       >
-                        <span className="text-gray-600 dark:text-gray-300 font-medium text-lg">
-                          {participant.displayName.charAt(0).toUpperCase()}
-                        </span>
-                      </Avatar>
-                    )}
-                  </div>
+                        <div 
+                          className="flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+                          onClick={() => handleParticipantClick(participant.userId)}
+                          title={t('viewProfile') || 'View profile'}
+                        >
+                          {participant.profilePicture ? (
+                            <Image
+                              src={participant.profilePicture}
+                              alt={participant.displayName}
+                              width={48}
+                              height={48}
+                              className="rounded-full w-10 h-10 sm:w-12 sm:h-12 object-cover cursor-pointer"
+                            />
+                          ) : (
+                            <Avatar
+                              img=""
+                              alt={participant.displayName}
+                              rounded
+                              size="sm"
+                              className="sm:!w-10 sm:!h-10 flex-shrink-0 bg-gray-300 dark:bg-gray-600 cursor-pointer"
+                            >
+                              <span className="text-gray-600 dark:text-gray-300 font-medium text-sm sm:text-base">
+                                {participant.displayName.charAt(0).toUpperCase()}
+                              </span>
+                            </Avatar>
+                          )}
+                        </div>
+                        
+                        {/* Name, Status, and Date */}
+                        <div 
+                          className="flex-1 min-w-0 cursor-pointer"
+                          onClick={() => handleParticipantClick(participant.userId)}
+                        >
+                          <p className="text-sm sm:text-base font-medium text-gray-900 dark:text-white truncate hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                            {participant.displayName}
+                          </p>
+                          <div className="flex items-center gap-2 mt-1">
+                            {getStatusBadge(participant.status)}
+                          </div>
+                          {(participant.validatedAt || participant.rejectedAt) && (
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                              {participant.validatedAt 
+                                ? `${t('validatedAt') || 'Validated at'}: ${formatDate(participant.validatedAt)}`
+                                : participant.rejectedAt 
+                                  ? `${t('rejectedAt') || 'Rejected at'}: ${formatDate(participant.rejectedAt)}`
+                                  : ''}
+                            </p>
+                          )}
+                        </div>
+                      </div>
                   
-                  {/* Name and Date */}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm sm:text-base font-medium text-gray-900 dark:text-white truncate">
-                      {participant.displayName}
-                    </p>
-                    {participant.validatedAt && (
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                        {t('validatedAt')}: {formatDate(participant.validatedAt)}
-                      </p>
-                    )}
+                      {/* Action Buttons - Only show for pending status */}
+                      {showButtons && (
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-200 dark:border-gray-700 sm:border-l sm:pl-4 sm:ml-4 min-w-[180px] sm:min-w-[200px]">
+                          <Button
+                            size="sm"
+                            color="success"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleValidate(participant.userId);
+                            }}
+                            disabled={isProcessing}
+                            className="flex-1 sm:flex-initial min-h-[44px] sm:min-h-0 flex items-center justify-center whitespace-nowrap"
+                          >
+                            {isProcessing ? (
+                              <Spinner size="sm" />
+                            ) : (
+                              <>
+                                <HiCheck className="h-4 w-4 sm:mr-1" />
+                                <span className="text-sm sm:text-base">{t('validateParticipant') || 'Validate'}</span>
+                              </>
+                            )}
+                          </Button>
+                          <Button
+                            size="sm"
+                            color="failure"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleReject(participant.userId);
+                            }}
+                            disabled={isProcessing}
+                            className="flex-1 sm:flex-initial min-h-[44px] sm:min-h-0 flex items-center justify-center whitespace-nowrap"
+                          >
+                            {isProcessing ? (
+                              <Spinner size="sm" />
+                            ) : (
+                              <>
+                                <HiX className="h-4 w-4 sm:mr-1" />
+                                <span className="text-sm sm:text-base">{t('rejectParticipant') || 'Reject'}</span>
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  
-                  {/* Click indicator */}
-                  <div className="flex-shrink-0 text-gray-400 dark:text-gray-500">
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 5l7 7-7 7"
-                      />
-                    </svg>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </Modal.Body>

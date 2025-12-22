@@ -631,7 +631,18 @@
         "viewParticipants": "View Participants",
         "noParticipants": "No participants yet",
         "participantsTitle": "Participants",
-        "validatedAt": "Validated"
+        "validatedAt": "Validated",
+        "rejectedAt": "Rejected at",
+        "validateParticipant": "Validate",
+        "rejectParticipant": "Reject",
+        "pendingValidation": "Pending",
+        "validated": "Validated",
+        "rejected": "Rejected",
+        "validateActivityCompletion": "Use the buttons below to validate if each participant actually completed the activity.",
+        "processingValidation": "Processing...",
+        "processingRejection": "Processing...",
+        "errorValidating": "Failed to validate participant",
+        "errorRejecting": "Failed to reject participant"
     },
     "Dashboard": {
         "yourStatistics": "Your Statistics",

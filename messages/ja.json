@@ -631,7 +631,18 @@
         "viewParticipants": "参加者を表示",
         "noParticipants": "まだ参加者はいません",
         "participantsTitle": "参加者",
-        "validatedAt": "承認日"
+        "validatedAt": "承認日",
+        "rejectedAt": "却下日時",
+        "validateParticipant": "承認",
+        "rejectParticipant": "却下",
+        "pendingValidation": "保留中",
+        "validated": "承認済み",
+        "rejected": "却下済み",
+        "validateActivityCompletion": "下のボタンを使用して、各参加者が実際に活動を完了したかどうかを確認してください。",
+        "processingValidation": "処理中...",
+        "processingRejection": "処理中...",
+        "errorValidating": "参加者の承認に失敗しました",
+        "errorRejecting": "参加者の却下に失敗しました"
     },
     "Dashboard": {
         "yourStatistics": "あなたの統計",

@@ -2,6 +2,7 @@ import { collection, addDoc, getDoc, doc, query, where, getDocs, updateDoc, runT
 import { db } from 'firebaseConfig';
 import { fetchActivityById } from './crudActivities';
 import { grantBadgeToUser } from './crudBadges';
+import { initializeValidationDocument } from './crudActivityValidation';
 
 export const checkExistingApplication = async (activityId, userId) => {
   try {
@@ -200,6 +201,17 @@ export const updateApplicationStatus = async (activityId, applicationId, status,
 
     // Update in activity's applications collection
     await updateDoc(applicationRef, updateData);
+    
+    // If status is being changed to "accepted", initialize validation document
+    if (status === 'accepted' && applicationData.userId) {
+      try {
+        await initializeValidationDocument(activityId, applicationData.userId);
+        console.log(`Validation document initialized for user ${applicationData.userId} on activity ${activityId}`);
+      } catch (validationError) {
+        // Log error but don't fail the application status update
+        console.error('Error initializing validation document:', validationError);
+      }
+    }
     
     if (applicationData) {
       // Update in user's applications collection

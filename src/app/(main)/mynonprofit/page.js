@@ -807,7 +807,7 @@ export default function MyNonProfitDashboard() {
           onClose={() => {
             setShowParticipantModal(false);
           }}
-          activityId={selectedActivity.id}
+          activity={selectedActivity}
         />
       )}
 

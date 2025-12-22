@@ -746,7 +746,7 @@ export default function AdminActivitiesPage() {
           onClose={() => {
             setShowParticipantModal(false);
           }}
-          activityId={selectedActivity.id}
+          activity={selectedActivity}
         />
       )}
 

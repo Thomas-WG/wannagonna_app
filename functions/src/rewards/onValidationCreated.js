@@ -12,7 +12,9 @@ import {FieldValue} from "firebase-admin/firestore";
  * @return {Promise<void>}
  */
 async function processValidationRewards(event, isUpdate = false) {
-  const validationData = event.data?.data();
+  // For update events, use event.data.after, for create events use event.data
+  const validationSnapshot = isUpdate ? event.data?.after : event.data;
+  const validationData = validationSnapshot?.data();
   const activityId = event.params.activityId;
   const validationId = event.params.validationId;
 
@@ -42,7 +44,8 @@ async function processValidationRewards(event, isUpdate = false) {
 
   try {
     // Check if rewards have already been processed
-    const validationRef = event.data?.ref;
+    // For update events, use event.data.after.ref, for create events use event.data.ref
+    const validationRef = validationSnapshot?.ref;
     if (!validationRef) {
       throw new Error("Validation reference not found");
     }
