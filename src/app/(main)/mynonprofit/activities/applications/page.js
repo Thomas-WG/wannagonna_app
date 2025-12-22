@@ -25,9 +25,6 @@ export default function ReviewApplicationsPage() {
   const [profileModalOpen, setProfileModalOpen] = useState(false)
   const [selectedUserId, setSelectedUserId] = useState(null)
   
-  // Register confirmation modal with global modal manager
-  const wrappedConfirmationOnClose = useModal(confirmationOpen, closeConfirm, 'applications-confirmation-modal')
-
   const organizationId = claims?.npoId || null
 
   const getStatusBadge = (status) => {
@@ -87,6 +84,9 @@ export default function ReviewApplicationsPage() {
     setConfirmation(null)
     setNpoResponse('')
   }
+
+  // Register confirmation modal with global modal manager
+  const wrappedConfirmationOnClose = useModal(confirmationOpen, closeConfirm, 'applications-confirmation-modal')
 
   const confirmAction = async () => {
     if (!confirmation) return
