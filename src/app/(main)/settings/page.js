@@ -4,7 +4,7 @@
 
 import React, {useEffect, useState} from 'react';
 import {useTranslations, useLocale} from "next-intl"; // Import hook to handle translations
-import {setUserLocale} from '@/utils/locale'; // Import function to set the user's preferred locale
+import {setUserLocaleClient} from '@/utils/localeClient'; // Client-side helper to set the user's preferred locale
 import {useAuth} from '@/utils/auth/AuthContext'; // Hook for accessing user authentication status
 import {useTheme} from '@/utils/theme/ThemeContext'; // Hook for theme management
 import {Select, Label} from "flowbite-react";
@@ -37,7 +37,7 @@ export default function SettingsPage() {
   // Function to handle language change
   const handleLanguageChange = (e) => {
     const newLocale = e.target.value;
-    setUserLocale(newLocale); // Set the new locale using the setUserLocale utility
+    setUserLocaleClient(newLocale); // Set the new locale cookie on the client
     // Reload the page to apply the new locale
     window.location.reload();
   };

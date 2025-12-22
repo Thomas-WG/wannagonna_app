@@ -335,8 +335,8 @@ export default function CreateUpdateActivityPage() {
       await updateActivityStatus(savedActivityId, 'Open');
       console.log('Activity status updated successfully');
       setShowStatusModal(false);
-      // Navigate back after successful status update
-      router.back();
+      // Redirect to NPO dashboard after successful status update
+      router.push('/mynonprofit');
     } catch (error) {
       console.error('Error updating activity status:', error);
       alert('Error updating activity status. Please try again.');
