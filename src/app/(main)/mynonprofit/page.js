@@ -631,19 +631,17 @@ export default function MyNonProfitDashboard() {
                             </div>
                           )}
 
-                          {/* View Participants Button - Hidden for events */}
-                          {!isEvent && (
-                            <div className="flex flex-col items-center">
-                              <button
-                                onClick={handleViewParticipants}
-                                className="w-16 h-16 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-teal-500 text-white flex items-center justify-center shadow-lg hover:bg-teal-600 active:bg-teal-700 transition-colors touch-manipulation"
-                                aria-label="View Participants"
-                              >
-                                <HiUsers className="h-7 w-7 sm:h-6 sm:w-6 md:h-7 md:w-7" />
-                              </button>
-                              <span className="mt-1.5 text-xs sm:text-[11px] md:text-xs text-white font-medium text-center leading-tight px-0.5">{t('viewParticipants') || 'Participants'}</span>
-                            </div>
-                          )}
+                          {/* View Participants Button */}
+                          <div className="flex flex-col items-center">
+                            <button
+                              onClick={handleViewParticipants}
+                              className="w-16 h-16 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-teal-500 text-white flex items-center justify-center shadow-lg hover:bg-teal-600 active:bg-teal-700 transition-colors touch-manipulation"
+                              aria-label="View Participants"
+                            >
+                              <HiUsers className="h-7 w-7 sm:h-6 sm:w-6 md:h-7 md:w-7" />
+                            </button>
+                            <span className="mt-1.5 text-xs sm:text-[11px] md:text-xs text-white font-medium text-center leading-tight px-0.5">{t('viewParticipants') || 'Participants'}</span>
+                          </div>
 
                           {/* Show QR Code Button - Conditional */}
                           {hasQRCode && (

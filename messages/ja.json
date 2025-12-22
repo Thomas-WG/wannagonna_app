@@ -642,7 +642,13 @@
         "processingValidation": "処理中...",
         "processingRejection": "処理中...",
         "errorValidating": "参加者の承認に失敗しました",
-        "errorRejecting": "参加者の却下に失敗しました"
+        "errorRejecting": "参加者の却下に失敗しました",
+        "contactParticipants": "参加者に連絡",
+        "contactPending": "保留中の参加者に連絡",
+        "contactValidated": "承認済みの参加者に連絡",
+        "contactAll": "全員に連絡",
+        "noEmailsAvailable": "選択した参加者に利用可能なメールアドレスがありません。",
+        "emailSubject": "件名: {activityTitle}"
     },
     "Dashboard": {
         "yourStatistics": "あなたの統計",

@@ -641,7 +641,13 @@
         "processingValidation": "Traitement...",
         "processingRejection": "Traitement...",
         "errorValidating": "Échec de la validation du participant",
-        "errorRejecting": "Échec du rejet du participant"
+        "errorRejecting": "Échec du rejet du participant",
+        "contactParticipants": "Contacter les participants",
+        "contactPending": "Contacter les en attente",
+        "contactValidated": "Contacter les validés",
+        "contactAll": "Contacter tous",
+        "noEmailsAvailable": "Aucune adresse e-mail disponible pour les participants sélectionnés.",
+        "emailSubject": "Concernant : {activityTitle}"
     },
     "Dashboard": {
         "yourStatistics": "Vos Statistiques",

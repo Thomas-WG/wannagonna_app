@@ -636,7 +636,13 @@
         "processingValidation": "Procesando...",
         "processingRejection": "Procesando...",
         "errorValidating": "Error al validar participante",
-        "errorRejecting": "Error al rechazar participante"
+        "errorRejecting": "Error al rechazar participante",
+        "contactParticipants": "Contactar participantes",
+        "contactPending": "Contactar pendientes",
+        "contactValidated": "Contactar validados",
+        "contactAll": "Contactar todos",
+        "noEmailsAvailable": "No hay direcciones de correo electrónico disponibles para los participantes seleccionados.",
+        "emailSubject": "Respecto a: {activityTitle}"
     },
     "Dashboard": {
         "yourStatistics": "Tus Estadísticas",

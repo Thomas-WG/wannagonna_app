@@ -1,6 +1,6 @@
 'use client';
 
-import { Modal, Avatar, Spinner, Button, Badge } from 'flowbite-react';
+import { Modal, Avatar, Spinner, Button, Badge, Dropdown } from 'flowbite-react';
 import { useEffect, useState, useCallback } from 'react';
 import { fetchValidationsForActivity, validateApplicant, rejectApplicant } from '@/utils/crudActivityValidation';
 import { getDoc, doc } from 'firebase/firestore';
@@ -10,7 +10,7 @@ import { useModal } from '@/utils/modal/useModal';
 import { useAuth } from '@/utils/auth/AuthContext';
 import PublicProfileModal from '@/components/profile/PublicProfileModal';
 import Image from 'next/image';
-import { HiCheck, HiX } from 'react-icons/hi';
+import { HiCheck, HiX, HiMail, HiChevronDown } from 'react-icons/hi';
 
 export default function ParticipantListModal({ isOpen, onClose, activity, activityId }) {
   const t = useTranslations('MyNonProfit');
@@ -46,6 +46,7 @@ export default function ParticipantListModal({ isOpen, onClose, activity, activi
                 userId: validation.userId,
                 displayName: userData.displayName || userData.name || 'Unknown User',
                 profilePicture: userData.profilePicture || userData.photoURL || null,
+                email: userData.email || null, // Add email for contact functionality
                 status: validation.status || 'validated', // Default to 'validated' for backward compatibility
                 validatedAt: validation.validatedAt,
                 rejectedAt: validation.rejectedAt
@@ -58,6 +59,7 @@ export default function ParticipantListModal({ isOpen, onClose, activity, activi
               userId: validation.userId,
               displayName: 'Unknown User',
               profilePicture: null,
+              email: null,
               status: validation.status || 'validated',
               validatedAt: validation.validatedAt,
               rejectedAt: validation.rejectedAt
@@ -172,16 +174,91 @@ export default function ParticipantListModal({ isOpen, onClose, activity, activi
     }
   };
 
+  const handleContactParticipants = (filterType) => {
+    let filteredParticipants = [];
+    
+    switch (filterType) {
+      case 'pending':
+        filteredParticipants = participants.filter(p => p.status === 'pending');
+        break;
+      case 'validated':
+        filteredParticipants = participants.filter(p => p.status === 'validated');
+        break;
+      case 'all':
+        filteredParticipants = participants;
+        break;
+      default:
+        filteredParticipants = participants;
+    }
+    
+    // Get emails, filtering out null/undefined/empty strings
+    const emails = filteredParticipants
+      .map(p => p.email)
+      .filter(email => email && email.trim() !== '');
+    
+    if (emails.length === 0) {
+      alert(t('noEmailsAvailable') || 'No email addresses available for the selected participants.');
+      return;
+    }
+    
+    // Create mailto: link with BCC
+    // Note: Some email clients have limits on BCC recipients (typically 50-100)
+    // For large lists, you might want to split into multiple emails
+    const bccEmails = emails.join(',');
+    const activityTitle = activity?.title || t('activity') || 'Activity';
+    const subject = encodeURIComponent(
+      t('emailSubject', { activityTitle }) || 
+      `Regarding: ${activityTitle}`
+    );
+    const mailtoLink = `mailto:?bcc=${encodeURIComponent(bccEmails)}&subject=${subject}`;
+    
+    // Open email client
+    window.location.href = mailtoLink;
+  };
+
   return (
     <>
       <Modal show={isOpen} onClose={wrappedOnClose} size="lg" className="z-50">
         <Modal.Header className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white">
+          <div className="flex items-center justify-between w-full gap-3">
           <div className="flex items-center gap-3">
             <h3 className="text-lg sm:text-xl font-semibold">{t('participantsTitle')}</h3>
             {participants.length > 0 && (
               <span className="text-sm bg-white/20 px-2 py-1 rounded-full">
                 {participants.length}
               </span>
+              )}
+            </div>
+            
+            {/* Contact Participants Button */}
+            {participants.length > 0 && (
+              <div className="relative">
+                <Dropdown
+                  label=""
+                  dismissOnClick={true}
+                  renderTrigger={() => (
+                    <Button
+                      size="sm"
+                      color="light"
+                      className="bg-white/20 hover:bg-white/30 text-white border-0 min-h-[44px] sm:min-h-0"
+                    >
+                      <HiMail className="h-4 w-4 sm:mr-2" />
+                      <span className="hidden sm:inline">{t('contactParticipants') || 'Contact'}</span>
+                      <HiChevronDown className="h-4 w-4 ml-1" />
+                    </Button>
+                  )}
+                >
+                  <Dropdown.Item onClick={() => handleContactParticipants('pending')}>
+                    {t('contactPending') || 'Contact Pending'} ({participants.filter(p => p.status === 'pending').length})
+                  </Dropdown.Item>
+                  <Dropdown.Item onClick={() => handleContactParticipants('validated')}>
+                    {t('contactValidated') || 'Contact Validated'} ({participants.filter(p => p.status === 'validated').length})
+                  </Dropdown.Item>
+                  <Dropdown.Item onClick={() => handleContactParticipants('all')}>
+                    {t('contactAll') || 'Contact All'} ({participants.length})
+                  </Dropdown.Item>
+                </Dropdown>
+              </div>
             )}
           </div>
         </Modal.Header>
@@ -225,40 +302,40 @@ export default function ParticipantListModal({ isOpen, onClose, activity, activi
                       >
                         <div 
                           className="flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
-                          onClick={() => handleParticipantClick(participant.userId)}
+                  onClick={() => handleParticipantClick(participant.userId)}
                           title={t('viewProfile') || 'View profile'}
-                        >
-                          {participant.profilePicture ? (
-                            <Image
-                              src={participant.profilePicture}
-                              alt={participant.displayName}
-                              width={48}
-                              height={48}
+                >
+                    {participant.profilePicture ? (
+                      <Image
+                        src={participant.profilePicture}
+                        alt={participant.displayName}
+                        width={48}
+                        height={48}
                               className="rounded-full w-10 h-10 sm:w-12 sm:h-12 object-cover cursor-pointer"
-                            />
-                          ) : (
-                            <Avatar
-                              img=""
-                              alt={participant.displayName}
-                              rounded
+                      />
+                    ) : (
+                      <Avatar
+                        img=""
+                        alt={participant.displayName}
+                        rounded
                               size="sm"
                               className="sm:!w-10 sm:!h-10 flex-shrink-0 bg-gray-300 dark:bg-gray-600 cursor-pointer"
-                            >
+                      >
                               <span className="text-gray-600 dark:text-gray-300 font-medium text-sm sm:text-base">
-                                {participant.displayName.charAt(0).toUpperCase()}
-                              </span>
-                            </Avatar>
-                          )}
-                        </div>
-                        
+                          {participant.displayName.charAt(0).toUpperCase()}
+                        </span>
+                      </Avatar>
+                    )}
+                  </div>
+                  
                         {/* Name, Status, and Date */}
                         <div 
                           className="flex-1 min-w-0 cursor-pointer"
                           onClick={() => handleParticipantClick(participant.userId)}
                         >
                           <p className="text-sm sm:text-base font-medium text-gray-900 dark:text-white truncate hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                            {participant.displayName}
-                          </p>
+                      {participant.displayName}
+                    </p>
                           <div className="flex items-center gap-2 mt-1">
                             {getStatusBadge(participant.status)}
                           </div>
@@ -269,10 +346,10 @@ export default function ParticipantListModal({ isOpen, onClose, activity, activi
                                 : participant.rejectedAt 
                                   ? `${t('rejectedAt') || 'Rejected at'}: ${formatDate(participant.rejectedAt)}`
                                   : ''}
-                            </p>
-                          )}
+                      </p>
+                    )}
                         </div>
-                      </div>
+                  </div>
                   
                       {/* Action Buttons - Only show for pending status */}
                       {showButtons && (

@@ -361,7 +361,18 @@ export default function DashboardPage() {
       return allApplicationsActivities;
     } else {
       // Show all activities (Open and Closed) - combine openActivities and historyActivities
-      return [...openActivities, ...historyActivities];
+      // Deduplicate by activity ID to prevent same activity appearing twice
+      const combined = [...openActivities, ...historyActivities];
+      const seenIds = new Set();
+      const deduplicated = combined.filter(activity => {
+        const activityId = activity.id || activity.activityId;
+        if (seenIds.has(activityId)) {
+          return false; // Skip duplicate
+        }
+        seenIds.add(activityId);
+        return true;
+      });
+      return deduplicated;
     }
   }, [showApplications, allApplicationsActivities, openActivities, historyActivities]);
 

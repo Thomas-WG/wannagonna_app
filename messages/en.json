@@ -642,7 +642,13 @@
         "processingValidation": "Processing...",
         "processingRejection": "Processing...",
         "errorValidating": "Failed to validate participant",
-        "errorRejecting": "Failed to reject participant"
+        "errorRejecting": "Failed to reject participant",
+        "contactParticipants": "Contact Participants",
+        "contactPending": "Contact Pending",
+        "contactValidated": "Contact Validated",
+        "contactAll": "Contact All",
+        "noEmailsAvailable": "No email addresses available for the selected participants.",
+        "emailSubject": "Regarding: {activityTitle}"
     },
     "Dashboard": {
         "yourStatistics": "Your Statistics",
