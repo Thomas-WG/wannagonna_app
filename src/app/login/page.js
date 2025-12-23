@@ -115,12 +115,12 @@ export default function LoginPage() {
           const timestamp = parseInt(cachedTimestamp, 10);
           const age = Date.now() - timestamp;
           if (age < 24 * 60 * 60 * 1000) {
-            setLogoUrl(cachedUrl);
+          setLogoUrl(cachedUrl);
             // Still fetch fresh URL in background to update cache
             fetch('/api/logo').catch(() => {
               // Silently fail background fetch
             });
-            return;
+          return;
           }
         }
 
@@ -488,7 +488,7 @@ export default function LoginPage() {
             className="object-contain"
             priority
             quality={75}
-            sizes="120px"
+            sizes="(max-width: 640px) 100px, 120px"
           />
         </div>
       )}

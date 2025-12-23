@@ -20,6 +20,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { useAuth } from '@/utils/auth/AuthContext'; // Custom hook for Firebase authentication
 import { useTranslations } from 'use-intl';
 import { Sidebar } from 'flowbite-react';
+import Image from 'next/image';
 import { HiChartPie, HiQuestionMarkCircle, HiLightBulb } from 'react-icons/hi';
 import { MdOutlineExplore, MdOutlineLeaderboard } from 'react-icons/md';
 import { RiTeamLine } from 'react-icons/ri';
@@ -242,15 +243,26 @@ export default function Navbar() {
         aria-label='Sidebar'
       >
         <Sidebar aria-label='Sidebar' className='bg-background-sidebar dark:bg-background-sidebar border-r border-border-light dark:border-border-dark'>
-          {logoUrl ? (
-            <Sidebar.Logo img={logoUrl} imgAlt='WannaGonna logo' className='text-text-primary dark:text-text-primary font-semibold'> 
+          {/* Custom Logo with Next.js Image optimization */}
+          <div className="flex items-center gap-3 p-2 mb-4">
+            {logoUrl ? (
+              <div className="flex-shrink-0">
+                <Image
+                  src={logoUrl}
+                  alt="WannaGonna logo"
+                  width={40}
+                  height={40}
+                  className="object-contain"
+                  priority
+                  quality={75}
+                  sizes="(max-width: 768px) 32px, 40px"
+                />
+              </div>
+            ) : null}
+            <span className='text-text-primary dark:text-text-primary font-semibold text-lg'>
               Wanna Gonna
-            </Sidebar.Logo>
-          ) : (
-            <Sidebar.Logo className='text-text-primary dark:text-text-primary font-semibold'> 
-              Wanna Gonna
-            </Sidebar.Logo>
-          )}
+            </span>
+          </div>
           <Sidebar.Items >
             <Sidebar.ItemGroup>
               <Sidebar.Item 

@@ -147,7 +147,7 @@ export default function Home() {
             priority
             onError={() => setLogoError(true)}
             quality={75}
-            sizes="120px"
+            sizes="(max-width: 640px) 100px, 120px"
           />
         </div>
       )}
