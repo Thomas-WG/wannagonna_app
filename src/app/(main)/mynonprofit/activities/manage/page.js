@@ -10,7 +10,9 @@ import {
   updateActivity,
   fetchActivityById,
   updateActivityStatus,
+  deleteActivity,
 } from '@/utils/crudActivities';
+import { calculateActivityXP } from '@/utils/calculateActivityXP';
 import {fetchOrganizationById} from '@/utils/crudOrganizations';
 import ProgressStepper from '@/components/layout/ProgressStepper';
 import { useAuth } from '@/utils/auth/AuthContext'; // Hook for accessing user authentication status
@@ -43,7 +45,10 @@ export default function CreateUpdateActivityPage() {
     frequency: '',// once or regular activity
     country: '', // Default country
     city: '', // Default city
-    xp_reward: 20, // Default XP points
+    location: '', // Specific location/venue for local and event activities
+    xp_reward: 20, // Default XP points (will be auto-calculated)
+    timeCommitment: 50, // Time commitment slider value (0-100, default: 50 for standard)
+    complexity: 50, // Complexity slider value (0-100, default: 50 for moderate)
     sdg: '', // Sustainable Development Goal
     languages: ['English'],
     organization_logo: '/logo/Favicon.png', // Default NPO logo path
@@ -52,7 +57,13 @@ export default function CreateUpdateActivityPage() {
     creation_date: new Date(),  // Current date and time as default
     start_date: new Date(),     // Default start date
     end_date: new Date(),        // Default end date
-    status: 'created'
+    status: 'created',
+    // New fields
+    externalPlatformLink: '', // External platform/event link
+    participantTarget: null, // Number of participants target
+    acceptApplicationsWG: true, // For local activities: accept applications through WG (default: true)
+    autoAcceptApplications: false, // Auto-accept applications when enabled
+    activity_url: '' // Legacy field name for external link (keeping for backward compatibility)
   });
 
   const [currentStep, setCurrentStep] = useState(1); // Track the current step
@@ -151,6 +162,19 @@ export default function CreateUpdateActivityPage() {
                   return new Date();
                 }
               })() : new Date(),
+              // Handle backward compatibility for external platform link
+              externalPlatformLink: data.externalPlatformLink || data.activity_url || '',
+              activity_url: data.activity_url || data.externalPlatformLink || '',
+              // Set defaults for new fields if not present
+              participantTarget: data.participantTarget || null,
+              acceptApplicationsWG: data.acceptApplicationsWG !== undefined ? data.acceptApplicationsWG : (data.type === 'local' ? true : undefined),
+              autoAcceptApplications: data.autoAcceptApplications || false,
+              location: data.location || '',
+              // Ensure frequency is 'once' for events
+              frequency: data.type === 'event' ? 'once' : (data.frequency || ''),
+              // Backward compatibility: default to 50 if fields are missing
+              timeCommitment: data.timeCommitment !== undefined ? data.timeCommitment : 50,
+              complexity: data.complexity !== undefined ? data.complexity : 50,
             };
             console.log('Processed form data:', processedData);
             setFormData(processedData);
@@ -168,11 +192,67 @@ export default function CreateUpdateActivityPage() {
     if (!isEditMode && prefillType) {
       const allowed = ['online', 'local', 'event'];
       if (allowed.includes(prefillType)) {
-        setFormData((prev) => ({ ...prev, type: prefillType }));
+        setFormData((prev) => ({ 
+          ...prev, 
+          type: prefillType,
+          // Auto-set frequency to 'once' for events
+          frequency: prefillType === 'event' ? 'once' : prev.frequency
+        }));
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [prefillType, isEditMode]);
+
+  // Auto-set frequency to 'once' for events
+  useEffect(() => {
+    if (formData.type === 'event' && formData.frequency !== 'once') {
+      setFormData((prev) => ({ ...prev, frequency: 'once' }));
+    }
+  }, [formData.type, formData.frequency]);
+
+  // Auto-calculate XP when relevant fields change
+  useEffect(() => {
+    // For events, always set XP to 15
+    if (formData.type === 'event') {
+      setFormData((prev) => ({ ...prev, xp_reward: 15 }));
+      return;
+    }
+
+    // For online and local activities, calculate XP
+    if (formData.type === 'online' || formData.type === 'local') {
+      // Only calculate if we have a category selected
+      if (formData.category) {
+        const calculatedXP = calculateActivityXP({
+          type: formData.type,
+          category: formData.category,
+          timeCommitment: formData.timeCommitment ?? 50,
+          complexity: formData.complexity ?? 50,
+          frequency: formData.frequency || 'once',
+        });
+        setFormData((prev) => ({ ...prev, xp_reward: calculatedXP }));
+      }
+    }
+  }, [formData.type, formData.category, formData.timeCommitment, formData.complexity, formData.frequency]);
+
+  // Reset sliders to defaults when activity type changes
+  useEffect(() => {
+    if (formData.type === 'event') {
+      // Events don't use sliders, but we can reset them anyway
+      setFormData((prev) => ({ 
+        ...prev, 
+        timeCommitment: 50, 
+        complexity: 50 
+      }));
+    } else if (formData.type === 'online' || formData.type === 'local') {
+      // Only reset if they're not already set (to preserve values when editing)
+      if (formData.timeCommitment === undefined) {
+        setFormData((prev) => ({ ...prev, timeCommitment: 50 }));
+      }
+      if (formData.complexity === undefined) {
+        setFormData((prev) => ({ ...prev, complexity: 50 }));
+      }
+    }
+  }, [formData.type]);
 
   // Handle form input changes
   const handleChange = (e) => {
@@ -196,25 +276,45 @@ export default function CreateUpdateActivityPage() {
       formData.end_date = null;
     }
 
+    // Normalize skills to store only values (IDs) for consistency
+    // This prevents storing full react-select objects which can't be rendered directly
+    const normalizedSkills = formData.skills && Array.isArray(formData.skills)
+      ? formData.skills.map(skill => {
+          // Extract value from react-select object format, or use string as-is
+          if (typeof skill === 'object' && skill !== null) {
+            return skill.value || skill.id || skill.label || skill;
+          }
+          return skill;
+        }).filter(Boolean) // Remove any null/undefined values
+      : [];
+
     const baseDataToSave = {
       ...formData,
       // Add automatic attributes here if needed (e.g., organizationId, creatorId)
       organizationId: claims?.npoId || formData.organizationId, // Ensure organizationId is set
-      creatorId: user?.uid // Add the creator's ID
+      creatorId: user?.uid, // Add the creator's ID
+      // Ensure frequency is 'once' for events
+      frequency: formData.type === 'event' ? 'once' : formData.frequency,
+      // Ensure both externalPlatformLink and activity_url are saved for backward compatibility
+      externalPlatformLink: formData.externalPlatformLink || formData.activity_url || '',
+      activity_url: formData.activity_url || formData.externalPlatformLink || '',
+      // Normalize skills to store only values
+      skills: normalizedSkills
     };
     
     try {
         // Handle single activity
     if (isEditMode) {
+          // For updates, just save and navigate back (no status modal)
           await updateActivity(activityId, baseDataToSave);
-          setSavedActivityId(activityId);
+          router.back();
     } else {
-          const activityId = await createActivity(baseDataToSave);
-          setSavedActivityId(activityId);
+          // For new activities, create first, then show status modal
+          const newActivityId = await createActivity(baseDataToSave);
+          setSavedActivityId(newActivityId);
+          // Show status update modal
+          setShowStatusModal(true);
         }
-
-    // Show status update modal instead of navigating back
-    setShowStatusModal(true);
     } catch (error) {
       console.error('Error saving activity:', error);
       alert('Error saving activity. Please try again.');
@@ -235,8 +335,8 @@ export default function CreateUpdateActivityPage() {
       await updateActivityStatus(savedActivityId, 'Open');
       console.log('Activity status updated successfully');
       setShowStatusModal(false);
-      // Navigate back after successful status update
-      router.back();
+      // Redirect to NPO dashboard after successful status update
+      router.push('/mynonprofit');
     } catch (error) {
       console.error('Error updating activity status:', error);
       alert('Error updating activity status. Please try again.');
@@ -267,6 +367,23 @@ export default function CreateUpdateActivityPage() {
     } finally {
       setIsUpdatingStatus(false);
     }
+  };
+
+  // Handle cancel action - delete the activity if it was just created
+  const handleCancel = async () => {
+    if (savedActivityId && !isEditMode) {
+      // Only delete if this was a new activity (not an update)
+      try {
+        await deleteActivity(savedActivityId);
+        console.log('Activity deleted after cancel');
+      } catch (error) {
+        console.error('Error deleting activity:', error);
+        // Still close the modal even if deletion fails
+      }
+    }
+    setShowStatusModal(false);
+    // Reset saved activity ID
+    setSavedActivityId(null);
   };
 
   // If there is no authenticated user, return null (no content rendered)
@@ -357,7 +474,7 @@ export default function CreateUpdateActivityPage() {
       {/* Publish/Draft Modal */}
       <PublishDraftModal
         isOpen={showStatusModal}
-        onClose={() => setShowStatusModal(false)}
+        onClose={handleCancel}
         onPublish={handlePublish}
         onDraft={handleDraft}
         isUpdating={isUpdatingStatus}

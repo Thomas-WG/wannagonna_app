@@ -2,6 +2,7 @@ import { collection, addDoc, getDoc, doc, query, where, getDocs, updateDoc, runT
 import { db } from 'firebaseConfig';
 import { fetchActivityById } from './crudActivities';
 import { grantBadgeToUser } from './crudBadges';
+import { initializeValidationDocument } from './crudActivityValidation';
 
 export const checkExistingApplication = async (activityId, userId) => {
   try {
@@ -10,7 +11,11 @@ export const checkExistingApplication = async (activityId, userId) => {
     const q = query(applicationsRef, where('userId', '==', userId));
     
     const querySnapshot = await getDocs(q);
-    return !querySnapshot.empty;
+    // Check if there's any application that is NOT cancelled
+    const hasNonCancelledApplication = querySnapshot.docs.some(
+      (doc) => doc.data().status !== 'cancelled'
+    );
+    return hasNonCancelledApplication;
   } catch (error) {
     console.error('Error checking existing application:', error);
     throw error;
@@ -28,10 +33,16 @@ export const createApplication = async ({ activityId, userId, userEmail, message
       };
     }
 
-    // Get activity details to get organization ID
+    // Get activity details to get organization ID and check auto-accept settings
     const activityRef = doc(db, 'activities', activityId);
     const activityDoc = await getDoc(activityRef);
-    const organizationId = activityDoc.data().organizationId;
+    const activityData = activityDoc.data();
+    const organizationId = activityData.organizationId;
+    
+    // Check if auto-accept is enabled
+    const shouldAutoAccept = activityData.autoAcceptApplications === true;
+    const defaultStatus = shouldAutoAccept ? 'accepted' : 'pending';
+    const defaultNpoResponse = shouldAutoAccept ? 'Your application has been automatically accepted.' : '';
 
     // Check if this is the user's first application (check BEFORE transaction)
     const userRef = doc(db, 'members', userId);
@@ -44,10 +55,11 @@ export const createApplication = async ({ activityId, userId, userEmail, message
     const applicationData = {
       userId,
       message,
-      status: 'pending',
+      status: defaultStatus,
       createdAt: new Date(),
       activityId,
-      organizationId: organizationId
+      organizationId: organizationId,
+      ...(shouldAutoAccept && { npoResponse: defaultNpoResponse })
     };
 
     // Use transaction to ensure all operations succeed or all fail
@@ -70,6 +82,13 @@ export const createApplication = async ({ activityId, userId, userEmail, message
         ...applicationData,
         applicationId: docRef.id,
       });
+
+      // If auto-accept is enabled, update organization's totalNewApplications count
+      // (since it's already accepted, we don't increment the pending count)
+      if (shouldAutoAccept) {
+        // No need to increment totalNewApplications for auto-accepted applications
+        // They bypass the pending queue
+      }
 
       return docRef.id;
     });
@@ -150,7 +169,14 @@ export const fetchApplicationsForActivity = async (activityId) => {
   }
 };
 
-export const updateApplicationStatus = async (activityId, applicationId, status, npoResponse = '', updatedByUserId = null) => {
+export const updateApplicationStatus = async (
+  activityId,
+  applicationId,
+  status,
+  npoResponse = '',
+  updatedByUserId = null,
+  cancellationMessage = ''
+) => {
   try {
     // Get application data first to check current status and find user and organization IDs
     const activityRef = doc(db, 'activities', activityId);
@@ -165,7 +191,7 @@ export const updateApplicationStatus = async (activityId, applicationId, status,
     // Check if we need to update the organization's totalNewApplications count
     const shouldDecrementCount = applicationData.status === 'pending' && (status === 'accepted' || status === 'rejected' || status === 'cancelled');
 
-    // Prepare update data - include lastStatusUpdatedBy if provided
+    // Prepare update data - include lastStatusUpdatedBy and optional cancellationMessage
     const updateData = {
       status,
       npoResponse,
@@ -180,8 +206,24 @@ export const updateApplicationStatus = async (activityId, applicationId, status,
       console.warn("updateApplicationStatus: updatedByUserId not provided, lastStatusUpdatedBy will not be set");
     }
 
+    // Only add cancellationMessage when cancelling, keep backward compatibility otherwise
+    if (status === 'cancelled') {
+      updateData.cancellationMessage = cancellationMessage || '';
+    }
+
     // Update in activity's applications collection
     await updateDoc(applicationRef, updateData);
+    
+    // If status is being changed to "accepted", initialize validation document
+    if (status === 'accepted' && applicationData.userId) {
+      try {
+        await initializeValidationDocument(activityId, applicationData.userId);
+        console.log(`Validation document initialized for user ${applicationData.userId} on activity ${activityId}`);
+      } catch (validationError) {
+        // Log error but don't fail the application status update
+        console.error('Error initializing validation document:', validationError);
+      }
+    }
     
     if (applicationData) {
       // Update in user's applications collection
@@ -236,12 +278,36 @@ export const fetchApplicationsByUserId = async (userId) => {
       // Convert Firestore timestamps to Date objects
       const createdAt = data.createdAt?.toDate ? data.createdAt.toDate() : data.createdAt;
       const updatedAt = data.updatedAt?.toDate ? data.updatedAt.toDate() : data.updatedAt;
+
+      // Optionally enrich with staff member info who last updated the status
+      let lastUpdatedByDisplayName = null;
+      let lastUpdatedByProfilePicture = null;
+      if (data.lastStatusUpdatedBy) {
+        try {
+          const staffRef = doc(db, 'members', data.lastStatusUpdatedBy);
+          const staffDoc = await getDoc(staffRef);
+          if (staffDoc.exists()) {
+            const staffData = staffDoc.data();
+            lastUpdatedByDisplayName =
+              staffData.displayName || staffData.name || null;
+            lastUpdatedByProfilePicture =
+              staffData.profilePicture || staffData.photoURL || null;
+          }
+        } catch (staffError) {
+          console.warn(
+            'Error fetching staff profile for application lastStatusUpdatedBy:',
+            staffError
+          );
+        }
+      }
       
       applications.push({
         id: docSnapshot.id,
         ...data,
         createdAt,
-        updatedAt
+        updatedAt,
+        lastUpdatedByDisplayName,
+        lastUpdatedByProfilePicture
       });
     }
     
@@ -310,16 +376,23 @@ export const createOrUpdateApplicationAsAccepted = async (activityId, userId) =>
     const organizationId = activityData.organizationId;
     
     if (!querySnapshot.empty) {
-      // Application exists - update to accepted
+      // Application exists - update to accepted without overwriting any existing NPO response
       const existingApp = querySnapshot.docs[0];
       const applicationId = existingApp.id;
+      const existingData = existingApp.data();
       
-      // Update status to accepted
-      await updateApplicationStatus(activityId, applicationId, 'accepted', 'Accepted via QR code validation');
+      const existingNpoResponse = existingData.npoResponse || '';
+      
+      await updateApplicationStatus(
+        activityId,
+        applicationId,
+        'accepted',
+        existingNpoResponse
+      );
       
       return { success: true, applicationId, action: 'updated' };
     } else {
-      // No application exists - create new one with accepted status
+      // No application exists - create new one with accepted status (generic manual acceptance)
       // Check if this is the user's first application (before creating it)
       const userRef = doc(db, 'members', userId);
       const userApplicationsRef = collection(userRef, 'applications');
@@ -328,7 +401,7 @@ export const createOrUpdateApplicationAsAccepted = async (activityId, userId) =>
       
       const applicationData = {
         userId,
-        message: 'Accepted via QR code validation',
+        message: '',
         status: 'accepted',
         createdAt: Timestamp.now(),
         activityId,

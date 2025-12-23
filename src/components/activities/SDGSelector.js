@@ -50,7 +50,11 @@ export default function SDGSelector({ formData, setFormData, organizationData })
                     ? 'bg-orange-100 dark:bg-orange-900/30 border-2 border-orange-500 dark:border-orange-400 shadow-lg scale-105 ring-2 ring-orange-200 dark:ring-orange-800'
                     : 'hover:bg-gray-100 dark:hover:bg-gray-800 hover:shadow-md hover:scale-105 active:scale-95 border-2 border-transparent'
                 }`}
-                onClick={() => setFormData((prev) => ({ ...prev, sdg: name }))}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setFormData((prev) => ({ ...prev, sdg: name }));
+                }}
               >
                 <div className={`relative ${isSelected ? 'animate-pulse' : ''}`}>
                   <Image

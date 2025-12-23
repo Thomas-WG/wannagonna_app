@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button, Select } from 'flowbite-react';
 import { HiFilter, HiX, HiChevronDown, HiChevronUp } from 'react-icons/hi';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import categories from '@/constant/categories';
-import { allSDGs, sdgNames } from '@/constant/sdgs';
+import { getSkillsForSelect } from '@/utils/crudSkills';
 
 export default function ActivityFilters({
   filters,
@@ -16,7 +16,56 @@ export default function ActivityFilters({
 }) {
   const t = useTranslations('Activities');
   const tManage = useTranslations('ManageActivities');
+  const tStatus = useTranslations('StatusUpdateModal');
+  const locale = useLocale();
   const [isOpen, setIsOpen] = useState(false);
+  const [skillLabelsMap, setSkillLabelsMap] = useState({});
+  const [isLoadingSkills, setIsLoadingSkills] = useState(false);
+
+  // Load skill labels for translation
+  useEffect(() => {
+    const loadSkillLabels = async () => {
+      if (!availableSkills || availableSkills.length === 0) {
+        setSkillLabelsMap({});
+        return;
+      }
+
+      try {
+        setIsLoadingSkills(true);
+        const skillOptions = await getSkillsForSelect(locale);
+        // Create a flat map of all skills for easy lookup
+        const allSkills = skillOptions.reduce((acc, group) => {
+          return [...acc, ...group.options];
+        }, []);
+
+        // Create a mapping from skill ID to label
+        const labelsMap = {};
+        availableSkills.forEach(skillId => {
+          const foundSkill = allSkills.find(s => s.value === skillId);
+          if (foundSkill) {
+            labelsMap[skillId] = foundSkill.label;
+          } else {
+            // Fallback to ID if not found
+            labelsMap[skillId] = skillId;
+          }
+        });
+
+        setSkillLabelsMap(labelsMap);
+      } catch (error) {
+        console.error('Error loading skill labels:', error);
+        // Fallback: create map with IDs as labels
+        const fallbackMap = {};
+        availableSkills.forEach(skillId => {
+          fallbackMap[skillId] = skillId;
+        });
+        setSkillLabelsMap(fallbackMap);
+      } finally {
+        setIsLoadingSkills(false);
+      }
+    };
+
+    loadSkillLabels();
+  }, [availableSkills, locale]);
 
   const handleFilterChange = (filterKey, value) => {
     onFiltersChange({
@@ -26,21 +75,26 @@ export default function ActivityFilters({
   };
 
   const clearFilters = () => {
-    onFiltersChange({
+    const clearedFilters = {
       type: 'all',
       category: 'all',
       country: 'all',
-      sdg: 'all',
       skill: 'all',
-    });
+      status: 'all',
+    };
+    // Preserve organization filter if it exists (for admin pages)
+    if (filters.organization !== undefined) {
+      clearedFilters.organization = 'all';
+    }
+    onFiltersChange(clearedFilters);
   };
 
   const hasActiveFilters = 
     filters.type !== 'all' ||
     filters.category !== 'all' ||
     filters.country !== 'all' ||
-    filters.sdg !== 'all' ||
-    filters.skill !== 'all';
+    filters.skill !== 'all' ||
+    (filters.status !== undefined && filters.status !== 'all');
 
   // Get categories based on selected type
   const getCategoriesForType = () => {
@@ -68,25 +122,20 @@ export default function ActivityFilters({
       <div className="block md:hidden">
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="w-full flex items-center justify-between p-4 bg-white rounded-lg shadow-sm border border-gray-200 hover:bg-gray-50 transition-colors"
+          className="w-full flex items-center justify-between p-4 bg-background-card dark:bg-background-card rounded-lg shadow-sm border border-border-light dark:border-border-dark hover:bg-background-hover dark:hover:bg-background-hover transition-colors"
         >
           <div className="flex items-center gap-2">
-            <HiFilter className="h-5 w-5" />
-            <span className="font-medium">{t('filters')}</span>
-            {hasActiveFilters && (
-              <span className="ml-2 px-2 py-0.5 text-xs bg-blue-500 text-white rounded-full">
-                {t('active')}
-              </span>
-            )}
+            <HiFilter className="h-5 w-5 text-text-primary dark:text-text-primary" />
+            <span className="font-medium text-text-primary dark:text-text-primary">{t('filters')}</span>
           </div>
           {isOpen ? (
-            <HiChevronUp className="h-5 w-5" />
+            <HiChevronUp className="h-5 w-5 text-text-primary dark:text-text-primary" />
           ) : (
-            <HiChevronDown className="h-5 w-5" />
+            <HiChevronDown className="h-5 w-5 text-text-primary dark:text-text-primary" />
           )}
         </button>
         {isOpen && (
-          <div className="mt-2 p-4 bg-white rounded-lg shadow-sm border border-gray-200 space-y-4">
+          <div className="mt-2 p-4 bg-background-card dark:bg-background-card rounded-lg shadow-sm border border-border-light dark:border-border-dark space-y-4">
             {renderFilters()}
             {hasActiveFilters && (
               <Button
@@ -104,7 +153,7 @@ export default function ActivityFilters({
       </div>
 
       {/* Desktop: Horizontal Layout */}
-      <div className="hidden md:flex flex-wrap items-end gap-4 p-4 bg-white rounded-lg shadow-sm border border-gray-200">
+      <div className="hidden md:flex flex-wrap items-end gap-4 p-4 bg-background-card dark:bg-background-card rounded-lg shadow-sm border border-border-light dark:border-border-dark">
         {renderFilters()}
         {hasActiveFilters && (
           <Button
@@ -125,7 +174,7 @@ export default function ActivityFilters({
       <>
         {/* Type Filter */}
         <div className="flex-1 min-w-[150px]">
-          <label className="block mb-1 text-sm font-medium text-gray-700">
+          <label className="block mb-1 text-sm font-medium text-text-primary dark:text-text-primary">
             {t('filterTypeLabel')}
           </label>
           <Select
@@ -138,7 +187,7 @@ export default function ActivityFilters({
                 category: 'all', // Reset category when type changes
               });
             }}
-            className="w-full"
+            className="w-full bg-background-card dark:bg-background-card text-text-primary dark:text-text-primary border-border-light dark:border-border-dark"
           >
             <option value="all">{t('allTypes')}</option>
             <option value="online">{t('online')}</option>
@@ -149,13 +198,13 @@ export default function ActivityFilters({
 
         {/* Category Filter */}
         <div className="flex-1 min-w-[150px]">
-          <label className="block mb-1 text-sm font-medium text-gray-700">
+          <label className="block mb-1 text-sm font-medium text-text-primary dark:text-text-primary">
             {t('filterCategoryLabel')}
           </label>
           <Select
             value={filters.category}
             onChange={(e) => handleFilterChange('category', e.target.value)}
-            className="w-full"
+            className="w-full bg-background-card dark:bg-background-card text-text-primary dark:text-text-primary border-border-light dark:border-border-dark"
             disabled={filters.type === 'all' && categoryOptions.length === 0}
           >
             <option value="all">{t('allCategories')}</option>
@@ -176,13 +225,13 @@ export default function ActivityFilters({
         {/* Country Filter */}
         {availableCountries && availableCountries.length > 0 && (
           <div className="flex-1 min-w-[150px]">
-            <label className="block mb-1 text-sm font-medium text-gray-700">
+            <label className="block mb-1 text-sm font-medium text-text-primary dark:text-text-primary">
               {t('filterLocationLabel')}
             </label>
             <Select
               value={filters.country}
               onChange={(e) => handleFilterChange('country', e.target.value)}
-              className="w-full"
+              className="w-full bg-background-card dark:bg-background-card text-text-primary dark:text-text-primary border-border-light dark:border-border-dark"
             >
               <option value="all">{t('allCountries')}</option>
               {availableCountries.map((country) => (
@@ -194,42 +243,43 @@ export default function ActivityFilters({
           </div>
         )}
 
-        {/* SDG Filter */}
-        <div className="flex-1 min-w-[150px]">
-          <label className="block mb-1 text-sm font-medium text-gray-700">
-            {t('filterSdgLabel')}
-          </label>
-          <Select
-            value={filters.sdg}
-            onChange={(e) => handleFilterChange('sdg', e.target.value)}
-            className="w-full"
-          >
-            <option value="all">{t('allSdgs')}</option>
-            {allSDGs.map((sdg) => (
-              <option key={sdg.id} value={sdg.id}>
-                {sdg.id}: {sdgNames[sdg.id] || `SDG ${sdg.name}`}
-              </option>
-            ))}
-          </Select>
-        </div>
-
         {/* Skills Filter */}
         {availableSkills && availableSkills.length > 0 && (
           <div className="flex-1 min-w-[150px]">
-            <label className="block mb-1 text-sm font-medium text-gray-700">
+            <label className="block mb-1 text-sm font-medium text-text-primary dark:text-text-primary">
               {t('filterSkillLabel')}
             </label>
             <Select
               value={filters.skill}
               onChange={(e) => handleFilterChange('skill', e.target.value)}
-              className="w-full"
+              className="w-full bg-background-card dark:bg-background-card text-text-primary dark:text-text-primary border-border-light dark:border-border-dark"
+              disabled={isLoadingSkills}
             >
               <option value="all">{t('allSkills')}</option>
-              {availableSkills.map((skill) => (
-                <option key={skill} value={skill}>
-                  {skill}
+              {availableSkills.map((skillId) => (
+                <option key={skillId} value={skillId}>
+                  {skillLabelsMap[skillId] || skillId}
                 </option>
               ))}
+            </Select>
+          </div>
+        )}
+
+        {/* Status Filter */}
+        {filters.status !== undefined && (
+          <div className="flex-1 min-w-[150px]">
+            <label className="block mb-1 text-sm font-medium text-text-primary dark:text-text-primary">
+              Status
+            </label>
+            <Select
+              value={filters.status || 'all'}
+              onChange={(e) => handleFilterChange('status', e.target.value)}
+              className="w-full bg-background-card dark:bg-background-card text-text-primary dark:text-text-primary border-border-light dark:border-border-dark"
+            >
+              <option value="all">All Statuses</option>
+              <option value="Draft">{tStatus('status.Draft')}</option>
+              <option value="Open">{tStatus('status.Open')}</option>
+              <option value="Closed">{tStatus('status.Closed')}</option>
             </Select>
           </div>
         )}

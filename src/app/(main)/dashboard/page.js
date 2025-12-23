@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, Progress, Toast, Badge, Button } from "flowbite-react";
+import { Card, Progress, Toast, Badge, Button, Select, Modal, Textarea } from "flowbite-react";
 import { 
   HiUser, 
   HiOfficeBuilding, 
@@ -17,14 +17,17 @@ import {
   HiQrcode
 } from "react-icons/hi";
 import { MdOutlineSocialDistance } from "react-icons/md";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/utils/auth/AuthContext";
 import { fetchMemberById } from "@/utils/crudMemberProfile";
-import { fetchApplicationsByUserId, fetchActivitiesForVolunteer } from "@/utils/crudApplications";
+import { fetchApplicationsByUserId, fetchActivitiesForVolunteer, updateApplicationStatus } from "@/utils/crudApplications";
 import { fetchHistoryActivities, fetchActivityById } from "@/utils/crudActivities";
+import { fetchOrganizationById } from "@/utils/crudOrganizations";
+import NPODetailsModal from "@/components/activities/NPODetailsModal";
 import { useTranslations } from "next-intl";
 import ActivityCard from "@/components/activities/ActivityCard";
+import ApplicationCard from "@/components/activities/ApplicationCard";
 import ActivityDetailsModal from "@/components/activities/ActivityDetailsModal";
 import ViewApplicationModal from "@/components/activities/ViewApplicationModal";
 import BadgeList from "@/components/badges/BadgeList";
@@ -33,9 +36,12 @@ import ActivityValidationSuccessModal from "@/components/activities/ActivityVali
 import PublicProfileModal from "@/components/profile/PublicProfileModal";
 import { Alert } from "flowbite-react";
 import Image from "next/image";
+import ActivityFilters from "@/components/activities/ActivityFilters";
+import categories from "@/constant/categories";
 
 export default function DashboardPage() {
   const t = useTranslations('Dashboard');
+  const tActivities = useTranslations('Activities');
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, claims } = useAuth();
@@ -46,12 +52,10 @@ export default function DashboardPage() {
   const [historyActivities, setHistoryActivities] = useState([]);
   const [openActivities, setOpenActivities] = useState([]);
   const [allApplicationsActivities, setAllApplicationsActivities] = useState([]);
-  const [showClosedActivities, setShowClosedActivities] = useState(false);
   const [showApplications, setShowApplications] = useState(false);
   const [applicationsWithActivities, setApplicationsWithActivities] = useState([]);
   const [showActivityModal, setShowActivityModal] = useState(false);
   const [selectedActivityId, setSelectedActivityId] = useState(null);
-  const [selectedTypeFilter, setSelectedTypeFilter] = useState(null); // 'local', 'online', 'event', or null
   const [selectedApplicationActivity, setSelectedApplicationActivity] = useState(null);
   const [showApplicationModal, setShowApplicationModal] = useState(false);
   const [showActionModal, setShowActionModal] = useState(false);
@@ -65,6 +69,12 @@ export default function DashboardPage() {
   });
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState({ type: '', message: '' });
+  const [filters, setFilters] = useState({
+    type: 'all',
+    category: 'all',
+    status: 'all',
+  });
+  const [sortBy, setSortBy] = useState('newest');
   
   // Validation result modal state
   const [showValidationModal, setShowValidationModal] = useState(false);
@@ -73,6 +83,17 @@ export default function DashboardPage() {
   
   // Public profile modal state
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [selectedProfileUserId, setSelectedProfileUserId] = useState(null);
+  
+  // Organization details modal state
+  const [showOrgModal, setShowOrgModal] = useState(false);
+  const [selectedOrganization, setSelectedOrganization] = useState(null);
+  
+  // Cancel application modal state
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelApplication, setCancelApplication] = useState(null);
+  const [cancelMessage, setCancelMessage] = useState("");
+  const [isCancelling, setIsCancelling] = useState(false);
   
   // Gamification data (placeholder - can be enhanced later)
   const [gamificationData, setGamificationData] = useState({
@@ -232,7 +253,10 @@ export default function DashboardPage() {
         // Filter activities to show only Open activities with accepted applications
         const open = activities.filter(a => a.status === 'Open');
         setOpenActivities(open);
-        setVolunteerActivities(open);
+        
+        // Show all activities (Open and Closed) by default
+        const allActivitiesForDisplay = [...activities, ...history];
+        setVolunteerActivities(allActivitiesForDisplay);
 
         // Calculate stats from all activities (including closed)
         const allActivities = [...activities];
@@ -333,75 +357,144 @@ export default function DashboardPage() {
     }
   };
 
-  // Handle clicking on Closed card to show closed activities
-  const handleClosedCardClick = () => {
-    if (showClosedActivities) {
-      // Switch back to open activities
-      setVolunteerActivities(openActivities);
-      setShowClosedActivities(false);
-      setShowApplications(false);
-      setSelectedTypeFilter(null);
-    } else {
-      // Show closed activities from history
-      setVolunteerActivities(historyActivities);
-      setShowClosedActivities(true);
-      setShowApplications(false);
-      setSelectedTypeFilter(null);
-    }
-  };
-
-  // Handle clicking on type filter cards (Local, Online, Events)
+  // Handle clicking on type filter cards (Local, Online, Events) - removed filtering, cards are display-only
   const handleTypeFilterClick = (type) => {
-    // Determine source activities based on current view
-    let sourceActivities = [];
-    if (showApplications) {
-      sourceActivities = allApplicationsActivities;
-    } else if (showClosedActivities) {
-      sourceActivities = historyActivities;
-    } else {
-      sourceActivities = openActivities;
-    }
-
-    // Toggle filter: if clicking the same type, remove filter
-    if (selectedTypeFilter === type) {
-      setSelectedTypeFilter(null);
-      setVolunteerActivities(sourceActivities);
-    } else {
-      // Apply filter
-      setSelectedTypeFilter(type);
-      const filtered = sourceActivities.filter(a => a.type === type);
-      setVolunteerActivities(filtered);
-    }
+    // Cards are now display-only, no filtering action
   };
 
-  // Calculate dynamic stats based on current view
-  const getDynamicStats = () => {
-    let activitiesToCount = [];
-    if (showApplications) {
-      activitiesToCount = allApplicationsActivities;
-    } else if (showClosedActivities) {
-      activitiesToCount = historyActivities;
-    } else {
-      activitiesToCount = openActivities;
-    }
-
-    return {
-      local: activitiesToCount.filter(a => a.type === 'local').length,
-      online: activitiesToCount.filter(a => a.type === 'online').length,
-      event: activitiesToCount.filter(a => a.type === 'event').length
-    };
+  // Calculate dynamic stats - show closed activities count for each type
+  const dynamicStats = {
+    local: stats.totalLocalActivities,
+    online: stats.totalOnlineActivities,
+    event: stats.totalEvents
   };
 
-  const dynamicStats = getDynamicStats();
+  // Get all activities for current view - show Open and Closed activities
+  const allActivitiesForView = useMemo(() => {
+    if (showApplications) {
+      return allApplicationsActivities;
+    } else {
+      // Show all activities (Open and Closed) - combine openActivities and historyActivities
+      // Deduplicate by activity ID to prevent same activity appearing twice
+      const combined = [...openActivities, ...historyActivities];
+      const seenIds = new Set();
+      const deduplicated = combined.filter(activity => {
+        const activityId = activity.id || activity.activityId;
+        if (seenIds.has(activityId)) {
+          return false; // Skip duplicate
+        }
+        seenIds.add(activityId);
+        return true;
+      });
+      return deduplicated;
+    }
+  }, [showApplications, allApplicationsActivities, openActivities, historyActivities]);
+
+  // Get all applications for the sub-section (pending, accepted, rejected)
+  const allApplications = useMemo(() => {
+    if (showApplications) {
+      return []; // Don't show in applications view
+    }
+    // Show all applications (pending, accepted, rejected) with valid activity data
+    return applicationsWithActivities
+      .filter(app => app.activity !== null)
+      .map(app => ({
+        ...app.activity,
+        applicationStatus: app.status,
+        applicationId: app.id,
+        applicationData: app,
+        appliedAt: app.createdAt
+      }));
+  }, [showApplications, applicationsWithActivities]);
+
+  // Extract available categories from activities
+  const availableCategories = useMemo(() => {
+    const cats = new Set();
+    allActivitiesForView.forEach((activity) => {
+      if (activity.category) cats.add(activity.category);
+    });
+    return Array.from(cats).sort();
+  }, [allActivitiesForView]);
+
+  // Filter activities based on filters
+  const filteredActivities = useMemo(() => {
+    let filtered = [...allActivitiesForView];
+
+    // Filter by type
+    if (filters.type !== 'all') {
+      filtered = filtered.filter((activity) => activity.type === filters.type);
+    }
+
+    // Filter by category
+    if (filters.category !== 'all') {
+      filtered = filtered.filter((activity) => activity.category === filters.category);
+    }
+
+    // Filter by status
+    if (filters.status !== 'all') {
+      filtered = filtered.filter((activity) => activity.status === filters.status);
+    }
+
+    return filtered;
+  }, [allActivitiesForView, filters]);
+
+  // Sort activities
+  const sortedActivities = useMemo(() => {
+    const sorted = [...filteredActivities];
+
+    switch (sortBy) {
+      case 'newest':
+        return sorted.sort((a, b) => {
+          const getDate = (date) => {
+            if (!date) return new Date(0);
+            if (date.seconds) return new Date(date.seconds * 1000);
+            if (date.toDate) return date.toDate();
+            if (date instanceof Date) return date;
+            return new Date(date);
+          };
+          const dateA = getDate(a.start_date);
+          const dateB = getDate(b.start_date);
+          return dateB - dateA;
+        });
+      case 'oldest':
+        return sorted.sort((a, b) => {
+          const getDate = (date) => {
+            if (!date) return new Date(0);
+            if (date.seconds) return new Date(date.seconds * 1000);
+            if (date.toDate) return date.toDate();
+            if (date instanceof Date) return date;
+            return new Date(date);
+          };
+          const dateA = getDate(a.start_date);
+          const dateB = getDate(b.start_date);
+          return dateA - dateB;
+        });
+      case 'xp_high':
+        return sorted.sort((a, b) => (b.xp_reward || 0) - (a.xp_reward || 0));
+      case 'xp_low':
+        return sorted.sort((a, b) => (a.xp_reward || 0) - (b.xp_reward || 0));
+      case 'applicants_high':
+        return sorted.sort((a, b) => (b.applicants || 0) - (a.applicants || 0));
+      case 'applicants_low':
+        return sorted.sort((a, b) => (a.applicants || 0) - (b.applicants || 0));
+      case 'alphabetical':
+        return sorted.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+      default:
+        return sorted;
+    }
+  }, [filteredActivities, sortBy]);
 
   // Handle application card click - show action buttons for applications
   const handleApplicationCardClick = (activity) => {
-    if (showApplications) {
+    // If activity has applicationStatus, it's an application (from applications view or pending sub-section)
+    if (activity.applicationStatus || showApplications) {
       setSelectedApplicationActivity(activity);
       setShowActionModal(true);
     } else {
       // For non-application views, just open activity modal
-      setSelectedActivityId(activity.id);
+      // Use activityId if available (for history activities), otherwise use id
+      const activityIdToUse = activity.activityId || activity.id;
+      setSelectedActivityId(activityIdToUse);
       setShowActivityModal(true);
     }
   };
@@ -409,7 +502,9 @@ export default function DashboardPage() {
   // Handle viewing activity from application
   const handleViewActivity = () => {
     if (selectedApplicationActivity) {
-      setSelectedActivityId(selectedApplicationActivity.id);
+      // Use activityId if available (for history activities), otherwise use id
+      const activityIdToUse = selectedApplicationActivity.activityId || selectedApplicationActivity.id;
+      setSelectedActivityId(activityIdToUse);
       setShowActivityModal(true);
       setShowActionModal(false);
     }
@@ -419,6 +514,45 @@ export default function DashboardPage() {
   const handleViewApplication = () => {
     setShowApplicationModal(true);
     setShowActionModal(false);
+  };
+
+  // Handle cancel application
+  const handleCancelClick = (application, activity) => {
+    setCancelApplication({ application, activity });
+    setCancelMessage("");
+    setShowCancelModal(true);
+  };
+
+  const handleConfirmCancel = async () => {
+    if (!cancelApplication) return;
+    const { application, activity } = cancelApplication;
+    
+    if (!application.activityId || !application.applicationId || !application.id) return;
+
+    setIsCancelling(true);
+    try {
+      await updateApplicationStatus(
+        application.activityId,
+        application.applicationId,
+        "cancelled",
+        application.npoResponse || "",
+        application.userId || null,
+        cancelMessage.trim() || ""
+      );
+
+      handleApplicationUpdated(application.id, "cancelled");
+      setShowCancelModal(false);
+      setCancelMessage("");
+      setCancelApplication(null);
+    } catch (error) {
+      console.error("Error cancelling application:", error);
+      alert(
+        t("errorCancellingApplication") ||
+          "Failed to cancel application. Please try again."
+      );
+    } finally {
+      setIsCancelling(false);
+    }
   };
 
   // Handle application updated (after cancellation)
@@ -514,11 +648,12 @@ export default function DashboardPage() {
   // Handle clicking on Applications card to show all applications
   const handleApplicationsCardClick = () => {
     if (showApplications) {
-      // Switch back to open activities
-      setVolunteerActivities(openActivities);
+      // Switch back to activities view
+      const allActivitiesForDisplay = [...openActivities, ...historyActivities];
+      setVolunteerActivities(allActivitiesForDisplay);
       setShowApplications(false);
-      setShowClosedActivities(false);
-      setSelectedTypeFilter(null);
+      // Reset filters
+      setFilters({ type: 'all', category: 'all', status: 'all' });
     } else {
       // Convert applications with activities to display format
       const activitiesToShow = applicationsWithActivities
@@ -534,8 +669,8 @@ export default function DashboardPage() {
       setAllApplicationsActivities(activitiesToShow);
       setVolunteerActivities(activitiesToShow);
       setShowApplications(true);
-      setShowClosedActivities(false);
-      setSelectedTypeFilter(null);
+      // Reset filters
+      setFilters({ type: 'all', category: 'all', status: 'all' });
     }
   };
 
@@ -554,16 +689,16 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
+    <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 bg-background-page dark:bg-background-page min-h-screen">
       {loading ? (
         <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500 dark:border-primary-400"></div>
         </div>
       ) : (
         <>
           {/* Profile Section with Gamification */}
           <div className="mb-6 sm:mb-8">
-            <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-indigo-200">
+            <Card className="bg-background-card dark:bg-background-card border-2 border-primary-200 dark:border-primary-700 shadow-lg">
               <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
                 {/* Profile Picture */}
                 <div
@@ -579,7 +714,7 @@ export default function DashboardPage() {
                       className="rounded-full border-4 border-white shadow-lg"
                     />
                   ) : (
-                    <div className="rounded-full bg-indigo-500 w-24 h-24 flex items-center justify-center border-4 border-white shadow-lg">
+                    <div className="rounded-full bg-primary-500 dark:bg-primary-600 w-24 h-24 flex items-center justify-center border-4 border-white dark:border-neutral-800 shadow-lg">
                       <HiUser className="w-12 h-12 text-white" />
                     </div>
                   )}
@@ -588,7 +723,7 @@ export default function DashboardPage() {
                 {/* Profile Info and Gamification */}
                 <div className="flex-1 w-full sm:w-auto text-center sm:text-left">
                   <h1
-                    className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 cursor-pointer hover:text-blue-600 transition-colors"
+                    className="text-2xl sm:text-3xl font-bold text-text-primary dark:text-text-primary mb-2 cursor-pointer hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
                     onClick={() => user?.uid && setShowProfileModal(true)}
                   >
                     {displayName}
@@ -597,7 +732,7 @@ export default function DashboardPage() {
                   {/* User Code */}
                   {userCode && (
                     <div className="mb-4 flex items-center justify-center sm:justify-start gap-2">
-                      <span className="text-sm sm:text-base text-gray-600 font-mono font-semibold">
+                      <span className="text-sm sm:text-base text-text-secondary dark:text-text-secondary font-mono font-semibold">
                         {t('code') || 'Code'}: {userCode}
                       </span>
                       <Button
@@ -616,11 +751,11 @@ export default function DashboardPage() {
                   <div className="mb-4">
                     <div className="flex items-center justify-center sm:justify-start gap-3 mb-2">
                       <div className="flex items-center gap-2">
-                        <span className="text-lg sm:text-xl font-bold text-gray-800">
+                        <span className="text-lg sm:text-xl font-bold text-text-primary dark:text-text-primary">
                           Level {gamificationData.level}
                         </span>
                       </div>
-                      <div className="flex items-center gap-1 text-sm text-gray-600">
+                      <div className="flex items-center gap-1 text-sm text-text-secondary dark:text-text-secondary">
                         <span>{gamificationData.totalXP} XP</span>
                       </div>
                     </div>
@@ -631,7 +766,7 @@ export default function DashboardPage() {
                       onClick={() => router.push('/xp-history')}
                       title={t('viewXpHistory') || 'View XP History'}
                     >
-                      <div className="flex justify-between text-xs text-gray-600 mb-1">
+                      <div className="flex justify-between text-xs text-text-secondary dark:text-text-secondary mb-1">
                         <span>{gamificationData.currentXP} / 100 XP</span>
                         <span>{100 - gamificationData.currentXP} XP to next level</span>
                       </div>
@@ -646,8 +781,8 @@ export default function DashboardPage() {
 
                   {/* Badges Count */}
                   <div className="flex items-center justify-center sm:justify-start gap-2">
-                    <HiBadgeCheck className="w-5 h-5 text-purple-600" />
-                    <span className="text-sm sm:text-base text-gray-700">
+                    <HiBadgeCheck className="w-5 h-5 text-activityType-event-500 dark:text-activityType-event-400" />
+                    <span className="text-sm sm:text-base text-text-primary dark:text-text-primary">
                       <span className="font-semibold">{gamificationData.badgesCount}</span> Badges earned
                     </span>
                   </div>
@@ -658,204 +793,120 @@ export default function DashboardPage() {
 
           {/* Stats Section */}
           <div className="mb-6 sm:mb-8">
-            <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 px-1 text-gray-700">
+            <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 px-1 text-text-primary dark:text-text-primary">
               {t('yourStatistics') || 'Your Statistics'}
             </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               {/* Local Activities */}
-              <Card 
-                className={`hover:shadow-lg transition-all cursor-pointer touch-manipulation ${
-                  selectedTypeFilter === 'local' 
-                    ? 'ring-4 ring-green-400 shadow-xl scale-105' 
-                    : 'shadow-md'
-                }`}
-                onClick={() => handleTypeFilterClick('local')}
-              >
-                <div className="flex flex-col items-center p-2 sm:p-3">
-                  <div className={`p-2 rounded-full mb-2 transition-colors ${
-                    selectedTypeFilter === 'local' 
-                      ? 'bg-green-500' 
-                      : 'bg-green-100'
-                  }`}>
-                    <HiOfficeBuilding className={`h-5 w-5 sm:h-6 sm:w-6 ${
-                      selectedTypeFilter === 'local' 
-                        ? 'text-white' 
-                        : 'text-green-600'
-                    }`} />
+              <div className="bg-background-card dark:bg-background-card rounded-lg shadow-md border border-border-light dark:border-border-dark hover:shadow-lg transition-shadow">
+                <div className="flex items-center gap-2 sm:gap-3 py-1 sm:py-1.5 px-2 sm:px-2.5">
+                  <div className="bg-activityType-local-100 dark:bg-activityType-local-900 p-2 rounded-full flex-shrink-0">
+                    <HiOfficeBuilding className="h-5 w-5 sm:h-6 sm:w-6 text-activityType-local-600 dark:text-activityType-local-400" />
                   </div>
-                  <h2 className="text-xs sm:text-sm font-semibold mb-1 text-center">
+                  <h2 className="text-xs sm:text-sm font-semibold flex-1 text-text-primary dark:text-text-primary">
                     {t('localActivities') || 'Local Activities'}
                   </h2>
-                  <p className={`text-xl sm:text-2xl font-bold text-center ${
-                    selectedTypeFilter === 'local' 
-                      ? 'text-green-800' 
-                      : 'text-green-600'
-                  }`}>
+                  <p className="text-xl sm:text-2xl font-bold text-activityType-local-600 dark:text-activityType-local-400 flex-shrink-0">
                     {dynamicStats.local}
                   </p>
                 </div>
-              </Card>
+              </div>
 
               {/* Online Activities */}
-              <Card 
-                className={`hover:shadow-lg transition-all cursor-pointer touch-manipulation ${
-                  selectedTypeFilter === 'online' 
-                    ? 'ring-4 ring-blue-400 shadow-xl scale-105' 
-                    : 'shadow-md'
-                }`}
-                onClick={() => handleTypeFilterClick('online')}
-              >
-                <div className="flex flex-col items-center p-2 sm:p-3">
-                  <div className={`p-2 rounded-full mb-2 transition-colors ${
-                    selectedTypeFilter === 'online' 
-                      ? 'bg-blue-500' 
-                      : 'bg-blue-100'
-                  }`}>
-                    <MdOutlineSocialDistance className={`h-5 w-5 sm:h-6 sm:w-6 ${
-                      selectedTypeFilter === 'online' 
-                        ? 'text-white' 
-                        : 'text-blue-600'
-                    }`} />
+              <div className="bg-background-card dark:bg-background-card rounded-lg shadow-md border border-border-light dark:border-border-dark hover:shadow-lg transition-shadow">
+                <div className="flex items-center gap-2 sm:gap-3 py-1 sm:py-1.5 px-2 sm:px-2.5">
+                  <div className="bg-activityType-online-100 dark:bg-activityType-online-900 p-2 rounded-full flex-shrink-0">
+                    <MdOutlineSocialDistance className="h-5 w-5 sm:h-6 sm:w-6 text-activityType-online-600 dark:text-activityType-online-400" />
                   </div>
-                  <h2 className="text-xs sm:text-sm font-semibold mb-1 text-center">
+                  <h2 className="text-xs sm:text-sm font-semibold flex-1 text-text-primary dark:text-text-primary">
                     {t('onlineActivities') || 'Online Activities'}
                   </h2>
-                  <p className={`text-xl sm:text-2xl font-bold text-center ${
-                    selectedTypeFilter === 'online' 
-                      ? 'text-blue-800' 
-                      : 'text-blue-600'
-                  }`}>
+                  <p className="text-xl sm:text-2xl font-bold text-activityType-online-600 dark:text-activityType-online-400 flex-shrink-0">
                     {dynamicStats.online}
                   </p>
                 </div>
-              </Card>
+              </div>
 
               {/* Events */}
-              <Card 
-                className={`hover:shadow-lg transition-all cursor-pointer touch-manipulation ${
-                  selectedTypeFilter === 'event' 
-                    ? 'ring-4 ring-purple-400 shadow-xl scale-105' 
-                    : 'shadow-md'
-                }`}
-                onClick={() => handleTypeFilterClick('event')}
-              >
-                <div className="flex flex-col items-center p-2 sm:p-3">
-                  <div className={`p-2 rounded-full mb-2 transition-colors ${
-                    selectedTypeFilter === 'event' 
-                      ? 'bg-purple-500' 
-                      : 'bg-purple-100'
-                  }`}>
-                    <HiCalendar className={`h-5 w-5 sm:h-6 sm:w-6 ${
-                      selectedTypeFilter === 'event' 
-                        ? 'text-white' 
-                        : 'text-purple-600'
-                    }`} />
+              <div className="bg-background-card dark:bg-background-card rounded-lg shadow-md border border-border-light dark:border-border-dark hover:shadow-lg transition-shadow">
+                <div className="flex items-center gap-2 sm:gap-3 py-1 sm:py-1.5 px-2 sm:px-2.5">
+                  <div className="bg-activityType-event-100 dark:bg-activityType-event-900 p-2 rounded-full flex-shrink-0">
+                    <HiCalendar className="h-5 w-5 sm:h-6 sm:w-6 text-activityType-event-600 dark:text-activityType-event-400" />
                   </div>
-                  <h2 className="text-xs sm:text-sm font-semibold mb-1 text-center">
+                  <h2 className="text-xs sm:text-sm font-semibold flex-1 text-text-primary dark:text-text-primary">
                     {t('events') || 'Events'}
                   </h2>
-                  <p className={`text-xl sm:text-2xl font-bold text-center ${
-                    selectedTypeFilter === 'event' 
-                      ? 'text-purple-800' 
-                      : 'text-purple-600'
-                  }`}>
+                  <p className="text-xl sm:text-2xl font-bold text-activityType-event-600 dark:text-activityType-event-400 flex-shrink-0">
                     {dynamicStats.event}
                   </p>
                 </div>
-              </Card>
+              </div>
 
               {/* Total Applications */}
-              <Card 
-                className={`hover:shadow-lg transition-all cursor-pointer touch-manipulation ${
-                  showApplications 
-                    ? 'ring-4 ring-yellow-400 shadow-xl scale-105' 
-                    : 'shadow-md'
-                }`}
-                onClick={handleApplicationsCardClick}
-              >
-                <div className="flex flex-col items-center p-2 sm:p-3">
-                  <div className={`p-2 rounded-full mb-2 transition-colors ${
-                    showApplications 
-                      ? 'bg-yellow-500' 
-                      : 'bg-yellow-100'
-                  }`}>
-                    <HiDocumentText className={`h-5 w-5 sm:h-6 sm:w-6 ${
-                      showApplications 
-                        ? 'text-white' 
-                        : 'text-yellow-600'
-                    }`} />
+              <div className="bg-background-card dark:bg-background-card rounded-lg shadow-md border border-border-light dark:border-border-dark hover:shadow-lg transition-shadow">
+                <div className="flex items-center gap-2 sm:gap-3 py-1 sm:py-1.5 px-2 sm:px-2.5">
+                  <div className="bg-semantic-warning-100 dark:bg-semantic-warning-900 p-2 rounded-full flex-shrink-0">
+                    <HiDocumentText className="h-5 w-5 sm:h-6 sm:w-6 text-semantic-warning-600 dark:text-semantic-warning-400" />
                   </div>
-                  <h2 className="text-xs sm:text-sm font-semibold mb-1 text-center">
-                    {t('totalApplications') || 'Applications'}
+                  <h2 className="text-xs sm:text-sm font-semibold flex-1 text-text-primary dark:text-text-primary">
+                    {t('totalApplications') || 'Total applications'}
                   </h2>
-                  <p className={`text-xl sm:text-2xl font-bold text-center ${
-                    showApplications 
-                      ? 'text-yellow-800' 
-                      : 'text-yellow-600'
-                  }`}>
+                  <p className="text-xl sm:text-2xl font-bold text-semantic-warning-600 dark:text-semantic-warning-400 flex-shrink-0">
                     {stats.totalApplications}
                   </p>
                 </div>
-              </Card>
-
-              {/* Closed Activities */}
-              <Card 
-                className={`hover:shadow-lg transition-all cursor-pointer touch-manipulation ${
-                  showClosedActivities 
-                    ? 'ring-4 ring-gray-400 shadow-xl scale-105' 
-                    : 'shadow-md'
-                }`}
-                onClick={handleClosedCardClick}
-              >
-                <div className="flex flex-col items-center p-2 sm:p-3">
-                  <div className={`p-2 rounded-full mb-2 transition-colors ${
-                    showClosedActivities 
-                      ? 'bg-gray-500' 
-                      : 'bg-gray-100'
-                  }`}>
-                    <HiLockClosed className={`h-5 w-5 sm:h-6 sm:w-6 ${
-                      showClosedActivities 
-                        ? 'text-white' 
-                        : 'text-gray-600'
-                    }`} />
-                  </div>
-                  <h2 className="text-xs sm:text-sm font-semibold mb-1 text-center">
-                    {t('closedActivities') || 'Closed'}
-                  </h2>
-                  <p className={`text-xl sm:text-2xl font-bold text-center ${
-                    showClosedActivities 
-                      ? 'text-gray-800' 
-                      : 'text-gray-600'
-                  }`}>
-                    {stats.closedActivities}
-                  </p>
-                </div>
-        </Card>
+              </div>
             </div>
           </div>
 
           {/* Activities Section */}
           <div className="mb-6 sm:mb-10">
-            <h2 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 px-1">
+            <h2 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 px-1 text-text-primary dark:text-text-primary">
               {showApplications
                 ? (t('yourApplications') || 'Your Applications')
-                : showClosedActivities 
-                  ? (t('closedActivities') || 'Closed Activities')
-                  : (t('yourActivities') || 'Your Activities')
+                : (t('yourActivities') || 'Your Activities')
               }
             </h2>
-            {volunteerActivities.length === 0 ? (
-              <p className="text-gray-600 px-1">
+            
+            {/* Filters */}
+            <ActivityFilters
+              filters={filters}
+              onFiltersChange={setFilters}
+              availableCountries={[]}
+              availableCategories={availableCategories}
+              availableSkills={[]}
+            />
+
+            {/* Sort and Results Count */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+              <div className="text-sm text-text-secondary dark:text-text-secondary">
+                {tActivities('showing')} <span className="font-semibold">{sortedActivities.length}</span> {tActivities('of')}{' '}
+                <span className="font-semibold">{allActivitiesForView.length}</span> {tActivities('activities')}
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium text-text-primary dark:text-text-primary">{tActivities('sortBy')}</label>
+                <Select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="w-full sm:w-auto bg-background-card dark:bg-background-card text-text-primary dark:text-text-primary border-border-light dark:border-border-dark">
+                  <option value="newest">{tActivities('sortNewest')}</option>
+                  <option value="oldest">{tActivities('sortOldest')}</option>
+                  <option value="xp_high">{tActivities('sortXpHigh')}</option>
+                  <option value="xp_low">{tActivities('sortXpLow')}</option>
+                  <option value="applicants_high">{tActivities('sortApplicantsHigh')}</option>
+                  <option value="applicants_low">{tActivities('sortApplicantsLow')}</option>
+                  <option value="alphabetical">{tActivities('sortAlphabetical')}</option>
+                </Select>
+              </div>
+            </div>
+
+            {sortedActivities.length === 0 ? (
+              <p className="text-text-secondary dark:text-text-secondary px-1">
                 {showApplications
                   ? (t('noApplicationsFound') || 'No applications found.')
-                  : showClosedActivities
-                    ? (t('noClosedActivitiesFound') || 'No closed activities found in your history.')
-                    : (t('noActivitiesFound') || 'No activities found. Start applying to activities to see them here!')
+                  : (t('noActivitiesFound') || 'No activities found. Start applying to activities to see them here!')
                 }
               </p>
             ) : (
-              <div className='flex flex-wrap justify-center gap-4 sm:gap-6'>
-                {volunteerActivities.map((activity) => {
+              <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5'>
+                {sortedActivities.map((activity) => {
                   // Find the application data for this activity if in applications view
                   const applicationData = showApplications 
                     ? applicationsWithActivities.find(app => app.id === activity.applicationId)
@@ -877,14 +928,21 @@ export default function DashboardPage() {
                         xp_reward={activity.xp_reward}
                         description={activity.description}
                         status={activity.status}
+                        last_updated={activity.last_updated}
                         city={activity.city}
                         category={activity.category}
                         qrCodeToken={activity.qrCodeToken}
+                        frequency={activity.frequency}
+                        skills={activity.skills}
+                        participantTarget={activity.participantTarget}
+                        acceptApplicationsWG={activity.acceptApplicationsWG}
                         onClick={() => {
                           if (showApplications) {
                             handleApplicationCardClick(activity);
                           } else {
-                            setSelectedActivityId(activity.id);
+                            // Use activityId if available (for history activities), otherwise use id
+                            const activityIdToUse = activity.activityId || activity.id;
+                            setSelectedActivityId(activityIdToUse);
                             setShowActivityModal(true);
                           }
                         }}
@@ -945,6 +1003,65 @@ export default function DashboardPage() {
               </div>
             )}
           </div>
+
+          {/* My Applications Sub-section - Show all applications when not in applications view */}
+          {!showApplications && allApplications.length > 0 && (
+            <div className="mb-6 sm:mb-10">
+              <h2 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 px-1">
+                {t('myApplications') || 'My Applications'}
+              </h2>
+              <p className="text-sm text-gray-600 mb-4 px-1">
+                {t('allApplicationsDescription') || 'All your applications'}
+              </p>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
+                {allApplications.map((activity) => {
+                  const applicationData = applicationsWithActivities.find(
+                    (app) => app.id === activity.applicationId
+                  );
+
+                  if (!applicationData) return null;
+
+                  return (
+                    <ApplicationCard
+                      key={applicationData.id}
+                      application={applicationData}
+                      activity={activity}
+                      memberProfile={{
+                        displayName,
+                        profilePicture,
+                      }}
+                      onOpenActivity={() => {
+                        const activityIdToUse = activity.activityId || activity.id;
+                        setSelectedActivityId(activityIdToUse);
+                        setShowActivityModal(true);
+                      }}
+                      onCancelClick={() => handleCancelClick(applicationData, activity)}
+                      onMemberAvatarClick={() => {
+                        // For member dashboard, clicking own avatar opens own profile
+                        setSelectedProfileUserId(user?.uid);
+                        setShowProfileModal(true);
+                      }}
+                      onOrgLogoClick={async () => {
+                        // Fetch organization data and open modal
+                        if (activity.organizationId) {
+                          try {
+                            const orgData = await fetchOrganizationById(activity.organizationId);
+                            if (orgData) {
+                              setSelectedOrganization(orgData);
+                              setShowOrgModal(true);
+                            }
+                          } catch (error) {
+                            console.error('Error fetching organization:', error);
+                          }
+                        }
+                      }}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Badges Section */}
           <div className="mb-6 sm:mb-10">
@@ -1041,10 +1158,82 @@ export default function DashboardPage() {
           {/* Public Profile Modal */}
           <PublicProfileModal
             isOpen={showProfileModal}
-            onClose={() => setShowProfileModal(false)}
-            userId={user?.uid}
-            isOwnProfile={true}
+            onClose={() => {
+              setShowProfileModal(false);
+              setSelectedProfileUserId(null);
+            }}
+            userId={selectedProfileUserId || user?.uid}
+            isOwnProfile={selectedProfileUserId === user?.uid}
           />
+
+          {/* Organization Details Modal */}
+          <NPODetailsModal
+            isOpen={showOrgModal}
+            onClose={() => {
+              setShowOrgModal(false);
+              setSelectedOrganization(null);
+            }}
+            organization={selectedOrganization}
+          />
+
+          {/* Cancel Application Modal */}
+          <Modal
+            show={showCancelModal}
+            onClose={() => {
+              if (!isCancelling) {
+                setShowCancelModal(false);
+                setCancelApplication(null);
+                setCancelMessage("");
+              }
+            }}
+            size="md"
+          >
+            <Modal.Header>
+              {t("confirmCancelApplication") || "Confirm Cancellation"}
+            </Modal.Header>
+            <Modal.Body>
+              <p className="text-sm text-text-secondary dark:text-text-secondary mb-3">
+                {t("confirmCancelMessage") ||
+                  "Are you sure you want to cancel this application? This action cannot be undone."}
+              </p>
+              <label className="block text-sm font-medium mb-1 text-text-primary dark:text-text-primary">
+                {t("optionalCancelMessage") || "Cancellation message (optional)"}
+              </label>
+              <Textarea
+                rows={3}
+                value={cancelMessage}
+                onChange={(e) => setCancelMessage(e.target.value)}
+                placeholder={
+                  t("optionalCancelPlaceholder") ||
+                  "You can briefly explain why you are cancelling"
+                }
+                className="w-full"
+              />
+            </Modal.Body>
+            <Modal.Footer>
+              <Button
+                color="failure"
+                onClick={handleConfirmCancel}
+                disabled={isCancelling}
+                className="bg-semantic-error-600 hover:bg-semantic-error-700 dark:bg-semantic-error-500 dark:hover:bg-semantic-error-600"
+              >
+                {isCancelling
+                  ? t("cancelling") || "Cancelling..."
+                  : t("confirmCancel") || "Yes, cancel application"}
+              </Button>
+              <Button
+                color="gray"
+                onClick={() => {
+                  setShowCancelModal(false);
+                  setCancelApplication(null);
+                  setCancelMessage("");
+                }}
+                disabled={isCancelling}
+              >
+                {t("noKeepIt") || "No, keep it"}
+              </Button>
+            </Modal.Footer>
+          </Modal>
         </>
       )}
     </div>

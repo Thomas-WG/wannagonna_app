@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import dynamic from 'next/dynamic';
 import { Button } from 'flowbite-react';
-import { HiDownload, HiPrinter } from 'react-icons/hi';
+import { HiDownload, HiPrinter, HiExternalLink } from 'react-icons/hi';
+import { useTheme } from '@/utils/theme/ThemeContext';
 
 // Dynamically import QRCode to avoid SSR issues
 const QRCode = dynamic(
@@ -28,6 +29,7 @@ export default function ActivityQRCode({
   startDate,
   size = 256 
 }) {
+  const { isDark } = useTheme();
   const [isDownloading, setIsDownloading] = useState(false);
 
   if (!activityId || !qrCodeToken) {
@@ -168,15 +170,15 @@ export default function ActivityQRCode({
   };
 
   return (
-    <div className="flex flex-col items-center p-6 bg-white rounded-lg">
+    <div className="flex flex-col items-center p-6 bg-background-card dark:bg-background-card rounded-lg">
       <div className="mb-4 text-center">
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">{title}</h3>
+        <h3 className="text-lg font-semibold text-text-primary dark:text-text-primary mb-2">{title}</h3>
         {startDate && (
-          <p className="text-sm text-gray-600">Date: {formatDate(startDate)}</p>
+          <p className="text-sm text-text-secondary dark:text-text-secondary">Date: {formatDate(startDate)}</p>
         )}
       </div>
 
-      <div className="mb-4 p-4 bg-white border-2 border-gray-200 rounded-lg flex justify-center">
+      <div className="mb-4 p-4 bg-background-hover dark:bg-background-hover border-2 border-border-light dark:border-[#475569] rounded-lg flex justify-center">
         <div id="qr-code-svg">
           {QRCode && (
             <QRCode
@@ -190,9 +192,24 @@ export default function ActivityQRCode({
         </div>
       </div>
 
-      <div className="text-center mb-4">
-        <p className="text-xs text-gray-500 mb-2">Scan to validate participation</p>
-        <p className="text-xs text-gray-400 break-all max-w-xs">{validationUrl}</p>
+      {/* Validation URL Card */}
+      <div className="w-full mb-4">
+        <div className="flex items-center gap-4 p-4 bg-background-hover dark:bg-background-hover rounded-xl border-2 border-border-light dark:border-[#475569] hover:shadow-md transition-all">
+          <div className="bg-semantic-info-100 dark:bg-semantic-info-900 p-3 rounded-full">
+            <HiExternalLink className="h-6 w-6 text-semantic-info-600 dark:text-semantic-info-400 flex-shrink-0" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-medium text-text-tertiary dark:text-text-tertiary mb-1 uppercase tracking-wide">Validation URL</p>
+            <a
+              href={validationUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-semantic-info-600 dark:text-semantic-info-400 hover:text-semantic-info-700 dark:hover:text-semantic-info-300 text-sm font-medium break-all hover:underline"
+            >
+              {validationUrl}
+            </a>
+          </div>
+        </div>
       </div>
 
       <div className="flex gap-2">
@@ -201,6 +218,7 @@ export default function ActivityQRCode({
           color="gray"
           onClick={handleDownload}
           disabled={isDownloading}
+          className="bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-300 dark:hover:bg-neutral-600"
         >
           <HiDownload className="mr-2 h-4 w-4" />
           Download
@@ -209,6 +227,7 @@ export default function ActivityQRCode({
           size="sm"
           color="gray"
           onClick={handlePrint}
+          className="bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-300 dark:hover:bg-neutral-600"
         >
           <HiPrinter className="mr-2 h-4 w-4" />
           Print

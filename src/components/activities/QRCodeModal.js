@@ -2,6 +2,8 @@
 
 import { Modal } from 'flowbite-react';
 import ActivityQRCode from './ActivityQRCode';
+import { useTheme } from '@/utils/theme/ThemeContext';
+import { useModal } from '@/utils/modal/useModal';
 
 /**
  * QRCodeModal Component
@@ -22,14 +24,17 @@ export default function QRCodeModal({
   title, 
   startDate 
 }) {
+  const { isDark } = useTheme();
+  const wrappedOnClose = useModal(isOpen, onClose, 'qr-code-modal');
+  
   return (
-    <Modal show={isOpen} onClose={onClose} size="md">
-      <Modal.Header>
+    <Modal show={isOpen} onClose={wrappedOnClose} size="md" className="z-50">
+      <Modal.Header className="bg-gradient-to-r from-primary-400 to-primary-600 dark:from-primary-600 dark:to-primary-700 text-white border-b border-border-light dark:border-border-dark">
         <div className="flex items-center gap-2">
           <span>QR Code for Activity</span>
         </div>
       </Modal.Header>
-      <Modal.Body>
+      <Modal.Body className="bg-background-card dark:bg-background-card">
         <ActivityQRCode
           activityId={activityId}
           qrCodeToken={qrCodeToken}

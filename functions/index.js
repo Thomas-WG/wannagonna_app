@@ -93,11 +93,6 @@ export const onApplicationStatusChangedNotifyUser = onDocumentUpdated(
         return;
       }
 
-      // Only notify for accepted / rejected transitions
-      if (afterStatus !== "accepted" && afterStatus !== "rejected") {
-        return;
-      }
-
       const userId = after.userId;
       if (!userId) {
         console.error(
@@ -109,17 +104,74 @@ export const onApplicationStatusChangedNotifyUser = onDocumentUpdated(
       const activityId = event.params.activityId;
       const applicationId = event.params.applicationId;
 
-      const title = afterStatus === "accepted" ?
-        "Application accepted" :
-        "Application rejected";
-
-      const body = afterStatus === "accepted" ?
-        "Your application has been accepted. " +
-          "Check your dashboard for details." :
-        "Your application has been rejected. " +
-          "You can review the details on your dashboard.";
-
       try {
+        // Handle cancelled status separately - notify NPO members, not the applicant
+        if (afterStatus === "cancelled" && after.organizationId) {
+          const organizationId = after.organizationId;
+          
+          // Decrement applicants count if previous status was NOT cancelled
+          // (to avoid double-decrementing if status changes from cancelled to something else and back)
+          if (beforeStatus !== "cancelled") {
+            try {
+              await db.runTransaction(async (transaction) => {
+                const activityRef = db.collection("activities").doc(activityId);
+                const activitySnap = await transaction.get(activityRef);
+
+                if (activitySnap.exists) {
+                  const activity = activitySnap.data();
+                  const newApplicantCount = Math.max((activity.applicants || 0) - 1, 0);
+                  transaction.update(activityRef, {applicants: newApplicantCount});
+                  console.log("Decremented applicants count to:", newApplicantCount);
+                }
+              });
+            } catch (countError) {
+              console.error("Failed to decrement applicants count:", countError);
+              // Don't fail the entire function if count update fails
+            }
+          }
+
+          const membersSnap = await db.collection("members")
+              .where("npoId", "==", organizationId)
+              .get();
+
+          if (!membersSnap.empty) {
+            const promises = membersSnap.docs.map((memberDoc) =>
+              sendUserNotification({
+                userId: memberDoc.id,
+                type: "APPLICATION",
+                title: "Application cancelled",
+                body: "A volunteer cancelled their application. " +
+                  "Review updates in your applications list.",
+                link: "/mynonprofit/activities/applications",
+                metadata: {
+                  activityId,
+                  applicationId,
+                  organizationId,
+                  status: "cancelled",
+                  cancelledByUserId: userId,
+                },
+              }),
+            );
+            await Promise.all(promises);
+          }
+          return; // Exit early after handling cancelled status
+        }
+
+        // Only notify for accepted / rejected transitions
+        if (afterStatus !== "accepted" && afterStatus !== "rejected") {
+          return;
+        }
+
+        const title = afterStatus === "accepted" ?
+          "Application accepted" :
+          "Application rejected";
+
+        const body = afterStatus === "accepted" ?
+          "Your application has been accepted. " +
+            "Check your dashboard for details." :
+          "Your application has been rejected. " +
+            "You can review the details on your dashboard.";
+
         await sendUserNotification({
           userId,
           type: "APPLICATION_STATUS",
@@ -264,35 +316,6 @@ export const onApplicationStatusChangedNotifyUser = onDocumentUpdated(
             lastStatusUpdatedBy: after.lastStatusUpdatedBy,
           });
         }
-
-        // If the application was cancelled by the user, also notify NPO members
-        if (afterStatus === "cancelled" && after.organizationId) {
-          const organizationId = after.organizationId;
-          const membersSnap = await db.collection("members")
-              .where("npoId", "==", organizationId)
-              .get();
-
-          if (!membersSnap.empty) {
-            const promises = membersSnap.docs.map((memberDoc) =>
-              sendUserNotification({
-                userId: memberDoc.id,
-                type: "APPLICATION",
-                title: "Application cancelled",
-                body: "A volunteer cancelled their application. " +
-                  "Review updates in your applications list.",
-                link: "/mynonprofit/activities/applications",
-                metadata: {
-                  activityId,
-                  applicationId,
-                  organizationId,
-                  status: "cancelled",
-                  cancelledByUserId: userId,
-                },
-              }),
-            );
-            await Promise.all(promises);
-          }
-        }
       } catch (error) {
         console.error(
             "Failed to create application status notification:",
@@ -414,6 +437,41 @@ export const notifyReferralReward = onCall(async (request) => {
     metadata: {
       referralCode,
       mode,
+      badgeXP: Number(badgeXP) || 0,
+    },
+  });
+
+  return {success: true};
+});
+
+/**
+ * Callable used by the client to send badge earned notifications.
+ * This wraps sendUserNotification so it can also send push
+ * based on user preferences.
+ */
+export const notifyBadgeEarned = onCall(async (request) => {
+  if (!request.auth) {
+    throw new Error("Unauthorized");
+  }
+
+  const {userId, badgeTitle, badgeXP, badgeId} = request.data || {};
+
+  if (!userId || !badgeTitle) {
+    throw new Error("userId and badgeTitle are required");
+  }
+
+  const xpPart = badgeXP > 0 ? ` and ${badgeXP} XP` : "";
+  const title = "Badge earned";
+  const body = `You earned the "${badgeTitle}" badge${xpPart}!`;
+
+  await sendUserNotification({
+    userId,
+    type: "REWARD",
+    title,
+    body,
+    link: "/badges",
+    metadata: {
+      badgeId: badgeId || null,
       badgeXP: Number(badgeXP) || 0,
     },
   });

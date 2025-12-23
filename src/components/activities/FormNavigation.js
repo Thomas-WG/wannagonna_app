@@ -5,9 +5,14 @@ import { useTranslations } from 'use-intl';
 export default function FormNavigation({ currentStep, prevStep, nextStep, formData, isEditMode, handleSubmit }) {
   const t = useTranslations('ManageActivities');
 
+  // Check if external link is required but missing
+  const externalLink = formData.externalPlatformLink || formData.activity_url || '';
+  const isExternalLinkRequired = formData.type === 'local' && formData.acceptApplicationsWG === false;
+  const hasRequiredExternalLink = !isExternalLinkRequired || (isExternalLinkRequired && externalLink.trim() !== '');
+
   const canProceed = 
     (currentStep === 1 && formData.category) ||
-    (currentStep === 2 && formData.title && formData.description && formData.frequency) ||
+    (currentStep === 2 && formData.title && formData.description && formData.frequency && hasRequiredExternalLink) ||
     (currentStep === 3 && formData.sdg);
 
 
@@ -53,13 +58,19 @@ export default function FormNavigation({ currentStep, prevStep, nextStep, formDa
             </Button>
           ) : (
             <Button 
-              type='submit' 
+              type='button' 
               pill 
               className={`min-w-[140px] h-11 sm:h-12 text-sm sm:text-base font-medium touch-manipulation ${
                 !canProceed ? 'opacity-50 cursor-not-allowed' : ''
               }`}
               disabled={!canProceed}
-              onClick={handleSubmit}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (canProceed) {
+                  handleSubmit(e);
+                }
+              }}
             >
               {isEditMode ? t('update') : t('create')}
             </Button>

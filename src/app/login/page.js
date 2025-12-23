@@ -41,6 +41,9 @@ import { useTranslations } from "use-intl"; // Import hook to handle translation
 import { setUserLocale } from '@/utils/locale'; // Import function to set the user's preferred locale
 import { useAuth } from '@/utils/auth/AuthContext';
 import { handleReferralReward } from '@/utils/crudBadges';
+import { useModal } from '@/utils/modal/useModal';
+import { getDownloadURL, ref } from 'firebase/storage';
+import { storage } from 'firebaseConfig';
 
 /**
  * LoginPage - Renders the login UI, with logo and Google sign-in functionality.
@@ -61,6 +64,10 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false); // State for loading
   const [error, setError] = useState(''); // State for error
   const [referralCode, setReferralCode] = useState(''); // Add state for referral code
+  const [logoUrl, setLogoUrl] = useState(''); // State for logo URL
+  
+  // Register modal with global modal manager
+  const wrappedModalOnClose = useModal(modalOpen, () => setModalOpen(false), 'login-create-account-modal');
   const [googleReferralCode, setGoogleReferralCode] = useState(''); // Add state for Google sign-in referral code
 
   const t = useTranslations('Login');
@@ -85,6 +92,40 @@ export default function LoginPage() {
       router.push('/dashboard');
     }
   }, [user, loading, router]);
+
+  // Fetch logo URL from Firebase Storage
+  useEffect(() => {
+    const fetchLogoUrl = async () => {
+      try {
+        // Check if we have a cached URL
+        const cachedUrl = localStorage.getItem('wannagonnaLogoUrl');
+        const cachedTimestamp = localStorage.getItem('wannagonnaLogoTimestamp');
+        
+        // If we have a cached URL less than 24 hours old, use it
+        if (cachedUrl && cachedTimestamp && (Date.now() - parseInt(cachedTimestamp)) < 24 * 60 * 60 * 1000) {
+          setLogoUrl(cachedUrl);
+          return;
+        }
+
+        const logoRef = ref(storage, 'logo/Favicon.png');
+        const url = await getDownloadURL(logoRef);
+        
+        // Cache the URL and timestamp
+        localStorage.setItem('wannagonnaLogoUrl', url);
+        localStorage.setItem('wannagonnaLogoTimestamp', Date.now().toString());
+        
+        setLogoUrl(url);
+      } catch (error) {
+        console.error('Error fetching logo URL:', error);
+        // If there's an error, try to use cached URL even if it's old
+        const cachedUrl = localStorage.getItem('wannagonnaLogoUrl');
+        if (cachedUrl) {
+          setLogoUrl(cachedUrl);
+        }
+      }
+    };
+    fetchLogoUrl();
+  }, []);
 
   /**
    * Validate referral code by checking if it exists in members collection
@@ -394,22 +435,35 @@ export default function LoginPage() {
 
   // Render the login UI
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-background-page dark:bg-background-page">
       <div className="absolute top-4 right-4"> {/* Positioning the dropdown */}
-        <Dropdown label={t('select')} inline={true}>
+        <Dropdown label={t('select')} inline={true} className="bg-background-card dark:bg-background-card border-border-light dark:border-border-dark">
           {languageOptions.map((option) => (
-            <Dropdown.Item key={option.value} onClick={() => handleLanguageChange(option.value)}>
+            <Dropdown.Item key={option.value} onClick={() => handleLanguageChange(option.value)} className="text-text-primary dark:text-text-primary hover:bg-background-hover dark:hover:bg-background-hover">
               {option.label}
             </Dropdown.Item>
           ))}
         </Dropdown>
       </div>
-      <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
-        <h2 className="text-2xl font-semibold text-center mb-6">{t('login')}</h2>
+      {/* Logo */}
+      {logoUrl && (
+        <div className="mb-8 flex justify-center">
+          <Image 
+            src={logoUrl} 
+            alt="Wannagonna Logo" 
+            width={120} 
+            height={120} 
+            className="object-contain"
+            priority
+          />
+        </div>
+      )}
+      <div className="bg-background-card dark:bg-background-card p-6 rounded-lg shadow-lg max-w-md w-full border border-border-light dark:border-border-dark">
+        <h2 className="text-2xl font-semibold text-center mb-6 text-text-primary dark:text-text-primary">{t('login')}</h2>
         <form className="flex max-w-md flex-col gap-4" onSubmit={handleEmailLogin}>
           <div>
             <div className="mb-2 block">
-              <Label htmlFor="email1">{t('email')}</Label>
+              <Label htmlFor="email1" className="text-text-primary dark:text-text-primary">{t('email')}</Label>
             </div>
             <TextInput 
               id="email1" 
@@ -419,11 +473,12 @@ export default function LoginPage() {
               value={email} // Bind email state
               onChange={(e) => setEmail(e.target.value)} // Update email state on change
               autoComplete="username" // Added autocomplete attribute
+              className="bg-background-card dark:bg-background-card !text-text-primary dark:!text-text-primary border-border-light dark:border-border-dark placeholder:text-text-tertiary dark:placeholder:text-text-tertiary"
             />
           </div>
           <div>
             <div className="mb-2 block">
-              <Label htmlFor="password1">{t('password')}</Label>
+              <Label htmlFor="password1" className="text-text-primary dark:text-text-primary">{t('password')}</Label>
             </div>
             <TextInput 
               id="password1" 
@@ -432,24 +487,25 @@ export default function LoginPage() {
               value={password} // Bind password state
               onChange={(e) => setPassword(e.target.value)} // Update password state on change
               autoComplete="current-password" // Added autocomplete attribute
+              className="bg-background-card dark:bg-background-card !text-text-primary dark:!text-text-primary border-border-light dark:border-border-dark"
             />
           </div>
-          <Button type="submit" className="mb-4">{t('login')}</Button> {/* Submit button for email login */}
+          <Button type="submit" className="mb-4 bg-primary-500 hover:bg-primary-600 dark:bg-primary-600 dark:hover:bg-primary-700 text-white">{t('login')}</Button> {/* Submit button for email login */}
         </form>
         
         {/* Display login error message if exists */}
         {loginErrorMessage && (
-          <div className="text-red-500 text-center mb-4">{loginErrorMessage}</div>
+          <div className="text-semantic-error-600 dark:text-semantic-error-400 text-center mb-4">{loginErrorMessage}</div>
         )}
 
         {/* Separator with "or" */}
         <div className="text-center my-4"> {/* Added margin for spacing */}
-          <span className="text-gray-500">{t('or')}</span>
+          <span className="text-text-tertiary dark:text-text-tertiary">{t('or')}</span>
         </div>
 
         {/* Referral Code Input - Optional for returning users, required for new accounts */}
         <div className="mb-4">
-          <Label htmlFor="googleReferralCode">{t('referralCode')} <span className="text-gray-400 text-xs">(optional for returning users)</span></Label>
+          <Label htmlFor="googleReferralCode" className="text-text-primary dark:text-text-primary">{t('referralCode')} <span className="text-text-tertiary dark:text-text-tertiary text-xs">(optional for returning users)</span></Label>
           <TextInput 
             id="googleReferralCode" 
             type="text" 
@@ -461,11 +517,11 @@ export default function LoginPage() {
               if (error) setError('');
             }}
             maxLength={5}
-            className="uppercase"
+            className="uppercase bg-background-card dark:bg-background-card !text-text-primary dark:!text-text-primary border-border-light dark:border-border-dark placeholder:text-text-tertiary dark:placeholder:text-text-tertiary"
           />
-          <p className="text-xs text-gray-500 mt-1">{t('referralCodeHelper')} Required for new accounts.</p>
+          <p className="text-xs text-text-tertiary dark:text-text-tertiary mt-1">{t('referralCodeHelper')} Required for new accounts.</p>
           {error && (
-            <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-600">
+            <div className="mt-2 p-2 bg-semantic-error-50 dark:bg-semantic-error-900 border border-semantic-error-200 dark:border-semantic-error-700 rounded text-xs text-semantic-error-600 dark:text-semantic-error-400">
               <p className="font-medium">{error}</p>
             </div>
           )}
@@ -473,7 +529,7 @@ export default function LoginPage() {
 
         <button
           onClick={handleGoogleSignIn}
-          className="w-full max-w-xs mx-auto py-3 px-6 bg-white border border-gray-300 rounded-lg flex items-center justify-center gap-3 hover:bg-gray-50 transition-colors duration-200 text-gray-700 text-lg font-medium"
+          className="w-full max-w-xs mx-auto py-3 px-6 bg-background-card dark:bg-background-card border border-border-light dark:border-border-dark rounded-lg flex items-center justify-center gap-3 hover:bg-background-hover dark:hover:bg-background-hover transition-colors duration-200 text-text-primary dark:text-text-primary text-lg font-medium"
         >
           <FcGoogle className="text-2xl" />
           <span>{t('google')}</span>
@@ -481,10 +537,10 @@ export default function LoginPage() {
 
         {/* Registration prompt */}
         <div className="text-center mt-6"> {/* Added margin for spacing */}
-          <span className="text-gray-500">{t('noaccount')} </span>
+          <span className="text-text-tertiary dark:text-text-tertiary">{t('noaccount')} </span>
           <button 
             onClick={() => setModalOpen(true)} // Open modal on click
-            className="text-blue-500 hover:underline"
+            className="text-semantic-info-600 dark:text-semantic-info-400 hover:text-semantic-info-700 dark:hover:text-semantic-info-300 hover:underline"
           >
             {t('register')}
           </button>
@@ -492,12 +548,12 @@ export default function LoginPage() {
       </div>
 
       {/* Modal for account creation */}
-      <Modal show={modalOpen} onClose={() => setModalOpen(false)} size="md" className="flex items-center justify-center h-full">
-        <Modal.Header>{t('createtitle')}</Modal.Header>
-        <Modal.Body>
+      <Modal show={modalOpen} onClose={wrappedModalOnClose} size="md" className="flex items-center justify-center h-full">
+        <Modal.Header className="bg-background-card dark:bg-background-card border-b border-border-light dark:border-border-dark text-text-primary dark:text-text-primary">{t('createtitle')}</Modal.Header>
+        <Modal.Body className="bg-background-card dark:bg-background-card">
           <form className="flex flex-col gap-4 w-full max-w-sm mx-auto" onSubmit={handleCreateAccount}>
             <div>
-              <Label htmlFor="referralCode">{t('referralCode')}</Label>
+              <Label htmlFor="referralCode" className="text-text-primary dark:text-text-primary">{t('referralCode')}</Label>
               <TextInput 
                 id="referralCode" 
                 type="text" 
@@ -506,22 +562,23 @@ export default function LoginPage() {
                 value={referralCode}
                 onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
                 maxLength={5}
-                className="uppercase"
+                className="uppercase bg-background-card dark:bg-background-card !text-text-primary dark:!text-text-primary border-border-light dark:border-border-dark placeholder:text-text-tertiary dark:placeholder:text-text-tertiary"
               />
-              <p className="text-xs text-gray-500 mt-1">{t('referralCodeHelper')}</p>
+              <p className="text-xs text-text-tertiary dark:text-text-tertiary mt-1">{t('referralCodeHelper')}</p>
             </div>
             <div>
-              <Label htmlFor="newEmail">{t('email')}</Label>
+              <Label htmlFor="newEmail" className="text-text-primary dark:text-text-primary">{t('email')}</Label>
               <TextInput 
                 id="newEmail" 
                 type="email" 
                 required 
                 value={newEmail} // Bind newEmail state
                 onChange={(e) => setNewEmail(e.target.value)} // Update newEmail state on change
+                className="bg-background-card dark:bg-background-card !text-text-primary dark:!text-text-primary border-border-light dark:border-border-dark placeholder:text-text-tertiary dark:placeholder:text-text-tertiary"
               />
             </div>
             <div>
-              <Label htmlFor="newPassword">{t('password')}</Label>
+              <Label htmlFor="newPassword" className="text-text-primary dark:text-text-primary">{t('password')}</Label>
               <TextInput 
                 id="newPassword" 
                 type="password" 
@@ -529,10 +586,11 @@ export default function LoginPage() {
                 value={newPassword} // Bind newPassword state
                 onChange={(e) => setNewPassword(e.target.value)} // Update newPassword state on change
                 autoComplete="new-password" // Added autocomplete attribute
+                className="bg-background-card dark:bg-background-card !text-text-primary dark:!text-text-primary border-border-light dark:border-border-dark"
               />
             </div>
             <div>
-              <Label htmlFor="confirmPassword">{t('confirmpassword')}</Label>
+              <Label htmlFor="confirmPassword" className="text-text-primary dark:text-text-primary">{t('confirmpassword')}</Label>
               <TextInput 
                 id="confirmPassword" 
                 type="password" 
@@ -540,13 +598,14 @@ export default function LoginPage() {
                 value={confirmPassword} // Bind confirmPassword state
                 onChange={(e) => setConfirmPassword(e.target.value)} // Update confirmPassword state on change
                 autoComplete="new-password" // Added autocomplete attribute
+                className="bg-background-card dark:bg-background-card !text-text-primary dark:!text-text-primary border-border-light dark:border-border-dark"
               />
             </div>
             {/* Display creation error message if exists */}
             {createErrorMessage && (
-              <div className="text-red-500 text-center mb-4">{createErrorMessage}</div>
+              <div className="text-semantic-error-600 dark:text-semantic-error-400 text-center mb-4">{createErrorMessage}</div>
             )}
-            <Button type="submit">{t('create')}</Button>
+            <Button type="submit" className="bg-primary-500 hover:bg-primary-600 dark:bg-primary-600 dark:hover:bg-primary-700 text-white">{t('create')}</Button>
           </form>
         </Modal.Body>
       </Modal>

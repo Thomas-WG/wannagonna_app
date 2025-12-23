@@ -1,7 +1,10 @@
+'use client';
+
 import { useState, useEffect } from 'react';
 import { Modal, Button } from 'flowbite-react';
 import { HiTrash } from 'react-icons/hi';
 import { HiExclamationTriangle } from 'react-icons/hi2';
+import { useModal } from '@/utils/modal/useModal';
 
 import { useTranslations } from 'next-intl';
 import { deleteActivity } from '@/utils/crudActivities';
@@ -16,6 +19,7 @@ export default function DeleteActivityModal({
 }) {
   const t = useTranslations('DeleteActivity');
   const [isDeleting, setIsDeleting] = useState(false);
+  const wrappedOnClose = useModal(isOpen, onClose, 'delete-activity-modal');
 
 
  
@@ -29,7 +33,7 @@ export default function DeleteActivityModal({
       await deleteActivity(activity.id);
       onActivityDeleted?.(1);
       
-      onClose();
+      wrappedOnClose();
     } catch (error) {
       console.error('Error deleting activity:', error);
       alert('Error deleting activity. Please try again.');
@@ -42,7 +46,7 @@ export default function DeleteActivityModal({
   if (!activity) return null;
 
   return (
-    <Modal show={isOpen} onClose={onClose} size="md">
+    <Modal show={isOpen} onClose={wrappedOnClose} size="md">
       <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-600">
         <div className="flex items-center gap-2">
           <HiExclamationTriangle className="h-5 w-5 text-red-500" />
@@ -67,7 +71,7 @@ export default function DeleteActivityModal({
         <div className="flex justify-end gap-3">
           <Button 
             color="gray" 
-            onClick={onClose}
+            onClick={wrappedOnClose}
             disabled={isDeleting}
           >
             {t('cancel')}

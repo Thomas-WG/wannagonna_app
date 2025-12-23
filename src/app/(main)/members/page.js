@@ -200,14 +200,14 @@ export default function MembersPage() {
   if (!user && !authLoading) return null;
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-background-page dark:bg-background-page">
       <div className="container mx-auto px-4 py-6 max-w-7xl">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-2xl sm:text-3xl font-bold text-text-primary dark:text-text-primary mb-2">
             {t('title')}
           </h1>
-          <p className="text-gray-600">
+          <p className="text-text-secondary dark:text-text-secondary">
             {t('subtitle')}
           </p>
         </div>
@@ -215,18 +215,18 @@ export default function MembersPage() {
         {/* Search Bar */}
         <div className="mb-4">
           <div className="relative">
-            <HiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <HiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-text-tertiary dark:text-text-tertiary" />
             <input
               type="text"
               placeholder={t('searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-border-light dark:border-border-dark rounded-lg bg-background-card dark:bg-background-card text-text-primary dark:text-text-primary focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 focus:border-primary-500 dark:focus:border-primary-400 transition-all duration-200"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-text-tertiary dark:text-text-tertiary hover:text-text-primary dark:hover:text-text-primary transition-colors duration-200"
               >
                 <HiX className="h-5 w-5" />
               </button>
@@ -240,35 +240,35 @@ export default function MembersPage() {
           <div className="block md:hidden">
             <button
               onClick={() => setIsFilterOpen(!isFilterOpen)}
-              className="w-full flex items-center justify-between p-4 bg-white rounded-lg shadow-sm border border-gray-200 hover:bg-gray-50 transition-colors"
+              className="w-full flex items-center justify-between p-4 bg-background-card dark:bg-background-card rounded-lg shadow-sm border border-border-light dark:border-border-dark hover:bg-background-hover dark:hover:bg-background-hover transition-colors"
             >
               <div className="flex items-center gap-2">
-                <HiFilter className="h-5 w-5" />
-                <span className="font-medium">{t('filters')}</span>
+                <HiFilter className="h-5 w-5 text-text-primary dark:text-text-primary" />
+                <span className="font-medium text-text-primary dark:text-text-primary">{t('filters')}</span>
                 {hasActiveFilters && (
-                  <span className="ml-2 px-2 py-0.5 text-xs bg-blue-500 text-white rounded-full">
+                  <span className="ml-2 px-2 py-0.5 text-xs bg-primary-500 dark:bg-primary-600 text-white rounded-full">
                     {t('active')}
                   </span>
                 )}
               </div>
               {isFilterOpen ? (
-                <HiChevronUp className="h-5 w-5" />
+                <HiChevronUp className="h-5 w-5 text-text-primary dark:text-text-primary" />
               ) : (
-                <HiChevronDown className="h-5 w-5" />
+                <HiChevronDown className="h-5 w-5 text-text-primary dark:text-text-primary" />
               )}
             </button>
             {isFilterOpen && (
-              <div className="mt-2 p-4 bg-white rounded-lg shadow-sm border border-gray-200 space-y-4">
+              <div className="mt-2 p-4 bg-background-card dark:bg-background-card rounded-lg shadow-sm border border-border-light dark:border-border-dark space-y-4">
                 {/* Country Filter */}
                 {availableCountries.length > 0 && (
                   <div>
-                    <label className="block mb-1 text-sm font-medium text-gray-700">
+                    <label className="block mb-1 text-sm font-medium text-text-primary dark:text-text-primary">
                       {t('filterCountry')}
                     </label>
                     <Select
                       value={filters.country}
                       onChange={(e) => handleFilterChange('country', e.target.value)}
-                      className="w-full"
+                      className="w-full bg-background-card dark:bg-background-card text-text-primary dark:text-text-primary border-border-light dark:border-border-dark"
                     >
                       <option value="all">{t('allCountries')}</option>
                       {availableCountries.map((countryCode) => {
@@ -286,7 +286,7 @@ export default function MembersPage() {
                 {hasActiveFilters && (
                   <button
                     onClick={clearFilters}
-                    className="w-full px-4 py-2 text-sm text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors flex items-center justify-center gap-2"
+                    className="w-full px-4 py-2 text-sm text-text-primary dark:text-text-primary bg-background-hover dark:bg-background-hover hover:bg-opacity-80 dark:hover:bg-opacity-80 rounded-lg transition-colors flex items-center justify-center gap-2"
                   >
                     <HiX className="h-4 w-4" />
                     {t('clearAllFilters')}
@@ -297,16 +297,16 @@ export default function MembersPage() {
           </div>
 
           {/* Desktop: Horizontal Layout */}
-          <div className="hidden md:flex flex-wrap items-end gap-4 p-4 bg-white rounded-lg shadow-sm border border-gray-200">
+          <div className="hidden md:flex flex-wrap items-end gap-4 p-4 bg-background-card dark:bg-background-card rounded-lg shadow-sm border border-border-light dark:border-border-dark">
             {availableCountries.length > 0 && (
               <div className="flex-1 min-w-[150px]">
-                <label className="block mb-1 text-sm font-medium text-gray-700">
+                <label className="block mb-1 text-sm font-medium text-text-primary dark:text-text-primary">
                   {t('filterCountry')}
                 </label>
                 <Select
                   value={filters.country}
                   onChange={(e) => handleFilterChange('country', e.target.value)}
-                  className="w-full"
+                  className="w-full bg-background-card dark:bg-background-card text-text-primary dark:text-text-primary border-border-light dark:border-border-dark"
                 >
                   <option value="all">{t('allCountries')}</option>
                   {availableCountries.map((countryCode) => {
@@ -324,7 +324,7 @@ export default function MembersPage() {
             {hasActiveFilters && (
               <button
                 onClick={clearFilters}
-                className="px-4 py-2 text-sm text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors flex items-center gap-2"
+                className="px-4 py-2 text-sm text-text-primary dark:text-text-primary bg-background-hover dark:bg-background-hover hover:bg-opacity-80 dark:hover:bg-opacity-80 rounded-lg transition-colors flex items-center gap-2"
               >
                 <HiX className="h-4 w-4" />
                 {t('clearAll')}
@@ -344,7 +344,7 @@ export default function MembersPage() {
                 })()}
                 <button
                   onClick={() => setFilters({ ...filters, country: 'all' })}
-                  className="ml-1 hover:text-gray-800"
+                  className="ml-1 hover:text-text-primary dark:hover:text-text-primary transition-colors"
                 >
                   <HiX className="h-3 w-3" />
                 </button>
@@ -355,13 +355,13 @@ export default function MembersPage() {
 
         {/* Sort and Results Count */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-text-secondary dark:text-text-secondary">
             {t('showing')} <span className="font-semibold">{sortedMembers.length}</span> {t('of')}{' '}
             <span className="font-semibold">{allMembers.length}</span> {t('members')}
           </div>
           <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-gray-700">{t('sortBy')}</label>
-            <Select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="w-full sm:w-auto">
+            <label className="text-sm font-medium text-text-primary dark:text-text-primary">{t('sortBy')}</label>
+            <Select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="w-full sm:w-auto bg-background-card dark:bg-background-card text-text-primary dark:text-text-primary border-border-light dark:border-border-dark">
               <option value="name_az">{t('sortNameAZ')}</option>
               <option value="name_za">{t('sortNameZA')}</option>
               <option value="joined_newest">{t('sortJoinedNewest')}</option>
@@ -379,9 +379,9 @@ export default function MembersPage() {
 
         {/* Empty State */}
         {!loading && sortedMembers.length === 0 && (
-          <div className="text-center py-12 bg-white rounded-lg shadow-sm">
-            <p className="text-lg text-gray-600 mb-2">{t('noMembersFound')}</p>
-            <p className="text-sm text-gray-500">
+          <div className="text-center py-12 bg-background-card dark:bg-background-card rounded-lg shadow-sm border border-border-light dark:border-border-dark">
+            <p className="text-lg text-text-secondary dark:text-text-secondary mb-2">{t('noMembersFound')}</p>
+            <p className="text-sm text-text-tertiary dark:text-text-tertiary">
               {allMembers.length === 0
                 ? t('noMembers')
                 : t('tryAdjustingFilters')}
@@ -413,15 +413,15 @@ export default function MembersPage() {
                   {/* Middle: Name + Country */}
                   <div className="flex-1 min-w-0">
                     {/* Display Name */}
-                    <h3 className="text-base font-semibold text-gray-900 mb-1 line-clamp-1">
+                    <h3 className="text-base font-semibold text-text-primary dark:text-text-primary mb-1 line-clamp-1">
                       {member.displayName || 'Anonymous'}
                     </h3>
 
                     {/* Country */}
                     {member.countryName && (
                       <div className="flex items-center gap-1.5">
-                        <HiLocationMarker className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-                        <span className="text-xs text-gray-600 truncate">
+                        <HiLocationMarker className="w-3.5 h-3.5 text-text-tertiary dark:text-text-tertiary flex-shrink-0" />
+                        <span className="text-xs text-text-secondary dark:text-text-secondary truncate">
                           {member.countryName}
                         </span>
                       </div>
@@ -432,23 +432,23 @@ export default function MembersPage() {
                   <div className="flex-shrink-0 flex flex-col items-end gap-2">
                     {/* Level in Circle */}
                     <div className="flex flex-col items-center">
-                      <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center border-2 border-blue-500">
-                        <span className="text-sm font-bold text-blue-700">
+                      <div className="w-10 h-10 rounded-full bg-semantic-info-100 dark:bg-semantic-info-900 flex items-center justify-center border-2 border-semantic-info-500 dark:border-semantic-info-400">
+                        <span className="text-sm font-bold text-semantic-info-700 dark:text-semantic-info-300">
                           {member.level}
                         </span>
                       </div>
-                      <span className="text-xs text-gray-500 mt-0.5">{t('level')}</span>
+                      <span className="text-xs text-text-tertiary dark:text-text-tertiary mt-0.5">{t('level')}</span>
                     </div>
 
                     {/* Badge Count */}
                     <div className="flex flex-col items-center">
                       <div className="flex items-center gap-1">
-                        <HiBadgeCheck className="w-4 h-4 text-purple-600" />
-                        <span className="text-sm font-semibold text-gray-700">
+                        <HiBadgeCheck className="w-4 h-4 text-activityType-event-500 dark:text-activityType-event-400" />
+                        <span className="text-sm font-semibold text-text-primary dark:text-text-primary">
                           {member.badgeCount}
                         </span>
                       </div>
-                      <span className="text-xs text-gray-500">{t('badges')}</span>
+                      <span className="text-xs text-text-tertiary dark:text-text-tertiary">{t('badges')}</span>
                     </div>
                   </div>
                 </div>
@@ -468,15 +468,15 @@ export default function MembersPage() {
                   {/* Middle: Name + Country */}
                   <div className="flex-1 min-w-0">
                     {/* Display Name */}
-                    <h3 className="text-xl font-semibold text-gray-900 mb-1.5 line-clamp-1">
+                    <h3 className="text-xl font-semibold text-text-primary dark:text-text-primary mb-1.5 line-clamp-1">
                       {member.displayName || 'Anonymous'}
                     </h3>
 
                     {/* Country */}
                     {member.countryName && (
                       <div className="flex items-center gap-1.5">
-                        <HiLocationMarker className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                        <span className="text-sm text-gray-600 truncate">
+                        <HiLocationMarker className="w-4 h-4 text-text-tertiary dark:text-text-tertiary flex-shrink-0" />
+                        <span className="text-sm text-text-secondary dark:text-text-secondary truncate">
                           {member.countryName}
                         </span>
                       </div>
@@ -487,19 +487,19 @@ export default function MembersPage() {
                   <div className="flex-shrink-0 flex flex-col items-end gap-2">
                     {/* Level in Circle */}
                     <div className="flex flex-col items-center">
-                      <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center border-2 border-blue-500">
-                        <span className="text-base font-bold text-blue-700">
+                      <div className="w-12 h-12 rounded-full bg-semantic-info-100 dark:bg-semantic-info-900 flex items-center justify-center border-2 border-semantic-info-500 dark:border-semantic-info-400">
+                        <span className="text-base font-bold text-semantic-info-700 dark:text-semantic-info-300">
                           {member.level}
                         </span>
                       </div>
-                      <span className="text-xs text-gray-500 mt-0.5">{t('level')}</span>
+                      <span className="text-xs text-text-tertiary dark:text-text-tertiary mt-0.5">{t('level')}</span>
                     </div>
 
                     {/* Badge Count */}
                     <div className="flex flex-col items-center">
                       <div className="flex items-center gap-1">
-                        <HiBadgeCheck className="w-5 h-5 text-purple-600" />
-                        <span className="text-base font-semibold text-gray-700">
+                        <HiBadgeCheck className="w-5 h-5 text-activityType-event-500 dark:text-activityType-event-400" />
+                        <span className="text-base font-semibold text-text-primary dark:text-text-primary">
                           {member.badgeCount}
                         </span>
                         {t('badges')}

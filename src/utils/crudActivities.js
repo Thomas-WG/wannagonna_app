@@ -3,6 +3,7 @@ import { db } from 'firebaseConfig';
 import { fetchApplicationsForActivity } from './crudApplications';
 import { grantActivityCompletionBadges, awardXpToUser } from './crudBadges';
 import { v4 as uuidv4 } from 'uuid';
+import { fetchValidationsForActivity } from './crudActivityValidation';
 
 // Fetch all activities from the Firestore database
 export async function fetchActivities() {
@@ -81,6 +82,45 @@ export async function createActivity(data) {
   } catch (error) {
     console.error('Error creating activity:', error); // Log any errors
     throw error; // Re-throw the error to be handled by the caller
+  }
+}
+
+// Duplicate an existing activity
+export async function duplicateActivity(activityId) {
+  try {
+    // Fetch the original activity
+    const originalActivity = await fetchActivityById(activityId);
+    if (!originalActivity) {
+      throw new Error('Activity not found');
+    }
+
+    // Prepare duplicate data - exclude fields that shouldn't be copied
+    const {
+      id,
+      applicants,
+      creation_date,
+      qrCodeToken,
+      ...duplicateData
+    } = originalActivity;
+
+    // Set status to 'created' (draft)
+    duplicateData.status = 'created';
+
+    // Set creation_date to current date
+    duplicateData.creation_date = new Date();
+
+    // Generate new QR code token for Event and Local activities
+    if (duplicateData.type === 'event' || duplicateData.type === 'local') {
+      duplicateData.qrCodeToken = uuidv4();
+    }
+
+    // Create the duplicate activity
+    const newActivityId = await createActivity(duplicateData);
+    console.log('Activity duplicated with new ID:', newActivityId);
+    return newActivityId;
+  } catch (error) {
+    console.error('Error duplicating activity:', error);
+    throw error;
   }
 }
 
@@ -164,33 +204,23 @@ export async function fetchActivitiesByCriteria(organizationId = 'any', type = '
   }
 }
 
-// Helper function to duplicate activity to members' history collection
-async function addActivityToMemberHistory(activityId, activityData, userId) {
+// Helper function to add activity reference to members' history collection
+// Best practice: Store only activityId reference, not duplicated activity data
+// This prevents data inconsistency and reduces storage costs
+async function addActivityToMemberHistory(activityId, userId, metadata = {}) {
   try {
     const memberRef = doc(db, 'members', userId);
     const historyRef = collection(memberRef, 'history');
     
-    // Create a copy of the activity data for history
-    // Convert Firestore Timestamps to Date objects if needed
-    const historyData = { ...activityData };
-    
-    // Convert any Firestore Timestamp objects to Date objects
-    Object.keys(historyData).forEach(key => {
-      const value = historyData[key];
-      if (value && typeof value.toDate === 'function') {
-        historyData[key] = value.toDate();
-      }
-    });
-    
-    // Remove the document ID field if it exists (we'll store activityId separately)
-    delete historyData.id;
-    
-    // Add metadata
-    historyData.activityId = activityId;
-    historyData.addedToHistoryAt = new Date();
+    // Store only reference and metadata, not full activity data
+    const historyData = {
+      activityId: activityId,
+      addedToHistoryAt: new Date(),
+      ...metadata // Allow additional metadata like validatedViaQR, validatedViaManual, etc.
+    };
     
     await addDoc(historyRef, historyData);
-    console.log(`Activity ${activityId} added to history for member ${userId}`);
+    console.log(`Activity ${activityId} reference added to history for member ${userId}`);
   } catch (error) {
     console.error(`Error adding activity to history for member ${userId}:`, error);
     throw error;
@@ -198,6 +228,8 @@ async function addActivityToMemberHistory(activityId, activityData, userId) {
 }
 
 // Fetch closed activities from member history
+// This function fetches activityId references from the history sub-collection,
+// then fetches the full activity data from the main activities collection
 export const fetchHistoryActivities = async (userId) => {
   try {
     const memberRef = doc(db, 'members', userId);
@@ -206,23 +238,86 @@ export const fetchHistoryActivities = async (userId) => {
     
     const historyActivities = [];
     
+    // Extract activityIds from history documents
+    const activityIds = [];
+    const historyMetadata = new Map(); // Map activityId -> metadata (addedToHistoryAt, etc.)
+    
     for (const docSnapshot of querySnapshot.docs) {
       const data = docSnapshot.data();
       
-      // Convert Firestore timestamps to Date objects if needed
-      const historyData = { ...data };
-      Object.keys(historyData).forEach(key => {
-        const value = historyData[key];
-        if (value && typeof value.toDate === 'function') {
-          historyData[key] = value.toDate();
-        }
-      });
+      // Extract activityId - handle both old duplicated data and new reference-only data
+      const activityId = data.activityId;
       
-      historyActivities.push({
-        id: docSnapshot.id,
-        ...historyData,
-        fromHistory: true
-      });
+      if (!activityId) {
+        // Skip documents without activityId (shouldn't happen, but handle gracefully)
+        console.warn(`History document ${docSnapshot.id} has no activityId, skipping`);
+        continue;
+      }
+      
+      // Store metadata for this activity
+      const metadata = {
+        historyDocId: docSnapshot.id,
+        addedToHistoryAt: data.addedToHistoryAt,
+        validatedViaQR: data.validatedViaQR,
+        validatedViaManual: data.validatedViaManual,
+      };
+      
+      // Convert Firestore timestamps to Date objects if needed
+      if (metadata.addedToHistoryAt && typeof metadata.addedToHistoryAt.toDate === 'function') {
+        metadata.addedToHistoryAt = metadata.addedToHistoryAt.toDate();
+      }
+      
+      if (!activityIds.includes(activityId)) {
+        activityIds.push(activityId);
+        historyMetadata.set(activityId, metadata);
+      }
+    }
+    
+    // Fetch full activity data for each activityId
+    for (const activityId of activityIds) {
+      try {
+        const activityData = await fetchActivityById(activityId);
+        
+        if (activityData) {
+          // Get metadata for this activity
+          const metadata = historyMetadata.get(activityId) || {};
+          
+          // Convert Firestore timestamps to Date objects if needed
+          const processedActivity = {
+            ...activityData,
+            start_date: activityData.start_date
+              ? activityData.start_date instanceof Date
+                ? activityData.start_date
+                : activityData.start_date.seconds
+                ? new Date(activityData.start_date.seconds * 1000)
+                : new Date(activityData.start_date)
+              : null,
+            end_date: activityData.end_date
+              ? activityData.end_date instanceof Date
+                ? activityData.end_date
+                : activityData.end_date.seconds
+                ? new Date(activityData.end_date.seconds * 1000)
+                : new Date(activityData.end_date)
+              : null,
+            // Preserve activityId for reference (used in dashboard for modal)
+            activityId: activityId,
+            // Add history metadata
+            addedToHistoryAt: metadata.addedToHistoryAt,
+            validatedViaQR: metadata.validatedViaQR,
+            validatedViaManual: metadata.validatedViaManual,
+            // Mark as from history
+            fromHistory: true
+          };
+          
+          historyActivities.push(processedActivity);
+        } else {
+          // Activity was deleted, log warning but don't fail
+          console.warn(`Activity ${activityId} referenced in history no longer exists`);
+        }
+      } catch (error) {
+        // Error fetching activity, log but continue with other activities
+        console.error(`Error fetching activity ${activityId} from history:`, error);
+      }
     }
     
     return historyActivities;
@@ -350,5 +445,58 @@ export async function deleteActivity(id) {
   } catch (error) {
     console.error('Error deleting activity:', error);
     throw error;
+  }
+}
+
+/**
+ * Get count of validated participants for an activity
+ * @param {string} activityId - Activity ID
+ * @returns {Promise<number>} Count of validated participants
+ */
+export async function getValidatedParticipantsCount(activityId) {
+  try {
+    const validations = await fetchValidationsForActivity(activityId);
+    // Filter to only validated participants (status === 'validated')
+    const validatedCount = validations.filter(v => v.status === 'validated').length;
+    return validatedCount;
+  } catch (error) {
+    console.error('Error getting validated participants count:', error);
+    return 0;
+  }
+}
+
+/**
+ * Get count of effective participants for an activity
+ * 
+ * This starts from all accepted applications, then subtracts
+ * participants who have a validation with status 'rejected'
+ * (they were accepted but ultimately did not do the job).
+ * @param {string} activityId - Activity ID
+ * @returns {Promise<number>} Count of effective participants
+ */
+export async function getAcceptedApplicationsCount(activityId) {
+  try {
+    // Fetch all applications for the activity
+    const applications = await fetchApplicationsForActivity(activityId);
+    // Consider only accepted applications as the base set of participants
+    const acceptedApplications = applications.filter(app => app.status === 'accepted');
+
+    // Fetch validations to identify rejected participants
+    const validations = await fetchValidationsForActivity(activityId);
+    const rejectedUserIds = new Set(
+      validations
+        .filter(v => v.status === 'rejected')
+        .map(v => v.userId)
+    );
+
+    // Effective participants = accepted applications minus those explicitly rejected
+    const effectiveParticipants = acceptedApplications.filter(
+      app => !rejectedUserIds.has(app.userId)
+    );
+
+    return effectiveParticipants.length;
+  } catch (error) {
+    console.error('Error getting accepted applications count:', error);
+    return 0;
   }
 }

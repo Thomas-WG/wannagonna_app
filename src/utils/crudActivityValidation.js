@@ -1,7 +1,7 @@
 import { collection, getDocs, addDoc, getDoc, doc, query, where, Timestamp, updateDoc } from 'firebase/firestore';
 import { db } from 'firebaseConfig';
 import { fetchActivityById } from './crudActivities';
-import { createOrUpdateApplicationAsAccepted } from './crudApplications';
+import { createOrUpdateApplicationAsAccepted, updateApplicationStatus } from './crudApplications';
 
 /**
  * Check if user has already validated this activity
@@ -56,15 +56,21 @@ async function recordValidation(userId, activityId, token, validatedBy = null) {
     if (!querySnapshot.empty) {
       // Update existing validation
       const existingValidation = querySnapshot.docs[0];
+      const existingData = existingValidation.data();
       const updateData = {
         status: 'validated',
         validatedAt: Timestamp.now(),
-        token: token || existingValidation.data().token,
-        validatedBy: validatedBy || existingValidation.data().validatedBy,
+        validatedBy: validatedBy || existingData.validatedBy || null,
         // Clear rejection fields if they exist
         rejectedAt: null,
         rejectedBy: null,
       };
+      // Only include token if it exists in existing data or if we're providing a new token
+      if (token) {
+        updateData.token = token;
+      } else if (existingData.token !== undefined) {
+        updateData.token = existingData.token;
+      }
       await updateDoc(existingValidation.ref, updateData);
     } else {
       // Create new validation
@@ -85,21 +91,39 @@ async function recordValidation(userId, activityId, token, validatedBy = null) {
 }
 
 /**
- * Check if current date matches activity date (same day)
- * @param {Date} activityDate - Activity start date
- * @returns {boolean} True if same day, false otherwise
+ * Normalize a date to local timezone year-month-day (ignore time component)
  */
-function isSameDay(date1, date2) {
-  if (!date1 || !date2) return false;
-  
-  const d1 = date1 instanceof Date ? date1 : new Date(date1);
-  const d2 = date2 instanceof Date ? date2 : new Date(date2);
-  
-  return (
-    d1.getFullYear() === d2.getFullYear() &&
-    d1.getMonth() === d2.getMonth() &&
-    d1.getDate() === d2.getDate()
-  );
+function normalizeToLocalDay(date) {
+  if (!date) return null;
+  const d = date instanceof Date ? date : new Date(date);
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+/**
+ * Check if the current date falls on the activity date, considering only the day
+ * and, when an end_date exists, allowing any day from start_date to end_date (inclusive).
+ * All comparisons use local timezone day boundaries.
+ * @param {Date} currentDate
+ * @param {Date} startDate
+ * @param {Date | null} endDate
+ * @returns {boolean}
+ */
+function isDateInActivityRange(currentDate, startDate, endDate = null) {
+  if (!currentDate || !startDate) return false;
+
+  const today = normalizeToLocalDay(currentDate);
+  const start = normalizeToLocalDay(startDate);
+  const end = endDate ? normalizeToLocalDay(endDate) : null;
+
+  if (!start || !today) return false;
+
+  if (!end) {
+    // No end date: must match the start date exactly
+    return today.getTime() === start.getTime();
+  }
+
+  // With end date: allow any day from start to end (inclusive)
+  return today.getTime() >= start.getTime() && today.getTime() <= end.getTime();
 }
 
 /**
@@ -152,13 +176,20 @@ export async function validateActivityByQR(userId, activityId, token) {
 
     // Check if validation is on the activity date
     const today = new Date();
-    const activityDate = activity.start_date instanceof Date 
+    const activityStartDate = activity.start_date instanceof Date 
       ? activity.start_date 
       : activity.start_date?.toDate 
         ? activity.start_date.toDate() 
         : new Date(activity.start_date);
+    const activityEndDate = activity.end_date
+      ? (activity.end_date instanceof Date
+          ? activity.end_date
+          : activity.end_date?.toDate
+            ? activity.end_date.toDate()
+            : new Date(activity.end_date))
+      : null;
     
-    if (!isSameDay(today, activityDate)) {
+    if (!isDateInActivityRange(today, activityStartDate, activityEndDate)) {
       return {
         success: false,
         error: 'INVALID_DATE',
@@ -170,15 +201,37 @@ export async function validateActivityByQR(userId, activityId, token) {
     // This is the critical operation that must complete before showing success
     await recordValidation(userId, activityId, token);
 
-    // Create/update application in background (non-blocking) - not critical for immediate response
-    createOrUpdateApplicationAsAccepted(activityId, userId)
-      .then(() => {
-        console.log(`Application created/updated for user ${userId} on activity ${activityId}`);
-      })
-      .catch((appError) => {
-        console.error('Error creating/updating application:', appError);
-        // Continue even if application creation fails - validation is already recorded
-      });
+    // If the user already has a pending application for this activity, automatically
+    // accept it and add an automatic NPO response. This is the ONLY place we add
+    // this automatic message.
+    try {
+      const activityDocRef = doc(db, 'activities', activityId);
+      const applicationsRef = collection(activityDocRef, 'applications');
+      const qApps = query(
+        applicationsRef,
+        where('userId', '==', userId),
+        where('status', '==', 'pending')
+      );
+      const appsSnapshot = await getDocs(qApps);
+
+      if (!appsSnapshot.empty) {
+        const existingApp = appsSnapshot.docs[0];
+        const applicationId = existingApp.id;
+
+        await updateApplicationStatus(
+          activityId,
+          applicationId,
+          'accepted',
+          'Your application has been automatically accepted by QR code scan.'
+        );
+      }
+    } catch (autoAcceptError) {
+      console.error(
+        'Error auto-accepting pending application during QR validation:',
+        autoAcceptError
+      );
+      // Do not fail the validation if this step has an issue
+    }
 
     // Return expected structure for backward compatibility
     // Note: Actual rewards are processed by Cloud Function in background
@@ -196,6 +249,52 @@ export async function validateActivityByQR(userId, activityId, token) {
       success: false,
       error: 'VALIDATION_ERROR',
       message: error.message || 'An error occurred during validation.'
+    };
+  }
+}
+
+/**
+ * Initialize a validation document with pending status when an application is accepted
+ * @param {string} activityId - Activity ID
+ * @param {string} userId - User ID of the accepted volunteer
+ * @returns {Promise<Object>} Result object with success status
+ */
+export async function initializeValidationDocument(activityId, userId) {
+  try {
+    const activityDoc = doc(db, 'activities', activityId);
+    const validationsRef = collection(activityDoc, 'validations');
+    
+    // Check if validation already exists to avoid duplicates
+    const q = query(validationsRef, where('userId', '==', userId));
+    const querySnapshot = await getDocs(q);
+    
+    if (!querySnapshot.empty) {
+      // Validation already exists, don't create duplicate
+      console.log(`Validation document already exists for user ${userId} on activity ${activityId}`);
+      return {
+        success: true,
+        message: 'Validation document already exists'
+      };
+    }
+    
+    // Create new validation document with pending status
+    await addDoc(validationsRef, {
+      userId,
+      status: 'pending',
+      createdAt: Timestamp.now(),
+    });
+    
+    console.log(`Validation document initialized for user ${userId} on activity ${activityId} with status 'pending'`);
+    return {
+      success: true,
+      message: 'Validation document initialized successfully'
+    };
+  } catch (error) {
+    console.error('Error initializing validation document:', error);
+    return {
+      success: false,
+      error: 'INITIALIZATION_ERROR',
+      message: error.message || 'An error occurred while initializing validation document.'
     };
   }
 }
@@ -313,6 +412,7 @@ export async function rejectApplicant(activityId, userId, rejectedBy) {
     if (!querySnapshot.empty) {
       // Update existing validation
       const existingValidation = querySnapshot.docs[0];
+      const existingData = existingValidation.data();
       const updateData = {
         status: 'rejected',
         rejectedAt: Timestamp.now(),
@@ -320,8 +420,12 @@ export async function rejectApplicant(activityId, userId, rejectedBy) {
         // Clear validation fields if they exist
         validatedAt: null,
         validatedBy: null,
-        token: null,
       };
+      // Only set token to null if it exists in the document (to clear it)
+      // Don't set it if it doesn't exist to avoid undefined
+      if (existingData.token !== undefined) {
+        updateData.token = null;
+      }
       await updateDoc(existingValidation.ref, updateData);
     } else {
       // Create new rejection record
@@ -452,13 +556,20 @@ export async function canUserValidateActivity(userId, activityId) {
     }
 
     const today = new Date();
-    const activityDate = activity.start_date instanceof Date 
+    const activityStartDate = activity.start_date instanceof Date 
       ? activity.start_date 
       : activity.start_date?.toDate 
         ? activity.start_date.toDate() 
         : new Date(activity.start_date);
+    const activityEndDate = activity.end_date
+      ? (activity.end_date instanceof Date
+          ? activity.end_date
+          : activity.end_date?.toDate
+            ? activity.end_date.toDate()
+            : new Date(activity.end_date))
+      : null;
     
-    if (!isSameDay(today, activityDate)) {
+    if (!isDateInActivityRange(today, activityStartDate, activityEndDate)) {
       return {
         canValidate: false,
         reason: 'INVALID_DATE',

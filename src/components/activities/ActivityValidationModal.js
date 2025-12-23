@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Modal, Button, Avatar, Badge, Spinner } from 'flowbite-react';
 import { HiCheck, HiX } from 'react-icons/hi';
 import { useTranslations } from 'next-intl';
+import { useModal } from '@/utils/modal/useModal';
 import { fetchApplicationsForActivity } from '@/utils/crudApplications';
 import { 
   fetchValidationsForActivity, 
@@ -72,7 +73,8 @@ export default function ActivityValidationModal({
 
   // Check if all applicants are validated or rejected
   const allApplicantsProcessed = () => {
-    if (applications.length === 0) return false;
+    // If there are no applicants, consider it as "processed" (can close activity)
+    if (applications.length === 0) return true;
     return applications.every(app => {
       const status = getValidationStatus(app.userId);
       return status === 'validated' || status === 'rejected';
@@ -196,8 +198,14 @@ export default function ActivityValidationModal({
   };
 
   // Handle close - check if all are processed, if so, close activity
-  const handleClose = async () => {
-    const shouldCloseActivity = allApplicantsProcessed() && activity?.status !== 'Closed';
+  const handleClose = useCallback(async () => {
+    // Check if all applicants are processed
+    const allProcessed = applications.length === 0 || applications.every(app => {
+      const status = validations.find(v => v.userId === app.userId)?.status;
+      return status === 'validated' || status === 'rejected';
+    });
+    
+    const shouldCloseActivity = allProcessed && activity?.status !== 'Closed';
     if (shouldCloseActivity) {
       // All applicants processed, close the activity
       try {
@@ -214,7 +222,10 @@ export default function ActivityValidationModal({
     if (onClose) {
       onClose(shouldCloseActivity);
     }
-  };
+  }, [activity, onClose, onStatusChange, applications, validations]);
+  
+  // Use wrapped onClose for modal registration
+  const wrappedOnClose = useModal(isOpen, handleClose, 'activity-validation-modal');
 
   // Count unprocessed applicants
   const unprocessedCount = applications.filter(app => {
@@ -227,7 +238,7 @@ export default function ActivityValidationModal({
   return (
     <Modal 
       show={isOpen} 
-      onClose={handleClose} 
+      onClose={wrappedOnClose} 
       size="lg"
     >
       <Modal.Header className="px-3 sm:px-6 py-3 sm:py-4">
@@ -246,9 +257,14 @@ export default function ActivityValidationModal({
           </div>
         ) : applications.length === 0 ? (
           <div className="text-center py-8">
-            <p className="text-sm sm:text-base text-gray-500 px-2">
+            <p className="text-sm sm:text-base text-gray-500 px-2 mb-4">
               {t('noAcceptedApplicants') || 'No accepted applicants found for this activity.'}
             </p>
+            <div className="mt-4 p-3 sm:p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-xs sm:text-sm text-blue-800 text-center">
+                {t('noApplicantsCanClose') || 'You can close this activity since there are no applicants.'}
+              </p>
+            </div>
           </div>
         ) : (
           <div className="space-y-3 sm:space-y-4">
@@ -325,7 +341,7 @@ export default function ActivityValidationModal({
                           <p className="text-sm sm:text-base font-medium text-gray-900 truncate" title={application.displayName}>
                             {application.displayName}
                           </p>
-                          {validationStatus && (
+                          {(validationStatus === 'validated' || validationStatus === 'rejected') && (
                             <Badge
                               color={validationStatus === 'validated' ? 'success' : 'failure'}
                               className="mt-1 text-xs"
@@ -397,7 +413,7 @@ export default function ActivityValidationModal({
         <div className="flex justify-end w-full">
           <Button 
             color="gray" 
-            onClick={handleClose}
+            onClick={wrappedOnClose}
             className="w-full sm:w-auto min-h-[44px] sm:min-h-0"
             size="sm"
           >

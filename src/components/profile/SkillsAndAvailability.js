@@ -4,24 +4,26 @@ import { useTranslations } from 'next-intl';
 import { useState, useEffect } from 'react';
 import { getSkillsForSelect } from '@/utils/crudSkills';
 import { useLocale } from 'next-intl';
+import { useTheme } from '@/utils/theme/ThemeContext';
 
 export default function SkillsAndAvailability({ profileData, handleMultiSelectChange, handleCheckboxChange }) {
   const t = useTranslations('CompleteProfile');
   const locale = useLocale();
+  const { isDark } = useTheme();
   const [skillOptions, setSkillOptions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedSkills, setSelectedSkills] = useState([]);
 
-  // Define category colors
+  // Define category colors with dark mode variants
   const categoryColors = [
-    { bg: '#e6f7ff', text: '#0066cc' }, // Light blue
-    { bg: '#f0fff4', text: '#2e7d32' }, // Light green
-    { bg: '#fff8e1', text: '#ff8f00' }, // Light amber
-    { bg: '#fce4ec', text: '#c2185b' }, // Light pink
-    { bg: '#f3e5f5', text: '#7b1fa2' }, // Light purple
-    { bg: '#e8f5e9', text: '#388e3c' }, // Another green
-    { bg: '#fff3e0', text: '#e65100' }, // Another amber
-    { bg: '#e0f7fa', text: '#0097a7' }, // Another blue
+    { bg: '#e6f7ff', text: '#0066cc', bgDark: '#1e3a5f', textDark: '#7dd3fc' }, // Light blue
+    { bg: '#f0fff4', text: '#2e7d32', bgDark: '#1e3d2e', textDark: '#6ee7b7' }, // Light green
+    { bg: '#fff8e1', text: '#ff8f00', bgDark: '#5c3d1e', textDark: '#fcd34d' }, // Light amber
+    { bg: '#fce4ec', text: '#c2185b', bgDark: '#5c1e3a', textDark: '#f9a8d4' }, // Light pink
+    { bg: '#f3e5f5', text: '#7b1fa2', bgDark: '#4c1e5c', textDark: '#d8b4fe' }, // Light purple
+    { bg: '#e8f5e9', text: '#388e3c', bgDark: '#1e3d2e', textDark: '#6ee7b7' }, // Another green
+    { bg: '#fff3e0', text: '#e65100', bgDark: '#5c3d1e', textDark: '#fcd34d' }, // Another amber
+    { bg: '#e0f7fa', text: '#0097a7', bgDark: '#1e3a5f', textDark: '#7dd3fc' }, // Another blue
   ];
 
   // Load skills from Firestore
@@ -59,8 +61,22 @@ export default function SkillsAndAvailability({ profileData, handleMultiSelectCh
     loadSkills();
   }, [locale, profileData.skills]);
 
-  // Custom styles for the Select component
+  // Custom styles for the Select component with dark mode support
   const customStyles = {
+    control: (base) => ({
+      ...base,
+      backgroundColor: isDark ? '#1e293b' : '#ffffff',
+      borderColor: isDark ? '#334155' : '#e2e8f0',
+      color: isDark ? '#f8fafc' : '#0f172a',
+      '&:hover': {
+        borderColor: isDark ? '#fb923c' : '#f97316',
+      },
+    }),
+    menu: (base) => ({
+      ...base,
+      backgroundColor: isDark ? '#1e293b' : '#ffffff',
+      borderColor: isDark ? '#334155' : '#e2e8f0',
+    }),
     groupHeading: (base, { group }) => {
       // Default colors in case group is not found
       let colors = categoryColors[0];
@@ -80,8 +96,8 @@ export default function SkillsAndAvailability({ profileData, handleMultiSelectCh
       
       return {
         ...base,
-        backgroundColor: colors.bg,
-        color: colors.text,
+        backgroundColor: isDark ? colors.bgDark : colors.bg,
+        color: isDark ? colors.textDark : colors.text,
         fontWeight: 'bold',
         padding: '8px 12px',
         borderRadius: '4px',
@@ -90,28 +106,50 @@ export default function SkillsAndAvailability({ profileData, handleMultiSelectCh
     },
     option: (base, state) => ({
       ...base,
-      backgroundColor: state.isSelected ? '#e6f7ff' : state.isFocused ? '#f5f5f5' : 'white',
-      color: state.isSelected ? '#0066cc' : '#333',
+      backgroundColor: state.isSelected
+        ? (isDark ? '#334155' : '#e0f2fe')
+        : state.isFocused
+        ? (isDark ? '#334155' : '#f1f5f9')
+        : isDark ? '#1e293b' : '#ffffff',
+      color: state.isSelected
+        ? (isDark ? '#f8fafc' : '#0284c7')
+        : isDark ? '#f8fafc' : '#0f172a',
       '&:active': {
-        backgroundColor: '#e6f7ff',
+        backgroundColor: isDark ? '#475569' : '#e0f2fe',
       },
     }),
     multiValue: (base) => ({
       ...base,
-      backgroundColor: '#e6f7ff',
+      backgroundColor: isDark ? '#334155' : '#e0f2fe',
       borderRadius: '4px',
     }),
     multiValueLabel: (base) => ({
       ...base,
-      color: '#0066cc',
+      color: isDark ? '#f8fafc' : '#0284c7',
     }),
     multiValueRemove: (base) => ({
       ...base,
-      color: '#0066cc',
+      color: isDark ? '#cbd5e1' : '#0284c7',
       '&:hover': {
-        backgroundColor: '#cce6ff',
-        color: '#003366',
+        backgroundColor: isDark ? '#475569' : '#bae6fd',
+        color: isDark ? '#f8fafc' : '#0369a1',
       },
+    }),
+    placeholder: (base) => ({
+      ...base,
+      color: isDark ? '#94a3b8' : '#64748b',
+    }),
+    input: (base) => ({
+      ...base,
+      color: isDark ? '#f8fafc' : '#0f172a',
+    }),
+    singleValue: (base) => ({
+      ...base,
+      color: isDark ? '#f8fafc' : '#0f172a',
+    }),
+    indicatorsContainer: (base) => ({
+      ...base,
+      color: isDark ? '#cbd5e1' : '#64748b',
     }),
   };
 
@@ -119,16 +157,16 @@ export default function SkillsAndAvailability({ profileData, handleMultiSelectCh
   const safeSelectedSkills = selectedSkills || [];
 
   return (
-    <Card className="w-full h-fit">
+    <Card className="w-full h-fit bg-background-card dark:bg-background-card border-border-light dark:border-border-dark">
       <div className="p-4">
-        <h5 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white mb-4">
+        <h5 className="text-2xl font-bold tracking-tight text-text-primary dark:text-text-primary mb-4">
           {t('skillsAvailable')}
         </h5>
         <div className="space-y-6">
           {/* Skills Section */}
           <div>
             <div className="mb-2 block">
-              <Label htmlFor="skills">{t('skills')}</Label>
+              <Label htmlFor="skills" className="text-text-primary dark:text-text-primary">{t('skills')}</Label>
             </div>
                     <Select
                       id="skills"
@@ -155,7 +193,7 @@ export default function SkillsAndAvailability({ profileData, handleMultiSelectCh
           
           {/* Availability Section */}
           <div>
-            <h6 className="text-lg font-semibold text-gray-800 mb-4">{t('availability') || 'Availability'}</h6>
+            <h6 className="text-lg font-semibold text-text-primary dark:text-text-primary mb-4">{t('availability') || 'Availability'}</h6>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div>
                       <div className="mb-2 block">
@@ -170,7 +208,7 @@ export default function SkillsAndAvailability({ profileData, handleMultiSelectCh
                             onChange={handleCheckboxChange('timeCommitment')}
                             className="mr-2"
                           />
-                          <Label htmlFor="daily">{t('daily')}</Label>
+                          <Label htmlFor="daily" className="text-text-primary dark:text-text-primary">{t('daily')}</Label>
                         </div>
                         <div className="flex items-center">
                           <Checkbox
@@ -180,7 +218,7 @@ export default function SkillsAndAvailability({ profileData, handleMultiSelectCh
                             onChange={handleCheckboxChange('timeCommitment')}
                             className="mr-2"
                           />
-                          <Label htmlFor="weekly">{t('weekly')}</Label>
+                          <Label htmlFor="weekly" className="text-text-primary dark:text-text-primary">{t('weekly')}</Label>
                         </div>
                         <div className="flex items-center">
                           <Checkbox
@@ -190,7 +228,7 @@ export default function SkillsAndAvailability({ profileData, handleMultiSelectCh
                             onChange={handleCheckboxChange('timeCommitment')}
                             className="mr-2"
                           />
-                          <Label htmlFor="biweekly">{t('biweekly')}</Label>
+                          <Label htmlFor="biweekly" className="text-text-primary dark:text-text-primary">{t('biweekly')}</Label>
                         </div>
                         <div className="flex items-center">
                           <Checkbox
@@ -200,7 +238,7 @@ export default function SkillsAndAvailability({ profileData, handleMultiSelectCh
                             onChange={handleCheckboxChange('timeCommitment')}
                             className="mr-2"
                           />
-                          <Label htmlFor="monthly">{t('monthly')}</Label>
+                          <Label htmlFor="monthly" className="text-text-primary dark:text-text-primary">{t('monthly')}</Label>
                         </div>
                         <div className="flex items-center">
                           <Checkbox
@@ -210,7 +248,7 @@ export default function SkillsAndAvailability({ profileData, handleMultiSelectCh
                             onChange={handleCheckboxChange('timeCommitment')}
                             className="mr-2"
                           />
-                          <Label htmlFor="occasional">{t('occasionally')}</Label>
+                          <Label htmlFor="occasional" className="text-text-primary dark:text-text-primary">{t('occasionally')}</Label>
                         </div>
                         <div className="flex items-center">
                           <Checkbox
@@ -220,13 +258,13 @@ export default function SkillsAndAvailability({ profileData, handleMultiSelectCh
                             onChange={handleCheckboxChange('timeCommitment')}
                             className="mr-2"
                           />
-                          <Label htmlFor="flexible">{t('flexible')}</Label>
+                          <Label htmlFor="flexible" className="text-text-primary dark:text-text-primary">{t('flexible')}</Label>
                         </div>
                       </div>
                     </div>
                     <div>
                       <div className="mb-2 block">
-                        <Label>{t('availabilities')}</Label>
+                        <Label className="text-text-primary dark:text-text-primary">{t('availabilities')}</Label>
                       </div>
                       <div className="space-y-2">
                         <div className="flex items-center">
@@ -237,7 +275,7 @@ export default function SkillsAndAvailability({ profileData, handleMultiSelectCh
                             onChange={handleCheckboxChange('availabilities')}
                             className="mr-2"
                           />
-                          <Label htmlFor="weekdays">{t('weekdays')}</Label>
+                          <Label htmlFor="weekdays" className="text-text-primary dark:text-text-primary">{t('weekdays')}</Label>
                         </div>
                         <div className="flex items-center">
                           <Checkbox
@@ -247,7 +285,7 @@ export default function SkillsAndAvailability({ profileData, handleMultiSelectCh
                             onChange={handleCheckboxChange('availabilities')}
                             className="mr-2"
                           />
-                          <Label htmlFor="weekends">{t('weekends')}</Label>
+                          <Label htmlFor="weekends" className="text-text-primary dark:text-text-primary">{t('weekends')}</Label>
                         </div>
                         <div className="flex items-center">
                           <Checkbox
@@ -257,7 +295,7 @@ export default function SkillsAndAvailability({ profileData, handleMultiSelectCh
                             onChange={handleCheckboxChange('availabilities')}
                             className="mr-2"
                           />
-                          <Label htmlFor="mornings">{t('mornings')}</Label>
+                          <Label htmlFor="mornings" className="text-text-primary dark:text-text-primary">{t('mornings')}</Label>
                         </div>
                         <div className="flex items-center">
                           <Checkbox
@@ -267,7 +305,7 @@ export default function SkillsAndAvailability({ profileData, handleMultiSelectCh
                             onChange={handleCheckboxChange('availabilities')}
                             className="mr-2"
                           />
-                          <Label htmlFor="afternoons">{t('afternoons')}</Label>
+                          <Label htmlFor="afternoons" className="text-text-primary dark:text-text-primary">{t('afternoons')}</Label>
                         </div>
                         <div className="flex items-center">
                           <Checkbox
@@ -277,7 +315,7 @@ export default function SkillsAndAvailability({ profileData, handleMultiSelectCh
                             onChange={handleCheckboxChange('availabilities')}
                             className="mr-2"
                           />
-                          <Label htmlFor="evenings">{t('evenings')}</Label>
+                          <Label htmlFor="evenings" className="text-text-primary dark:text-text-primary">{t('evenings')}</Label>
                         </div>
                         <div className="flex items-center">
                           <Checkbox
@@ -287,7 +325,7 @@ export default function SkillsAndAvailability({ profileData, handleMultiSelectCh
                             onChange={handleCheckboxChange('availabilities')}
                             className="mr-2"
                           />
-                          <Label htmlFor="flexible2">{t('flexible')}</Label>
+                          <Label htmlFor="flexible2" className="text-text-primary dark:text-text-primary">{t('flexible')}</Label>
                         </div>
                       </div>
                     </div>
