@@ -341,7 +341,7 @@ export default function ActivityValidationModal({
                           <p className="text-sm sm:text-base font-medium text-gray-900 truncate" title={application.displayName}>
                             {application.displayName}
                           </p>
-                          {validationStatus && (
+                          {(validationStatus === 'validated' || validationStatus === 'rejected') && (
                             <Badge
                               color={validationStatus === 'validated' ? 'success' : 'failure'}
                               className="mt-1 text-xs"
