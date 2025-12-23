@@ -466,16 +466,35 @@ export async function getValidatedParticipantsCount(activityId) {
 }
 
 /**
- * Get count of accepted applications for an activity
+ * Get count of effective participants for an activity
+ * 
+ * This starts from all accepted applications, then subtracts
+ * participants who have a validation with status 'rejected'
+ * (they were accepted but ultimately did not do the job).
  * @param {string} activityId - Activity ID
- * @returns {Promise<number>} Count of accepted applications
+ * @returns {Promise<number>} Count of effective participants
  */
 export async function getAcceptedApplicationsCount(activityId) {
   try {
+    // Fetch all applications for the activity
     const applications = await fetchApplicationsForActivity(activityId);
-    // Filter to only accepted applications (status === 'accepted')
-    const acceptedCount = applications.filter(app => app.status === 'accepted').length;
-    return acceptedCount;
+    // Consider only accepted applications as the base set of participants
+    const acceptedApplications = applications.filter(app => app.status === 'accepted');
+
+    // Fetch validations to identify rejected participants
+    const validations = await fetchValidationsForActivity(activityId);
+    const rejectedUserIds = new Set(
+      validations
+        .filter(v => v.status === 'rejected')
+        .map(v => v.userId)
+    );
+
+    // Effective participants = accepted applications minus those explicitly rejected
+    const effectiveParticipants = acceptedApplications.filter(
+      app => !rejectedUserIds.has(app.userId)
+    );
+
+    return effectiveParticipants.length;
   } catch (error) {
     console.error('Error getting accepted applications count:', error);
     return 0;

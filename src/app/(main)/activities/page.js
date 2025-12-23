@@ -521,6 +521,7 @@ export default function ActivitiesPage() {
                   applicants={activity.applicants}
                   xp_reward={activity.xp_reward}
                   description={activity.description}
+                  last_updated={activity.last_updated}
                   city={activity.city}
                   category={activity.category}
                   status={activity.status}

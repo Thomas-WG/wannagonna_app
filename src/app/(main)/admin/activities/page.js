@@ -536,6 +536,7 @@ export default function AdminActivitiesPage() {
                   xp_reward={activity.xp_reward}
                   description={activity.description}
                   status={activity.status}
+                  last_updated={activity.last_updated}
                   city={activity.city}
                   category={activity.category}
                   qrCodeToken={activity.qrCodeToken}

@@ -90,6 +90,7 @@
     },
     "ActivityCard": {
         "points": "points",
+        "present": "présent",
         "apply": "Appliquer",
         "applyFor": "Appliquer pour",
         "whyHelp": "Pourquoi voulez-vous aider ?",
@@ -693,7 +694,11 @@
         "myApplications": "Mes Candidatures",
         "pendingApplicationsDescription": "Candidatures en attente d'examen",
         "allApplicationsDescription": "Toutes vos candidatures",
-        "viewXpHistory": "Voir l'historique XP"
+        "viewXpHistory": "Voir l'historique XP",
+        "optionalCancelMessage": "Message d'annulation (optionnel)",
+        "optionalCancelPlaceholder": "Vous pouvez expliquer brièvement pourquoi vous annulez",
+        "showMore": "Ouvrir la fiche pour lire tout le message",
+        "you": "Vous"
     },
     "XpHistory": {
         "title": "Historique XP",
@@ -790,3 +795,5 @@
         "noMembers": "Aucun membre trouvé dans le système"
     }
 }
+
+

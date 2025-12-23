@@ -14,6 +14,7 @@ export default function ViewApplicationModal({ isOpen, onClose, application, act
   const { isDark } = useTheme();
   const [isCancelling, setIsCancelling] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [cancelMessage, setCancelMessage] = useState('');
   const wrappedOnClose = useModal(isOpen, onClose, 'view-application-modal');
   const wrappedCancelConfirmOnClose = useModal(showCancelConfirm, () => setShowCancelConfirm(false), 'cancel-confirm-modal');
 
@@ -38,7 +39,14 @@ export default function ViewApplicationModal({ isOpen, onClose, application, act
     
     setIsCancelling(true);
     try {
-      await updateApplicationStatus(activityId, activityApplicationId, 'cancelled', '');
+      await updateApplicationStatus(
+        activityId,
+        activityApplicationId,
+        'cancelled',
+        application.npoResponse || '',
+        application.userId || null,
+        cancelMessage.trim() || ''
+      );
       
       // Update local state via callback - use the user's application document ID
       if (onApplicationUpdated) {
@@ -46,6 +54,7 @@ export default function ViewApplicationModal({ isOpen, onClose, application, act
       }
       
       setShowCancelConfirm(false);
+      setCancelMessage('');
       wrappedOnClose();
     } catch (error) {
       console.error('Error cancelling application:', error);
@@ -147,9 +156,19 @@ export default function ViewApplicationModal({ isOpen, onClose, application, act
           {t('confirmCancelApplication') || 'Confirm Cancellation'}
         </Modal.Header>
         <Modal.Body className="bg-background-card dark:bg-background-card">
-          <p className="text-text-secondary dark:text-text-secondary">
+          <p className="text-text-secondary dark:text-text-secondary mb-3">
             {t('confirmCancelMessage') || 'Are you sure you want to cancel this application? This action cannot be undone.'}
           </p>
+          <label className="block text-sm font-medium mb-1 text-text-primary dark:text-text-primary">
+            {t('optionalCancelMessage') || 'Cancellation message (optional)'}
+          </label>
+          <textarea
+            className="w-full rounded-lg border border-border-light dark:border-border-dark bg-background-page dark:bg-background-page text-sm p-2"
+            rows={3}
+            value={cancelMessage}
+            onChange={(e) => setCancelMessage(e.target.value)}
+            placeholder={t('optionalCancelPlaceholder') || 'You can briefly explain why you are cancelling'}
+          />
         </Modal.Body>
         <Modal.Footer className="bg-background-card dark:bg-background-card border-t-2 border-border-light dark:border-[#475569]">
           <Button

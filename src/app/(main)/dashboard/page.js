@@ -25,6 +25,7 @@ import { fetchApplicationsByUserId, fetchActivitiesForVolunteer } from "@/utils/
 import { fetchHistoryActivities, fetchActivityById } from "@/utils/crudActivities";
 import { useTranslations } from "next-intl";
 import ActivityCard from "@/components/activities/ActivityCard";
+import ApplicationCard from "@/components/activities/ApplicationCard";
 import ActivityDetailsModal from "@/components/activities/ActivityDetailsModal";
 import ViewApplicationModal from "@/components/activities/ViewApplicationModal";
 import BadgeList from "@/components/badges/BadgeList";
@@ -875,6 +876,7 @@ export default function DashboardPage() {
                         xp_reward={activity.xp_reward}
                         description={activity.description}
                         status={activity.status}
+                        last_updated={activity.last_updated}
                         city={activity.city}
                         category={activity.category}
                         qrCodeToken={activity.qrCodeToken}
@@ -960,84 +962,32 @@ export default function DashboardPage() {
                 {t('allApplicationsDescription') || 'All your applications'}
               </p>
               
-              <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5'>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
                 {allApplications.map((activity) => {
-                  const applicationData = applicationsWithActivities.find(app => app.id === activity.applicationId);
+                  const applicationData = applicationsWithActivities.find(
+                    (app) => app.id === activity.applicationId
+                  );
+
+                  if (!applicationData) return null;
 
                   return (
-                    <div key={activity.applicationId} className="relative">
-                      <ActivityCard
-                        id={activity.id}
-                        organization_name={activity.organization_name}
-                        organization_logo={activity.organization_logo}
-                        title={activity.title}
-                        type={activity.type}
-                        country={activity.country}
-                        start_date={activity.start_date}
-                        end_date={activity.end_date}
-                        sdg={activity.sdg}
-                        applicants={activity.applicants}
-                        xp_reward={activity.xp_reward}
-                        description={activity.description}
-                        status={activity.status}
-                        city={activity.city}
-                        category={activity.category}
-                        qrCodeToken={activity.qrCodeToken}
-                        onClick={() => {
-                          handleApplicationCardClick(activity);
-                        }}
-                        canEditStatus={false}
-                      />
-                      {/* Show pending status badge */}
-                      {activity.applicationStatus && (
-                        <div className="absolute top-3 right-3 z-10">
-                          {getApplicationStatusBadge(activity.applicationStatus)}
-                        </div>
-                      )}
-
-                      {/* Overlay with action buttons */}
-                      {selectedApplicationActivity && selectedApplicationActivity.id === activity.id && showActionModal && (
-                        <div className="absolute inset-0 bg-black bg-opacity-60 rounded-lg flex items-center justify-center z-10 p-3 sm:p-4">
-                          <div className="grid grid-cols-2 sm:flex sm:flex-row gap-3 sm:gap-4 md:gap-6 w-full sm:w-auto">
-                            {/* View Activity Button */}
-                            <div className="flex flex-col items-center">
-                              <button
-                                onClick={handleViewActivity}
-                                className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-purple-500 text-white flex items-center justify-center shadow-lg hover:bg-purple-600 active:bg-purple-700 transition-colors touch-manipulation"
-                                aria-label={t('viewActivity') || 'View Activity'}
-                              >
-                                <HiEye className="h-6 w-6 sm:h-8 sm:w-8" />
-                              </button>
-                              <span className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-white font-medium">{t('viewActivity') || 'View Activity'}</span>
-                            </div>
-
-                            {/* View Application Button */}
-                            <div className="flex flex-col items-center">
-                              <button
-                                onClick={handleViewApplication}
-                                className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-blue-500 text-white flex items-center justify-center shadow-lg hover:bg-blue-600 active:bg-blue-700 transition-colors touch-manipulation"
-                                aria-label={t('viewMyApplication') || 'View Application'}
-                              >
-                                <HiDocumentText className="h-6 w-6 sm:h-8 sm:w-8" />
-                              </button>
-                              <span className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-white font-medium">{t('viewMyApplication') || 'View Application'}</span>
-                            </div>
-                          </div>
-                          
-                          {/* Close button */}
-                          <button
-                            onClick={() => {
-                              setShowActionModal(false);
-                              setSelectedApplicationActivity(null);
-                            }}
-                            className="absolute top-2 right-2 sm:top-3 sm:right-3 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gray-600 text-white flex items-center justify-center hover:bg-gray-700 active:bg-gray-800 transition-colors text-lg sm:text-xl touch-manipulation"
-                            aria-label={t('close') || 'Close'}
-                          >
-                            ×
-                          </button>
-                        </div>
-                      )}
-                    </div>
+                    <ApplicationCard
+                      key={applicationData.id}
+                      application={applicationData}
+                      activity={activity}
+                      memberProfile={{
+                        displayName,
+                        profilePicture,
+                      }}
+                      onOpenActivity={() => {
+                        const activityIdToUse = activity.activityId || activity.id;
+                        setSelectedActivityId(activityIdToUse);
+                        setShowActivityModal(true);
+                      }}
+                      onCancelSuccess={(applicationId, newStatus) => {
+                        handleApplicationUpdated(applicationId, newStatus);
+                      }}
+                    />
                   );
                 })}
               </div>

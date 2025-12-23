@@ -90,6 +90,7 @@
     },
     "ActivityCard": {
         "points": "points",
+        "present": "present",
         "apply": "Apply",
         "applyFor": "Apply for",
         "whyHelp": "Why do you want to help?",
@@ -694,7 +695,11 @@
         "myApplications": "My Applications",
         "pendingApplicationsDescription": "Applications awaiting review",
         "allApplicationsDescription": "All your applications",
-        "viewXpHistory": "View XP History"
+        "viewXpHistory": "View XP History",
+        "optionalCancelMessage": "Cancellation message (optional)",
+        "optionalCancelPlaceholder": "You can briefly explain why you are cancelling",
+        "showMore": "Open details to read full message",
+        "you": "You"
     },
     "XpHistory": {
         "title": "XP History",
@@ -791,3 +796,5 @@
         "noMembers": "No members found in the system"
     }
 }
+
+

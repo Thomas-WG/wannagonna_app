@@ -90,6 +90,7 @@
     },
     "ActivityCard": {
         "points": "点",
+        "present": "現在",
         "apply": "応募する",
         "applyFor": "応募する",
         "whyHelp": "なぜ応募しますか？",

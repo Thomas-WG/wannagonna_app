@@ -43,6 +43,7 @@ export default function ActivityCard({
   showQRButton = false,
   participantTarget,
   acceptApplicationsWG,
+  last_updated,
 }) {
   const t = useTranslations('ActivityCard');
   const tManage = useTranslations('ManageActivities');
@@ -179,36 +180,73 @@ export default function ActivityCard({
       return null;
     }
   };
+  // Helper to strip time component (local timezone)
+  const stripTime = (date) => {
+    if (!date) return null;
+    const d = date instanceof Date ? date : new Date(date);
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  };
 
-  const formatDateTimeRange = (start, end) => {
+  /**
+   * Format activity date information without hours.
+   * Rules:
+   * - If end_date exists: "startDate - endDate"
+   * - If no end_date and today is after start_date: "startDate - present"
+   * - If status is Closed: "startDate - last_updated (or end_date, or today)"
+   * - Otherwise: "startDate"
+   */
+  const formatActivityDateRange = (start, end, activityStatus, lastUpdated) => {
     if (!start) return null;
+
     try {
       const startDate = getDateFromFirestore(start);
-      const endDate = end ? getDateFromFirestore(end) : null;
-      
       if (!startDate) return null;
+
+      const endDate = end ? getDateFromFirestore(end) : null;
+      const lastUpdatedDate = lastUpdated ? getDateFromFirestore(lastUpdated) : null;
+
+      const startDay = stripTime(startDate);
+      const endDay = endDate ? stripTime(endDate) : null;
+      const lastUpdatedDay = lastUpdatedDate ? stripTime(lastUpdatedDate) : null;
+      const today = stripTime(new Date());
 
       const dateFormatter = new Intl.DateTimeFormat(undefined, {
         month: 'short',
-        day: 'numeric'
+        day: 'numeric',
+        year: 'numeric',
       });
 
-      const timeFormatter = new Intl.DateTimeFormat(undefined, {
-        hour: 'numeric',
-        minute: '2-digit'
-      });
+      const startStr = dateFormatter.format(startDay);
 
-      const datePart = dateFormatter.format(startDate);
-      const startTime = timeFormatter.format(startDate);
-      const endTime = endDate ? timeFormatter.format(endDate) : null;
+      // When activity is closed, show last modification date
+      if (activityStatus === 'Closed') {
+        const endForDisplay = lastUpdatedDay || endDay || today;
+        const endStr = dateFormatter.format(endForDisplay);
+        return `${startStr} - ${endStr}`;
+      }
 
-      return endTime ? `${datePart}, ${startTime} - ${endTime}` : `${datePart}, ${startTime}`;
+      // If we have an end date on the same day, just show the single day
+      if (endDay && startDay && endDay.getTime() === startDay.getTime()) {
+        return startStr;
+      }
+
+      // If we have an end date, show the range
+      if (endDay) {
+        const endStr = dateFormatter.format(endDay);
+        return `${startStr} - ${endStr}`;
+      }
+
+      // No end date: if today is after start date, show "start - present"
+      if (today && startDay && today.getTime() > startDay.getTime()) {
+        return `${startStr} - ${t('present')}`;
+      }
+
+      // Default: just show start date
+      return startStr;
     } catch (e) {
       return null;
     }
   };
-
-  const dateTimeLine = formatDateTimeRange(start_date, end_date);
 
   // Format description preview (max 100 characters)
   const getDescriptionPreview = () => {
@@ -227,27 +265,6 @@ export default function ActivityCard({
       'role': 'Long-term'
     };
     return frequencyMap[frequency] || frequency;
-  };
-
-  // Format relative date
-  const getRelativeDate = () => {
-    if (!start_date) return null;
-    const startDate = getDateFromFirestore(start_date);
-    if (!startDate) return null;
-    
-    try {
-      const now = new Date();
-      const diffTime = startDate - now;
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-      if (diffDays < 0) return null; // Past date
-      if (diffDays === 0) return 'Starts today';
-      if (diffDays === 1) return 'Starts tomorrow';
-      if (diffDays <= 7) return `Starts in ${diffDays} days`;
-      return null; // Use absolute date for dates > 7 days
-    } catch (e) {
-      return null;
-    }
   };
 
   // Get type-based color classes using design tokens
@@ -269,7 +286,7 @@ export default function ActivityCard({
 
   const descriptionPreview = getDescriptionPreview();
   const timeCommitment = getTimeCommitment();
-  const relativeDate = getRelativeDate();
+  const activityDateLine = formatActivityDateRange(start_date, end_date, localStatus, last_updated);
   const typeColorClass = getTypeColorClasses();
 
   // Handle status update
@@ -551,12 +568,12 @@ export default function ActivityCard({
                 </span>
               </div>
             </div>
-            {/* Date with relative formatting */}
-            {(relativeDate || dateTimeLine) && (
+            {/* Date range (no time component) */}
+            {activityDateLine && (
               <div className='flex items-center text-xs sm:text-sm text-text-secondary dark:text-text-secondary'>
                 <HiClock className='mr-1.5 h-3.5 w-3.5 text-text-tertiary dark:text-text-tertiary flex-shrink-0' />
                 <span className='truncate'>
-                  {relativeDate || dateTimeLine}
+                  {activityDateLine}
                 </span>
               </div>
             )}

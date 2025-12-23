@@ -169,7 +169,14 @@ export const fetchApplicationsForActivity = async (activityId) => {
   }
 };
 
-export const updateApplicationStatus = async (activityId, applicationId, status, npoResponse = '', updatedByUserId = null) => {
+export const updateApplicationStatus = async (
+  activityId,
+  applicationId,
+  status,
+  npoResponse = '',
+  updatedByUserId = null,
+  cancellationMessage = ''
+) => {
   try {
     // Get application data first to check current status and find user and organization IDs
     const activityRef = doc(db, 'activities', activityId);
@@ -184,7 +191,7 @@ export const updateApplicationStatus = async (activityId, applicationId, status,
     // Check if we need to update the organization's totalNewApplications count
     const shouldDecrementCount = applicationData.status === 'pending' && (status === 'accepted' || status === 'rejected' || status === 'cancelled');
 
-    // Prepare update data - include lastStatusUpdatedBy if provided
+    // Prepare update data - include lastStatusUpdatedBy and optional cancellationMessage
     const updateData = {
       status,
       npoResponse,
@@ -197,6 +204,11 @@ export const updateApplicationStatus = async (activityId, applicationId, status,
       console.log("Setting lastStatusUpdatedBy:", updatedByUserId, "for application:", applicationId);
     } else {
       console.warn("updateApplicationStatus: updatedByUserId not provided, lastStatusUpdatedBy will not be set");
+    }
+
+    // Only add cancellationMessage when cancelling, keep backward compatibility otherwise
+    if (status === 'cancelled') {
+      updateData.cancellationMessage = cancellationMessage || '';
     }
 
     // Update in activity's applications collection
@@ -266,12 +278,36 @@ export const fetchApplicationsByUserId = async (userId) => {
       // Convert Firestore timestamps to Date objects
       const createdAt = data.createdAt?.toDate ? data.createdAt.toDate() : data.createdAt;
       const updatedAt = data.updatedAt?.toDate ? data.updatedAt.toDate() : data.updatedAt;
+
+      // Optionally enrich with staff member info who last updated the status
+      let lastUpdatedByDisplayName = null;
+      let lastUpdatedByProfilePicture = null;
+      if (data.lastStatusUpdatedBy) {
+        try {
+          const staffRef = doc(db, 'members', data.lastStatusUpdatedBy);
+          const staffDoc = await getDoc(staffRef);
+          if (staffDoc.exists()) {
+            const staffData = staffDoc.data();
+            lastUpdatedByDisplayName =
+              staffData.displayName || staffData.name || null;
+            lastUpdatedByProfilePicture =
+              staffData.profilePicture || staffData.photoURL || null;
+          }
+        } catch (staffError) {
+          console.warn(
+            'Error fetching staff profile for application lastStatusUpdatedBy:',
+            staffError
+          );
+        }
+      }
       
       applications.push({
         id: docSnapshot.id,
         ...data,
         createdAt,
-        updatedAt
+        updatedAt,
+        lastUpdatedByDisplayName,
+        lastUpdatedByProfilePicture
       });
     }
     
@@ -340,16 +376,23 @@ export const createOrUpdateApplicationAsAccepted = async (activityId, userId) =>
     const organizationId = activityData.organizationId;
     
     if (!querySnapshot.empty) {
-      // Application exists - update to accepted
+      // Application exists - update to accepted without overwriting any existing NPO response
       const existingApp = querySnapshot.docs[0];
       const applicationId = existingApp.id;
+      const existingData = existingApp.data();
       
-      // Update status to accepted
-      await updateApplicationStatus(activityId, applicationId, 'accepted', 'Accepted via QR code validation');
+      const existingNpoResponse = existingData.npoResponse || '';
+      
+      await updateApplicationStatus(
+        activityId,
+        applicationId,
+        'accepted',
+        existingNpoResponse
+      );
       
       return { success: true, applicationId, action: 'updated' };
     } else {
-      // No application exists - create new one with accepted status
+      // No application exists - create new one with accepted status (generic manual acceptance)
       // Check if this is the user's first application (before creating it)
       const userRef = doc(db, 'members', userId);
       const userApplicationsRef = collection(userRef, 'applications');
@@ -358,7 +401,7 @@ export const createOrUpdateApplicationAsAccepted = async (activityId, userId) =>
       
       const applicationData = {
         userId,
-        message: 'Accepted via QR code validation',
+        message: '',
         status: 'accepted',
         createdAt: Timestamp.now(),
         activityId,

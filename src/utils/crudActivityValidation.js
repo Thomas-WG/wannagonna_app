@@ -1,7 +1,7 @@
 import { collection, getDocs, addDoc, getDoc, doc, query, where, Timestamp, updateDoc } from 'firebase/firestore';
 import { db } from 'firebaseConfig';
 import { fetchActivityById } from './crudActivities';
-import { createOrUpdateApplicationAsAccepted } from './crudApplications';
+import { createOrUpdateApplicationAsAccepted, updateApplicationStatus } from './crudApplications';
 
 /**
  * Check if user has already validated this activity
@@ -91,21 +91,39 @@ async function recordValidation(userId, activityId, token, validatedBy = null) {
 }
 
 /**
- * Check if current date matches activity date (same day)
- * @param {Date} activityDate - Activity start date
- * @returns {boolean} True if same day, false otherwise
+ * Normalize a date to local timezone year-month-day (ignore time component)
  */
-function isSameDay(date1, date2) {
-  if (!date1 || !date2) return false;
-  
-  const d1 = date1 instanceof Date ? date1 : new Date(date1);
-  const d2 = date2 instanceof Date ? date2 : new Date(date2);
-  
-  return (
-    d1.getFullYear() === d2.getFullYear() &&
-    d1.getMonth() === d2.getMonth() &&
-    d1.getDate() === d2.getDate()
-  );
+function normalizeToLocalDay(date) {
+  if (!date) return null;
+  const d = date instanceof Date ? date : new Date(date);
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+/**
+ * Check if the current date falls on the activity date, considering only the day
+ * and, when an end_date exists, allowing any day from start_date to end_date (inclusive).
+ * All comparisons use local timezone day boundaries.
+ * @param {Date} currentDate
+ * @param {Date} startDate
+ * @param {Date | null} endDate
+ * @returns {boolean}
+ */
+function isDateInActivityRange(currentDate, startDate, endDate = null) {
+  if (!currentDate || !startDate) return false;
+
+  const today = normalizeToLocalDay(currentDate);
+  const start = normalizeToLocalDay(startDate);
+  const end = endDate ? normalizeToLocalDay(endDate) : null;
+
+  if (!start || !today) return false;
+
+  if (!end) {
+    // No end date: must match the start date exactly
+    return today.getTime() === start.getTime();
+  }
+
+  // With end date: allow any day from start to end (inclusive)
+  return today.getTime() >= start.getTime() && today.getTime() <= end.getTime();
 }
 
 /**
@@ -158,13 +176,20 @@ export async function validateActivityByQR(userId, activityId, token) {
 
     // Check if validation is on the activity date
     const today = new Date();
-    const activityDate = activity.start_date instanceof Date 
+    const activityStartDate = activity.start_date instanceof Date 
       ? activity.start_date 
       : activity.start_date?.toDate 
         ? activity.start_date.toDate() 
         : new Date(activity.start_date);
+    const activityEndDate = activity.end_date
+      ? (activity.end_date instanceof Date
+          ? activity.end_date
+          : activity.end_date?.toDate
+            ? activity.end_date.toDate()
+            : new Date(activity.end_date))
+      : null;
     
-    if (!isSameDay(today, activityDate)) {
+    if (!isDateInActivityRange(today, activityStartDate, activityEndDate)) {
       return {
         success: false,
         error: 'INVALID_DATE',
@@ -174,9 +199,39 @@ export async function validateActivityByQR(userId, activityId, token) {
 
     // Record validation immediately - Cloud Function trigger will process rewards in background
     // This is the critical operation that must complete before showing success
-    // Note: No application is created for QR validations - only validation document with status "validated"
-    // History will be added by Cloud Function when rewards are processed
     await recordValidation(userId, activityId, token);
+
+    // If the user already has a pending application for this activity, automatically
+    // accept it and add an automatic NPO response. This is the ONLY place we add
+    // this automatic message.
+    try {
+      const activityDocRef = doc(db, 'activities', activityId);
+      const applicationsRef = collection(activityDocRef, 'applications');
+      const qApps = query(
+        applicationsRef,
+        where('userId', '==', userId),
+        where('status', '==', 'pending')
+      );
+      const appsSnapshot = await getDocs(qApps);
+
+      if (!appsSnapshot.empty) {
+        const existingApp = appsSnapshot.docs[0];
+        const applicationId = existingApp.id;
+
+        await updateApplicationStatus(
+          activityId,
+          applicationId,
+          'accepted',
+          'Your application has been automatically accepted by QR code scan.'
+        );
+      }
+    } catch (autoAcceptError) {
+      console.error(
+        'Error auto-accepting pending application during QR validation:',
+        autoAcceptError
+      );
+      // Do not fail the validation if this step has an issue
+    }
 
     // Return expected structure for backward compatibility
     // Note: Actual rewards are processed by Cloud Function in background
@@ -501,13 +556,20 @@ export async function canUserValidateActivity(userId, activityId) {
     }
 
     const today = new Date();
-    const activityDate = activity.start_date instanceof Date 
+    const activityStartDate = activity.start_date instanceof Date 
       ? activity.start_date 
       : activity.start_date?.toDate 
         ? activity.start_date.toDate() 
         : new Date(activity.start_date);
+    const activityEndDate = activity.end_date
+      ? (activity.end_date instanceof Date
+          ? activity.end_date
+          : activity.end_date?.toDate
+            ? activity.end_date.toDate()
+            : new Date(activity.end_date))
+      : null;
     
-    if (!isSameDay(today, activityDate)) {
+    if (!isDateInActivityRange(today, activityStartDate, activityEndDate)) {
       return {
         canValidate: false,
         reason: 'INVALID_DATE',
