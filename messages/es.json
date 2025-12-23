@@ -687,6 +687,7 @@
         "statusPending": "Pendiente",
         "myApplications": "Mis Solicitudes",
         "pendingApplicationsDescription": "Solicitudes pendientes de revisión",
+        "allApplicationsDescription": "Todas tus solicitudes",
         "viewXpHistory": "Ver Historial de XP"
     },
     "XpHistory": {

@@ -185,7 +185,8 @@ export default function ParticipantListModal({ isOpen, onClose, activity, activi
         filteredParticipants = participants.filter(p => p.status === 'validated');
         break;
       case 'all':
-        filteredParticipants = participants;
+        // Include all participants except rejected ones
+        filteredParticipants = participants.filter(p => p.status !== 'rejected');
         break;
       default:
         filteredParticipants = participants;
@@ -255,7 +256,7 @@ export default function ParticipantListModal({ isOpen, onClose, activity, activi
                     {t('contactValidated') || 'Contact Validated'} ({participants.filter(p => p.status === 'validated').length})
                   </Dropdown.Item>
                   <Dropdown.Item onClick={() => handleContactParticipants('all')}>
-                    {t('contactAll') || 'Contact All'} ({participants.length})
+                    {t('contactAll') || 'Contact All'} ({participants.filter(p => p.status !== 'rejected').length})
                   </Dropdown.Item>
                 </Dropdown>
               </div>

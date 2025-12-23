@@ -376,14 +376,14 @@ export default function DashboardPage() {
     }
   }, [showApplications, allApplicationsActivities, openActivities, historyActivities]);
 
-  // Get pending applications for the sub-section
-  const pendingApplications = useMemo(() => {
+  // Get all applications for the sub-section (pending, accepted, rejected)
+  const allApplications = useMemo(() => {
     if (showApplications) {
       return []; // Don't show in applications view
     }
-    // Filter applications to only show pending ones
+    // Show all applications (pending, accepted, rejected) with valid activity data
     return applicationsWithActivities
-      .filter(app => app.status === 'pending' && app.activity !== null)
+      .filter(app => app.activity !== null)
       .map(app => ({
         ...app.activity,
         applicationStatus: app.status,
@@ -950,18 +950,18 @@ export default function DashboardPage() {
             )}
           </div>
 
-          {/* My Applications Sub-section - Only show pending applications when not in applications view */}
-          {!showApplications && pendingApplications.length > 0 && (
+          {/* My Applications Sub-section - Show all applications when not in applications view */}
+          {!showApplications && allApplications.length > 0 && (
             <div className="mb-6 sm:mb-10">
               <h2 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 px-1">
                 {t('myApplications') || 'My Applications'}
               </h2>
               <p className="text-sm text-gray-600 mb-4 px-1">
-                {t('pendingApplicationsDescription') || 'Applications awaiting review'}
+                {t('allApplicationsDescription') || 'All your applications'}
               </p>
               
               <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5'>
-                {pendingApplications.map((activity) => {
+                {allApplications.map((activity) => {
                   const applicationData = applicationsWithActivities.find(app => app.id === activity.applicationId);
 
                   return (

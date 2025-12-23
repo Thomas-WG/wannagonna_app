@@ -692,6 +692,7 @@
         "statusPending": "En Attente",
         "myApplications": "Mes Candidatures",
         "pendingApplicationsDescription": "Candidatures en attente d'examen",
+        "allApplicationsDescription": "Toutes vos candidatures",
         "viewXpHistory": "Voir l'historique XP"
     },
     "XpHistory": {

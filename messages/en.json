@@ -693,6 +693,7 @@
         "statusPending": "Pending",
         "myApplications": "My Applications",
         "pendingApplicationsDescription": "Applications awaiting review",
+        "allApplicationsDescription": "All your applications",
         "viewXpHistory": "View XP History"
     },
     "XpHistory": {

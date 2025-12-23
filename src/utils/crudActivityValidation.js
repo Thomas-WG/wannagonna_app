@@ -174,17 +174,9 @@ export async function validateActivityByQR(userId, activityId, token) {
 
     // Record validation immediately - Cloud Function trigger will process rewards in background
     // This is the critical operation that must complete before showing success
+    // Note: No application is created for QR validations - only validation document with status "validated"
+    // History will be added by Cloud Function when rewards are processed
     await recordValidation(userId, activityId, token);
-
-    // Create/update application in background (non-blocking) - not critical for immediate response
-    createOrUpdateApplicationAsAccepted(activityId, userId)
-      .then(() => {
-        console.log(`Application created/updated for user ${userId} on activity ${activityId}`);
-      })
-      .catch((appError) => {
-        console.error('Error creating/updating application:', appError);
-        // Continue even if application creation fails - validation is already recorded
-      });
 
     // Return expected structure for backward compatibility
     // Note: Actual rewards are processed by Cloud Function in background

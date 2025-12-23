@@ -693,6 +693,7 @@
         "statusPending": "保留中",
         "myApplications": "私の申請",
         "pendingApplicationsDescription": "審査待ちの申請",
+        "allApplicationsDescription": "すべての申請",
         "viewXpHistory": "XP履歴を表示"
     },
     "XpHistory": {
