@@ -31,8 +31,6 @@ import { useRouter } from 'next/navigation';
 import { GoOrganization } from "react-icons/go";
 import { IoLogOut } from "react-icons/io5";
 import { FaUserShield } from "react-icons/fa";
-import { getDownloadURL, ref } from 'firebase/storage';
-import { storage } from 'firebaseConfig';
 
 // Main Sidebar component
 export default function Navbar() {
@@ -61,37 +59,71 @@ export default function Navbar() {
     return claims && claims.role === 'member';
   }, [claims]);
 
-  // Fetch logo URL from Firebase Storage
+  // Fetch logo URL from API route (server-side)
   useEffect(() => {
     const fetchLogoUrl = async () => {
       try {
-        // Check if we have a cached URL
-        const cachedUrl = localStorage.getItem('wannagonnaLogoUrl');
-        const cachedTimestamp = localStorage.getItem('wannagonnaLogoTimestamp');
+        // Check if we have a cached URL in cookies (client-side check for immediate display)
+        const getCookie = (name) => {
+          const value = `; ${document.cookie}`;
+          const parts = value.split(`; ${name}=`);
+          if (parts.length === 2) {
+            const cookieValue = parts.pop().split(';').shift();
+            // Decode the cookie value (cookies are URL-encoded)
+            return cookieValue ? decodeURIComponent(cookieValue) : null;
+          }
+          return null;
+        };
+
+        const cachedUrl = getCookie('wannagonnaLogoUrl');
+        const cachedTimestamp = getCookie('wannagonnaLogoTimestamp');
         
-        // If we have a cached URL less than 24 hours old, use it
-        if (cachedUrl && cachedTimestamp && (Date.now() - parseInt(cachedTimestamp)) < 24 * 60 * 60 * 1000) {
-          setLogoUrl(cachedUrl);
-          return;
+        // If we have a cached URL less than 24 hours old, use it immediately
+        if (cachedUrl && cachedTimestamp) {
+          const timestamp = parseInt(cachedTimestamp, 10);
+          const age = Date.now() - timestamp;
+          if (age < 24 * 60 * 60 * 1000) {
+            setLogoUrl(cachedUrl);
+            // Still fetch fresh URL in background to update cache
+            fetch('/api/logo').catch(() => {
+              // Silently fail background fetch
+            });
+            return;
+          }
         }
 
-        const logoRef = ref(storage, 'logo/Favicon.png');
-        const url = await getDownloadURL(logoRef);
-        
-        // Cache the URL and timestamp
-        localStorage.setItem('wannagonnaLogoUrl', url);
-        localStorage.setItem('wannagonnaLogoTimestamp', Date.now().toString());
-        
-        setLogoUrl(url);
+        // Fetch from API route
+        const response = await fetch('/api/logo');
+        if (!response.ok) {
+          throw new Error('Failed to fetch logo');
+        }
+
+        const data = await response.json();
+        if (data.url) {
+          setLogoUrl(data.url);
+        } else {
+          throw new Error('No URL in response');
+        }
       } catch (error) {
         console.error('Error fetching logo URL:', error);
-        // If there's an error, try to use cached URL even if it's old
-        const cachedUrl = localStorage.getItem('wannagonnaLogoUrl');
+        // Try to use cookie cache as fallback
+        const getCookie = (name) => {
+          const value = `; ${document.cookie}`;
+          const parts = value.split(`; ${name}=`);
+          if (parts.length === 2) {
+            const cookieValue = parts.pop().split(';').shift();
+            // Decode the cookie value (cookies are URL-encoded)
+            return cookieValue ? decodeURIComponent(cookieValue) : null;
+          }
+          return null;
+        };
+        const cachedUrl = getCookie('wannagonnaLogoUrl');
         if (cachedUrl) {
           setLogoUrl(cachedUrl);
         }
       }
     };
+
     fetchLogoUrl();
   }, []);
 
