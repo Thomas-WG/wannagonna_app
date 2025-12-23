@@ -1,20 +1,21 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Avatar, Badge, Button, Modal } from 'flowbite-react'
-import { HiCheck, HiClock, HiX } from 'react-icons/hi'
+import { Button, Modal } from 'flowbite-react'
+import { HiCheck, HiX } from 'react-icons/hi'
 import { useAuth } from '@/utils/auth/AuthContext'
 import { fetchActivitiesByCriteria } from '@/utils/crudActivities'
 import { fetchApplicationsForActivity, updateApplicationStatus } from '@/utils/crudApplications'
-import { formatDate } from '@/utils/dateUtils'
 import { useTranslations } from 'next-intl'
 import { useModal } from '@/utils/modal/useModal'
 import PublicProfileModal from '@/components/profile/PublicProfileModal'
+import ApplicationCard from '@/components/activities/ApplicationCard'
+import NPODetailsModal from '@/components/activities/NPODetailsModal'
+import { fetchOrganizationById } from '@/utils/crudOrganizations'
 
 export default function ReviewApplicationsPage() {
   const { user, claims } = useAuth()
   const t = useTranslations('MyNonProfit')
-  const tStatus = useTranslations('Dashboard')
   const [loading, setLoading] = useState(true)
   const [activities, setActivities] = useState([])
   const [applicationsByActivityId, setApplicationsByActivityId] = useState({})
@@ -24,21 +25,10 @@ export default function ReviewApplicationsPage() {
   const [npoResponse, setNpoResponse] = useState('')
   const [profileModalOpen, setProfileModalOpen] = useState(false)
   const [selectedUserId, setSelectedUserId] = useState(null)
+  const [showOrgModal, setShowOrgModal] = useState(false)
+  const [selectedOrganization, setSelectedOrganization] = useState(null)
   
   const organizationId = claims?.npoId || null
-
-  const getStatusBadge = (status) => {
-    switch (status) {
-      case 'accepted':
-        return <Badge color="success" icon={HiCheck}>{tStatus('statusAccepted') || 'Accepted'}</Badge>
-      case 'rejected':
-        return <Badge color="failure" icon={HiX}>{tStatus('statusRejected') || 'Rejected'}</Badge>
-      case 'cancelled':
-        return <Badge color="gray" icon={HiX}>{tStatus('statusCancelled') || 'Cancelled'}</Badge>
-      default:
-        return <Badge color="warning" icon={HiClock}>{tStatus('statusPending') || 'Pending'}</Badge>
-    }
-  }
 
   const loadData = useCallback(async () => {
     if (!organizationId) return
@@ -193,117 +183,56 @@ export default function ReviewApplicationsPage() {
         <div className="text-center py-10">
           <p className="text-text-secondary dark:text-text-secondary">{t('noActivitiesFound') || 'No activities found for your organization.'}</p>
         </div>
+      ) : totalApplications === 0 ? (
+        <div className="text-center py-10">
+          <p className="text-text-secondary dark:text-text-secondary">{t('noApplicationsYet') || 'No applications yet.'}</p>
+        </div>
       ) : (
-        <div className="space-y-6">
-          {sortedActivities.map((activity) => {
+        <div className="space-y-4">
+          {sortedActivities.flatMap((activity) => {
             const applications = getSortedApplications(activity.id)
-            const pendingCount = applications.filter(app => app.status === 'pending').length
-            const hasPending = pendingCount > 0
             
-            return (
-              <div key={activity.id} className={`border rounded-lg ${hasPending ? 'border-semantic-warning-300 dark:border-semantic-warning-700 shadow-md' : 'border-border-light dark:border-border-dark'} bg-background-card dark:bg-background-card`}>
-                <div className={`p-4 rounded-t-lg ${hasPending ? 'bg-semantic-warning-50 dark:bg-semantic-warning-900' : 'bg-background-hover dark:bg-background-hover'}`}>
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                    <div className="min-w-0">
-                      <h2 className="text-lg font-semibold truncate text-text-primary dark:text-text-primary">{activity.title || (t('untitledActivity') || 'Untitled activity')}</h2>
-                      <p className="text-xs text-text-secondary dark:text-text-secondary truncate">{activity.city ? `${activity.city}${activity.country ? `, ${activity.country}` : ''}` : activity.country || ''}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {pendingCount > 0 && (
-                        <Badge color="warning" icon={HiClock}>
-                          {pendingCount} {t('pending') || 'pending'}
-                        </Badge>
-                      )}
-                      <span className="text-sm text-text-secondary dark:text-text-secondary">
-                        {applications.length} {applications.length !== 1 ? (t('applications') || 'applications') : (t('application') || 'application')}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {applications.length === 0 ? (
-                  <div className="p-4">
-                    <p className="text-text-secondary dark:text-text-secondary text-sm">{t('noApplicationsYet') || 'No applications yet.'}</p>
-                  </div>
-                ) : (
-                  <div className="divide-y divide-border-light dark:divide-border-dark">
-                    {applications.map((application) => (
-                      <div key={application.id} className="p-4">
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex items-center gap-3 min-w-0">
-                            <div
-                              className={application.userId ? "cursor-pointer" : ""}
-                              onClick={() => {
-                                if (application.userId) {
-                                  setSelectedUserId(application.userId);
-                                  setProfileModalOpen(true);
-                                }
-                              }}
-                            >
-                              <Avatar img={application.profilePicture || '/favicon.ico'} alt={application.displayName} size="md" rounded />
-                            </div>
-                            <div className="min-w-0">
-                              <p className="text-sm font-medium text-text-primary dark:text-text-primary truncate">
-                                {application.displayName}
-                              </p>
-                              {application.userId && (
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setSelectedUserId(application.userId);
-                                    setProfileModalOpen(true);
-                                  }}
-                                  className="text-xs text-semantic-info-600 dark:text-semantic-info-400 hover:text-semantic-info-700 dark:hover:text-semantic-info-300 hover:underline transition-colors"
-                                >
-                                  {t('viewProfile') || 'View profile'}
-                                </button>
-                              )}
-                              <p className="text-xs text-text-tertiary dark:text-text-tertiary">{formatDate(application.createdAt)}</p>
-                            </div>
-                          </div>
-                          <div className="flex-shrink-0">{getStatusBadge(application.status)}</div>
-                        </div>
-
-                        <div className="mb-3">
-                          <p className="text-sm text-text-secondary dark:text-text-secondary bg-background-hover dark:bg-background-hover p-3 rounded">{application.message || (t('noMessageProvided') || 'No message provided')}</p>
-                          {application.npoResponse && (
-                            <div className="mt-2">
-                              <p className="text-xs font-medium text-semantic-info-700 dark:text-semantic-info-300 mb-1">{t('npoResponse') || 'NPO Response'}:</p>
-                              <p className="text-xs text-semantic-info-700 dark:text-semantic-info-300 bg-semantic-info-50 dark:bg-semantic-info-900 p-2 rounded">{application.npoResponse}</p>
-                            </div>
-                          )}
-                        </div>
-
-                        {application.status === 'pending' && (
-                          <div className="flex flex-col sm:flex-row gap-2 pt-2 border-t border-border-light dark:border-border-dark">
-                            <Button
-                              size="sm"
-                              color="success"
-                              onClick={() => openConfirm(activity.id, application, 'accepted')}
-                              disabled={processingApplicationId === application.id}
-                              className="flex items-center justify-center gap-1 flex-1"
-                            >
-                              <HiCheck className="h-4 w-4" />
-                              <span>{t('accept') || 'Accept'}</span>
-                            </Button>
-                            <Button
-                              size="sm"
-                              color="failure"
-                              onClick={() => openConfirm(activity.id, application, 'rejected')}
-                              disabled={processingApplicationId === application.id}
-                              className="flex items-center justify-center gap-1 flex-1"
-                            >
-                              <HiX className="h-4 w-4" />
-                              <span>{t('reject') || 'Reject'}</span>
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )
+            return applications.map((application) => (
+              <ApplicationCard
+                key={application.id}
+                application={{
+                  ...application,
+                  activityId: activity.id,
+                  applicationId: application.id,
+                }}
+                activity={activity}
+                memberProfile={{
+                  displayName: application.displayName,
+                  profilePicture: application.profilePicture,
+                }}
+                onMemberAvatarClick={() => {
+                  if (application.userId) {
+                    setSelectedUserId(application.userId);
+                    setProfileModalOpen(true);
+                  }
+                }}
+                onOrgLogoClick={async () => {
+                  // Fetch organization data and open modal
+                  const orgId = activity.organizationId || application.organizationId || organizationId;
+                  if (orgId) {
+                    try {
+                      const orgData = await fetchOrganizationById(orgId);
+                      if (orgData) {
+                        setSelectedOrganization(orgData);
+                        setShowOrgModal(true);
+                      }
+                    } catch (error) {
+                      console.error('Error fetching organization:', error);
+                    }
+                  }
+                }}
+                onAcceptClick={() => openConfirm(activity.id, application, 'accepted')}
+                onRejectClick={() => openConfirm(activity.id, application, 'rejected')}
+                isProcessing={processingApplicationId === application.id}
+                acceptLabel={t('accept')}
+                rejectLabel={t('reject')}
+              />
+            ))
           })}
         </div>
       )}
@@ -388,6 +317,16 @@ export default function ReviewApplicationsPage() {
           setSelectedUserId(null);
         }}
         userId={selectedUserId}
+      />
+
+      {/* Organization Details Modal */}
+      <NPODetailsModal
+        isOpen={showOrgModal}
+        onClose={() => {
+          setShowOrgModal(false);
+          setSelectedOrganization(null);
+        }}
+        organization={selectedOrganization}
       />
     </div>
   )

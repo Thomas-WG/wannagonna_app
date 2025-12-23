@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, Progress, Toast, Badge, Button, Select } from "flowbite-react";
+import { Card, Progress, Toast, Badge, Button, Select, Modal, Textarea } from "flowbite-react";
 import { 
   HiUser, 
   HiOfficeBuilding, 
@@ -21,8 +21,10 @@ import { useEffect, useState, useRef, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/utils/auth/AuthContext";
 import { fetchMemberById } from "@/utils/crudMemberProfile";
-import { fetchApplicationsByUserId, fetchActivitiesForVolunteer } from "@/utils/crudApplications";
+import { fetchApplicationsByUserId, fetchActivitiesForVolunteer, updateApplicationStatus } from "@/utils/crudApplications";
 import { fetchHistoryActivities, fetchActivityById } from "@/utils/crudActivities";
+import { fetchOrganizationById } from "@/utils/crudOrganizations";
+import NPODetailsModal from "@/components/activities/NPODetailsModal";
 import { useTranslations } from "next-intl";
 import ActivityCard from "@/components/activities/ActivityCard";
 import ApplicationCard from "@/components/activities/ApplicationCard";
@@ -81,6 +83,17 @@ export default function DashboardPage() {
   
   // Public profile modal state
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [selectedProfileUserId, setSelectedProfileUserId] = useState(null);
+  
+  // Organization details modal state
+  const [showOrgModal, setShowOrgModal] = useState(false);
+  const [selectedOrganization, setSelectedOrganization] = useState(null);
+  
+  // Cancel application modal state
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelApplication, setCancelApplication] = useState(null);
+  const [cancelMessage, setCancelMessage] = useState("");
+  const [isCancelling, setIsCancelling] = useState(false);
   
   // Gamification data (placeholder - can be enhanced later)
   const [gamificationData, setGamificationData] = useState({
@@ -501,6 +514,45 @@ export default function DashboardPage() {
   const handleViewApplication = () => {
     setShowApplicationModal(true);
     setShowActionModal(false);
+  };
+
+  // Handle cancel application
+  const handleCancelClick = (application, activity) => {
+    setCancelApplication({ application, activity });
+    setCancelMessage("");
+    setShowCancelModal(true);
+  };
+
+  const handleConfirmCancel = async () => {
+    if (!cancelApplication) return;
+    const { application, activity } = cancelApplication;
+    
+    if (!application.activityId || !application.applicationId || !application.id) return;
+
+    setIsCancelling(true);
+    try {
+      await updateApplicationStatus(
+        application.activityId,
+        application.applicationId,
+        "cancelled",
+        application.npoResponse || "",
+        application.userId || null,
+        cancelMessage.trim() || ""
+      );
+
+      handleApplicationUpdated(application.id, "cancelled");
+      setShowCancelModal(false);
+      setCancelMessage("");
+      setCancelApplication(null);
+    } catch (error) {
+      console.error("Error cancelling application:", error);
+      alert(
+        t("errorCancellingApplication") ||
+          "Failed to cancel application. Please try again."
+      );
+    } finally {
+      setIsCancelling(false);
+    }
   };
 
   // Handle application updated (after cancellation)
@@ -984,8 +1036,25 @@ export default function DashboardPage() {
                         setSelectedActivityId(activityIdToUse);
                         setShowActivityModal(true);
                       }}
-                      onCancelSuccess={(applicationId, newStatus) => {
-                        handleApplicationUpdated(applicationId, newStatus);
+                      onCancelClick={() => handleCancelClick(applicationData, activity)}
+                      onMemberAvatarClick={() => {
+                        // For member dashboard, clicking own avatar opens own profile
+                        setSelectedProfileUserId(user?.uid);
+                        setShowProfileModal(true);
+                      }}
+                      onOrgLogoClick={async () => {
+                        // Fetch organization data and open modal
+                        if (activity.organizationId) {
+                          try {
+                            const orgData = await fetchOrganizationById(activity.organizationId);
+                            if (orgData) {
+                              setSelectedOrganization(orgData);
+                              setShowOrgModal(true);
+                            }
+                          } catch (error) {
+                            console.error('Error fetching organization:', error);
+                          }
+                        }
                       }}
                     />
                   );
@@ -1089,10 +1158,82 @@ export default function DashboardPage() {
           {/* Public Profile Modal */}
           <PublicProfileModal
             isOpen={showProfileModal}
-            onClose={() => setShowProfileModal(false)}
-            userId={user?.uid}
-            isOwnProfile={true}
+            onClose={() => {
+              setShowProfileModal(false);
+              setSelectedProfileUserId(null);
+            }}
+            userId={selectedProfileUserId || user?.uid}
+            isOwnProfile={selectedProfileUserId === user?.uid}
           />
+
+          {/* Organization Details Modal */}
+          <NPODetailsModal
+            isOpen={showOrgModal}
+            onClose={() => {
+              setShowOrgModal(false);
+              setSelectedOrganization(null);
+            }}
+            organization={selectedOrganization}
+          />
+
+          {/* Cancel Application Modal */}
+          <Modal
+            show={showCancelModal}
+            onClose={() => {
+              if (!isCancelling) {
+                setShowCancelModal(false);
+                setCancelApplication(null);
+                setCancelMessage("");
+              }
+            }}
+            size="md"
+          >
+            <Modal.Header>
+              {t("confirmCancelApplication") || "Confirm Cancellation"}
+            </Modal.Header>
+            <Modal.Body>
+              <p className="text-sm text-text-secondary dark:text-text-secondary mb-3">
+                {t("confirmCancelMessage") ||
+                  "Are you sure you want to cancel this application? This action cannot be undone."}
+              </p>
+              <label className="block text-sm font-medium mb-1 text-text-primary dark:text-text-primary">
+                {t("optionalCancelMessage") || "Cancellation message (optional)"}
+              </label>
+              <Textarea
+                rows={3}
+                value={cancelMessage}
+                onChange={(e) => setCancelMessage(e.target.value)}
+                placeholder={
+                  t("optionalCancelPlaceholder") ||
+                  "You can briefly explain why you are cancelling"
+                }
+                className="w-full"
+              />
+            </Modal.Body>
+            <Modal.Footer>
+              <Button
+                color="failure"
+                onClick={handleConfirmCancel}
+                disabled={isCancelling}
+                className="bg-semantic-error-600 hover:bg-semantic-error-700 dark:bg-semantic-error-500 dark:hover:bg-semantic-error-600"
+              >
+                {isCancelling
+                  ? t("cancelling") || "Cancelling..."
+                  : t("confirmCancel") || "Yes, cancel application"}
+              </Button>
+              <Button
+                color="gray"
+                onClick={() => {
+                  setShowCancelModal(false);
+                  setCancelApplication(null);
+                  setCancelMessage("");
+                }}
+                disabled={isCancelling}
+              >
+                {t("noKeepIt") || "No, keep it"}
+              </Button>
+            </Modal.Footer>
+          </Modal>
         </>
       )}
     </div>

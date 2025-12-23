@@ -1,31 +1,34 @@
 'use client';
 
-import { Card, Button, Badge, Avatar, Modal, Textarea } from "flowbite-react";
+import { Card, Button, Badge, Avatar } from "flowbite-react";
 import { HiCheck, HiX, HiClock, HiDocumentText } from "react-icons/hi";
 import Image from "next/image";
-import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { formatDate } from "@/utils/dateUtils";
-import { updateApplicationStatus } from "@/utils/crudApplications";
 
 /**
- * Chat-style application card for the volunteer dashboard.
+ * Pure presentational chat-style application card component.
  * Shows:
  * - NPO logo + activity title + status
  * - Member message, NPO response, optional cancellation message
- * - Actions: view activity, view full application, cancel (pending only)
+ * - Actions: view activity, cancel (member) or accept/reject (NPO)
  */
 export default function ApplicationCard({
   application,
   activity,
   memberProfile,
   onOpenActivity,
-  onCancelSuccess,
+  onCancelClick,
+  onAcceptClick,
+  onRejectClick,
+  onMemberAvatarClick,
+  onOrgLogoClick,
+  isProcessing = false,
+  // Add these new props for translated strings
+  acceptLabel,
+  rejectLabel,
 }) {
   const t = useTranslations("Dashboard");
-  const [showCancelModal, setShowCancelModal] = useState(false);
-  const [cancelMessage, setCancelMessage] = useState("");
-  const [isCancelling, setIsCancelling] = useState(false);
 
   if (!application || !activity) return null;
 
@@ -79,45 +82,14 @@ export default function ApplicationCard({
     }
   };
 
-  const handleConfirmCancel = async () => {
-    if (!activityId || !applicationId || !userApplicationDocId) return;
-
-    setIsCancelling(true);
-    try {
-      // Keep current NPO response; add cancellation message
-      await updateApplicationStatus(
-        activityId,
-        applicationId,
-        "cancelled",
-        npoResponse || "",
-        userId || null,
-        cancelMessage.trim() || ""
-      );
-
-      if (onCancelSuccess) {
-        onCancelSuccess(userApplicationDocId, "cancelled");
-      }
-
-      setShowCancelModal(false);
-      setCancelMessage("");
-    } catch (error) {
-      console.error("Error cancelling application from card:", error);
-      alert(
-        t("errorCancellingApplication") ||
-          "Failed to cancel application. Please try again."
-      );
-    } finally {
-      setIsCancelling(false);
-    }
-  };
-
   const renderMessageBubble = (
     side,
     avatarSrc,
     name,
     text,
     dateLabel,
-    tone = "user"
+    tone = "user",
+    onAvatarClick = null
   ) => {
     if (!text) return null;
     const isRight = side === "right";
@@ -140,9 +112,18 @@ export default function ApplicationCard({
         {!isRight && (
           <div className="flex-shrink-0">
             {avatarSrc ? (
-              <Avatar img={avatarSrc} rounded size="sm" />
+              <Avatar 
+                img={avatarSrc} 
+                rounded 
+                size="sm" 
+                className={onAvatarClick ? "cursor-pointer" : ""}
+                onClick={onAvatarClick}
+              />
             ) : (
-              <div className="w-8 h-8 rounded-full bg-neutral-300 dark:bg-neutral-600 flex items-center justify-center text-xs font-semibold text-white">
+              <div 
+                className={`w-8 h-8 rounded-full bg-neutral-300 dark:bg-neutral-600 flex items-center justify-center text-xs font-semibold text-white ${onAvatarClick ? "cursor-pointer" : ""}`}
+                onClick={onAvatarClick}
+              >
                 {name?.[0]?.toUpperCase() || "?"}
               </div>
             )}
@@ -181,9 +162,18 @@ export default function ApplicationCard({
         {isRight && (
           <div className="flex-shrink-0">
             {avatarSrc ? (
-              <Avatar img={avatarSrc} rounded size="sm" />
+              <Avatar 
+                img={avatarSrc} 
+                rounded 
+                size="sm" 
+                className={onAvatarClick ? "cursor-pointer" : ""}
+                onClick={onAvatarClick}
+              />
             ) : (
-              <div className="w-8 h-8 rounded-full bg-primary-500 dark:bg-primary-600 flex items-center justify-center text-xs font-semibold text-white">
+              <div 
+                className={`w-8 h-8 rounded-full bg-primary-500 dark:bg-primary-600 flex items-center justify-center text-xs font-semibold text-white ${onAvatarClick ? "cursor-pointer" : ""}`}
+                onClick={onAvatarClick}
+              >
                 {name?.[0]?.toUpperCase() || "?"}
               </div>
             )}
@@ -211,10 +201,14 @@ export default function ApplicationCard({
                 alt={`${orgName} logo`}
                 width={40}
                 height={40}
-                className="rounded-full flex-shrink-0"
+                className={`rounded-full flex-shrink-0 ${onOrgLogoClick ? "cursor-pointer" : ""}`}
+                onClick={onOrgLogoClick}
               />
             ) : (
-              <div className="w-10 h-10 rounded-full bg-neutral-300 dark:bg-neutral-700 flex items-center justify-center text-xs font-semibold text-white flex-shrink-0">
+              <div 
+                className={`w-10 h-10 rounded-full bg-neutral-300 dark:bg-neutral-700 flex items-center justify-center text-xs font-semibold text-white flex-shrink-0 ${onOrgLogoClick ? "cursor-pointer" : ""}`}
+                onClick={onOrgLogoClick}
+              >
                 {orgName?.[0]?.toUpperCase() || "O"}
               </div>
             )}
@@ -245,7 +239,8 @@ export default function ApplicationCard({
             memberName,
             message || t("noMessageProvided") || "No message provided",
             appliedDateLabel,
-            "user"
+            "user",
+            onMemberAvatarClick
           )}
 
           {npoResponse &&
@@ -265,88 +260,69 @@ export default function ApplicationCard({
               memberName,
               cancellationMessage,
               cancelDateLabel,
-              "cancel"
+              "cancel",
+              onMemberAvatarClick
             )}
         </div>
 
         {/* Footer actions */}
         <div className="mt-4 pt-3 border-t border-border-light dark:border-border-dark flex flex-wrap gap-2 justify-between">
-          <div className="flex gap-2">
-            <Button
-              size="xs"
-              color="light"
-              onClick={onOpenActivity}
-              className="text-xs sm:text-sm"
-            >
-              <HiDocumentText className="h-4 w-4 mr-1" />
-              {t("viewActivity") || "View activity"}
-            </Button>
-          </div>
+          {onOpenActivity && (
+            <div className="flex gap-2">
+              <Button
+                size="xs"
+                color="light"
+                onClick={onOpenActivity}
+                className="text-xs sm:text-sm"
+              >
+                <HiDocumentText className="h-4 w-4 mr-1" />
+                {t("viewActivity") || "View activity"}
+              </Button>
+            </div>
+          )}
 
           {status === "pending" && (
-            <Button
-              size="xs"
-              color="failure"
-              onClick={() => setShowCancelModal(true)}
-              className="text-xs sm:text-sm bg-semantic-error-600 hover:bg-semantic-error-700 dark:bg-semantic-error-500 dark:hover:bg-semantic-error-600"
-            >
-              <HiX className="h-4 w-4 mr-1" />
-              {t("cancelApplication") || "Cancel application"}
-            </Button>
+            <>
+              {onCancelClick && (
+                <Button
+                  size="xs"
+                  color="failure"
+                  onClick={onCancelClick}
+                  className="text-xs sm:text-sm bg-semantic-error-600 hover:bg-semantic-error-700 dark:bg-semantic-error-500 dark:hover:bg-semantic-error-600"
+                >
+                  <HiX className="h-4 w-4 mr-1" />
+                  {t("cancelApplication") || "Cancel application"}
+                </Button>
+              )}
+              {onAcceptClick && onRejectClick && (
+                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                  <Button
+                    size="sm"
+                    color="success"
+                    onClick={onAcceptClick}
+                    disabled={isProcessing}
+                    className="flex items-center justify-center gap-1 flex-1 sm:flex-none"
+                  >
+                    <HiCheck className="h-4 w-4" />
+                    <span>{acceptLabel || "Accept"}</span>
+                  </Button>
+                  <Button
+                    size="sm"
+                    color="failure"
+                    onClick={onRejectClick}
+                    disabled={isProcessing}
+                    className="flex items-center justify-center gap-1 flex-1 sm:flex-none"
+                  >
+                    <HiX className="h-4 w-4" />
+                    <span>{rejectLabel || "Reject"}</span>
+                  </Button>
+                </div>
+              )}
+            </>
           )}
         </div>
         </div>
       </Card>
-
-      {/* Cancel with message modal */}
-      <Modal
-        show={showCancelModal}
-        onClose={() => {
-          if (!isCancelling) setShowCancelModal(false);
-        }}
-        size="md"
-      >
-        <Modal.Header>
-          {t("confirmCancelApplication") || "Confirm Cancellation"}
-        </Modal.Header>
-        <Modal.Body>
-          <p className="text-sm text-text-secondary dark:text-text-secondary mb-3">
-            {t("confirmCancelMessage") ||
-              "Are you sure you want to cancel this application? This action cannot be undone."}
-          </p>
-          <label className="block text-sm font-medium mb-1 text-text-primary dark:text-text-primary">
-            {t("optionalCancelMessage") || "Cancellation message (optional)"}
-          </label>
-          <Textarea
-            rows={3}
-            value={cancelMessage}
-            onChange={(e) => setCancelMessage(e.target.value)}
-            placeholder={
-              t("optionalCancelPlaceholder") ||
-              "You can briefly explain why you are cancelling"
-            }
-          />
-        </Modal.Body>
-        <Modal.Footer>
-          <Button
-            color="failure"
-            onClick={handleConfirmCancel}
-            disabled={isCancelling}
-            className="bg-semantic-error-600 hover:bg-semantic-error-700 dark:bg-semantic-error-500 dark:hover:bg-semantic-error-600"
-          >
-            {isCancelling
-              ? t("cancelling") || "Cancelling..."
-              : t("confirmCancel") || "Yes, cancel application"}
-          </Button>
-          <Button
-            color="gray"
-            onClick={() => setShowCancelModal(false)}
-            disabled={isCancelling}
-          >
-            {t("noKeepIt") || "No, keep it"}
-          </Button>
-        </Modal.Footer>
-      </Modal>
     </>
   );
 }
