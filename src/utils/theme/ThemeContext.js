@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
 import { useAuth } from '@/utils/auth/AuthContext';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from 'firebaseConfig';
@@ -112,13 +112,14 @@ export function ThemeProvider({ children }) {
     }
   }, [user]);
 
-  const value = {
+  // Memoize the context value to prevent unnecessary re-renders
+  const value = useMemo(() => ({
     theme,
     toggleTheme,
     setTheme: setThemePreference,
     isLoading,
     isDark: theme === 'dark',
-  };
+  }), [theme, toggleTheme, setThemePreference, isLoading]);
 
   return (
     <ThemeContext.Provider value={value}>

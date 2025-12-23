@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useCallback } from 'react';
+import { createContext, useContext, useState, useCallback, useMemo } from 'react';
 
 /**
  * ModalContext
@@ -86,14 +86,15 @@ export function ModalProvider({ children }) {
     return modalStack.length > 0;
   }, [modalStack]);
 
-  const value = {
+  // Memoize the context value to prevent unnecessary re-renders
+  const value = useMemo(() => ({
     registerModal,
     unregisterModal,
     closeTopModal,
     getTopModal,
     hasOpenModals,
     modalStack,
-  };
+  }), [registerModal, unregisterModal, closeTopModal, getTopModal, hasOpenModals, modalStack]);
 
   return <ModalContext.Provider value={value}>{children}</ModalContext.Provider>;
 }
