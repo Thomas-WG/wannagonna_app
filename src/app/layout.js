@@ -44,8 +44,26 @@ export default async function RootLayout({ children }) {
   const messages = await getMessages();
 
   return (
-    <html lang={locale} className={roboto.className}>
-      <body className='h-screen flex overflow-hidden'>
+    <html lang={locale} className={roboto.className} suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var theme = localStorage.getItem('theme');
+                  if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                    document.documentElement.classList.add('dark');
+                  } else {
+                    document.documentElement.classList.remove('dark');
+                  }
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
+      </head>
+      <body className='h-screen flex overflow-hidden' suppressHydrationWarning>
       {/* Wrap the entire app in NextIntlClientProvider for access to internationalization services */}
         <NextIntlClientProvider messages={messages}>
           {/* Wrap the entire app in ErrorBoundary for error handling (outermost catch-all) */}
