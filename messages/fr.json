@@ -109,6 +109,7 @@
             "Closed": "Fermé"
         },
         "participants": "participants",
+        "peopleMax": "personnes max",
         "validated": "validés",
         "externalPlatformLink": "Lien vers la Plateforme Externe",
         "openLink": "Ouvrir le Lien",
@@ -406,7 +407,6 @@
         "noResults": "Aucun membre trouvé",
         "noMembers": "Aucun membre",
         "member": "membre",
-        "members": "membres",
         "found": "trouvé(s)",
         "editMember": "Modifier le membre",
         "xpPoints": "Points XP",
@@ -415,7 +415,6 @@
         "errorUpdatingMember": "Erreur lors de la mise à jour du membre",
         "badgesManagement": "Gestion des badges",
         "allBadges": "Tous les badges",
-        "addCategory": "Ajouter une catégorie",
         "noCategories": "Aucune catégorie trouvée",
         "editBadge": "Modifier le badge",
         "badgeId": "ID du badge",
@@ -434,7 +433,6 @@
         "errorCreatingCategory": "Erreur lors de la création de la catégorie",
         "errorDeletingCategory": "Erreur lors de la suppression de la catégorie",
         "deleteBadge": "Supprimer le badge",
-        "deleteCategory": "Supprimer la catégorie",
         "confirmDeleteBadge": "Êtes-vous sûr de vouloir supprimer ce badge ?",
         "confirmDeleteCategory": "Êtes-vous sûr de vouloir supprimer cette catégorie ? Tous les badges de cette catégorie seront également supprimés.",
         "create": "Créer",
@@ -479,7 +477,6 @@
         "answerFr": "Réponse (Français)",
         "answerEs": "Réponse (Espagnol)",
         "answerJa": "Réponse (Japonais)",
-        "order": "Ordre",
         "orderHelper": "Ordre pour le tri (les nombres les plus bas apparaissent en premier)",
         "faqAdded": "FAQ ajoutée avec succès",
         "faqUpdated": "FAQ mise à jour avec succès",
@@ -489,8 +486,6 @@
         "confirmDeleteFaq": "Êtes-vous sûr de vouloir supprimer cette FAQ ?",
         "englishRequired": "La question et la réponse en anglais sont requises",
         "searchFaqs": "Rechercher des FAQ",
-        "searchPlaceholder": "Rechercher par question ou réponse...",
-        "noResults": "Aucune FAQ trouvée",
         "noFaqs": "Aucune FAQ"
     },
     "StatusUpdateModal": {
