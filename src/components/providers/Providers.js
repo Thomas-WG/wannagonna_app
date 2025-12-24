@@ -29,6 +29,7 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 import { AuthProvider } from '@/utils/auth/AuthContext';
 import { ThemeProvider } from '@/utils/theme/ThemeContext';
 import ModalProviderWrapper from '@/components/modal/ModalProviderWrapper';
+import QueryProvider from '@/components/providers/QueryProvider';
 
 /**
  * Providers - Consolidated provider component with error boundaries
@@ -39,17 +40,21 @@ import ModalProviderWrapper from '@/components/modal/ModalProviderWrapper';
 export default function Providers({ children }) {
   return (
     <ErrorBoundary>
-      <AuthProvider>
+      <QueryProvider>
         <ErrorBoundary>
-          <ThemeProvider>
+          <AuthProvider>
             <ErrorBoundary>
-              <ModalProviderWrapper>
-                {children}
-              </ModalProviderWrapper>
+              <ThemeProvider>
+                <ErrorBoundary>
+                  <ModalProviderWrapper>
+                    {children}
+                  </ModalProviderWrapper>
+                </ErrorBoundary>
+              </ThemeProvider>
             </ErrorBoundary>
-          </ThemeProvider>
+          </AuthProvider>
         </ErrorBoundary>
-      </AuthProvider>
+      </QueryProvider>
     </ErrorBoundary>
   );
 }

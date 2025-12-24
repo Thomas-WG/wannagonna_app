@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@cospired/i18n-iso-languages": "^4.2.0",
+    "@tanstack/react-query": "^5.90.12",
     "countries-list": "^3.1.1",
     "dotenv": "^16.5.0",
     "firebase": "^11.0.1",
@@ -22,7 +23,8 @@
     "react-dom": "^19.2.1",
     "react-qr-code": "^2.0.18",
     "react-select": "^5.10.1",
-    "uuid": "^13.0.0"
+    "uuid": "^13.0.0",
+    "zustand": "^5.0.9"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.20",
