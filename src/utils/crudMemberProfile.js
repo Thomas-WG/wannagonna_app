@@ -1,4 +1,4 @@
-import { collection, getDocs, addDoc, getDoc, updateDoc, doc, onSnapshot, query, where} from 'firebase/firestore';
+import { collection, getDocs, addDoc, getDoc, updateDoc, doc, onSnapshot, query, where, orderBy, limit, startAfter, getCountFromServer} from 'firebase/firestore';
 import { db } from 'firebaseConfig';
 
 // Fetch all members from the Firestore database
@@ -252,5 +252,111 @@ export async function findUserByCode(referralCode) {
   } catch (error) {
     console.error('Error finding user by code:', error);
     return null;
+  }
+}
+
+/**
+ * Fetch paginated members from Firestore with server-side filtering and sorting
+ * @param {number} page - Page number (1-indexed)
+ * @param {number} pageSize - Number of items per page
+ * @param {Object} filters - Filter object with country (optional)
+ * @param {string} sortBy - Sort option: 'name_az', 'name_za', 'joined_newest', 'joined_oldest'
+ * @param {Object|null} lastDoc - Last document from previous page (for cursor-based pagination)
+ * @returns {Promise<Object>} Object with members array, totalCount, hasNextPage, lastDoc
+ */
+export async function fetchMembersPaginated(page = 1, pageSize = 20, filters = {}, sortBy = 'name_az', lastDoc = null) {
+  try {
+    const membersRef = collection(db, 'members');
+    let q = query(membersRef);
+
+    // Apply country filter if specified
+    if (filters.country && filters.country !== 'all') {
+      q = query(q, where('country', '==', filters.country));
+    }
+
+    // Apply sorting based on sortBy parameter
+    // Note: Firestore requires an index for composite queries (filter + orderBy)
+    switch (sortBy) {
+      case 'name_az':
+        q = query(q, orderBy('displayName', 'asc'));
+        break;
+      case 'name_za':
+        q = query(q, orderBy('displayName', 'desc'));
+        break;
+      case 'joined_newest':
+        q = query(q, orderBy('createdAt', 'desc'));
+        break;
+      case 'joined_oldest':
+        q = query(q, orderBy('createdAt', 'asc'));
+        break;
+      default:
+        q = query(q, orderBy('displayName', 'asc'));
+    }
+
+    // Apply pagination
+    // For first page, don't use startAfter
+    // For subsequent pages, use startAfter with lastDoc
+    if (lastDoc) {
+      q = query(q, startAfter(lastDoc));
+    }
+    
+    // Fetch one extra document to check if there's a next page
+    q = query(q, limit(pageSize + 1));
+
+    const snapshot = await getDocs(q);
+    const docs = snapshot.docs;
+    
+    // Check if there's a next page
+    const hasNextPage = docs.length > pageSize;
+    const membersToReturn = hasNextPage ? docs.slice(0, pageSize) : docs;
+    
+    // Map documents to member objects
+    const members = membersToReturn.map((doc) => {
+      const data = doc.data();
+      return { id: doc.id, ...data };
+    });
+
+    // Get the last document for next page pagination
+    const newLastDoc = membersToReturn.length > 0 ? membersToReturn[membersToReturn.length - 1] : null;
+
+    return {
+      members,
+      hasNextPage,
+      lastDoc: newLastDoc,
+    };
+  } catch (error) {
+    console.error('Error fetching paginated members:', error);
+    // If error is due to missing index, provide helpful message
+    if (error.code === 'failed-precondition') {
+      console.error('Firestore index required. Please create a composite index for the query.');
+    }
+    return {
+      members: [],
+      hasNextPage: false,
+      lastDoc: null,
+    };
+  }
+}
+
+/**
+ * Get total count of members matching the filters
+ * @param {Object} filters - Filter object with country (optional)
+ * @returns {Promise<number>} Total count of members
+ */
+export async function getMembersCount(filters = {}) {
+  try {
+    const membersRef = collection(db, 'members');
+    let q = query(membersRef);
+
+    // Apply country filter if specified
+    if (filters.country && filters.country !== 'all') {
+      q = query(q, where('country', '==', filters.country));
+    }
+
+    const snapshot = await getCountFromServer(q);
+    return snapshot.data().count;
+  } catch (error) {
+    console.error('Error getting members count:', error);
+    return 0;
   }
 }

@@ -807,7 +807,12 @@
         "active": "Actif",
         "clearAllFilters": "Effacer tous les filtres",
         "clearAll": "Tout effacer",
-        "noMembers": "Aucun membre trouvé dans le système"
+        "noMembers": "Aucun membre trouvé dans le système",
+        "page": "Page",
+        "previous": "Précédent",
+        "next": "Suivant",
+        "loading": "Chargement",
+        "errorLoadingMembers": "Erreur lors du chargement des membres"
     }
 }
 

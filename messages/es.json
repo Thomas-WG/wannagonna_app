@@ -807,7 +807,12 @@
         "active": "Activo",
         "clearAllFilters": "Limpiar todos los filtros",
         "clearAll": "Limpiar todo",
-        "noMembers": "No se encontraron miembros en el sistema"
+        "noMembers": "No se encontraron miembros en el sistema",
+        "page": "Página",
+        "previous": "Anterior",
+        "next": "Siguiente",
+        "loading": "Cargando",
+        "errorLoadingMembers": "Error al cargar miembros"
     }
 }
 
