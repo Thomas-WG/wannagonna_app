@@ -715,7 +715,8 @@
         "emptyTitle": "Aún No Hay Historial de XP",
         "emptyMessage": "¡Comienza a ganar XP completando actividades y obteniendo insignias!",
         "totalEntries": "Total de Entradas",
-        "totalXp": "Total de XP Ganado"
+        "totalXp": "Total de XP Ganado",
+        "noMoreEntries": "No hay más entradas para cargar"
     },
     "Activities": {
         "title": "Actividades Disponibles",

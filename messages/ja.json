@@ -715,7 +715,8 @@
         "emptyTitle": "XP履歴はまだありません",
         "emptyMessage": "活動を完了したり、バッジを獲得したりしてXPを獲得しましょう！",
         "totalEntries": "総エントリ数",
-        "totalXp": "獲得した総XP"
+        "totalXp": "獲得した総XP",
+        "noMoreEntries": "読み込むエントリがありません"
     },
     "Activities": {
         "title": "利用可能な活動",

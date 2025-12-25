@@ -715,7 +715,8 @@
         "emptyTitle": "No XP History Yet",
         "emptyMessage": "Start earning XP by completing activities and earning badges!",
         "totalEntries": "Total Entries",
-        "totalXp": "Total XP Earned"
+        "totalXp": "Total XP Earned",
+        "noMoreEntries": "No more entries to load"
     },
     "Activities": {
         "title": "Available Activities",

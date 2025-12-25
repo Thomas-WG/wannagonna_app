@@ -715,7 +715,8 @@
         "emptyTitle": "Aucun historique XP pour le moment",
         "emptyMessage": "Commencez à gagner de l'XP en complétant des activités et en obtenant des badges !",
         "totalEntries": "Total des Entrées",
-        "totalXp": "Total XP Gagné"
+        "totalXp": "Total XP Gagné",
+        "noMoreEntries": "Aucune autre entrée à charger"
     },
     "Activities": {
         "title": "Activités Disponibles",
