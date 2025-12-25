@@ -36,6 +36,7 @@ import BadgeAnimation from '@/components/badges/BadgeAnimation';
 import { HiSearch, HiX, HiCheckCircle, HiChevronLeft, HiChevronRight } from 'react-icons/hi';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useTranslations, useLocale } from 'next-intl';
+import { countries } from 'countries-list';
 import { useOpenActivities } from '@/hooks/activities/useOpenActivities';
 import { useApplicationStatuses } from '@/hooks/activities/useApplicationStatuses';
 import { useActivitiesStore } from '@/stores/activitiesStore';
@@ -579,7 +580,10 @@ export default function ActivitiesPage() {
             )}
             {filters.country !== 'all' && (
               <Badge color="blue" className="flex items-center gap-1">
-                {t('filterLocation')} {filters.country}
+                {t('filterLocation')} {(() => {
+                  const countryData = countries[filters.country];
+                  return countryData ? countryData.name : filters.country;
+                })()}
                 <button
                   onClick={() => updateFilter('country', 'all')}
                   className="ml-1 hover:text-gray-800"

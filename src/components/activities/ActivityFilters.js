@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Button, Select } from 'flowbite-react';
 import { HiFilter, HiX, HiChevronDown, HiChevronUp } from 'react-icons/hi';
 import { useTranslations, useLocale } from 'next-intl';
+import { countries } from 'countries-list';
 import categories from '@/constant/categories';
 import { getSkillsForSelect } from '@/utils/crudSkills';
 import { sdgNames } from '@/constant/sdgs';
@@ -260,11 +261,15 @@ export default function ActivityFilters({
               className="w-full bg-background-card dark:bg-background-card text-text-primary dark:text-text-primary border-border-light dark:border-border-dark"
             >
               <option value="all">{t('allCountries')}</option>
-              {availableCountries.map((country) => (
-                <option key={country} value={country}>
-                  {country}
-                </option>
-              ))}
+              {availableCountries.map((countryCode) => {
+                const countryData = countries[countryCode];
+                const countryName = countryData ? countryData.name : countryCode;
+                return (
+                  <option key={countryCode} value={countryCode}>
+                    {countryName}
+                  </option>
+                );
+              })}
             </Select>
           </div>
         )}
