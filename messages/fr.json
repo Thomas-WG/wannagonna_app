@@ -86,7 +86,18 @@
         "errorLoadingPreferences": "Échec du chargement des préférences de notification.",
         "errorEnablePushBrowser": "Impossible d'activer les notifications push dans ce navigateur.",
         "errorEnablePush": "Échec de l'activation des notifications push.",
-        "errorSavePreferences": "Échec de l'enregistrement des préférences de notification."
+        "errorSavePreferences": "Échec de l'enregistrement des préférences de notification.",
+        "errorSavePreferencesNetwork": "Impossible d'enregistrer les préférences. Veuillez vérifier votre connexion Internet.",
+        "errorSavePreferencesPermission": "Impossible d'enregistrer les préférences. Veuillez vérifier vos permissions.",
+        "errorSavePreferencesGeneric": "Échec de l'enregistrement des préférences de notification. Veuillez réessayer.",
+        "successSavePreferences": "Préférences enregistrées avec succès.",
+        "errorLanguageChange": "Échec du changement de langue. Veuillez réessayer.",
+        "successLanguageChange": "Langue changée avec succès.",
+        "savingLanguage": "Changement de langue...",
+        "confirmDisableAllNotifications": "Désactiver toutes les notifications ?",
+        "confirmDisableAllNotificationsMessage": "Êtes-vous sûr de vouloir désactiver toutes les notifications ? Vous ne recevrez aucune notification dans l'application ni push pour la gamification ou les activités.",
+        "confirm": "Confirmer",
+        "cancel": "Annuler"
     },
     "ActivityCard": {
         "points": "points",

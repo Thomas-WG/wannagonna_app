@@ -86,7 +86,18 @@
         "errorLoadingPreferences": "Error al cargar las preferencias de notificación.",
         "errorEnablePushBrowser": "No se pueden habilitar las notificaciones push en este navegador.",
         "errorEnablePush": "Error al habilitar las notificaciones push.",
-        "errorSavePreferences": "Error al guardar las preferencias de notificación."
+        "errorSavePreferences": "Error al guardar las preferencias de notificación.",
+        "errorSavePreferencesNetwork": "No se pueden guardar las preferencias. Por favor, verifica tu conexión a internet.",
+        "errorSavePreferencesPermission": "No se pueden guardar las preferencias. Por favor, verifica tus permisos.",
+        "errorSavePreferencesGeneric": "Error al guardar las preferencias de notificación. Por favor, inténtalo de nuevo.",
+        "successSavePreferences": "Preferencias guardadas exitosamente.",
+        "errorLanguageChange": "Error al cambiar el idioma. Por favor, inténtalo de nuevo.",
+        "successLanguageChange": "Idioma cambiado exitosamente.",
+        "savingLanguage": "Cambiando idioma...",
+        "confirmDisableAllNotifications": "¿Desactivar todas las notificaciones?",
+        "confirmDisableAllNotificationsMessage": "¿Estás seguro de que quieres desactivar todas las notificaciones? No recibirás ninguna notificación en la aplicación ni push para gamificación o actividades.",
+        "confirm": "Confirmar",
+        "cancel": "Cancelar"
     },
     "ActivityCard": {
         "points": "puntos",

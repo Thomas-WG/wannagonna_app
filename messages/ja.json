@@ -86,7 +86,18 @@
         "errorLoadingPreferences": "通知設定の読み込みに失敗しました。",
         "errorEnablePushBrowser": "このブラウザではプッシュ通知を有効にできません。",
         "errorEnablePush": "プッシュ通知の有効化に失敗しました。",
-        "errorSavePreferences": "通知設定の保存に失敗しました。"
+        "errorSavePreferences": "通知設定の保存に失敗しました。",
+        "errorSavePreferencesNetwork": "設定を保存できません。インターネット接続を確認してください。",
+        "errorSavePreferencesPermission": "設定を保存できません。権限を確認してください。",
+        "errorSavePreferencesGeneric": "通知設定の保存に失敗しました。もう一度お試しください。",
+        "successSavePreferences": "設定が正常に保存されました。",
+        "errorLanguageChange": "言語の変更に失敗しました。もう一度お試しください。",
+        "successLanguageChange": "言語が正常に変更されました。",
+        "savingLanguage": "言語を変更しています...",
+        "confirmDisableAllNotifications": "すべての通知を無効にしますか？",
+        "confirmDisableAllNotificationsMessage": "すべての通知を無効にしてもよろしいですか？ゲーミフィケーションやアクティビティに関するアプリ内通知やプッシュ通知は一切受け取れなくなります。",
+        "confirm": "確認",
+        "cancel": "キャンセル"
     },
     "ActivityCard": {
         "points": "点",

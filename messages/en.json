@@ -86,7 +86,18 @@
         "errorLoadingPreferences": "Failed to load notification preferences.",
         "errorEnablePushBrowser": "Unable to enable push notifications in this browser.",
         "errorEnablePush": "Failed to enable push notifications.",
-        "errorSavePreferences": "Failed to save notification preferences."
+        "errorSavePreferences": "Failed to save notification preferences.",
+        "errorSavePreferencesNetwork": "Unable to save preferences. Please check your internet connection.",
+        "errorSavePreferencesPermission": "Unable to save preferences. Please check your permissions.",
+        "errorSavePreferencesGeneric": "Failed to save notification preferences. Please try again.",
+        "successSavePreferences": "Preferences saved successfully.",
+        "errorLanguageChange": "Failed to change language. Please try again.",
+        "successLanguageChange": "Language changed successfully.",
+        "savingLanguage": "Changing language...",
+        "confirmDisableAllNotifications": "Disable All Notifications?",
+        "confirmDisableAllNotificationsMessage": "Are you sure you want to disable all notifications? You will not receive any in-app or push notifications for gamification or activities.",
+        "confirm": "Confirm",
+        "cancel": "Cancel"
     },
     "ActivityCard": {
         "points": "points",
