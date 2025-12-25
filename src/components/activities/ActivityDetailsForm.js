@@ -26,18 +26,6 @@ export default function ActivityDetailsForm({ formData, handleChange, setFormDat
   const locale = useLocale();
   const { isDark } = useTheme();
   
-  // Debug logging
-  console.log('ActivityDetailsForm - formData dates:', {
-    start_date: formData.start_date,
-    start_date_type: typeof formData.start_date,
-    start_date_isDate: formData.start_date instanceof Date,
-    end_date: formData.end_date,
-    end_date_type: typeof formData.end_date,
-    end_date_isDate: formData.end_date instanceof Date,
-    creation_date: formData.creation_date,
-    creation_date_type: typeof formData.creation_date,
-    creation_date_isDate: formData.creation_date instanceof Date,
-  });
   const [skillOptions, setSkillOptions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedSkills, setSelectedSkills] = useState([]);
