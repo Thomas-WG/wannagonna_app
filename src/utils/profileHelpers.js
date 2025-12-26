@@ -3,9 +3,10 @@
  * A profile is considered complete if it has:
  * - displayName (not empty)
  * - bio (not empty)
+ * - cause (not empty)
+ * - hobbies (not empty)
  * - country (not empty)
  * - at least one language
- * - at least one skill
  * - profilePicture (not empty)
  * - at least one timeCommitment option selected
  * - at least one availability option selected
@@ -24,6 +25,16 @@ export function isProfileComplete(profileData) {
   
   // Check bio
   if (!profileData.bio || profileData.bio.trim() === '') {
+    return false;
+  }
+  
+  // Check cause
+  if (!profileData.cause || profileData.cause.trim() === '') {
+    return false;
+  }
+  
+  // Check hobbies
+  if (!profileData.hobbies || profileData.hobbies.trim() === '') {
     return false;
   }
   

@@ -1,13 +1,24 @@
 import { Card, Label, TextInput, Textarea, Select as FlowbiteSelect } from 'flowbite-react';
 import ProfilePicture from './ProfilePicture';
-import CreatableSelect from 'react-select/creatable';
 import { useTranslations } from 'next-intl';
 import Select from 'react-select';
 import { useTheme } from '@/utils/theme/ThemeContext';
+import { Controller } from 'react-hook-form';
+import FormError from './FormError';
 
-export default function ProfileInformation({ profileData, handleInputChange, handleMultiSelectChange, countryOptions, languageOptions, handleProfilePictureChange }) {
+export default function ProfileInformation({ 
+  control, 
+  errors, 
+  countryOptions, 
+  languageOptions, 
+  handleProfilePictureChange,
+  watch 
+}) {
   const t = useTranslations('CompleteProfile');
   const { isDark } = useTheme();
+  
+  // Watch profilePicture for ProfilePicture component
+  const profilePicture = watch('profilePicture');
 
   // Custom styles for react-select with dark mode support
   const selectStyles = {
@@ -76,125 +87,182 @@ export default function ProfileInformation({ profileData, handleInputChange, han
 
   return (
     <Card className="w-full h-fit bg-background-card dark:bg-background-card border-border-light dark:border-border-dark">
-              <div className="p-4">
-                <ProfilePicture profileData={profileData} handleProfilePictureChange={handleProfilePictureChange} />
-                <h5 className="text-2xl font-bold tracking-tight text-text-primary dark:text-text-primary mb-4">
-                  {t('profile')}
-                </h5>
-                <div className="space-y-4">
-                <div>
-                    <div className="mb-2 block">
-                      <Label htmlFor="email" className="text-text-primary dark:text-text-primary">{t('email')}</Label>
-                    </div>
-                    <TextInput 
-                      id="email" 
-                      name="email"
-                      type="email"
-                      value={profileData.email} 
-                      disabled
-                      className="bg-background-card dark:bg-background-card text-text-primary dark:text-text-primary border-border-light dark:border-border-dark"
-                    />
-                    <p className="mt-1 text-sm text-text-tertiary dark:text-text-tertiary">
-                      {t('emailHelper')}
-                    </p>
-                  </div>
-                  <div>
-                    <div className="mb-2 block">
-                      <Label htmlFor="displayname" className="text-text-primary dark:text-text-primary">{t('displayName')}</Label>
-                    </div>
-                    <TextInput 
-                      id="displayname" 
-                      name="displayName"
-                      type="text" 
-                      placeholder="Titi Toto" 
-                      value={profileData.displayName} 
-                      onChange={handleInputChange}
-                      className="bg-background-card dark:bg-background-card !text-text-primary dark:!text-text-primary border-border-light dark:border-border-dark placeholder:text-text-tertiary dark:placeholder:text-text-tertiary"
-                    />
-                  </div>
-                  <div>
-                    <div className="mb-2 block">
-                      <Label htmlFor="bio" className="text-text-primary dark:text-text-primary">{t('bio')}</Label>
-                    </div>
-                    <Textarea 
-                      id="bio" 
-                      name="bio"
-                      placeholder="A few words about yourself" 
-                      value={profileData.bio} 
-                      onChange={handleInputChange}
-                      className="bg-background-card dark:bg-background-card !text-text-primary dark:!text-text-primary border-border-light dark:border-border-dark placeholder:text-text-tertiary dark:placeholder:text-text-tertiary"
-                    />
-                  </div>
-                  <div>
-                    <div className="mb-2 block">
-                      <Label htmlFor="cause" className="text-text-primary dark:text-text-primary">{t('cause')}</Label>
-                    </div>
-                    <Textarea 
-                      id="cause" 
-                      name="cause"
-                      placeholder="What cause are you passionate about?" 
-                      value={profileData.cause || ''} 
-                      onChange={handleInputChange}
-                      rows={3}
-                      className="bg-background-card dark:bg-background-card !text-text-primary dark:!text-text-primary border-border-light dark:border-border-dark placeholder:text-text-tertiary dark:placeholder:text-text-tertiary"
-                    />
-                  </div>
-                  <div>
-                    <div className="mb-2 block">
-                      <Label htmlFor="hobbies" className="text-text-primary dark:text-text-primary">My Hobbies</Label>
-                    </div>
-                    <Textarea 
-                      id="hobbies" 
-                      name="hobbies"
-                      placeholder="What are your hobbies and interests?" 
-                      value={profileData.hobbies || ''} 
-                      onChange={handleInputChange}
-                      rows={3}
-                      className="bg-background-card dark:bg-background-card !text-text-primary dark:!text-text-primary border-border-light dark:border-border-dark placeholder:text-text-tertiary dark:placeholder:text-text-tertiary"
-                    />
-                  </div>
-                  <div>
-                    <div className="mb-2 block">
-                      <Label htmlFor="country" className="text-text-primary dark:text-text-primary">{t('country')}</Label>
-                    </div>
-                    <FlowbiteSelect
-                      id="country"
-                      name="country"
-                      value={profileData.country}
-                      onChange={handleInputChange}
-                      required
-                      className="bg-background-card dark:bg-background-card text-text-primary dark:text-text-primary border-border-light dark:border-border-dark"
-                    >
-                      <option value="">Select a country</option>
-                      {countryOptions.map(({ value, label }) => (
-                        <option key={value} value={value}>
-                          {label}
-                        </option>
-                      ))}
-                    </FlowbiteSelect>
-                  </div>
-                  <div>
-                    <div className="mb-2 block">
-                      <Label htmlFor="languages" className="text-text-primary dark:text-text-primary">{t('languages')}</Label>
-                    </div>
-                    <Select
-                      id="languages"
-                      name="languages"
-                      isMulti
-                      options={languageOptions}
-                      value={profileData.languages}
-                      onChange={handleMultiSelectChange('languages')}
-                      placeholder="Select or type languages..."
-                      className="basic-multi-select"
-                      classNamePrefix="select"
-                      styles={selectStyles}
-                    />
-                    <p className="mt-1 text-sm text-text-tertiary dark:text-text-tertiary">
-                      You can select from the list or type new languages
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </Card>
+      <div className="p-4 md:p-6">
+        <ProfilePicture 
+          profileData={{ profilePicture }} 
+          handleProfilePictureChange={handleProfilePictureChange} 
+        />
+        <h5 className="text-2xl font-bold tracking-tight text-text-primary dark:text-text-primary mb-4">
+          {t('profile')}
+        </h5>
+        <div className="space-y-4">
+          <div>
+            <div className="mb-2 block">
+              <Label htmlFor="email" className="text-text-primary dark:text-text-primary">
+                {t('email')}
+              </Label>
+            </div>
+            <Controller
+              name="email"
+              control={control}
+              render={({ field }) => (
+                <TextInput 
+                  {...field}
+                  id="email" 
+                  type="email"
+                  disabled
+                  className="w-full bg-background-card dark:bg-background-card text-text-primary dark:text-text-primary border-border-light dark:border-border-dark"
+                />
+              )}
+            />
+            <p className="mt-1 text-sm text-text-tertiary dark:text-text-tertiary">
+              {t('emailHelper')}
+            </p>
+          </div>
+          
+          <div>
+            <div className="mb-2 block">
+              <Label htmlFor="displayname" className="text-text-primary dark:text-text-primary">
+                {t('displayName')}
+              </Label>
+            </div>
+            <Controller
+              name="displayName"
+              control={control}
+              render={({ field }) => (
+                <TextInput 
+                  {...field}
+                  id="displayname" 
+                  type="text" 
+                  placeholder="Titi Toto" 
+                  className="w-full bg-background-card dark:bg-background-card !text-text-primary dark:!text-text-primary border-border-light dark:border-border-dark placeholder:text-text-tertiary dark:placeholder:text-text-tertiary"
+                />
+              )}
+            />
+            <FormError message={errors.displayName?.message} />
+          </div>
+          
+          <div>
+            <div className="mb-2 block">
+              <Label htmlFor="bio" className="text-text-primary dark:text-text-primary">
+                {t('bio')}
+              </Label>
+            </div>
+            <Controller
+              name="bio"
+              control={control}
+              render={({ field }) => (
+                <Textarea 
+                  {...field}
+                  id="bio" 
+                  placeholder="A few words about yourself" 
+                  className="w-full bg-background-card dark:bg-background-card !text-text-primary dark:!text-text-primary border-border-light dark:border-border-dark placeholder:text-text-tertiary dark:placeholder:text-text-tertiary"
+                />
+              )}
+            />
+            <FormError message={errors.bio?.message} />
+          </div>
+          
+          <div>
+            <div className="mb-2 block">
+              <Label htmlFor="cause" className="text-text-primary dark:text-text-primary">
+                {t('cause')}
+              </Label>
+            </div>
+            <Controller
+              name="cause"
+              control={control}
+              render={({ field }) => (
+                <Textarea 
+                  {...field}
+                  id="cause" 
+                  placeholder="What cause are you passionate about?" 
+                  rows={3}
+                  className="w-full bg-background-card dark:bg-background-card !text-text-primary dark:!text-text-primary border-border-light dark:border-border-dark placeholder:text-text-tertiary dark:placeholder:text-text-tertiary"
+                />
+              )}
+            />
+            <FormError message={errors.cause?.message} />
+          </div>
+          
+          <div>
+            <div className="mb-2 block">
+              <Label htmlFor="hobbies" className="text-text-primary dark:text-text-primary">
+                My Hobbies
+              </Label>
+            </div>
+            <Controller
+              name="hobbies"
+              control={control}
+              render={({ field }) => (
+                <Textarea 
+                  {...field}
+                  id="hobbies" 
+                  placeholder="What are your hobbies and interests?" 
+                  rows={3}
+                  className="w-full bg-background-card dark:bg-background-card !text-text-primary dark:!text-text-primary border-border-light dark:border-border-dark placeholder:text-text-tertiary dark:placeholder:text-text-tertiary"
+                />
+              )}
+            />
+            <FormError message={errors.hobbies?.message} />
+          </div>
+          
+          <div>
+            <div className="mb-2 block">
+              <Label htmlFor="country" className="text-text-primary dark:text-text-primary">
+                {t('country')}
+              </Label>
+            </div>
+            <Controller
+              name="country"
+              control={control}
+              render={({ field }) => (
+                <FlowbiteSelect
+                  {...field}
+                  id="country"
+                  className="w-full bg-background-card dark:bg-background-card text-text-primary dark:text-text-primary border-border-light dark:border-border-dark"
+                >
+                  <option value="">Select a country</option>
+                  {countryOptions.map(({ value, label }) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+                </FlowbiteSelect>
+              )}
+            />
+            <FormError message={errors.country?.message} />
+          </div>
+          
+          <div>
+            <div className="mb-2 block">
+              <Label htmlFor="languages" className="text-text-primary dark:text-text-primary">
+                {t('languages')}
+              </Label>
+            </div>
+            <Controller
+              name="languages"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  {...field}
+                  id="languages"
+                  isMulti
+                  options={languageOptions}
+                  placeholder="Select or type languages..."
+                  className="basic-multi-select w-full"
+                  classNamePrefix="select"
+                  styles={selectStyles}
+                />
+              )}
+            />
+            <FormError message={errors.languages?.message} />
+            <p className="mt-1 text-sm text-text-tertiary dark:text-text-tertiary">
+              You can select from the list or type new languages
+            </p>
+          </div>
+        </div>
+      </div>
+    </Card>
   );
 }
