@@ -250,6 +250,10 @@ export default function OrganizationsManagementPage() {
       borderColor: isDark ? '#334155' : '#e2e8f0',
       zIndex: 9999, // Ensure dropdown appears above modal
     }),
+    menuPortal: (base) => ({
+      ...base,
+      zIndex: 9999, // Ensure portal appears above modal
+    }),
     menuList: (base) => ({
       ...base,
       maxHeight: '200px',
