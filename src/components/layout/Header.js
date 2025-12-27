@@ -10,11 +10,13 @@ import {
   clearAllNotificationsClient,
 } from '@/utils/notifications';
 import {getRelativeTime} from '@/utils/dateUtils';
+import {useDashboardStore} from '@/stores/dashboardStore';
 
 const Header = () => {
   const router = useRouter();
   const {user} = useAuth();
   const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const {setNotificationValidationResult} = useDashboardStore();
 
   const {
     notifications,
@@ -41,6 +43,31 @@ const Header = () => {
       }
     }
 
+    // Check if this is a REWARD notification with activity validation data
+    if (notification.type === 'REWARD' && notification.metadata) {
+      const metadata = notification.metadata;
+      if (metadata.activityId && metadata.badgesGranted) {
+        // This is an activity validation notification - show animation instead of navigating
+        const validationResult = {
+          xpReward: metadata.totalXP || 0,
+          badgeIds: Array.isArray(metadata.badgesGranted) ? metadata.badgesGranted : [],
+          activityTitle: notification.body?.match(/for "([^"]+)"/)?.[1] || '',
+          xpBreakdown: {
+            totalXP: metadata.totalXP || 0,
+            activityXP: metadata.activityXP || 0,
+            badgeXPMap: metadata.badgeXPMap || {},
+          },
+        };
+        
+        // Set validation result in store to trigger animation (modal is global, no navigation needed)
+        setNotificationValidationResult(validationResult);
+        
+        setIsNotifOpen(false);
+        return; // Don't navigate to link, animation will show
+      }
+    }
+
+    // Default behavior: navigate to link
     if (notification.link) {
       router.push(notification.link);
     }

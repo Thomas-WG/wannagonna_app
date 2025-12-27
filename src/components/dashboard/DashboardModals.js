@@ -87,9 +87,11 @@ const DashboardModals = memo(function DashboardModals({
       <ActivityValidationSuccessModal
         show={showValidationModal}
         onClose={closeValidationModal}
-        xpReward={validationResult?.xpReward || 0}
+        xpReward={validationResult?.xpReward || validationResult?.xpBreakdown?.totalXP || 0}
+        badgeIds={validationResult?.badgeIds || []}
         badges={validationResult?.badges || []}
         activityTitle={validationResult?.activityTitle || ''}
+        xpBreakdown={validationResult?.xpBreakdown || null}
       />
 
       {/* Public Profile Modal */}

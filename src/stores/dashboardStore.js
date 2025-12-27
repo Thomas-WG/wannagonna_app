@@ -27,6 +27,9 @@ export const useDashboardStore = create((set) => ({
   selectedProfileUserId: null,
   cancelApplication: null,
   cancelMessage: '',
+  
+  // Notification-based validation result
+  notificationValidationResult: null,
 
   // View state
   showApplications: false,
@@ -49,6 +52,9 @@ export const useDashboardStore = create((set) => ({
   setCancelMessage: (message) => set({ cancelMessage: message }),
 
   setShowApplications: (show) => set({ showApplications: show }),
+  
+  setNotificationValidationResult: (result) => set({ notificationValidationResult: result }),
+  clearNotificationValidationResult: () => set({ notificationValidationResult: null }),
 
   // Helper: Reset all modals
   resetModals: () =>

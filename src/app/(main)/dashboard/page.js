@@ -58,7 +58,8 @@ export default function DashboardPage() {
     setShowToast(true);
   }, []);
 
-  // Validation result hook
+  // Validation result hook (only handles URL-based validation from QR codes)
+  // Notification-based validation is handled globally via GlobalValidationModal
   const { showValidationModal, validationResult, closeValidationModal } =
     useValidationResult(handleValidationToast);
 
