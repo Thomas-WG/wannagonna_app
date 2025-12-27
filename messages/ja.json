@@ -656,7 +656,16 @@
         "contactValidated": "承認済みの参加者に連絡",
         "contactAll": "全員に連絡",
         "noEmailsAvailable": "選択した参加者に利用可能なメールアドレスがありません。",
-        "emailSubject": "件名: {activityTitle}"
+        "emailSubject": "件名: {activityTitle}",
+        "errorUpdatingStatus": "活動ステータスの更新中にエラーが発生しました",
+        "errorClosingActivity": "活動の閉鎖に失敗しました",
+        "activityAnalytics": "活動分析",
+        "totalActivities": "活動総数",
+        "totalApplications": "申請総数",
+        "totalXP": "XP合計",
+        "averageXP": "平均XP",
+        "statusBreakdown": "ステータス別内訳",
+        "typeBreakdown": "タイプ別内訳"
     },
     "Dashboard": {
         "yourStatistics": "あなたの統計",

@@ -656,7 +656,16 @@
         "contactValidated": "Contactar validados",
         "contactAll": "Contactar todos",
         "noEmailsAvailable": "No hay direcciones de correo electrónico disponibles para los participantes seleccionados.",
-        "emailSubject": "Respecto a: {activityTitle}"
+        "emailSubject": "Respecto a: {activityTitle}",
+        "errorUpdatingStatus": "Error al actualizar el estado de la actividad",
+        "errorClosingActivity": "Error al cerrar la actividad",
+        "activityAnalytics": "Análisis de actividades",
+        "totalActivities": "Total de actividades",
+        "totalApplications": "Total de solicitudes",
+        "totalXP": "Total XP",
+        "averageXP": "XP promedio",
+        "statusBreakdown": "Desglose por estado",
+        "typeBreakdown": "Desglose por tipo"
     },
     "Dashboard": {
         "yourStatistics": "Tus Estadísticas",

@@ -656,7 +656,16 @@
         "contactValidated": "Contact Validated",
         "contactAll": "Contact All",
         "noEmailsAvailable": "No email addresses available for the selected participants.",
-        "emailSubject": "Regarding: {activityTitle}"
+        "emailSubject": "Regarding: {activityTitle}",
+        "errorUpdatingStatus": "Error updating activity status",
+        "errorClosingActivity": "Failed to close activity",
+        "activityAnalytics": "Activity Analytics",
+        "totalActivities": "Total Activities",
+        "totalApplications": "Total Applications",
+        "totalXP": "Total XP",
+        "averageXP": "Average XP",
+        "statusBreakdown": "Status Breakdown",
+        "typeBreakdown": "Type Breakdown"
     },
     "Dashboard": {
         "yourStatistics": "Your Statistics",
