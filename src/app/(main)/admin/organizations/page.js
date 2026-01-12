@@ -24,6 +24,7 @@ import { sdgOptions } from '@/constant/sdgs';
 import { useTheme } from '@/utils/theme/ThemeContext';
 import { useModal } from '@/utils/modal/useModal';
 import BackButton from '@/components/layout/BackButton';
+import { normalizeUrl, formatUrlForDisplay } from '@/utils/urlUtils';
 
 // Register the languages you want to use
 languages.registerLocale(require("@cospired/i18n-iso-languages/langs/en.json"));
@@ -59,7 +60,10 @@ export default function OrganizationsManagementPage() {
     email: '',
     members: [],
     registrationNumber: '',
-    createdAt: ''
+    createdAt: '',
+    linkedin: '',
+    facebook: '',
+    instagram: ''
   }); // Form data for adding/editing organizations
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' }); // Toast notification state
   const [logoFile, setLogoFile] = useState(null); // File object for logo upload
@@ -101,16 +105,25 @@ export default function OrganizationsManagementPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      // Normalize URL fields before saving
+      const normalizedForm = {
+        ...organizationForm,
+        website: organizationForm.website ? normalizeUrl(organizationForm.website) : '',
+        linkedin: organizationForm.linkedin ? normalizeUrl(organizationForm.linkedin) : '',
+        facebook: organizationForm.facebook ? normalizeUrl(organizationForm.facebook) : '',
+        instagram: organizationForm.instagram ? normalizeUrl(organizationForm.instagram) : '',
+      };
+
       let organizationId;
       if (selectedOrganization) {
         // Update existing organization
         organizationId = selectedOrganization.id;
-        await updateOrganization(selectedOrganization.id, organizationForm);
+        await updateOrganization(selectedOrganization.id, normalizedForm);
         showToast('Organization updated successfully', 'success');
       } else {
         // Create new organization
         const organizationWithCreatedAt = {
-          ...organizationForm,
+          ...normalizedForm,
           createdAt: new Date().toISOString()
         };
         const newOrg = await addOrganization(organizationWithCreatedAt);
@@ -122,7 +135,7 @@ export default function OrganizationsManagementPage() {
       if (logoFile && organizationId) {
         try {
           const url = await uploadOrgPicture(logoFile, organizationId);
-          await updateOrganization(organizationId, { ...organizationForm, logo: url });
+          await updateOrganization(organizationId, { ...normalizedForm, logo: url });
           setOrganizationForm(prev => ({ ...prev, logo: url }));
         } catch (error) {
           console.error('Error uploading logo:', error);
@@ -185,7 +198,10 @@ export default function OrganizationsManagementPage() {
       email: '',
       members: [],
       registrationNumber: '',
-      createdAt: ''
+      createdAt: '',
+      linkedin: '',
+      facebook: '',
+      instagram: ''
     });
     setLogoFile(null);
   };
@@ -209,6 +225,21 @@ export default function OrganizationsManagementPage() {
     } catch (error) {
         console.error("Error handling profile picture:", error);
       }
+    }
+  };
+
+  /**
+   * Handles URL field blur to normalize URLs
+   * @param {string} fieldName - The field name to normalize
+   * @param {string} value - The URL value
+   */
+  const handleUrlBlur = (fieldName, value) => {
+    if (value && value.trim() !== '') {
+      const normalized = normalizeUrl(value);
+      setOrganizationForm(prev => ({
+        ...prev,
+        [fieldName]: normalized
+      }));
     }
   };
 
@@ -677,14 +708,79 @@ export default function OrganizationsManagementPage() {
               <Label htmlFor="website" className="text-sm sm:text-base">Website</Label>
               <TextInput
                 id="website"
-                type="url"
-                value={organizationForm.website}
+                type="text"
+                value={formatUrlForDisplay(organizationForm.website || '')}
                 onChange={(e) => setOrganizationForm({
                   ...organizationForm,
                   website: e.target.value
                 })}
+                onBlur={(e) => handleUrlBlur('website', e.target.value)}
+                placeholder="www.example.com or example.com"
                 className="text-sm sm:text-base w-full"
               />
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                (https:// will be added automatically)
+              </p>
+            </div>
+
+            {/* LinkedIn Field */}
+            <div className="w-full max-w-full overflow-hidden">
+              <Label htmlFor="linkedin" className="text-sm sm:text-base">LinkedIn</Label>
+              <TextInput
+                id="linkedin"
+                type="text"
+                value={formatUrlForDisplay(organizationForm.linkedin || '')}
+                onChange={(e) => setOrganizationForm({
+                  ...organizationForm,
+                  linkedin: e.target.value
+                })}
+                onBlur={(e) => handleUrlBlur('linkedin', e.target.value)}
+                placeholder="www.linkedin.com/in/yourprofile"
+                className="text-sm sm:text-base w-full"
+              />
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                Enter your profile URL (e.g., https://linkedin.com/in/yourprofile) (https:// will be added automatically)
+              </p>
+            </div>
+
+            {/* Facebook Field */}
+            <div className="w-full max-w-full overflow-hidden">
+              <Label htmlFor="facebook" className="text-sm sm:text-base">Facebook</Label>
+              <TextInput
+                id="facebook"
+                type="text"
+                value={formatUrlForDisplay(organizationForm.facebook || '')}
+                onChange={(e) => setOrganizationForm({
+                  ...organizationForm,
+                  facebook: e.target.value
+                })}
+                onBlur={(e) => handleUrlBlur('facebook', e.target.value)}
+                placeholder="www.facebook.com/yourprofile"
+                className="text-sm sm:text-base w-full"
+              />
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                Enter your profile URL (e.g., https://facebook.com/yourprofile) (https:// will be added automatically)
+              </p>
+            </div>
+
+            {/* Instagram Field */}
+            <div className="w-full max-w-full overflow-hidden">
+              <Label htmlFor="instagram" className="text-sm sm:text-base">Instagram</Label>
+              <TextInput
+                id="instagram"
+                type="text"
+                value={formatUrlForDisplay(organizationForm.instagram || '')}
+                onChange={(e) => setOrganizationForm({
+                  ...organizationForm,
+                  instagram: e.target.value
+                })}
+                onBlur={(e) => handleUrlBlur('instagram', e.target.value)}
+                placeholder="www.instagram.com/yourprofile"
+                className="text-sm sm:text-base w-full"
+              />
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                Enter your profile URL (e.g., https://instagram.com/yourprofile) (https:// will be added automatically)
+              </p>
             </div>
 
             {/* Email Field */}
