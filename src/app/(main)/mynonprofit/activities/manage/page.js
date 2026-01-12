@@ -17,6 +17,7 @@ import {fetchOrganizationById} from '@/utils/crudOrganizations';
 import ProgressStepper from '@/components/layout/ProgressStepper';
 import { useAuth } from '@/utils/auth/AuthContext'; // Hook for accessing user authentication status
 import { useTranslations } from 'use-intl';
+import BackButton from '@/components/layout/BackButton';
 
 // Import the new components
 import CategorySelector from '@/components/activities/CategorySelector';
@@ -409,6 +410,11 @@ export default function CreateUpdateActivityPage() {
           <div className='flex justify-center items-center py-12'>
             <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500'></div>
           </div>
+        )}
+
+        {/* Back Button */}
+        {!loading && (
+          <BackButton fallbackPath="/mynonprofit" />
         )}
 
         {/* Progress Stepper */}

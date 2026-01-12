@@ -19,6 +19,7 @@ import ActivityValidationModal from "@/components/activities/ActivityValidationM
 import ParticipantListModal from "@/components/activities/ParticipantListModal";
 import ActivityFilters from "@/components/activities/ActivityFilters";
 import categories from "@/constant/categories";
+import BackButton from "@/components/layout/BackButton";
 
 export default function AdminActivitiesPage() {
   const t = useTranslations('Admin');
@@ -358,6 +359,9 @@ export default function AdminActivitiesPage() {
 
   return (
     <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 bg-background-page dark:bg-background-page min-h-screen">
+      {/* Back Button */}
+      <BackButton fallbackPath="/admin" />
+
       {/* Header */}
       <div className="mb-4 sm:mb-6 md:mb-8">
         <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2 text-text-primary dark:text-text-primary">{t('activitiesManagement') || 'Activities Management'}</h1>

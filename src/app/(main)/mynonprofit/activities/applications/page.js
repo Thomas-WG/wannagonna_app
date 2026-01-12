@@ -12,6 +12,7 @@ import PublicProfileModal from '@/components/profile/PublicProfileModal'
 import ApplicationCard from '@/components/activities/ApplicationCard'
 import NPODetailsModal from '@/components/activities/NPODetailsModal'
 import { fetchOrganizationById } from '@/utils/crudOrganizations'
+import BackButton from '@/components/layout/BackButton'
 
 export default function ReviewApplicationsPage() {
   const { user, claims } = useAuth()
@@ -159,6 +160,9 @@ export default function ReviewApplicationsPage() {
 
   return (
     <div className="p-4 max-w-5xl mx-auto bg-background-page dark:bg-background-page min-h-screen">
+      {/* Back Button */}
+      <BackButton fallbackPath="/mynonprofit" />
+
       <div className="mb-4">
         <h1 className="text-2xl font-bold text-text-primary dark:text-text-primary">{t('reviewApplications') || 'Review Applications'}</h1>
         <p className="text-sm text-text-secondary dark:text-text-secondary">

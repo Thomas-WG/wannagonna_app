@@ -23,6 +23,7 @@ import Image from 'next/image';
 import { sdgOptions } from '@/constant/sdgs';
 import { useTheme } from '@/utils/theme/ThemeContext';
 import { useModal } from '@/utils/modal/useModal';
+import BackButton from '@/components/layout/BackButton';
 
 // Register the languages you want to use
 languages.registerLocale(require("@cospired/i18n-iso-languages/langs/en.json"));
@@ -337,6 +338,9 @@ export default function OrganizationsManagementPage() {
 
   return (
     <div className="w-full max-w-full overflow-x-hidden px-3 sm:px-4 md:container md:mx-auto py-3 sm:py-4 space-y-4 sm:space-y-6">
+      {/* Back Button */}
+      <BackButton fallbackPath="/admin" />
+
       {/* Page Header */}
       <h1 className="text-xl sm:text-2xl font-bold">Organizations Management</h1>
       

@@ -21,6 +21,7 @@ import { useTranslations } from 'next-intl';
 import { useModal } from '@/utils/modal/useModal';
 import { HiSearch } from 'react-icons/hi';
 import { useDebounce } from '@/hooks/useDebounce';
+import BackButton from '@/components/layout/BackButton';
 
 const locales = ['en', 'fr', 'es', 'ja'];
 const localeLabels = {
@@ -207,6 +208,9 @@ export default function FAQManagementPage() {
 
   return (
     <div className="w-full max-w-full overflow-x-hidden px-3 sm:px-4 md:container md:mx-auto py-3 sm:py-4 space-y-4 sm:space-y-6">
+      {/* Back Button */}
+      <BackButton fallbackPath="/admin" />
+
       {/* Page Header */}
       <h1 className="text-xl sm:text-2xl font-bold">{t('faqManagement')}</h1>
       

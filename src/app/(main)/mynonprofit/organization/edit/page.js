@@ -12,7 +12,8 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useAuth } from '@/utils/auth/AuthContext';
 import { Card, Button, Label, TextInput, Textarea, Toast } from 'flowbite-react';
-import { HiOfficeBuilding, HiArrowLeft } from 'react-icons/hi';
+import { HiOfficeBuilding } from 'react-icons/hi';
+import BackButton from '@/components/layout/BackButton';
 import { 
   fetchOrganizationById,
   updateOrganization 
@@ -247,23 +248,17 @@ export default function OrganizationEditPage() {
 
   return (
     <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 max-w-4xl bg-background-page dark:bg-background-page min-h-screen">
-      {/* Header with back button */}
-      <div className="mb-4 sm:mb-6 flex items-center gap-3 sm:gap-4">
-        <button
-          onClick={() => router.push('/mynonprofit')}
-          className="p-2 rounded-full hover:bg-background-hover dark:hover:bg-background-hover transition-colors"
-          aria-label="Go back"
-        >
-          <HiArrowLeft className="h-5 w-5 sm:h-6 sm:w-6 text-text-primary dark:text-text-primary" />
-        </button>
-        <div className="flex items-center gap-2 sm:gap-3">
-          <div className="bg-semantic-info-100 dark:bg-semantic-info-900 p-2 sm:p-3 rounded-full">
-            <HiOfficeBuilding className="h-5 w-5 sm:h-6 sm:w-6 text-semantic-info-600 dark:text-semantic-info-400" />
-          </div>
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-text-primary dark:text-text-primary">
-            {t('editOrganization')}
-          </h1>
+      {/* Back Button */}
+      <BackButton fallbackPath="/mynonprofit" />
+
+      {/* Header */}
+      <div className="mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
+        <div className="bg-semantic-info-100 dark:bg-semantic-info-900 p-2 sm:p-3 rounded-full">
+          <HiOfficeBuilding className="h-5 w-5 sm:h-6 sm:w-6 text-semantic-info-600 dark:text-semantic-info-400" />
         </div>
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-text-primary dark:text-text-primary">
+          {t('editOrganization')}
+        </h1>
       </div>
 
       {/* Form Card */}
