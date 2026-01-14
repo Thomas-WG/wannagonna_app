@@ -4,8 +4,10 @@ import { useState, useEffect } from 'react';
 import { Button, Select } from 'flowbite-react';
 import { HiFilter, HiX, HiChevronDown, HiChevronUp } from 'react-icons/hi';
 import { useTranslations, useLocale } from 'next-intl';
+import { countries } from 'countries-list';
 import categories from '@/constant/categories';
 import { getSkillsForSelect } from '@/utils/crudSkills';
+import { sdgNames } from '@/constant/sdgs';
 
 export default function ActivityFilters({
   filters,
@@ -13,6 +15,8 @@ export default function ActivityFilters({
   availableCountries,
   availableCategories,
   availableSkills,
+  availableSDGs,
+  availableStatuses,
 }) {
   const t = useTranslations('Activities');
   const tManage = useTranslations('ManageActivities');
@@ -80,8 +84,19 @@ export default function ActivityFilters({
       category: 'all',
       country: 'all',
       skill: 'all',
-      status: 'all',
     };
+    // Include sdg if it exists (for activities page)
+    if (filters.sdg !== undefined) {
+      clearedFilters.sdg = 'all';
+    }
+    // Include startDate if it exists (for activities page)
+    if (filters.startDate !== undefined) {
+      clearedFilters.startDate = 'all';
+    }
+    // Include status if it exists (for admin pages)
+    if (filters.status !== undefined) {
+      clearedFilters.status = 'all';
+    }
     // Preserve organization filter if it exists (for admin pages)
     if (filters.organization !== undefined) {
       clearedFilters.organization = 'all';
@@ -94,18 +109,30 @@ export default function ActivityFilters({
     filters.category !== 'all' ||
     filters.country !== 'all' ||
     filters.skill !== 'all' ||
+    (filters.sdg !== undefined && filters.sdg !== 'all') ||
+    (filters.startDate !== undefined && filters.startDate !== 'all') ||
     (filters.status !== undefined && filters.status !== 'all');
 
-  // Get categories based on selected type
+  // Get categories based on selected type and available categories from filtered list
   const getCategoriesForType = () => {
-    if (filters.type === 'all') {
-      // Return all categories from all types
+    // If availableCategories is provided (filtered list), use those
+    if (availableCategories && availableCategories.length > 0) {
+      // Map available category IDs to category objects
       const allCats = [
         ...categories.online,
         ...categories.local,
         ...categories.event,
       ];
-      // Remove duplicates
+      return allCats.filter(cat => availableCategories.includes(cat.id));
+    }
+    
+    // Fallback to all categories if no filtered list provided
+    if (filters.type === 'all') {
+      const allCats = [
+        ...categories.online,
+        ...categories.local,
+        ...categories.event,
+      ];
       const uniqueCats = Array.from(
         new Map(allCats.map(cat => [cat.id, cat])).values()
       );
@@ -234,11 +261,15 @@ export default function ActivityFilters({
               className="w-full bg-background-card dark:bg-background-card text-text-primary dark:text-text-primary border-border-light dark:border-border-dark"
             >
               <option value="all">{t('allCountries')}</option>
-              {availableCountries.map((country) => (
-                <option key={country} value={country}>
-                  {country}
-                </option>
-              ))}
+              {availableCountries.map((countryCode) => {
+                const countryData = countries[countryCode];
+                const countryName = countryData ? countryData.name : countryCode;
+                return (
+                  <option key={countryCode} value={countryCode}>
+                    {countryName}
+                  </option>
+                );
+              })}
             </Select>
           </div>
         )}
@@ -265,6 +296,52 @@ export default function ActivityFilters({
           </div>
         )}
 
+        {/* SDG Filter */}
+        {filters.sdg !== undefined && availableSDGs && availableSDGs.length > 0 && (
+          <div className="flex-1 min-w-[150px]">
+            <label className="block mb-1 text-sm font-medium text-text-primary dark:text-text-primary">
+              {t('filterSdgLabel') || 'SDG'}
+            </label>
+            <Select
+              value={filters.sdg || 'all'}
+              onChange={(e) => handleFilterChange('sdg', e.target.value)}
+              className="w-full bg-background-card dark:bg-background-card text-text-primary dark:text-text-primary border-border-light dark:border-border-dark"
+            >
+              <option value="all">{t('allSDGs') || 'All SDGs'}</option>
+              {availableSDGs.map((sdgNum) => (
+                <option key={sdgNum} value={sdgNum}>
+                  {sdgNames[sdgNum] ? `SDG ${sdgNum}: ${sdgNames[sdgNum]}` : `SDG ${sdgNum}`}
+                </option>
+              ))}
+            </Select>
+          </div>
+        )}
+
+        {/* Start Date Filter */}
+        {filters.startDate !== undefined && (
+          <div className="flex-1 min-w-[150px]">
+            <label className="block mb-1 text-sm font-medium text-text-primary dark:text-text-primary">
+              {t('filterStartDateLabel') || 'Start Date'}
+            </label>
+            <Select
+              value={filters.startDate || 'all'}
+              onChange={(e) => handleFilterChange('startDate', e.target.value)}
+              className="w-full bg-background-card dark:bg-background-card text-text-primary dark:text-text-primary border-border-light dark:border-border-dark"
+            >
+              <option value="all">{t('allDates') || 'All Dates'}</option>
+              <option value="today">{t('today') || 'Today'}</option>
+              <option value="tomorrow">{t('tomorrow') || 'Tomorrow'}</option>
+              <option value="thisWeek">{t('thisWeek') || 'This Week'}</option>
+              <option value="thisWeekend">{t('thisWeekend') || 'This Weekend'}</option>
+              <option value="thisMonth">{t('thisMonth') || 'This Month'}</option>
+              <option value="thisYear">{t('thisYear') || 'This Year'}</option>
+              <option value="nextWeek">{t('nextWeek') || 'Next Week'}</option>
+              <option value="nextMonth">{t('nextMonth') || 'Next Month'}</option>
+              <option value="nextYear">{t('nextYear') || 'Next Year'}</option>
+            </Select>
+          </div>
+        )}
+
         {/* Status Filter */}
         {filters.status !== undefined && (
           <div className="flex-1 min-w-[150px]">
@@ -277,9 +354,19 @@ export default function ActivityFilters({
               className="w-full bg-background-card dark:bg-background-card text-text-primary dark:text-text-primary border-border-light dark:border-border-dark"
             >
               <option value="all">All Statuses</option>
-              <option value="Draft">{tStatus('status.Draft')}</option>
-              <option value="Open">{tStatus('status.Open')}</option>
-              <option value="Closed">{tStatus('status.Closed')}</option>
+              {availableStatuses && availableStatuses.length > 0 ? (
+                availableStatuses.map((status) => (
+                  <option key={status} value={status}>
+                    {tStatus(`status.${status}`) || status}
+                  </option>
+                ))
+              ) : (
+                <>
+                  <option value="Draft">{tStatus('status.Draft')}</option>
+                  <option value="Open">{tStatus('status.Open')}</option>
+                  <option value="Closed">{tStatus('status.Closed')}</option>
+                </>
+              )}
             </Select>
           </div>
         )}

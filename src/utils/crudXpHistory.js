@@ -1,4 +1,4 @@
-import { collection, addDoc, getDocs, query, orderBy, Timestamp, doc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, orderBy, Timestamp, doc, limit, startAfter } from 'firebase/firestore';
 import { db } from 'firebaseConfig';
 
 /**
@@ -80,6 +80,85 @@ export async function fetchXpHistory(userId) {
   } catch (error) {
     console.error(`Error fetching XP history for user ${userId}:`, error);
     return [];
+  }
+}
+
+/**
+ * Fetch XP history entries for a user with pagination support
+ * @param {string} userId - The user's ID
+ * @param {number} pageSize - Number of entries to fetch per page
+ * @param {Object|null} lastDoc - The last document from previous page (for cursor-based pagination)
+ * @returns {Promise<Object>} Object with entries array, hasNextPage boolean, and lastDoc for next page
+ */
+export async function fetchXpHistoryPaginated(userId, pageSize = 20, lastDoc = null) {
+  try {
+    if (!userId) {
+      console.error('No userId provided to fetchXpHistoryPaginated');
+      return {
+        entries: [],
+        hasNextPage: false,
+        lastDoc: null,
+      };
+    }
+
+    const memberDoc = doc(db, 'members', userId);
+    const xpHistoryCollection = collection(memberDoc, 'xpHistory');
+    
+    // Build query ordered by timestamp descending (newest first)
+    let q = query(xpHistoryCollection, orderBy('timestamp', 'desc'));
+    
+    // Apply pagination cursor if provided
+    if (lastDoc) {
+      q = query(q, startAfter(lastDoc));
+    }
+    
+    // Fetch one extra document to check if there's a next page
+    q = query(q, limit(pageSize + 1));
+
+    const querySnapshot = await getDocs(q);
+    const docs = querySnapshot.docs;
+    
+    // Check if there's a next page
+    const hasNextPage = docs.length > pageSize;
+    const docsToReturn = hasNextPage ? docs.slice(0, pageSize) : docs;
+    
+    const historyEntries = [];
+    
+    docsToReturn.forEach((docSnap) => {
+      const data = docSnap.data();
+      
+      // Convert Firestore Timestamp to Date if needed
+      let timestamp = data.timestamp;
+      if (timestamp && typeof timestamp.toDate === 'function') {
+        timestamp = timestamp.toDate();
+      }
+      
+      historyEntries.push({
+        id: docSnap.id,
+        title: data.title || '',
+        timestamp: timestamp,
+        points: data.points || 0,
+        type: data.type || 'unknown'
+      });
+    });
+    
+    // Get the last document snapshot for next page pagination (must be original Firestore doc)
+    const newLastDoc = docsToReturn.length > 0 ? docsToReturn[docsToReturn.length - 1] : null;
+    
+    console.log(`Fetched ${historyEntries.length} XP history entries for user ${userId} (hasMore: ${hasNextPage})`);
+    
+    return {
+      entries: historyEntries,
+      hasNextPage,
+      lastDoc: newLastDoc,
+    };
+  } catch (error) {
+    console.error(`Error fetching paginated XP history for user ${userId}:`, error);
+    return {
+      entries: [],
+      hasNextPage: false,
+      lastDoc: null,
+    };
   }
 }
 

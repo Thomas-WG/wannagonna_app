@@ -3,28 +3,28 @@
  *
  * Purpose:
  * This layout component is responsible for setting up the structure of every page in the app.
- * It configures the global layout with a sidebar (Navbar), font styling, and user authentication context.
- * The layout also conditionally renders the Navbar based on specific routes.
+ * It configures the global layout with font styling, internationalization, error boundaries, and providers.
  *
  * Key Functionalities:
  * - Sets up Roboto as the main font for the entire application.
- * - Wraps all children components with the AuthProvider for authentication handling.
- * - Conditionally displays the Navbar, hiding it on the login page.
+ * - Configures internationalization (i18n) with NextIntlClientProvider.
+ * - Wraps the app in ErrorBoundary for error handling (outermost catch-all).
+ * - Uses consolidated Providers component that includes AuthProvider, ThemeProvider, and ModalProvider
+ *   with individual error boundaries for each provider.
  *
  * Components:
- * - AuthProvider: Provides authentication context for all pages within the layout.
- * - Navbar: Sidebar navigation that is conditionally displayed based on the current route.
+ * - NextIntlClientProvider: Provides internationalization services.
+ * - ErrorBoundary: Catches errors in the component tree (outermost).
+ * - Providers: Consolidated component containing all app providers with individual error boundaries.
  *
  * Usage:
  * - This component should be used as the primary layout for the application.
  * - All pages in the app will have this layout as a wrapper.
- * - To exclude Navbar on specific pages, add those routes to the `noNavbarRoutes` array.
  */
 
 import '@/styles/globals.css'; // Global styles for the entire application
-import { AuthProvider } from '@/utils/auth/AuthContext'; // Authentication context provider
-import { ThemeProvider } from '@/utils/theme/ThemeContext'; // Theme context provider
-import ModalProviderWrapper from '@/components/modal/ModalProviderWrapper'; // Modal management provider
+import Providers from '@/components/providers/Providers'; // Consolidated providers with error boundaries
+import ErrorBoundary from '@/components/ErrorBoundary'; // Error boundary for error handling
 import { Roboto } from 'next/font/google'; // Roboto font from Google Fonts
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
@@ -44,21 +44,36 @@ export default async function RootLayout({ children }) {
   const messages = await getMessages();
 
   return (
-    <html lang={locale} className={roboto.className}>
-      <body className='h-screen flex overflow-hidden'>
+    <html lang={locale} className={roboto.className} suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var theme = localStorage.getItem('theme');
+                  if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                    document.documentElement.classList.add('dark');
+                  } else {
+                    document.documentElement.classList.remove('dark');
+                  }
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
+      </head>
+      <body className='h-screen flex overflow-hidden' suppressHydrationWarning>
       {/* Wrap the entire app in NextIntlClientProvider for access to internationalization services */}
         <NextIntlClientProvider messages={messages}>
-          {/* Wrap the entire app in AuthProvider for access to authentication context */}
-          <AuthProvider>
-            {/* Wrap the entire app in ThemeProvider for theme management (needs AuthProvider for user context) */}
-            <ThemeProvider>
-              {/* Wrap the entire app in ModalProviderWrapper for global modal management (ESC key, browser back button) */}
-              <ModalProviderWrapper>
-                {/* Main content area, which displays the child components */}
-                <main className='flex-1'>{children}</main>
-              </ModalProviderWrapper>
-            </ThemeProvider>
-          </AuthProvider>
+          {/* Wrap the entire app in ErrorBoundary for error handling (outermost catch-all) */}
+          <ErrorBoundary>
+            {/* Consolidated providers component with individual error boundaries for each provider */}
+            <Providers>
+              {/* Main content area, which displays the child components */}
+              <main className='flex-1'>{children}</main>
+            </Providers>
+          </ErrorBoundary>
         </NextIntlClientProvider>
       </body>
     </html>

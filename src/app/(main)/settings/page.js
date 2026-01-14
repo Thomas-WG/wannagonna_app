@@ -4,14 +4,17 @@
 
 import React, {useEffect, useState} from 'react';
 import {useTranslations, useLocale} from "next-intl"; // Import hook to handle translations
+import {useRouter} from 'next/navigation'; // Import Next.js router
 import {setUserLocaleClient} from '@/utils/localeClient'; // Client-side helper to set the user's preferred locale
 import {useAuth} from '@/utils/auth/AuthContext'; // Hook for accessing user authentication status
 import {useTheme} from '@/utils/theme/ThemeContext'; // Hook for theme management
-import {Select, Label} from "flowbite-react";
+import {Select, Label, Toast, Modal, Button} from "flowbite-react";
 import {doc, getDoc} from 'firebase/firestore';
 import {db} from 'firebaseConfig';
 import {enablePushForUser, updateNotificationPreferences} from '@/utils/notifications';
 import {HiMoon, HiSun, HiTranslate} from 'react-icons/hi';
+import { HiExclamationTriangle } from "react-icons/hi2";
+import {useModal} from '@/utils/modal/useModal';
 
 // Main component for the Settings Page
 export default function SettingsPage() {
@@ -24,22 +27,55 @@ export default function SettingsPage() {
     {label: '日本語', value: 'ja'},
   ];
 
+  const router = useRouter();
   const {user} = useAuth();
   const {theme, toggleTheme, isLoading: themeLoading} = useTheme();
   const [loadingPrefs, setLoadingPrefs] = useState(true);
   const [savingPrefs, setSavingPrefs] = useState(false);
+  const [savingToggle, setSavingToggle] = useState(null); // Track which toggle is being saved
+  const [changingLanguage, setChangingLanguage] = useState(false);
   const [prefs, setPrefs] = useState({
     GAMIFICATION: {inApp: true, push: false},
     ACTIVITY: {inApp: true, push: false},
   });
-  const [error, setError] = useState('');
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState({ type: 'success', message: '' });
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [pendingToggle, setPendingToggle] = useState(null); // {category, channel} for confirmation
 
   // Function to handle language change
-  const handleLanguageChange = (e) => {
+  const handleLanguageChange = async (e) => {
     const newLocale = e.target.value;
-    setUserLocaleClient(newLocale); // Set the new locale cookie on the client
-    // Reload the page to apply the new locale
-    window.location.reload();
+    if (newLocale === locale) return; // No change needed
+    
+    try {
+      setChangingLanguage(true);
+      setUserLocaleClient(newLocale); // Set the new locale cookie on the client
+      // Use router.refresh() instead of window.location.reload() for smoother UX
+      router.refresh();
+      
+      // Show success toast after a brief delay to allow refresh
+      setTimeout(() => {
+        setToastMessage({
+          type: 'success',
+          message: t('successLanguageChange')
+        });
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 3000);
+      }, 100);
+    } catch (error) {
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Failed to change language:', error);
+      }
+      setToastMessage({
+        type: 'error',
+        message: t('errorLanguageChange')
+      });
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 5000);
+    } finally {
+      setChangingLanguage(false);
+    }
   };
 
   useEffect(() => {
@@ -69,13 +105,46 @@ export default function SettingsPage() {
         if (process.env.NODE_ENV === 'development') {
           console.error('Failed to load notification preferences:', e);
         }
-        setError(t('errorLoadingPreferences'));
+        // Determine error type for better error message
+        let errorKey = 'errorLoadingPreferences';
+        if (!navigator.onLine) {
+          errorKey = 'errorSavePreferencesNetwork';
+        } else if (e.code === 'permission-denied') {
+          errorKey = 'errorSavePreferencesPermission';
+        }
+        
+        setToastMessage({
+          type: 'error',
+          message: t(errorKey)
+        });
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 5000);
       } finally {
         setLoadingPrefs(false);
       }
     };
     loadPreferences();
   }, [user]);
+
+  // Check if disabling this toggle would disable all notifications
+  const wouldDisableAllNotifications = (category, channel, nextPrefs) => {
+    const otherCategory = category === 'GAMIFICATION' ? 'ACTIVITY' : 'GAMIFICATION';
+    const otherChannel = channel === 'inApp' ? 'push' : 'inApp';
+    
+    // If disabling this channel
+    if (!nextPrefs[category][channel]) {
+      // Check if the other channel in this category is also disabled
+      const otherChannelDisabled = !nextPrefs[category][otherChannel];
+      // Check if both channels in the other category are disabled
+      const otherCategoryFullyDisabled = !nextPrefs[otherCategory].inApp && !nextPrefs[otherCategory].push;
+      
+      // If this is the last enabled channel across all categories
+      if (otherChannelDisabled && otherCategoryFullyDisabled) {
+        return true;
+      }
+    }
+    return false;
+  };
 
   const handleToggle = async (category, channel) => {
     if (!user?.uid) return;
@@ -88,41 +157,154 @@ export default function SettingsPage() {
       },
     };
 
+    // Check if this would disable all notifications - show confirmation
+    if (wouldDisableAllNotifications(category, channel, nextPrefs)) {
+      setPendingToggle({ category, channel });
+      setShowConfirmDialog(true);
+      return;
+    }
+
+    // Proceed with toggle
+    await performToggle(category, channel, nextPrefs);
+  };
+
+  const performToggle = async (category, channel, nextPrefs) => {
+    if (!user?.uid) return;
+
+    setSavingPrefs(true);
+    setSavingToggle(`${category}-${channel}`);
+    setShowToast(false);
+
     // If enabling push and no token yet, ensure push is enabled
     if (channel === 'push' && !prefs[category].push && nextPrefs[category].push) {
       try {
-        setSavingPrefs(true);
-        setError('');
+        // Check if VAPID key is configured before attempting to enable push
+        const VAPID_KEY = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
+        if (!VAPID_KEY) {
+          // VAPID key is missing - configuration issue
+          nextPrefs[category].push = false;
+          setToastMessage({
+            type: 'error',
+            message: t('errorEnablePushBrowser')
+          });
+          setShowToast(true);
+          setTimeout(() => setShowToast(false), 5000);
+          setSavingToggle(null);
+          setSavingPrefs(false);
+          return;
+        }
+
         const token = await enablePushForUser(user.uid);
         if (!token) {
           // Revert change if token acquisition failed
           nextPrefs[category].push = false;
-          setError(t('errorEnablePushBrowser'));
+          // Check if permission was denied
+          const permission = Notification.permission;
+          let errorKey = 'errorEnablePushBrowser';
+          if (permission === 'denied') {
+            errorKey = 'errorSavePreferencesPermission';
+          }
+          setToastMessage({
+            type: 'error',
+            message: t(errorKey)
+          });
+          setShowToast(true);
+          setTimeout(() => setShowToast(false), 5000);
+          setSavingToggle(null);
+          setSavingPrefs(false);
+          return;
         }
       } catch (e) {
         if (process.env.NODE_ENV === 'development') {
           console.error('Failed to enable push notifications:', e);
         }
         nextPrefs[category].push = false;
-        setError(t('errorEnablePush'));
-      } finally {
+        
+        // Determine error type
+        let errorKey = 'errorEnablePush';
+        if (e.code === 'permission-denied' || e.message?.includes('permission')) {
+          errorKey = 'errorSavePreferencesPermission';
+        } else if (!navigator.onLine) {
+          errorKey = 'errorSavePreferencesNetwork';
+        } else if (e.message?.includes('VAPID') || e.message?.includes('vapid')) {
+          errorKey = 'errorEnablePushBrowser';
+        }
+        
+        setToastMessage({
+          type: 'error',
+          message: t(errorKey)
+        });
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 5000);
+        setSavingToggle(null);
         setSavingPrefs(false);
+        return;
       }
     }
 
     setPrefs(nextPrefs);
     try {
-      setSavingPrefs(true);
       await updateNotificationPreferences(user.uid, nextPrefs);
+      
+      // Show success message
+      setToastMessage({
+        type: 'success',
+        message: t('successSavePreferences')
+      });
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
     } catch (e) {
       if (process.env.NODE_ENV === 'development') {
         console.error('Failed to save notification preferences:', e);
       }
-      setError(t('errorSavePreferences'));
+      
+      // Revert the change
+      setPrefs(prefs);
+      
+      // Determine error type for better error message
+      let errorKey = 'errorSavePreferencesGeneric';
+      if (!navigator.onLine) {
+        errorKey = 'errorSavePreferencesNetwork';
+      } else if (e.code === 'permission-denied') {
+        errorKey = 'errorSavePreferencesPermission';
+      } else if (e.code === 'unavailable') {
+        errorKey = 'errorSavePreferencesNetwork';
+      }
+      
+      setToastMessage({
+        type: 'error',
+        message: t(errorKey)
+      });
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 5000);
     } finally {
+      setSavingToggle(null);
       setSavingPrefs(false);
     }
   };
+
+  const handleConfirmDisable = async () => {
+    if (!pendingToggle) return;
+    
+    const { category, channel } = pendingToggle;
+    const nextPrefs = {
+      ...prefs,
+      [category]: {
+        ...prefs[category],
+        [channel]: !prefs[category][channel],
+      },
+    };
+    
+    setShowConfirmDialog(false);
+    setPendingToggle(null);
+    
+    await performToggle(category, channel, nextPrefs);
+  };
+
+  const wrappedConfirmDialogOnClose = useModal(showConfirmDialog, () => {
+    setShowConfirmDialog(false);
+    setPendingToggle(null);
+  }, 'settings-confirm-disable-all-notifications');
 
   // If there is no authenticated user, return null (no content rendered)
   if (!user) return null;
@@ -151,7 +333,8 @@ export default function SettingsPage() {
               id="language-select"
               value={locale}
               onChange={handleLanguageChange}
-              className="w-full bg-background-card dark:bg-background-card border-border-light dark:border-border-dark text-text-primary dark:text-text-primary"
+              disabled={changingLanguage}
+              className="w-full bg-background-card dark:bg-background-card border-border-light dark:border-border-dark text-text-primary dark:text-text-primary disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {languageOptions.map((option) => (
                 <option
@@ -164,7 +347,11 @@ export default function SettingsPage() {
               ))}
             </Select>
             <div className="mt-3 flex items-center gap-2 text-xs text-text-tertiary dark:text-text-tertiary">
-              <span>{t('currentLanguage')}: {languageOptions.find(opt => opt.value === locale)?.label || locale}</span>
+              {changingLanguage ? (
+                <span>{t('savingLanguage')}</span>
+              ) : (
+                <span>{t('currentLanguage')}: {languageOptions.find(opt => opt.value === locale)?.label || locale}</span>
+              )}
             </div>
           </div>
         </div>
@@ -213,10 +400,6 @@ export default function SettingsPage() {
             {t('notificationDescription')}
           </p>
 
-          {error && (
-            <p className="text-xs text-semantic-error-600 dark:text-semantic-error-400 mb-2 break-words">{error}</p>
-          )}
-
           {loadingPrefs ? (
             <p className="text-sm text-text-secondary dark:text-text-secondary">{t('loading')}</p>
           ) : (
@@ -234,20 +417,30 @@ export default function SettingsPage() {
                       type="checkbox"
                       checked={prefs.GAMIFICATION.inApp}
                       onChange={() => handleToggle('GAMIFICATION', 'inApp')}
-                      disabled={savingPrefs}
-                      className="h-4 w-4 rounded border-border-light dark:border-border-dark text-primary-600 focus:ring-primary-500 focus:ring-2"
+                      disabled={savingPrefs || savingToggle === 'GAMIFICATION-inApp'}
+                      className="h-4 w-4 rounded border-border-light dark:border-border-dark text-primary-600 focus:ring-primary-500 focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     />
-                    <span>{t('inApp')}</span>
+                    <span className="flex items-center gap-1">
+                      {t('inApp')}
+                      {savingToggle === 'GAMIFICATION-inApp' && (
+                        <span className="text-xs text-text-tertiary dark:text-text-tertiary">({t('saving')})</span>
+                      )}
+                    </span>
                   </label>
                   <label className="flex items-center gap-2 text-xs sm:text-sm text-text-primary dark:text-text-primary cursor-pointer">
                     <input
                       type="checkbox"
                       checked={prefs.GAMIFICATION.push}
                       onChange={() => handleToggle('GAMIFICATION', 'push')}
-                      disabled={savingPrefs}
-                      className="h-4 w-4 rounded border-border-light dark:border-border-dark text-primary-600 focus:ring-primary-500 focus:ring-2"
+                      disabled={savingPrefs || savingToggle === 'GAMIFICATION-push'}
+                      className="h-4 w-4 rounded border-border-light dark:border-border-dark text-primary-600 focus:ring-primary-500 focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     />
-                    <span>{t('push')}</span>
+                    <span className="flex items-center gap-1">
+                      {t('push')}
+                      {savingToggle === 'GAMIFICATION-push' && (
+                        <span className="text-xs text-text-tertiary dark:text-text-tertiary">({t('saving')})</span>
+                      )}
+                    </span>
                   </label>
                 </div>
               </div>
@@ -265,32 +458,97 @@ export default function SettingsPage() {
                       type="checkbox"
                       checked={prefs.ACTIVITY.inApp}
                       onChange={() => handleToggle('ACTIVITY', 'inApp')}
-                      disabled={savingPrefs}
-                      className="h-4 w-4 rounded border-border-light dark:border-border-dark text-primary-600 focus:ring-primary-500 focus:ring-2"
+                      disabled={savingPrefs || savingToggle === 'ACTIVITY-inApp'}
+                      className="h-4 w-4 rounded border-border-light dark:border-border-dark text-primary-600 focus:ring-primary-500 focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     />
-                    <span>{t('inApp')}</span>
+                    <span className="flex items-center gap-1">
+                      {t('inApp')}
+                      {savingToggle === 'ACTIVITY-inApp' && (
+                        <span className="text-xs text-text-tertiary dark:text-text-tertiary">({t('saving')})</span>
+                      )}
+                    </span>
                   </label>
                   <label className="flex items-center gap-2 text-xs sm:text-sm text-text-primary dark:text-text-primary cursor-pointer">
                     <input
                       type="checkbox"
                       checked={prefs.ACTIVITY.push}
                       onChange={() => handleToggle('ACTIVITY', 'push')}
-                      disabled={savingPrefs}
-                      className="h-4 w-4 rounded border-border-light dark:border-border-dark text-primary-600 focus:ring-primary-500 focus:ring-2"
+                      disabled={savingPrefs || savingToggle === 'ACTIVITY-push'}
+                      className="h-4 w-4 rounded border-border-light dark:border-border-dark text-primary-600 focus:ring-primary-500 focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     />
-                    <span>{t('push')}</span>
+                    <span className="flex items-center gap-1">
+                      {t('push')}
+                      {savingToggle === 'ACTIVITY-push' && (
+                        <span className="text-xs text-text-tertiary dark:text-text-tertiary">({t('saving')})</span>
+                      )}
+                    </span>
                   </label>
                 </div>
               </div>
             </div>
           )}
 
-          {savingPrefs && (
+          {savingPrefs && !savingToggle && (
             <p className="mt-2 text-xs text-text-tertiary dark:text-text-tertiary">
               {t('saving')}
             </p>
           )}
         </div>
+
+        {/* Toast Notification */}
+        {showToast && (
+          <div className="fixed bottom-16 sm:bottom-5 right-4 sm:right-5 left-4 sm:left-auto z-[60] max-w-sm sm:max-w-none">
+            <Toast onClose={() => setShowToast(false)}>
+              {toastMessage.type === 'success' && (
+                <div className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-green-100 text-green-500">
+                  ✓
+                </div>
+              )}
+              {toastMessage.type === 'error' && (
+                <div className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-100 text-red-500">
+                  !
+                </div>
+              )}
+              <div className="ml-3 text-sm font-normal break-words">
+                {toastMessage.message}
+              </div>
+              <Toast.Toggle onClose={() => setShowToast(false)} />
+            </Toast>
+          </div>
+        )}
+
+        {/* Confirmation Dialog for Disabling All Notifications */}
+        <Modal show={showConfirmDialog} onClose={wrappedConfirmDialogOnClose} size="md">
+          <Modal.Header className="border-b border-border-light dark:border-border-dark">
+            <div className="flex items-center gap-2">
+              <HiExclamationTriangle className="h-5 w-5 text-semantic-warning-600 dark:text-semantic-warning-400" />
+              <span className="text-text-primary dark:text-text-primary">{t('confirmDisableAllNotifications')}</span>
+            </div>
+          </Modal.Header>
+          <Modal.Body>
+            <div className="space-y-4">
+              <p className="text-sm text-text-secondary dark:text-text-secondary">
+                {t('confirmDisableAllNotificationsMessage')}
+              </p>
+            </div>
+          </Modal.Body>
+          <Modal.Footer className="border-t border-border-light dark:border-border-dark">
+            <div className="flex justify-end gap-3">
+              <Button 
+                color="gray" 
+                onClick={wrappedConfirmDialogOnClose}
+              >
+                {t('cancel')}
+              </Button>
+              <Button 
+                color="failure"
+                onClick={handleConfirmDisable}
+              >
+                {t('confirm')}
+              </Button>
+            </div>
+          </Modal.Footer>
+        </Modal>
       </div>
     </div>
   );

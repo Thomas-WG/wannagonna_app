@@ -103,8 +103,8 @@ export async function duplicateActivity(activityId) {
       ...duplicateData
     } = originalActivity;
 
-    // Set status to 'created' (draft)
-    duplicateData.status = 'created';
+    // Set status to 'Draft'
+    duplicateData.status = 'Draft';
 
     // Set creation_date to current date
     duplicateData.creation_date = new Date();

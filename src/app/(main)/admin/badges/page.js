@@ -27,6 +27,7 @@ import {
 import { HiBadgeCheck, HiPlus, HiTrash, HiPencil } from 'react-icons/hi';
 import Image from 'next/image';
 import { useModal } from '@/utils/modal/useModal';
+import BackButton from '@/components/layout/BackButton';
 
 export default function AdminBadgesPage() {
   const t = useTranslations('Admin');
@@ -270,6 +271,9 @@ export default function AdminBadgesPage() {
 
   return (
     <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
+      {/* Back Button */}
+      <BackButton fallbackPath="/admin" />
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 gap-3 sm:gap-4">
         <div className="flex items-center gap-2 sm:gap-3">

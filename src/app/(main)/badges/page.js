@@ -1,185 +1,12 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { fetchBadgeCategories, fetchBadgesByCategory, getCachedBadgeUrls, setCachedBadgeUrls, batchLoadBadgeImageUrls, fetchUserBadgeIds } from '@/utils/crudBadges';
+import { useState, useEffect } from 'react';
+import { fetchBadgeCategories, fetchBadgesByCategory, fetchUserBadgeIds } from '@/utils/crudBadges';
 import { useAuth } from '@/utils/auth/AuthContext';
 import { Card } from 'flowbite-react';
-import { HiBadgeCheck, HiStar } from 'react-icons/hi';
-
-/**
- * Badge Card Component with lazy loading
- */
-function BadgeCard({ badge, imageUrl, isEarned = false }) {
-  const [isVisible, setIsVisible] = useState(false);
-  const [imgLoaded, setImgLoaded] = useState(false);
-  const cardRef = useRef(null);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true);
-          observer.disconnect();
-        }
-      },
-      { rootMargin: '100px' } // Start loading 100px before visible
-    );
-
-    if (cardRef.current) {
-      observer.observe(cardRef.current);
-    }
-
-    return () => observer.disconnect();
-  }, []);
-
-  return (
-    <Card ref={cardRef} className={`hover:shadow-lg transition-all relative bg-background-card dark:bg-background-card border-border-light dark:border-border-dark ${
-      !isEarned ? 'opacity-60' : ''
-    }`}>
-      {/* Lock icon for unearned badges */}
-      {!isEarned && (
-        <div className="absolute top-3 right-3 z-10">
-          <svg className="w-5 h-5 text-text-tertiary dark:text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-          </svg>
-        </div>
-      )}
-
-      {/* Mobile: Horizontal Layout (image on right) */}
-      <div className="flex md:hidden items-center gap-4">
-        {/* Left: Title and Description */}
-        <div className="flex-1 min-w-0 pr-2">
-          {/* Badge Title */}
-          <h3 className={`text-base font-semibold mb-1.5 line-clamp-2 ${
-            isEarned ? 'text-text-primary dark:text-text-primary' : 'text-text-tertiary dark:text-text-tertiary'
-          }`}>
-            {badge.title || badge.id}
-          </h3>
-
-          {/* Badge Description */}
-          {badge.description && (
-            <p className={`text-sm mb-2 line-clamp-2 ${
-              isEarned ? 'text-text-secondary dark:text-text-secondary' : 'text-text-tertiary dark:text-text-tertiary'
-            }`}>
-              {badge.description}
-            </p>
-          )}
-
-          {/* XP Value */}
-          {badge.xp !== undefined && badge.xp !== null && (
-            <div className="mt-2">
-              <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-bold rounded-full ${
-                isEarned 
-                  ? 'bg-gradient-to-r from-primary-500 to-primary-600 dark:from-primary-600 dark:to-primary-700 text-white' 
-                  : 'bg-neutral-200 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300'
-              }`}>
-                <HiStar className={`w-3 h-3 ${isEarned ? 'fill-current' : ''}`} />
-                <span>{badge.xp} XP</span>
-              </span>
-            </div>
-          )}
-        </div>
-
-        {/* Right: Badge Image */}
-        <div className="flex-shrink-0 w-20 h-20 flex items-center justify-center relative">
-          {!isVisible || !imageUrl ? (
-            <div className="w-20 h-20 bg-background-hover dark:bg-background-hover rounded-full flex items-center justify-center animate-pulse">
-              <HiBadgeCheck className="w-10 h-10 text-text-tertiary dark:text-text-tertiary" />
-            </div>
-          ) : (
-            <>
-              {!imgLoaded && (
-                <div className="absolute w-20 h-20 bg-background-hover dark:bg-background-hover rounded-full flex items-center justify-center animate-pulse">
-                  <HiBadgeCheck className="w-10 h-10 text-text-tertiary dark:text-text-tertiary" />
-                </div>
-              )}
-              <img
-                src={imageUrl}
-                alt={badge.title || 'Badge'}
-                className={`object-contain w-20 h-20 transition-all duration-300 ${
-                  imgLoaded ? 'opacity-100' : 'opacity-0'
-                } ${!isEarned ? 'grayscale' : ''}`}
-                style={{
-                  filter: !isEarned ? 'grayscale(100%)' : 'none'
-                }}
-                onLoad={() => setImgLoaded(true)}
-                onError={() => {
-                  console.error(`Failed to load badge image: ${imageUrl}`);
-                  setImgLoaded(true); // Stop showing loading state
-                }}
-              />
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* Desktop: Vertical Layout (centered) */}
-      <div className="hidden md:flex flex-col items-center text-center h-full">
-        {/* Badge Image */}
-        <div className="mb-4 flex items-center justify-center min-h-[120px] relative">
-          {!isVisible || !imageUrl ? (
-            <div className="w-24 h-24 bg-background-hover dark:bg-background-hover rounded-full flex items-center justify-center animate-pulse">
-              <HiBadgeCheck className="w-12 h-12 text-text-tertiary dark:text-text-tertiary" />
-            </div>
-          ) : (
-            <>
-              {!imgLoaded && (
-                <div className="absolute w-24 h-24 bg-background-hover dark:bg-background-hover rounded-full flex items-center justify-center animate-pulse">
-                  <HiBadgeCheck className="w-12 h-12 text-text-tertiary dark:text-text-tertiary" />
-                </div>
-              )}
-              <img
-                src={imageUrl}
-                alt={badge.title || 'Badge'}
-                className={`object-contain max-w-[120px] max-h-[120px] transition-all duration-300 ${
-                  imgLoaded ? 'opacity-100' : 'opacity-0'
-                } ${!isEarned ? 'grayscale' : ''}`}
-                style={{
-                  filter: !isEarned ? 'grayscale(100%)' : 'none'
-                }}
-                onLoad={() => setImgLoaded(true)}
-                onError={() => {
-                  console.error(`Failed to load badge image: ${imageUrl}`);
-                  setImgLoaded(true); // Stop showing loading state
-                }}
-              />
-            </>
-          )}
-        </div>
-
-        {/* Badge Title */}
-        <h3 className={`text-lg font-semibold mb-2 ${
-          isEarned ? 'text-text-primary dark:text-text-primary' : 'text-text-tertiary dark:text-text-tertiary'
-        }`}>
-          {badge.title || badge.id}
-        </h3>
-
-        {/* Badge Description */}
-        {badge.description && (
-          <p className={`text-sm mb-3 flex-grow ${
-            isEarned ? 'text-text-secondary dark:text-text-secondary' : 'text-text-tertiary dark:text-text-tertiary'
-          }`}>
-            {badge.description}
-          </p>
-        )}
-
-        {/* XP Value */}
-        {badge.xp !== undefined && badge.xp !== null && (
-          <div className="mt-auto pt-2">
-            <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold rounded-full shadow-md ${
-              isEarned 
-                ? 'bg-gradient-to-r from-primary-500 to-primary-600 dark:from-primary-600 dark:to-primary-700 text-white' 
-                : 'bg-neutral-200 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300'
-            }`}>
-              <HiStar className={`w-4 h-4 ${isEarned ? 'fill-current' : ''}`} />
-              <span>{badge.xp} XP</span>
-            </span>
-          </div>
-        )}
-      </div>
-    </Card>
-  );
-}
+import { HiBadgeCheck } from 'react-icons/hi';
+import BadgeCard from '@/components/badges/BadgeCard';
+import { useBadgeImageUrls } from '@/hooks/badges/useBadgeImageUrls';
 
 /**
  * Badges Page Component
@@ -189,15 +16,16 @@ export default function BadgesPage() {
   const [categories, setCategories] = useState([]);
   const [badgesByCategory, setBadgesByCategory] = useState({});
   const [loading, setLoading] = useState(true);
-  const [imagesLoading, setImagesLoading] = useState(true);
-  const [badgeImageUrls, setBadgeImageUrls] = useState({});
   const [earnedBadgeIds, setEarnedBadgeIds] = useState(new Set());
+  const [allBadges, setAllBadges] = useState([]);
+
+  // Use custom hook for badge image URLs caching
+  const { badgeImageUrls, imagesLoading } = useBadgeImageUrls(allBadges);
 
   useEffect(() => {
     const loadBadges = async () => {
       try {
         setLoading(true);
-        setImagesLoading(true);
         
         // Load user badges and categories/badges in parallel
         const [earnedIds, allCategories] = await Promise.all([
@@ -218,7 +46,7 @@ export default function BadgesPage() {
         
         const badgesResults = await Promise.all(badgesPromises);
         const badgesMap = {};
-        const allBadges = [];
+        const badgesList = [];
         
         badgesResults.forEach(({ categoryId, badges }) => {
           badgesMap[categoryId] = badges;
@@ -228,49 +56,15 @@ export default function BadgesPage() {
               badge.categoryId = categoryId;
             }
           });
-          allBadges.push(...badges);
+          badgesList.push(...badges);
         });
         
         setBadgesByCategory(badgesMap);
-        
-        // Show content immediately, don't wait for images
+        setAllBadges(badgesList);
         setLoading(false);
-        
-        // Load image URLs in background (use cache if available)
-        const cachedUrls = getCachedBadgeUrls();
-        if (cachedUrls && allBadges.length > 0) {
-          // Check if cache is still valid
-          const badgeIds = new Set(allBadges.map(b => b.id));
-          const cachedIds = new Set(Object.keys(cachedUrls));
-          const idsMatch = badgeIds.size === cachedIds.size && 
-                          [...badgeIds].every(id => cachedIds.has(id));
-          
-          if (idsMatch) {
-            // Use cached URLs immediately
-            setBadgeImageUrls(cachedUrls);
-            setImagesLoading(false);
-          } else {
-            // Cache outdated, reload in background
-            batchLoadBadgeImageUrls(allBadges).then(urls => {
-              setBadgeImageUrls(urls);
-              setCachedBadgeUrls(urls);
-              setImagesLoading(false);
-            });
-          }
-        } else if (allBadges.length > 0) {
-          // No cache, load URLs
-          batchLoadBadgeImageUrls(allBadges).then(urls => {
-            setBadgeImageUrls(urls);
-            setCachedBadgeUrls(urls);
-            setImagesLoading(false);
-          });
-        } else {
-          setImagesLoading(false);
-        }
       } catch (error) {
         console.error('Error loading badges:', error);
         setLoading(false);
-        setImagesLoading(false);
       }
     };
 

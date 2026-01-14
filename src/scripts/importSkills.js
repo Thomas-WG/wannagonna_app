@@ -20,7 +20,7 @@ const categories = {
     { id: 'fundraising' },
     { id: 'longtermrole' },
     { id: 'explainer' },
-    { id: 'other' },
+    { id: 'other-online' },
   ],
   local: [
     { id: 'cleaning' },
@@ -33,7 +33,7 @@ const categories = {
     { id: 'childcare' },
     { id: 'manual_labor' },
     { id: 'administrative' },
-    { id: 'other' },
+    { id: 'other-local' },
   ],
   event: [
     { id: 'fundraising_event' },
@@ -44,7 +44,7 @@ const categories = {
     { id: 'networking' },
     { id: 'arts_and_crafts' },
     { id: 'food_fair' },
-    { id: 'other' },
+    { id: 'other-event' },
   ],
 };
 

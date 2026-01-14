@@ -15,6 +15,7 @@ import {
   deleteSkill
 } from '@/utils/crudSkills';
 import { useModal } from '@/utils/modal/useModal';
+import BackButton from '@/components/layout/BackButton';
 
 export default function SkillsManagementPage() {
   const t = useTranslations('Admin');
@@ -173,6 +174,9 @@ export default function SkillsManagementPage() {
 
   return (
     <div className="container mx-auto p-3 sm:p-4 space-y-4 sm:space-y-6">
+      {/* Back Button */}
+      <BackButton fallbackPath="/admin" />
+
       <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">{t('skillsManagement')}</h1>
       
       {/* Categories Section */}

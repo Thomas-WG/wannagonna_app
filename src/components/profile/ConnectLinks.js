@@ -1,101 +1,166 @@
 import { Card, Label, TextInput } from 'flowbite-react';
 import { useTranslations } from 'next-intl';
 import { formatUrlForDisplay } from '@/utils/urlUtils';
-import { useState, useEffect } from 'react';
+import { Controller } from 'react-hook-form';
+import { normalizeUrl } from '@/utils/urlUtils';
+import FormError from './FormError';
+import { useTheme } from '@/utils/theme/ThemeContext';
 
-export default function ConnectLinks({ profileData, handleInputChange }) {
+export default function ConnectLinks({ control, errors, setValue, trigger }) {
   const t = useTranslations('CompleteProfile');
-  
-  // Local state to store display values (without https://)
-  const [displayValues, setDisplayValues] = useState({
-    website: '',
-    linkedin: '',
-    facebook: '',
-    instagram: ''
-  });
+  const { isDark } = useTheme();
 
-  // Update display values when profileData changes
-  useEffect(() => {
-    setDisplayValues({
-      website: formatUrlForDisplay(profileData.website || ''),
-      linkedin: formatUrlForDisplay(profileData.linkedin || ''),
-      facebook: formatUrlForDisplay(profileData.facebook || ''),
-      instagram: formatUrlForDisplay(profileData.instagram || '')
-    });
-  }, [profileData.website, profileData.linkedin, profileData.facebook, profileData.instagram]);
-
-  const handleUrlChange = (e) => {
-    const { name, value } = e.target;
-    // Update display value
-    setDisplayValues(prev => ({ ...prev, [name]: value }));
-    // Call parent handler with the raw value (user can type www.example.com or example.com)
-    handleInputChange(e);
+  const handleUrlBlur = async (fieldName, value) => {
+    if (value && value.trim() !== '') {
+      const normalized = normalizeUrl(value);
+      setValue(fieldName, normalized, { shouldValidate: true });
+      await trigger(fieldName);
+    }
   };
 
   return (
-    <Card className="w-full h-fit">
-      <div className="p-4">
-        <h5 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white mb-4">
+    <Card className="w-full h-fit bg-background-card dark:bg-background-card border-border-light dark:border-border-dark">
+      <div className="p-4 md:p-6">
+        <h5 className="text-2xl font-bold tracking-tight text-text-primary dark:text-text-primary mb-4">
           {t('connect') || 'Connect'}
         </h5>
         <div className="space-y-4">
           <div>
             <div className="mb-2 block">
-              <Label htmlFor="website">{t('website')}</Label>
+              <Label htmlFor="website" className="text-text-primary dark:text-text-primary">
+                {t('website')}
+              </Label>
             </div>
-            <TextInput 
-              id="website" 
+            <Controller
               name="website"
-              type="text"
-              placeholder="www.example.com or example.com" 
-              value={displayValues.website} 
-              onChange={handleUrlChange}
+              control={control}
+              render={({ field }) => {
+                const displayValue = formatUrlForDisplay(field.value || '');
+                return (
+                  <TextInput 
+                    {...field}
+                    value={displayValue}
+                    onChange={(e) => {
+                      field.onChange(e.target.value);
+                    }}
+                    onBlur={async (e) => {
+                      await handleUrlBlur('website', e.target.value);
+                      field.onBlur();
+                    }}
+                    id="website" 
+                    type="text"
+                    placeholder="www.example.com or example.com" 
+                    className="w-full bg-background-card dark:bg-background-card text-text-primary dark:text-text-primary border-border-light dark:border-border-dark placeholder:text-text-tertiary dark:placeholder:text-text-tertiary"
+                  />
+                );
+              }}
             />
-            <p className="mt-1 text-sm text-gray-500">
+            <FormError message={errors.website?.message} />
+            <p className="mt-1 text-sm text-text-tertiary dark:text-text-tertiary">
               {t('websiteHelper')} {t('urlHelper') || '(https:// will be added automatically)'}
             </p>
           </div>
+          
           <div>
             <div className="mb-2 block">
-              <Label htmlFor="linkedin">{t('linkedin')}</Label>
+              <Label htmlFor="linkedin" className="text-text-primary dark:text-text-primary">
+                {t('linkedin')}
+              </Label>
             </div>
-            <TextInput 
-              id="linkedin" 
+            <Controller
               name="linkedin"
-              type="text"
-              placeholder="www.linkedin.com/in/yourprofile" 
-              value={displayValues.linkedin} 
-              onChange={handleUrlChange}
+              control={control}
+              render={({ field }) => {
+                const displayValue = formatUrlForDisplay(field.value || '');
+                return (
+                  <TextInput 
+                    {...field}
+                    value={displayValue}
+                    onChange={(e) => {
+                      field.onChange(e.target.value);
+                    }}
+                    onBlur={async (e) => {
+                      await handleUrlBlur('linkedin', e.target.value);
+                      field.onBlur();
+                    }}
+                    id="linkedin" 
+                    type="text"
+                    placeholder="www.linkedin.com/in/yourprofile" 
+                    className="w-full bg-background-card dark:bg-background-card text-text-primary dark:text-text-primary border-border-light dark:border-border-dark placeholder:text-text-tertiary dark:placeholder:text-text-tertiary"
+                  />
+                );
+              }}
             />
-            <p className="mt-1 text-sm text-gray-500">
+            <FormError message={errors.linkedin?.message} />
+            <p className="mt-1 text-sm text-text-tertiary dark:text-text-tertiary">
               {t('socialMediaHelper')} {t('urlHelper') || '(https:// will be added automatically)'}
             </p>
           </div>
+          
           <div>
             <div className="mb-2 block">
-              <Label htmlFor="facebook">{t('facebook')}</Label>
+              <Label htmlFor="facebook" className="text-text-primary dark:text-text-primary">
+                {t('facebook')}
+              </Label>
             </div>
-            <TextInput 
-              id="facebook" 
+            <Controller
               name="facebook"
-              type="text"
-              placeholder="www.facebook.com/yourprofile" 
-              value={displayValues.facebook} 
-              onChange={handleUrlChange}
+              control={control}
+              render={({ field }) => {
+                const displayValue = formatUrlForDisplay(field.value || '');
+                return (
+                  <TextInput 
+                    {...field}
+                    value={displayValue}
+                    onChange={(e) => {
+                      field.onChange(e.target.value);
+                    }}
+                    onBlur={async (e) => {
+                      await handleUrlBlur('facebook', e.target.value);
+                      field.onBlur();
+                    }}
+                    id="facebook" 
+                    type="text"
+                    placeholder="www.facebook.com/yourprofile" 
+                    className="w-full bg-background-card dark:bg-background-card text-text-primary dark:text-text-primary border-border-light dark:border-border-dark placeholder:text-text-tertiary dark:placeholder:text-text-tertiary"
+                  />
+                );
+              }}
             />
+            <FormError message={errors.facebook?.message} />
           </div>
+          
           <div>
             <div className="mb-2 block">
-              <Label htmlFor="instagram">{t('instagram')}</Label>
+              <Label htmlFor="instagram" className="text-text-primary dark:text-text-primary">
+                {t('instagram')}
+              </Label>
             </div>
-            <TextInput 
-              id="instagram" 
+            <Controller
               name="instagram"
-              type="text"
-              placeholder="www.instagram.com/yourprofile" 
-              value={displayValues.instagram} 
-              onChange={handleUrlChange}
+              control={control}
+              render={({ field }) => {
+                const displayValue = formatUrlForDisplay(field.value || '');
+                return (
+                  <TextInput 
+                    {...field}
+                    value={displayValue}
+                    onChange={(e) => {
+                      field.onChange(e.target.value);
+                    }}
+                    onBlur={async (e) => {
+                      await handleUrlBlur('instagram', e.target.value);
+                      field.onBlur();
+                    }}
+                    id="instagram" 
+                    type="text"
+                    placeholder="www.instagram.com/yourprofile" 
+                    className="w-full bg-background-card dark:bg-background-card text-text-primary dark:text-text-primary border-border-light dark:border-border-dark placeholder:text-text-tertiary dark:placeholder:text-text-tertiary"
+                  />
+                );
+              }}
             />
+            <FormError message={errors.instagram?.message} />
           </div>
         </div>
       </div>

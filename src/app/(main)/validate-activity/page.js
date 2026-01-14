@@ -68,7 +68,8 @@ export default function ValidateActivityPage() {
           const params = new URLSearchParams({
             validation: 'success',
             xp: validationResult.xpReward?.toString() || '0',
-            activityTitle: validationResult.activityTitle || ''
+            activityTitle: validationResult.activityTitle || '',
+            activityId: activityId || ''
           });
           
           router.replace(`/dashboard?${params.toString()}`);

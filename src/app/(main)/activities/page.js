@@ -9,128 +9,162 @@
  * - Provides filtering, sorting, and search capabilities.
  * - Shows activity details modal first, then apply modal.
  * - Mobile-friendly and user-friendly interface.
+ * - Pagination for large activity lists.
  *
  * Dependencies:
  * - `useAuth` hook to manage user authentication and redirect if not logged in.
- * - `subscribeToOpenActivities` utility function to fetch Open activities from the database.
+ * - `useOpenActivities` hook to fetch Open activities with React Query caching.
+ * - `useApplicationStatuses` hook to batch fetch and cache application statuses.
+ * - `useActivitiesStore` Zustand store for UI state management.
  * - `ActivityCard` component for displaying individual activity details.
  * - `ActivityDetailsModal` component for showing full activity details.
  * - `ActivityFilters` component for filtering activities.
+ * - `ApplyActivityModal` component for submitting applications.
  */
 
 'use client'; // Enable client-side rendering for this page
 
-import { subscribeToOpenActivities } from '@/utils/crudActivities';
-import { useEffect, useState, useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import ActivityCard from '@/components/activities/ActivityCard';
 import ActivityDetailsModal from '@/components/activities/ActivityDetailsModal';
 import ActivityFilters from '@/components/activities/ActivityFilters';
-import { Modal, Button, Label, Textarea, Toast, Select, Spinner, Badge } from 'flowbite-react';
-import { createApplication, checkExistingApplication } from '@/utils/crudApplications';
+import ApplyActivityModal from '@/components/activities/ApplyActivityModal';
+import { Toast, Select, Spinner, Badge, Button } from 'flowbite-react';
+import { createApplication } from '@/utils/crudApplications';
 import { useAuth } from '@/utils/auth/AuthContext';
 import BadgeAnimation from '@/components/badges/BadgeAnimation';
-import { HiSearch, HiX, HiCheckCircle, HiExternalLink } from 'react-icons/hi';
+import { HiSearch, HiX, HiCheckCircle, HiChevronLeft, HiChevronRight } from 'react-icons/hi';
 import { useDebounce } from '@/hooks/useDebounce';
-import { useTranslations } from 'next-intl';
-import { useTheme } from '@/utils/theme/ThemeContext';
-import { useModal } from '@/utils/modal/useModal';
+import { useTranslations, useLocale } from 'next-intl';
+import { countries } from 'countries-list';
+import { useOpenActivities } from '@/hooks/activities/useOpenActivities';
+import { useApplicationStatuses } from '@/hooks/activities/useApplicationStatuses';
+import { useActivitiesStore } from '@/stores/activitiesStore';
+import { useActivitiesPagination } from '@/hooks/activities/useActivitiesPagination';
+import { getSkillsForSelect } from '@/utils/crudSkills';
 
 // Main component to display activities
 export default function ActivitiesPage() {
   const t = useTranslations('Activities');
-  const { isDark } = useTheme();
-  // Destructure `user`, `claims`, and `loading` state from `useAuth` to manage access control
-  const { user, claims, loading: authLoading } = useAuth();
+  const locale = useLocale();
+  const { user, loading: authLoading } = useAuth();
 
-  // State variable to store the list of fetched activities
-  const [allActivities, setAllActivities] = useState([]);
-  const [loading, setLoading] = useState(true);
-  
-  // Modal states
-  const [showDetailsModal, setShowDetailsModal] = useState(false);
-  const [selectedActivityId, setSelectedActivityId] = useState(null);
-  const [openApplyModal, setOpenApplyModal] = useState(false);
-  const [selectedActivity, setSelectedActivity] = useState(null);
-  
-  // Application states
-  const [applyMessage, setApplyMessage] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [applicationStatuses, setApplicationStatuses] = useState({}); // Map of activityId -> hasApplied
-  
-  // Toast states
+  // Data hooks
+  const { activities: allActivities, isLoading: activitiesLoading } = useOpenActivities();
+  const { applicationStatuses, invalidateStatuses } = useApplicationStatuses(user?.uid);
+
+  // Zustand store for UI state
+  const {
+    showDetailsModal,
+    openApplyModal,
+    selectedActivityId,
+    selectedActivity,
+    filters,
+    searchQuery,
+    sortBy,
+    currentPage,
+    itemsPerPage,
+    setSearchQuery: setStoreSearchQuery,
+    setFilters: setStoreFilters,
+    updateFilter,
+    setSortBy: setStoreSortBy,
+    setCurrentPage,
+    openDetailsModal,
+    openApplyModalWithActivity,
+    closeDetailsModal,
+    closeApplyModal,
+  } = useActivitiesStore();
+
+  // Local state for toast and badge animation
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState({ type: '', message: '' });
-  
-  // Badge animation state
   const [showBadgeAnimation, setShowBadgeAnimation] = useState(false);
   const [earnedBadgeId, setEarnedBadgeId] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [skillLabelsMap, setSkillLabelsMap] = useState({});
 
-  // Filter states
-  const [filters, setFilters] = useState({
-    type: 'all',
-    category: 'all',
-    country: 'all',
-    sdg: 'all',
-    skill: 'all',
-  });
-
-  // Search state
-  const [searchQuery, setSearchQuery] = useState('');
+  // Debounce search query
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
-  // Sort state
-  const [sortBy, setSortBy] = useState('newest');
+  // Helper function to get date from activity start_date
+  const getActivityDate = (date) => {
+    if (!date) return null;
+    if (date.seconds) return new Date(date.seconds * 1000);
+    if (date.toDate) return date.toDate();
+    if (date instanceof Date) return date;
+    return new Date(date);
+  };
 
-  // Subscribe to Open activities only (efficient server-side filtering)
-  useEffect(() => {
-    let unsubscribe;
-    if (user) {
-      setLoading(true);
-      unsubscribe = subscribeToOpenActivities((updatedActivities) => {
-        setAllActivities(updatedActivities);
-        setLoading(false);
-      });
-    }
-    // Cleanup subscription when component unmounts or user changes
-    return () => {
-      if (unsubscribe) {
-        unsubscribe();
+  // Helper function to apply start date filter
+  const applyStartDateFilter = (activities, startDateFilter) => {
+    if (startDateFilter === 'all') return activities;
+
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const thisWeekEnd = new Date(now);
+    thisWeekEnd.setDate(thisWeekEnd.getDate() + 7);
+    const nextWeekStart = new Date(thisWeekEnd);
+    nextWeekStart.setDate(nextWeekStart.getDate() + 1);
+    const nextWeekEnd = new Date(nextWeekStart);
+    nextWeekEnd.setDate(nextWeekEnd.getDate() + 7);
+    const thisWeekendStart = new Date(now);
+    const dayOfWeek = now.getDay(); // 0 = Sunday, 6 = Saturday
+    const daysUntilSaturday = dayOfWeek === 0 ? 6 : 6 - dayOfWeek; // If Sunday, go to next Saturday
+    thisWeekendStart.setDate(now.getDate() + daysUntilSaturday);
+    const thisWeekendEnd = new Date(thisWeekendStart);
+    thisWeekendEnd.setDate(thisWeekendEnd.getDate() + 1); // Include Sunday
+    const thisMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    const nextMonthStart = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    const nextMonthEnd = new Date(now.getFullYear(), now.getMonth() + 2, 0);
+    const thisYearEnd = new Date(now.getFullYear(), 11, 31);
+    const nextYearEnd = new Date(now.getFullYear() + 1, 11, 31);
+
+    return activities.filter((activity) => {
+      const startDate = getActivityDate(activity.start_date);
+      if (!startDate) return false;
+
+      switch (startDateFilter) {
+        case 'today':
+          return startDate.toDateString() === now.toDateString();
+        case 'tomorrow':
+          return startDate.toDateString() === tomorrow.toDateString();
+        case 'thisWeek':
+          return startDate >= now && startDate <= thisWeekEnd;
+        case 'thisWeekend':
+          return startDate >= thisWeekendStart && startDate <= thisWeekendEnd;
+        case 'thisMonth':
+          return startDate >= now && startDate <= thisMonthEnd;
+        case 'thisYear':
+          return startDate >= now && startDate <= thisYearEnd;
+        case 'nextWeek':
+          return startDate >= nextWeekStart && startDate <= nextWeekEnd;
+        case 'nextMonth':
+          return startDate >= nextMonthStart && startDate <= nextMonthEnd;
+        case 'nextYear':
+          return startDate >= new Date(now.getFullYear() + 1, 0, 1) && startDate <= nextYearEnd;
+        default:
+          return true;
       }
-    };
-  }, [user]);
+    });
+  };
 
-  // Check application statuses for all activities
-  useEffect(() => {
-    if (!user || allActivities.length === 0) return;
-
-    const checkApplicationStatuses = async () => {
-      const statusMap = {};
-      await Promise.all(
-        allActivities.map(async (activity) => {
-          try {
-            const hasApplied = await checkExistingApplication(activity.id, user.uid);
-            statusMap[activity.id] = hasApplied;
-          } catch (error) {
-            console.error(`Error checking application for activity ${activity.id}:`, error);
-            statusMap[activity.id] = false;
-          }
-        })
-      );
-      setApplicationStatuses(statusMap);
-    };
-
-    checkApplicationStatuses();
-  }, [user, allActivities]);
-
-  // Extract available countries, categories, and skills from activities
-  const { availableCountries, availableCategories, availableSkills } = useMemo(() => {
+  // Extract available options from activities (for initial filter setup)
+  const { availableCountries, availableCategories, availableSkills, availableSDGs } = useMemo(() => {
     const countries = new Set();
     const categories = new Set();
     const skills = new Set();
+    const sdgs = new Set();
     
     allActivities.forEach((activity) => {
       if (activity.country) countries.add(activity.country);
       if (activity.category) categories.add(activity.category);
+      if (activity.sdg) {
+        // SDG can be stored as number or string, normalize to string
+        const sdgValue = String(activity.sdg);
+        sdgs.add(sdgValue);
+      }
       if (activity.skills && Array.isArray(activity.skills)) {
         activity.skills.forEach(skill => {
           if (skill) {
@@ -148,8 +182,100 @@ export default function ActivitiesPage() {
       availableCountries: Array.from(countries).sort(),
       availableCategories: Array.from(categories).sort(),
       availableSkills: Array.from(skills).sort(),
+      availableSDGs: Array.from(sdgs).sort((a, b) => Number(a) - Number(b)),
     };
   }, [allActivities]);
+
+  // Load skill labels for translation
+  useEffect(() => {
+    const loadSkillLabels = async () => {
+      if (!availableSkills || availableSkills.length === 0) {
+        setSkillLabelsMap({});
+        return;
+      }
+
+      try {
+        const skillOptions = await getSkillsForSelect(locale);
+        // Create a flat map of all skills for easy lookup
+        const allSkills = skillOptions.reduce((acc, group) => {
+          return [...acc, ...group.options];
+        }, []);
+
+        // Create a mapping from skill ID to label
+        const labelsMap = {};
+        availableSkills.forEach(skillId => {
+          const foundSkill = allSkills.find(s => s.value === skillId);
+          if (foundSkill) {
+            labelsMap[skillId] = foundSkill.label;
+          } else {
+            // Fallback to ID if not found
+            labelsMap[skillId] = skillId;
+          }
+        });
+
+        setSkillLabelsMap(labelsMap);
+      } catch (error) {
+        console.error('Error loading skill labels:', error);
+        // Fallback: create map with IDs as labels
+        const fallbackMap = {};
+        availableSkills.forEach(skillId => {
+          fallbackMap[skillId] = skillId;
+        });
+        setSkillLabelsMap(fallbackMap);
+      }
+    };
+
+    loadSkillLabels();
+  }, [availableSkills, locale]);
+
+  // Calculate available options from filtered list (before category/status filters are applied)
+  // This ensures category and status filters only show options that exist in the current filtered results
+  const filteredForOptions = useMemo(() => {
+    let filtered = [...allActivities];
+
+    // Apply filters that come before category/status in the filter chain
+    if (filters.type !== 'all') {
+      filtered = filtered.filter((activity) => activity.type === filters.type);
+    }
+    if (filters.country !== 'all') {
+      filtered = filtered.filter((activity) => activity.country === filters.country);
+    }
+    if (filters.sdg !== 'all') {
+      filtered = filtered.filter((activity) => String(activity.sdg) === String(filters.sdg));
+    }
+    if (filters.skill !== 'all') {
+      filtered = filtered.filter((activity) => {
+        if (!activity.skills || !Array.isArray(activity.skills)) return false;
+        return activity.skills.some(skill => {
+          const skillValue = typeof skill === 'object' && skill !== null 
+            ? (skill.value || skill.id || skill.label) 
+            : skill;
+          return skillValue === filters.skill;
+        });
+      });
+    }
+    if (filters.startDate !== 'all') {
+      filtered = applyStartDateFilter(filtered, filters.startDate);
+    }
+
+    return filtered;
+  }, [allActivities, filters.type, filters.country, filters.sdg, filters.skill, filters.startDate]);
+
+  // Extract available categories and statuses from the filtered list
+  const { availableCategoriesFiltered, availableStatusesFiltered } = useMemo(() => {
+    const categories = new Set();
+    const statuses = new Set();
+    
+    filteredForOptions.forEach((activity) => {
+      if (activity.category) categories.add(activity.category);
+      if (activity.status) statuses.add(activity.status);
+    });
+
+    return {
+      availableCategoriesFiltered: Array.from(categories).sort(),
+      availableStatusesFiltered: Array.from(statuses).sort(),
+    };
+  }, [filteredForOptions]);
 
   // Filter and search activities
   const filteredActivities = useMemo(() => {
@@ -179,6 +305,9 @@ export default function ActivitiesPage() {
           return skillValue === filters.skill;
         });
       });
+    }
+    if (filters.startDate !== 'all') {
+      filtered = applyStartDateFilter(filtered, filters.startDate);
     }
 
     // Apply search
@@ -241,10 +370,19 @@ export default function ActivitiesPage() {
     }
   }, [filteredActivities, sortBy]);
 
+  // Pagination
+  const {
+    paginatedActivities,
+    totalPages,
+    startIndex,
+    endIndex,
+    hasNextPage,
+    hasPreviousPage,
+  } = useActivitiesPagination(sortedActivities, currentPage, itemsPerPage);
+
   // Handle card click - show details modal
   const handleCardClick = (activity) => {
-    setSelectedActivityId(activity.id);
-    setShowDetailsModal(true);
+    openDetailsModal(activity.id);
   };
 
   // Handle Apply Now from details modal
@@ -257,26 +395,13 @@ export default function ActivitiesPage() {
                       !(activity.type === 'local' && activity.acceptApplicationsWG === false);
       
       if (canApply) {
-        setSelectedActivity(activity);
-        setShowDetailsModal(false);
-        setOpenApplyModal(true);
+        openApplyModalWithActivity(activity);
       }
     }
   };
 
-  // Handle apply modal close
-  const handleApplyModalClose = () => {
-    setOpenApplyModal(false);
-    setApplyMessage('');
-    setSelectedActivity(null);
-  };
-  
-  // Register apply modal with global modal manager
-  const wrappedApplyModalOnClose = useModal(openApplyModal, handleApplyModalClose, 'apply-activity-modal');
-
   // Handle submit application
-  const handleSubmitApplication = async (e) => {
-    e.preventDefault();
+  const handleSubmitApplication = async (message) => {
     if (!selectedActivity || !user) return;
     
     // Check if already applied
@@ -286,7 +411,7 @@ export default function ActivitiesPage() {
         message: t('toastAlreadyApplied'),
       });
       setShowToast(true);
-      handleApplyModalClose();
+      closeApplyModal();
       return;
     }
 
@@ -296,22 +421,18 @@ export default function ActivitiesPage() {
         activityId: selectedActivity.id,
         userId: user.uid,
         userEmail: user.email,
-        message: applyMessage,
+        message: message,
       });
       
       if (result.success) {
-        // Update application status
-        setApplicationStatuses((prev) => ({
-          ...prev,
-          [selectedActivity.id]: true,
-        }));
+        // Invalidate application statuses cache to refetch
+        invalidateStatuses();
         
         setToastMessage({
           type: 'success',
           message: t('toastApplicationSuccess'),
         });
-        setApplyMessage('');
-        handleApplyModalClose();
+        closeApplyModal();
         
         // Show badge animation if a badge was earned
         if (result.badgeDetails) {
@@ -323,10 +444,7 @@ export default function ActivitiesPage() {
           type: 'warning',
           message: t('toastAlreadyApplied'),
         });
-        setApplicationStatuses((prev) => ({
-          ...prev,
-          [selectedActivity.id]: true,
-        }));
+        invalidateStatuses();
       }
     } catch (error) {
       setToastMessage({
@@ -336,6 +454,13 @@ export default function ActivitiesPage() {
     } finally {
       setShowToast(true);
       setIsSubmitting(false);
+    }
+  };
+
+  // Handle view full details from apply modal
+  const handleViewFullDetails = () => {
+    if (selectedActivity) {
+      openDetailsModal(selectedActivity.id);
     }
   };
 
@@ -363,12 +488,12 @@ export default function ActivitiesPage() {
               type="text"
               placeholder={t('searchPlaceholder')}
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => setStoreSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-border-light dark:border-border-dark rounded-lg bg-background-card dark:bg-background-card text-text-primary dark:text-text-primary focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 focus:border-primary-500 dark:focus:border-primary-400 transition-all duration-200"
             />
             {searchQuery && (
               <button
-                onClick={() => setSearchQuery('')}
+                onClick={() => setStoreSearchQuery('')}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-text-tertiary dark:text-text-tertiary hover:text-text-primary dark:hover:text-text-primary transition-colors duration-200"
               >
                 <HiX className="h-5 w-5" />
@@ -380,10 +505,12 @@ export default function ActivitiesPage() {
         {/* Filters */}
         <ActivityFilters
           filters={filters}
-          onFiltersChange={setFilters}
+          onFiltersChange={setStoreFilters}
           availableCountries={availableCountries}
-          availableCategories={availableCategories}
+          availableCategories={availableCategoriesFiltered}
           availableSkills={availableSkills}
+          availableSDGs={availableSDGs}
+          availableStatuses={availableStatusesFiltered}
         />
 
         {/* Color Legend */}
@@ -405,13 +532,16 @@ export default function ActivitiesPage() {
 
         {/* Sort and Results Count */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-          <div className="text-sm text-gray-600">
-            {t('showing')} <span className="font-semibold">{sortedActivities.length}</span> {t('of')}{' '}
-            <span className="font-semibold">{allActivities.length}</span> {t('activities')}
+          <div className="text-sm text-text-secondary dark:text-text-secondary">
+            {t('showing')} <span className="font-semibold">{startIndex}-{endIndex}</span> {t('of')}{' '}
+            <span className="font-semibold">{sortedActivities.length}</span> {t('activities')}
+            {allActivities.length !== sortedActivities.length && (
+              <span> ({t('filtered')} {allActivities.length} {t('total')})</span>
+            )}
           </div>
           <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-gray-700">{t('sortBy')}</label>
-            <Select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="w-full sm:w-auto">
+            <label className="text-sm font-medium text-text-primary dark:text-text-primary">{t('sortBy')}</label>
+            <Select value={sortBy} onChange={(e) => setStoreSortBy(e.target.value)} className="w-full sm:w-auto bg-background-card dark:bg-background-card text-text-primary dark:text-text-primary border-border-light dark:border-border-dark">
               <option value="newest">{t('sortNewest')}</option>
               <option value="oldest">{t('sortOldest')}</option>
               <option value="xp_high">{t('sortXpHigh')}</option>
@@ -430,7 +560,7 @@ export default function ActivitiesPage() {
               <Badge color="blue" className="flex items-center gap-1">
                 {t('filterType')} {filters.type}
                 <button
-                  onClick={() => setFilters({ ...filters, type: 'all' })}
+                  onClick={() => updateFilter('type', 'all')}
                   className="ml-1 hover:text-gray-800"
                 >
                   <HiX className="h-3 w-3" />
@@ -441,7 +571,7 @@ export default function ActivitiesPage() {
               <Badge color="blue" className="flex items-center gap-1">
                 {t('filterCategory')} {filters.category}
                 <button
-                  onClick={() => setFilters({ ...filters, category: 'all' })}
+                  onClick={() => updateFilter('category', 'all')}
                   className="ml-1 hover:text-gray-800"
                 >
                   <HiX className="h-3 w-3" />
@@ -450,9 +580,12 @@ export default function ActivitiesPage() {
             )}
             {filters.country !== 'all' && (
               <Badge color="blue" className="flex items-center gap-1">
-                {t('filterLocation')} {filters.country}
+                {t('filterLocation')} {(() => {
+                  const countryData = countries[filters.country];
+                  return countryData ? countryData.name : filters.country;
+                })()}
                 <button
-                  onClick={() => setFilters({ ...filters, country: 'all' })}
+                  onClick={() => updateFilter('country', 'all')}
                   className="ml-1 hover:text-gray-800"
                 >
                   <HiX className="h-3 w-3" />
@@ -463,7 +596,7 @@ export default function ActivitiesPage() {
               <Badge color="blue" className="flex items-center gap-1">
                 {t('filterSdg')} {filters.sdg}
                 <button
-                  onClick={() => setFilters({ ...filters, sdg: 'all' })}
+                  onClick={() => updateFilter('sdg', 'all')}
                   className="ml-1 hover:text-gray-800"
                 >
                   <HiX className="h-3 w-3" />
@@ -472,9 +605,20 @@ export default function ActivitiesPage() {
             )}
             {filters.skill !== 'all' && (
               <Badge color="blue" className="flex items-center gap-1">
-                {t('filterSkill')} {filters.skill}
+                {t('filterSkill')} {skillLabelsMap[filters.skill] || filters.skill}
                 <button
-                  onClick={() => setFilters({ ...filters, skill: 'all' })}
+                  onClick={() => updateFilter('skill', 'all')}
+                  className="ml-1 hover:text-gray-800"
+                >
+                  <HiX className="h-3 w-3" />
+                </button>
+              </Badge>
+            )}
+            {filters.startDate !== 'all' && (
+              <Badge color="blue" className="flex items-center gap-1">
+                {t('filterStartDate') || 'Start Date'} {t(filters.startDate) || filters.startDate}
+                <button
+                  onClick={() => updateFilter('startDate', 'all')}
                   className="ml-1 hover:text-gray-800"
                 >
                   <HiX className="h-3 w-3" />
@@ -485,17 +629,17 @@ export default function ActivitiesPage() {
         )}
 
         {/* Loading State */}
-        {loading && (
+        {activitiesLoading && (
           <div className="flex justify-center items-center py-12">
             <Spinner size="xl" />
           </div>
         )}
 
         {/* Empty State */}
-        {!loading && sortedActivities.length === 0 && (
-          <div className="text-center py-12 bg-white rounded-lg shadow-sm">
-            <p className="text-lg text-gray-600 mb-2">{t('noActivitiesFound')}</p>
-            <p className="text-sm text-gray-500">
+        {!activitiesLoading && sortedActivities.length === 0 && (
+          <div className="text-center py-12 bg-background-card dark:bg-background-card rounded-lg shadow-sm">
+            <p className="text-lg text-text-secondary dark:text-text-secondary mb-2">{t('noActivitiesFound')}</p>
+            <p className="text-sm text-text-tertiary dark:text-text-tertiary">
               {allActivities.length === 0
                 ? t('noOpenActivities')
                 : t('tryAdjustingFilters')}
@@ -503,10 +647,71 @@ export default function ActivitiesPage() {
           </div>
         )}
 
+        {/* Top Pagination Controls */}
+        {!activitiesLoading && totalPages > 1 && paginatedActivities.length > 0 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6 pb-6 border-b border-border-light dark:border-border-dark">
+            <div className="text-sm text-text-secondary dark:text-text-secondary">
+              {t('page')} {currentPage} {t('of')} {totalPages}
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                color="gray"
+                size="sm"
+                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                disabled={!hasPreviousPage}
+                className="bg-background-card dark:bg-background-card text-text-primary dark:text-text-primary border-border-light dark:border-border-dark"
+              >
+                <HiChevronLeft className="h-4 w-4 mr-1" />
+                {t('previous')}
+              </Button>
+              <div className="flex items-center gap-1">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+                  return (
+                    <Button
+                      key={pageNum}
+                      color={currentPage === pageNum ? 'blue' : 'gray'}
+                      size="sm"
+                      onClick={() => setCurrentPage(pageNum)}
+                      className={
+                        currentPage === pageNum
+                          ? 'bg-primary-500 hover:bg-primary-600 text-white'
+                          : 'bg-background-card dark:bg-background-card text-text-primary dark:text-text-primary border-border-light dark:border-border-dark'
+                      }
+                    >
+                      {pageNum}
+                    </Button>
+                  );
+                })}
+              </div>
+              <Button
+                color="gray"
+                size="sm"
+                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                disabled={!hasNextPage}
+                className="bg-background-card dark:bg-background-card text-text-primary dark:text-text-primary border-border-light dark:border-border-dark"
+              >
+                {t('next')}
+                <HiChevronRight className="h-4 w-4 ml-1" />
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* Activities Grid */}
-        {!loading && sortedActivities.length > 0 && (
+        {!activitiesLoading && paginatedActivities.length > 0 && (
+          <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
-            {sortedActivities.map((activity) => (
+              {paginatedActivities.map((activity) => (
               <div key={activity.id} className="relative">
                 <ActivityCard
                   id={activity.id}
@@ -546,6 +751,67 @@ export default function ActivitiesPage() {
               </div>
             ))}
           </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-6 border-t border-border-light dark:border-border-dark">
+                <div className="text-sm text-text-secondary dark:text-text-secondary">
+                  {t('page')} {currentPage} {t('of')} {totalPages}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    color="gray"
+                    size="sm"
+                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                    disabled={!hasPreviousPage}
+                    className="bg-background-card dark:bg-background-card text-text-primary dark:text-text-primary border-border-light dark:border-border-dark"
+                  >
+                    <HiChevronLeft className="h-4 w-4 mr-1" />
+                    {t('previous')}
+                  </Button>
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      let pageNum;
+                      if (totalPages <= 5) {
+                        pageNum = i + 1;
+                      } else if (currentPage <= 3) {
+                        pageNum = i + 1;
+                      } else if (currentPage >= totalPages - 2) {
+                        pageNum = totalPages - 4 + i;
+                      } else {
+                        pageNum = currentPage - 2 + i;
+                      }
+                      return (
+                        <Button
+                          key={pageNum}
+                          color={currentPage === pageNum ? 'blue' : 'gray'}
+                          size="sm"
+                          onClick={() => setCurrentPage(pageNum)}
+                          className={
+                            currentPage === pageNum
+                              ? 'bg-primary-500 hover:bg-primary-600 text-white'
+                              : 'bg-background-card dark:bg-background-card text-text-primary dark:text-text-primary border-border-light dark:border-border-dark'
+                          }
+                        >
+                          {pageNum}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                  <Button
+                    color="gray"
+                    size="sm"
+                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                    disabled={!hasNextPage}
+                    className="bg-background-card dark:bg-background-card text-text-primary dark:text-text-primary border-border-light dark:border-border-dark"
+                  >
+                    {t('next')}
+                    <HiChevronRight className="h-4 w-4 ml-1" />
+                  </Button>
+                </div>
+              </div>
+            )}
+          </>
         )}
 
         {/* Toast Notification */}
@@ -576,150 +842,21 @@ export default function ActivitiesPage() {
         {/* Activity Details Modal */}
         <ActivityDetailsModal
           isOpen={showDetailsModal}
-          onClose={() => {
-            setShowDetailsModal(false);
-            setSelectedActivityId(null);
-          }}
+          onClose={closeDetailsModal}
           activityId={selectedActivityId}
           onApply={handleApplyFromDetails}
           hasApplied={selectedActivityId ? applicationStatuses[selectedActivityId] : false}
         />
 
-        {/* Enhanced Apply Modal */}
-        <Modal
-          show={openApplyModal}
-          onClose={wrappedApplyModalOnClose}
-          size="2xl"
-          className="z-50"
-        >
-          <Modal.Header>
-            <div className="flex items-center gap-3">
-              <div>
-                <h3 className="text-xl font-semibold">{t('applyForActivity')}</h3>
-                {selectedActivity && (
-                  <p className="text-sm text-gray-500 mt-1">{selectedActivity.title}</p>
-                )}
-              </div>
-            </div>
-          </Modal.Header>
-          <Modal.Body>
-            {selectedActivity && (
-              <div className="space-y-6">
-                {/* Activity Summary */}
-                <div className="bg-gradient-to-r from-semantic-info-50 to-semantic-info-100 dark:from-semantic-info-900 dark:to-semantic-info-800 rounded-lg p-4 border-2 border-semantic-info-200 dark:border-semantic-info-700">
-                  <div className="flex items-start gap-4">
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-text-primary dark:text-text-primary mb-2">
-                        {selectedActivity.title}
-                      </h4>
-                      <div className="flex flex-wrap gap-3 text-sm text-text-secondary dark:text-text-secondary">
-                        <div className="flex items-center gap-1">
-                          <span className="font-medium">{t('organization')}</span>
-                          <span>{selectedActivity.organization_name}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <span className="font-medium">{t('xpReward')}</span>
-                          <span className="text-primary-600 dark:text-primary-400 font-semibold">
-                            {selectedActivity.xp_reward || 0}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Description Preview */}
-                <div>
-                  <Label htmlFor="description" value={t('activityDescription')} className="text-text-primary dark:text-text-primary" />
-                  <div className="mt-2 p-3 bg-background-hover dark:bg-background-hover rounded-lg border-2 border-border-light dark:border-[#475569] max-h-32 overflow-y-auto">
-                    <p className="text-sm text-text-secondary dark:text-text-secondary line-clamp-4">
-                      {selectedActivity.description || t('noDescriptionProvided')}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => {
-                      wrappedApplyModalOnClose();
-                      setSelectedActivityId(selectedActivity.id);
-                      setShowDetailsModal(true);
-                    }}
-                    className="mt-2 text-sm text-semantic-info-600 dark:text-semantic-info-400 hover:text-semantic-info-700 dark:hover:text-semantic-info-300 underline"
-                  >
-                    {t('viewFullDetails')}
-                  </button>
-                </div>
-
-                {/* External Platform Link */}
-                {(selectedActivity.externalPlatformLink || selectedActivity.activity_url) && (
-                  <div className="flex items-center gap-4 p-4 bg-background-hover dark:bg-background-hover rounded-xl border-2 border-border-light dark:border-[#475569] hover:shadow-md transition-all">
-                    <div className="bg-semantic-info-100 dark:bg-semantic-info-900 p-3 rounded-full">
-                      <HiExternalLink className="h-6 w-6 text-semantic-info-600 dark:text-semantic-info-400 flex-shrink-0" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium text-text-tertiary dark:text-text-tertiary mb-1 uppercase tracking-wide">{t('externalPlatformLink')}</p>
-                      <a
-                        href={(selectedActivity.externalPlatformLink || selectedActivity.activity_url).startsWith('http') 
-                          ? (selectedActivity.externalPlatformLink || selectedActivity.activity_url) 
-                          : `https://${selectedActivity.externalPlatformLink || selectedActivity.activity_url}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-semantic-info-600 dark:text-semantic-info-400 hover:text-semantic-info-700 dark:hover:text-semantic-info-300 text-sm font-medium break-all hover:underline"
-                      >
-                        {selectedActivity.externalPlatformLink || selectedActivity.activity_url}
-                      </a>
-                    </div>
-                  </div>
-                )}
-
-                {/* Application Message */}
-                <div>
-                  <div className="mb-2 flex items-center justify-between">
-                    <Label htmlFor="message" value={t('whyHelp')} className="text-text-primary dark:text-text-primary" />
-                    <span className="text-xs text-text-tertiary dark:text-text-tertiary">
-                      {applyMessage.length}/500 {t('characters')}
-                    </span>
-                  </div>
-                  <Textarea
-                    id="message"
-                    placeholder={t('messagePlaceholder')}
-                    required
-                    rows={6}
-                    maxLength={500}
-                    value={applyMessage}
-                    onChange={(e) => setApplyMessage(e.target.value)}
-                    className="resize-none bg-background-card dark:bg-background-card !text-text-primary dark:!text-text-primary border-border-light dark:border-border-dark placeholder:text-text-tertiary dark:placeholder:text-text-tertiary"
-                  />
-                  <p className="mt-2 text-xs text-text-tertiary dark:text-text-tertiary">
-                    {t('messageTip')}
-                  </p>
-                </div>
-              </div>
-            )}
-          </Modal.Body>
-          <Modal.Footer className="bg-background-card dark:bg-background-card border-t-2 border-border-light dark:border-[#475569]">
-            <Button
-              onClick={handleSubmitApplication}
-              disabled={isSubmitting || !applyMessage.trim() || applyMessage.length < 10}
-              className="w-full sm:w-auto bg-primary-500 hover:bg-primary-600 dark:bg-primary-600 dark:hover:bg-primary-700 text-white"
-            >
-              {isSubmitting ? (
-                <>
-                  <Spinner size="sm" className="mr-2" />
-                  {t('submitting')}
-                </>
-              ) : (
-                t('submitApplication')
-              )}
-            </Button>
-            <Button
-              color="gray"
-              onClick={wrappedApplyModalOnClose}
-              disabled={isSubmitting}
-              className="w-full sm:w-auto bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-300 dark:hover:bg-neutral-600"
-            >
-              {t('cancel')}
-            </Button>
-          </Modal.Footer>
-        </Modal>
+        {/* Apply Modal */}
+        <ApplyActivityModal
+          isOpen={openApplyModal}
+          onClose={closeApplyModal}
+          activity={selectedActivity}
+          onSubmit={handleSubmitApplication}
+          isSubmitting={isSubmitting}
+          onViewFullDetails={handleViewFullDetails}
+        />
 
         {/* Badge Animation */}
         <BadgeAnimation

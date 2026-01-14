@@ -2,21 +2,24 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { auth } from 'firebaseConfig';
 import { useRouter } from 'next/navigation';
 import { Button, Toast } from 'flowbite-react';
-import { useAuth } from '@/utils/auth/AuthContext'; // Hook for accessing user authentication status
+import { useAuth } from '@/utils/auth/AuthContext';
 import { countries } from 'countries-list';
 import languages from '@cospired/i18n-iso-languages';
 import { updateMember, fetchMemberById } from '@/utils/crudMemberProfile';
 import { uploadProfilePicture } from '@/utils/storage';
 import { isProfileComplete } from '@/utils/profileHelpers';
 import { grantBadgeToUser, userHasBadge } from '@/utils/crudBadges';
-import { normalizeUrl } from '@/utils/urlUtils';
+import { profileSchema } from '@/utils/validation/profileSchema';
 import ProfileInformation from '@/components/profile/ProfileInformation';
 import SkillsAndAvailability from '@/components/profile/SkillsAndAvailability';
 import ConnectLinks from '@/components/profile/ConnectLinks';
 import BadgeAnimation from '@/components/badges/BadgeAnimation';
+import ProfileProgress from '@/components/profile/ProfileProgress';
 
 // Register the languages you want to use
 languages.registerLocale(require("@cospired/i18n-iso-languages/langs/en.json"));
@@ -32,6 +35,39 @@ const countryOptions = Object.entries(countries).map(([code, country]) => ({
   value: code,
   label: country.name
 })).sort((a, b) => a.label.localeCompare(b.label));
+
+// Default form values
+const defaultValues = {
+  displayName: '',
+  email: '',
+  bio: '',
+  cause: '',
+  hobbies: '',
+  website: '',
+  linkedin: '',
+  facebook: '',
+  instagram: '',
+  country: '',
+  languages: [],
+  skills: [],
+  profilePicture: '',
+  timeCommitment: {
+    daily: false,
+    weekly: false,
+    biweekly: false,
+    monthly: false,
+    occasional: false,
+    flexible: false
+  },
+  availabilities: {
+    weekdays: false,
+    weekends: false,
+    mornings: false,
+    afternoons: false,
+    evenings: false,
+    flexible: false
+  }
+};
 
 function cleanData(obj) {
   if (typeof obj !== 'object' || obj === null) {
@@ -53,233 +89,222 @@ function cleanData(obj) {
 export default function CompleteProfilePage() {
   const router = useRouter();
   const { user } = useAuth();
-
-  const [profileData, setProfileData] = useState({
-    displayName: auth.currentUser?.displayName || '',
-    email: auth.currentUser?.email || '',
-    bio: '',
-    cause: '',
-    hobbies: '',
-    website: '',
-    linkedin: '',
-    facebook: '',
-    instagram: '',
-    country: '',
-    languages: [], // This will now store an array of { value, label } objects
-    skills: [],
-    profilePicture: auth.currentUser?.photoURL || '',
-    timeCommitment: {
-      daily: false,
-      weekly: false,
-      biweekly: false,
-      monthly: false,
-      occasional: false,
-      flexible: false
-    },
-    availabilities: {
-      weekdays: false,
-      weekends: false,
-      mornings: false,
-      afternoons: false,
-      evenings: false,
-      flexible: false
-    }
-  });
-  
-  // Add state to store the selected file
+  const [isLoading, setIsLoading] = useState(true);
   const [selectedFile, setSelectedFile] = useState(null);
-  
-  // Add state for toast notifications
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
-  const [toastType, setToastType] = useState('success'); // 'success' or 'error'
-  
-  // Add state for badge animation
+  const [toastType, setToastType] = useState('success');
   const [showBadgeAnimation, setShowBadgeAnimation] = useState(false);
   const [earnedBadgeId, setEarnedBadgeId] = useState(null);
+  const [hasCompleteProfileBadge, setHasCompleteProfileBadge] = useState(false);
 
+  const {
+    control,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    setValue,
+    watch,
+    trigger,
+    reset,
+  } = useForm({
+    resolver: zodResolver(profileSchema),
+    defaultValues,
+    mode: 'onBlur', // Validate on blur for better UX
+  });
+
+  const formValues = watch();
+
+  // Check if user has completeProfile badge
   useEffect(() => {
-    if (user?.uid) {
-      fetchMemberById(user.uid, setProfileData);
-    }
+    const checkBadge = async () => {
+      if (!user?.uid) return;
+      
+      try {
+        const hasBadge = await userHasBadge(user.uid, 'completeProfile');
+        setHasCompleteProfileBadge(hasBadge);
+      } catch (error) {
+        console.error('Error checking badge:', error);
+        // Default to showing progress bar if check fails
+        setHasCompleteProfileBadge(false);
+      }
+    };
+
+    checkBadge();
   }, [user?.uid]);
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    if (name === 'languages') {
-      // Handle multiple selections for languages
-      const selectedOptions = Array.from(e.target.selectedOptions).map(option => option.value);
-      setProfileData(prev => ({ ...prev, languages: selectedOptions }));
-    } else if (name === 'website' || name === 'linkedin' || name === 'facebook' || name === 'instagram') {
-      // Normalize URL fields on blur (when user finishes typing)
-      // Store the raw value for editing, normalize on save
-      setProfileData(prev => ({ ...prev, [name]: value }));
-    } else {
-      setProfileData(prev => ({ ...prev, [name]: value }));
+  // Load existing profile data
+  useEffect(() => {
+    if (!user?.uid) {
+      setIsLoading(false);
+      return;
     }
-  };
 
-  const handleMultiSelectChange = (field) => (newValue) => {
-    setProfileData(prev => ({
-      ...prev,
-      [field]: newValue || []
-    }));
-  };
-
-  const handleCheckboxChange = (field) => (e) => {
-    const { name, checked } = e.target;
-    setProfileData(prev => ({
-      ...prev,
-      [field]: {
-        ...prev[field],
-        [name]: checked
+    setIsLoading(true);
+    
+    // fetchMemberById uses a callback pattern
+    fetchMemberById(user.uid, (profileData) => {
+      if (profileData) {
+        // Merge with defaults and reset form
+        const mergedData = {
+          ...defaultValues,
+          ...profileData,
+          displayName: profileData.displayName || auth.currentUser?.displayName || '',
+          email: profileData.email || auth.currentUser?.email || '',
+          profilePicture: profileData.profilePicture || auth.currentUser?.photoURL || '',
+          languages: Array.isArray(profileData.languages) ? profileData.languages : [],
+          skills: Array.isArray(profileData.skills) ? profileData.skills : [],
+          timeCommitment: {
+            ...defaultValues.timeCommitment,
+            ...(profileData.timeCommitment || {}),
+          },
+          availabilities: {
+            ...defaultValues.availabilities,
+            ...(profileData.availabilities || {}),
+          },
+        };
+        reset(mergedData);
+      } else {
+        // No existing profile, use auth defaults
+        reset({
+          ...defaultValues,
+          displayName: auth.currentUser?.displayName || '',
+          email: auth.currentUser?.email || '',
+          profilePicture: auth.currentUser?.photoURL || '',
+        });
       }
-    }));
-  };
+      setIsLoading(false);
+    });
+  }, [user?.uid, reset]);
+
   const handleProfilePictureChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
       try {
-        // Store the file for later upload
         setSelectedFile(file);
-        
-        // Create a temporary URL for preview
         const imageUrl = URL.createObjectURL(file);
-        
-        // Update the profile data with the temporary image URL
-        setProfileData(prev => ({
-          ...prev,
-          profilePicture: imageUrl
-        }));
+        setValue('profilePicture', imageUrl, { shouldValidate: true });
       } catch (error) {
         console.error("Error handling profile picture:", error);
       }
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    console.log(profileData);
-
+  const onSubmit = async (data) => {
     try {
-      let finalProfileData = { ...profileData };
-      
+      let finalProfileData = { ...data };
+
       // Upload profile picture if a new one was selected
       if (selectedFile && user?.uid) {
         try {
           const downloadURL = await uploadProfilePicture(selectedFile, user.uid);
           finalProfileData.profilePicture = downloadURL;
+          setValue('profilePicture', downloadURL);
         } catch (error) {
           console.error("Error uploading profile picture:", error);
-          // Continue with form submission even if picture upload fails
         }
       }
-      
-      // Normalize URL fields before saving
+
+      // Clean and normalize data
       const cleanedProfileData = cleanData(finalProfileData);
-      if (cleanedProfileData.website) {
-        cleanedProfileData.website = normalizeUrl(cleanedProfileData.website);
-      }
-      if (cleanedProfileData.linkedin) {
-        cleanedProfileData.linkedin = normalizeUrl(cleanedProfileData.linkedin);
-      }
-      if (cleanedProfileData.facebook) {
-        cleanedProfileData.facebook = normalizeUrl(cleanedProfileData.facebook);
-      }
-      if (cleanedProfileData.instagram) {
-        cleanedProfileData.instagram = normalizeUrl(cleanedProfileData.instagram);
-      }
-      
+
       await updateMember(user.uid, cleanedProfileData);
       console.log("Profile updated!");
-      
+
       // Check if profile is complete and grant badge if needed
       const profileIsComplete = isProfileComplete(cleanedProfileData);
       let badgeDetails = null;
-      
+
       if (profileIsComplete) {
-        // Check if user already has the profile completion badge
-        // Badge document ID is "completeProfile" (must match Firestore document ID)
         const hasBadge = await userHasBadge(user.uid, 'completeProfile');
-        
+
         if (!hasBadge) {
-          // Grant the badge
           badgeDetails = await grantBadgeToUser(user.uid, 'completeProfile');
-          
+
           if (badgeDetails) {
             console.log('Profile completion badge granted!', badgeDetails);
-            // Show badge animation
             setEarnedBadgeId(badgeDetails.id);
             setShowBadgeAnimation(true);
+            // Update badge state to hide progress bar
+            setHasCompleteProfileBadge(true);
           }
         }
       }
-      
+
       // Show success toast
-      if (badgeDetails) {
-        setToastMessage('Profile updated successfully!');
-      } else {
-        setToastMessage('Profile updated successfully!');
-      }
+      setToastMessage('Profile updated successfully!');
       setToastType('success');
       setShowToast(true);
-      
-      // Hide toast after 3 seconds
+
       setTimeout(() => {
         setShowToast(false);
       }, 3000);
-      
     } catch (error) {
       console.error("Error updating profile:", error);
-      
-      // Show error toast
       setToastMessage('Failed to update profile. Please try again.');
       setToastType('error');
       setShowToast(true);
-      
-      // Hide toast after 3 seconds
+
       setTimeout(() => {
         setShowToast(false);
       }, 3000);
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-text-primary dark:text-text-primary">Loading...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Progress Indicator - Only show if user doesn't have the badge */}
+      {!hasCompleteProfileBadge && (
+        <ProfileProgress formData={formValues} />
+      )}
+
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           {/* Left Column - Profile Information (takes 3/5 of width) */}
           <div className="lg:col-span-3">
             <ProfileInformation
-              profileData={profileData}
-              handleProfilePictureChange={handleProfilePictureChange}
-              handleInputChange={handleInputChange}
-              handleMultiSelectChange={handleMultiSelectChange}
+              control={control}
+              errors={errors}
               countryOptions={countryOptions}
               languageOptions={languageOptions}
+              handleProfilePictureChange={handleProfilePictureChange}
+              watch={watch}
             />
           </div>
-          
+
           {/* Right Column - Connect Links and Skills & Availability stacked (takes 2/5 of width) */}
           <div className="lg:col-span-2 space-y-6">
             <ConnectLinks
-              profileData={profileData}
-              handleInputChange={handleInputChange}
+              control={control}
+              errors={errors}
+              setValue={setValue}
+              trigger={trigger}
             />
             <SkillsAndAvailability
-              profileData={profileData}
-              handleMultiSelectChange={handleMultiSelectChange}
-              handleCheckboxChange={handleCheckboxChange}
+              control={control}
+              errors={errors}
+              watch={watch}
             />
           </div>
         </div>
         <div className="flex justify-center pb-6">
-          <Button type="submit" className="w-full md:w-auto md:min-w-[200px]">
-            Save Profile
+          <Button 
+            type="submit" 
+            className="w-full md:w-auto md:min-w-[200px]"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? 'Saving...' : 'Save Profile'}
           </Button>
         </div>
       </form>
-      
+
       {/* Toast Notification */}
       {showToast && (
         <div className="fixed bottom-5 right-5 z-50">
@@ -303,7 +328,7 @@ export default function CompleteProfilePage() {
           </Toast>
         </div>
       )}
-      
+
       {/* Badge Animation */}
       <BadgeAnimation
         badgeId={earnedBadgeId}

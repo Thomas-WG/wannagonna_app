@@ -86,7 +86,18 @@
         "errorLoadingPreferences": "Échec du chargement des préférences de notification.",
         "errorEnablePushBrowser": "Impossible d'activer les notifications push dans ce navigateur.",
         "errorEnablePush": "Échec de l'activation des notifications push.",
-        "errorSavePreferences": "Échec de l'enregistrement des préférences de notification."
+        "errorSavePreferences": "Échec de l'enregistrement des préférences de notification.",
+        "errorSavePreferencesNetwork": "Impossible d'enregistrer les préférences. Veuillez vérifier votre connexion Internet.",
+        "errorSavePreferencesPermission": "Impossible d'enregistrer les préférences. Veuillez vérifier vos permissions.",
+        "errorSavePreferencesGeneric": "Échec de l'enregistrement des préférences de notification. Veuillez réessayer.",
+        "successSavePreferences": "Préférences enregistrées avec succès.",
+        "errorLanguageChange": "Échec du changement de langue. Veuillez réessayer.",
+        "successLanguageChange": "Langue changée avec succès.",
+        "savingLanguage": "Changement de langue...",
+        "confirmDisableAllNotifications": "Désactiver toutes les notifications ?",
+        "confirmDisableAllNotificationsMessage": "Êtes-vous sûr de vouloir désactiver toutes les notifications ? Vous ne recevrez aucune notification dans l'application ni push pour la gamification ou les activités.",
+        "confirm": "Confirmer",
+        "cancel": "Annuler"
     },
     "ActivityCard": {
         "points": "points",
@@ -109,6 +120,7 @@
             "Closed": "Fermé"
         },
         "participants": "participants",
+        "peopleMax": "personnes max",
         "validated": "validés",
         "externalPlatformLink": "Lien vers la Plateforme Externe",
         "openLink": "Ouvrir le Lien",
@@ -161,7 +173,9 @@
         "fundraising": "Collecte de fonds",
         "longtermrole": "Rôle à long terme",
         "explainer": "Expliqueur / Tableau blanc",
-        "other": "Autre",
+        "other-online": "Autre (En ligne)",
+        "other-local": "Autre (Local)",
+        "other-event": "Autre (Événement)",
         "cleaning": "Nettoyage",
         "teaching": "Enseignement",
         "food_distribution": "Distribution de nourriture",
@@ -406,7 +420,6 @@
         "noResults": "Aucun membre trouvé",
         "noMembers": "Aucun membre",
         "member": "membre",
-        "members": "membres",
         "found": "trouvé(s)",
         "editMember": "Modifier le membre",
         "xpPoints": "Points XP",
@@ -415,7 +428,6 @@
         "errorUpdatingMember": "Erreur lors de la mise à jour du membre",
         "badgesManagement": "Gestion des badges",
         "allBadges": "Tous les badges",
-        "addCategory": "Ajouter une catégorie",
         "noCategories": "Aucune catégorie trouvée",
         "editBadge": "Modifier le badge",
         "badgeId": "ID du badge",
@@ -434,7 +446,6 @@
         "errorCreatingCategory": "Erreur lors de la création de la catégorie",
         "errorDeletingCategory": "Erreur lors de la suppression de la catégorie",
         "deleteBadge": "Supprimer le badge",
-        "deleteCategory": "Supprimer la catégorie",
         "confirmDeleteBadge": "Êtes-vous sûr de vouloir supprimer ce badge ?",
         "confirmDeleteCategory": "Êtes-vous sûr de vouloir supprimer cette catégorie ? Tous les badges de cette catégorie seront également supprimés.",
         "create": "Créer",
@@ -479,7 +490,6 @@
         "answerFr": "Réponse (Français)",
         "answerEs": "Réponse (Espagnol)",
         "answerJa": "Réponse (Japonais)",
-        "order": "Ordre",
         "orderHelper": "Ordre pour le tri (les nombres les plus bas apparaissent en premier)",
         "faqAdded": "FAQ ajoutée avec succès",
         "faqUpdated": "FAQ mise à jour avec succès",
@@ -489,8 +499,6 @@
         "confirmDeleteFaq": "Êtes-vous sûr de vouloir supprimer cette FAQ ?",
         "englishRequired": "La question et la réponse en anglais sont requises",
         "searchFaqs": "Rechercher des FAQ",
-        "searchPlaceholder": "Rechercher par question ou réponse...",
-        "noResults": "Aucune FAQ trouvée",
         "noFaqs": "Aucune FAQ"
     },
     "StatusUpdateModal": {
@@ -648,7 +656,16 @@
         "contactValidated": "Contacter les validés",
         "contactAll": "Contacter tous",
         "noEmailsAvailable": "Aucune adresse e-mail disponible pour les participants sélectionnés.",
-        "emailSubject": "Concernant : {activityTitle}"
+        "emailSubject": "Concernant : {activityTitle}",
+        "errorUpdatingStatus": "Erreur lors de la mise à jour du statut de l'activité",
+        "errorClosingActivity": "Échec de la fermeture de l'activité",
+        "activityAnalytics": "Analyses des activités",
+        "totalActivities": "Total des activités",
+        "totalApplications": "Total des candidatures",
+        "totalXP": "Total XP",
+        "averageXP": "XP moyen",
+        "statusBreakdown": "Répartition par statut",
+        "typeBreakdown": "Répartition par type"
     },
     "Dashboard": {
         "yourStatistics": "Vos Statistiques",
@@ -707,7 +724,8 @@
         "emptyTitle": "Aucun historique XP pour le moment",
         "emptyMessage": "Commencez à gagner de l'XP en complétant des activités et en obtenant des badges !",
         "totalEntries": "Total des Entrées",
-        "totalXp": "Total XP Gagné"
+        "totalXp": "Total XP Gagné",
+        "noMoreEntries": "Aucune autre entrée à charger"
     },
     "Activities": {
         "title": "Activités Disponibles",
@@ -720,6 +738,11 @@
         "showing": "Affichage",
         "of": "sur",
         "activities": "activités",
+        "page": "Page",
+        "previous": "Précédent",
+        "next": "Suivant",
+        "filtered": "filtré",
+        "total": "total",
         "sortBy": "Trier par :",
         "sortNewest": "Plus récentes d'abord",
         "sortOldest": "Plus anciennes d'abord",
@@ -766,7 +789,20 @@
         "allCategories": "Toutes les catégories",
         "allCountries": "Tous les pays",
         "allSdgs": "Tous les ODD",
+        "allSDGs": "Tous les ODD",
         "allSkills": "Toutes les compétences",
+        "filterStartDateLabel": "Date de début",
+        "filterStartDate": "Date de début",
+        "allDates": "Toutes les dates",
+        "today": "Aujourd'hui",
+        "tomorrow": "Demain",
+        "thisWeek": "Cette semaine",
+        "thisWeekend": "Ce week-end",
+        "thisMonth": "Ce mois",
+        "thisYear": "Cette année",
+        "nextWeek": "La semaine prochaine",
+        "nextMonth": "Le mois prochain",
+        "nextYear": "L'année prochaine",
         "externalPlatformLink": "Lien de plateforme externe"
     },
     "Members": {
@@ -792,7 +828,12 @@
         "active": "Actif",
         "clearAllFilters": "Effacer tous les filtres",
         "clearAll": "Tout effacer",
-        "noMembers": "Aucun membre trouvé dans le système"
+        "noMembers": "Aucun membre trouvé dans le système",
+        "page": "Page",
+        "previous": "Précédent",
+        "next": "Suivant",
+        "loading": "Chargement",
+        "errorLoadingMembers": "Erreur lors du chargement des membres"
     }
 }
 

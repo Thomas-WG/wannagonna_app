@@ -132,6 +132,57 @@ export async function findBadgeById(badgeId) {
 }
 
 /**
+ * Fetch multiple badge details by their IDs
+ * @param {string[]} badgeIds - Array of badge IDs to fetch
+ * @returns {Promise<Array>} Array of badge objects with id, title, description, categoryId, and imageUrl
+ */
+export async function fetchBadgeDetailsByIds(badgeIds) {
+  if (!badgeIds || badgeIds.length === 0) {
+    return [];
+  }
+
+  try {
+    // Fetch all badge details in parallel
+    const badgePromises = badgeIds.map(async (badgeId) => {
+      const badgeDetails = await findBadgeById(badgeId);
+      if (badgeDetails && badgeDetails.categoryId) {
+        // Fetch image URL (will check cache first)
+        const imageUrl = await getBadgeImageUrl(badgeDetails.categoryId, badgeId);
+        return {
+          id: badgeId,
+          title: badgeDetails.title || badgeId,
+          description: badgeDetails.description || '',
+          categoryId: badgeDetails.categoryId,
+          imageUrl: imageUrl || null,
+        };
+      }
+      return null;
+    });
+
+    const results = await Promise.all(badgePromises);
+    
+    // Update cache with newly fetched URLs
+    const urlMap = {};
+    results.forEach(badge => {
+      if (badge && badge.imageUrl) {
+        urlMap[badge.id] = badge.imageUrl;
+      }
+    });
+    if (Object.keys(urlMap).length > 0) {
+      // Merge with existing cache
+      const existingCache = getCachedBadgeUrls() || {};
+      setCachedBadgeUrls({ ...existingCache, ...urlMap });
+    }
+    
+    // Filter out null results (badges that weren't found)
+    return results.filter(badge => badge !== null);
+  } catch (error) {
+    console.error('Error fetching badge details by IDs:', error);
+    return [];
+  }
+}
+
+/**
  * Get the download URL for a badge image from Firebase Storage
  * Optimized: Since images are SVG and match document ID, try .svg first
  * @param {string} categoryId - The category ID (e.g., 'sdg', 'geography', 'general')
@@ -144,6 +195,11 @@ export async function getBadgeImageUrl(categoryId, badgeId) {
       return null;
     }
 
+    // Check cache first
+    const cachedUrls = getCachedBadgeUrls();
+    if (cachedUrls && cachedUrls[badgeId]) {
+      return cachedUrls[badgeId];
+    }
     // Since images are SVG and match document ID, try .svg first
     // Path format: badges/{category}/{badgeId}.svg
     const extensions = ['.svg', '.png', '.jpg', '.jpeg', '.webp'];
@@ -153,7 +209,17 @@ export async function getBadgeImageUrl(categoryId, badgeId) {
       try {
         const imagePath = `badges/${categoryId}/${badgeId}${ext}`;
         const imageRef = ref(storage, imagePath);
-        const url = await getDownloadURL(imageRef);
+        
+        // Add timeout to prevent hanging indefinitely (30 seconds max)
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('Timeout: getDownloadURL took longer than 30 seconds')), 30000);
+        });
+        
+        const url = await Promise.race([
+          getDownloadURL(imageRef),
+          timeoutPromise
+        ]);
+        
         return url;
       } catch (error) {
         // Continue to next extension if not found
@@ -183,7 +249,8 @@ export function getCachedBadgeUrls() {
     if (!cached) return null;
     
     const { urls, timestamp } = JSON.parse(cached);
-    if (Date.now() - timestamp > CACHE_DURATION) {
+    const age = Date.now() - timestamp;
+    if (age > CACHE_DURATION) {
       localStorage.removeItem(BADGE_URL_CACHE_KEY);
       return null;
     }

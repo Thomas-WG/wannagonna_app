@@ -8,12 +8,15 @@ import {
   HiMail,
   HiLocationMarker,
   HiCalendar,
+  HiExternalLink,
 } from 'react-icons/hi';
+import { FaLinkedin, FaFacebook, FaInstagram } from 'react-icons/fa';
 import { countries } from 'countries-list';
 import languages from '@cospired/i18n-iso-languages';
 import { sdgNames, getSDGNumber } from '@/constant/sdgs';
 import { useTheme } from '@/utils/theme/ThemeContext';
 import { useModal } from '@/utils/modal/useModal';
+import { normalizeUrl, formatUrlForDisplay } from '@/utils/urlUtils';
 
 // Register the languages you want to use
 languages.registerLocale(require("@cospired/i18n-iso-languages/langs/en.json"));
@@ -127,12 +130,12 @@ export default function NPODetailsModal({ isOpen, onClose, organization }) {
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-medium text-text-tertiary dark:text-text-tertiary mb-1 uppercase tracking-wide">Website</p>
                     <a
-                      href={organization.website.startsWith('http') ? organization.website : `https://${organization.website}`}
+                      href={normalizeUrl(organization.website)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-semantic-info-600 dark:text-semantic-info-400 hover:text-semantic-info-700 dark:hover:text-semantic-info-300 text-sm font-medium break-all hover:underline"
                     >
-                      {organization.website}
+                      {formatUrlForDisplay(organization.website)}
                     </a>
                   </div>
                 </div>
@@ -165,6 +168,82 @@ export default function NPODetailsModal({ isOpen, onClose, organization }) {
                     <p className="text-text-secondary dark:text-text-secondary text-sm leading-relaxed">{organization.address}</p>
                   </div>
                 </div>
+              )}
+            </div>
+          )}
+
+          {/* Social Links */}
+          {(organization.linkedin || organization.facebook || organization.instagram) && (
+            <div className="space-y-3 pt-4 border-t-2 border-border-light dark:border-[#475569]">
+              <h3 className="text-lg font-semibold text-text-primary dark:text-text-primary mb-4 flex items-center gap-2">
+                <div className="w-1 h-6 bg-semantic-info-500 dark:bg-semantic-info-400 rounded-full"></div>
+                Connect
+              </h3>
+              
+              {organization.linkedin && (
+                <a
+                  href={normalizeUrl(organization.linkedin)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-4 p-4 bg-background-hover dark:bg-background-hover rounded-xl border-2 border-border-light dark:border-[#475569] hover:shadow-md transition-all group"
+                >
+                  <div className="bg-semantic-info-100 dark:bg-semantic-info-900 p-3 rounded-full">
+                    <FaLinkedin className="h-6 w-6 text-semantic-info-600 dark:text-semantic-info-400 flex-shrink-0" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium text-text-tertiary dark:text-text-tertiary mb-1 uppercase tracking-wide">LinkedIn</p>
+                    <div className="flex items-center gap-2">
+                      <span className="text-semantic-info-600 dark:text-semantic-info-400 hover:text-semantic-info-700 dark:hover:text-semantic-info-300 text-sm font-medium break-all group-hover:underline">
+                        {formatUrlForDisplay(organization.linkedin)}
+                      </span>
+                      <HiExternalLink className="w-3 h-3 flex-shrink-0 text-semantic-info-600 dark:text-semantic-info-400" />
+                    </div>
+                  </div>
+                </a>
+              )}
+
+              {organization.facebook && (
+                <a
+                  href={normalizeUrl(organization.facebook)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-4 p-4 bg-background-hover dark:bg-background-hover rounded-xl border-2 border-border-light dark:border-[#475569] hover:shadow-md transition-all group"
+                >
+                  <div className="bg-semantic-info-100 dark:bg-semantic-info-900 p-3 rounded-full">
+                    <FaFacebook className="h-6 w-6 text-semantic-info-600 dark:text-semantic-info-400 flex-shrink-0" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium text-text-tertiary dark:text-text-tertiary mb-1 uppercase tracking-wide">Facebook</p>
+                    <div className="flex items-center gap-2">
+                      <span className="text-semantic-info-600 dark:text-semantic-info-400 hover:text-semantic-info-700 dark:hover:text-semantic-info-300 text-sm font-medium break-all group-hover:underline">
+                        {formatUrlForDisplay(organization.facebook)}
+                      </span>
+                      <HiExternalLink className="w-3 h-3 flex-shrink-0 text-semantic-info-600 dark:text-semantic-info-400" />
+                    </div>
+                  </div>
+                </a>
+              )}
+
+              {organization.instagram && (
+                <a
+                  href={normalizeUrl(organization.instagram)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-4 p-4 bg-background-hover dark:bg-background-hover rounded-xl border-2 border-border-light dark:border-[#475569] hover:shadow-md transition-all group"
+                >
+                  <div className="bg-semantic-info-100 dark:bg-semantic-info-900 p-3 rounded-full">
+                    <FaInstagram className="h-6 w-6 text-semantic-info-600 dark:text-semantic-info-400 flex-shrink-0" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium text-text-tertiary dark:text-text-tertiary mb-1 uppercase tracking-wide">Instagram</p>
+                    <div className="flex items-center gap-2">
+                      <span className="text-semantic-info-600 dark:text-semantic-info-400 hover:text-semantic-info-700 dark:hover:text-semantic-info-300 text-sm font-medium break-all group-hover:underline">
+                        {formatUrlForDisplay(organization.instagram)}
+                      </span>
+                      <HiExternalLink className="w-3 h-3 flex-shrink-0 text-semantic-info-600 dark:text-semantic-info-400" />
+                    </div>
+                  </div>
+                </a>
               )}
             </div>
           )}

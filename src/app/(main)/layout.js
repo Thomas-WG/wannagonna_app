@@ -3,6 +3,7 @@
 import Navbar from '@/components/layout/Sidebar'; // Navbar component for sidebar navigation
 import Header from '@/components/layout/Header'; // Header component for header navigation
 import ProtectedRoute from '@/utils/auth/ProtectedRoute';
+import GlobalValidationModal from '@/components/activities/GlobalValidationModal';
 
 const Layout = ({ children, isNavbarExpanded }) => {
     return (
@@ -21,6 +22,8 @@ const Layout = ({ children, isNavbarExpanded }) => {
                         </div>
                     </main>
                 </div>
+                {/* Global validation modal - appears on any page */}
+                <GlobalValidationModal />
             </div>
         </ProtectedRoute>
     );

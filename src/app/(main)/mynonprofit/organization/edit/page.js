@@ -12,7 +12,8 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useAuth } from '@/utils/auth/AuthContext';
 import { Card, Button, Label, TextInput, Textarea, Toast } from 'flowbite-react';
-import { HiOfficeBuilding, HiArrowLeft } from 'react-icons/hi';
+import { HiOfficeBuilding } from 'react-icons/hi';
+import BackButton from '@/components/layout/BackButton';
 import { 
   fetchOrganizationById,
   updateOrganization 
@@ -24,6 +25,7 @@ import Select from 'react-select';
 import Image from 'next/image';
 import { sdgOptions } from '@/constant/sdgs';
 import { useTheme } from '@/utils/theme/ThemeContext';
+import { normalizeUrl, formatUrlForDisplay } from '@/utils/urlUtils';
 
 // Register the languages you want to use
 languages.registerLocale(require("@cospired/i18n-iso-languages/langs/en.json"));
@@ -49,6 +51,9 @@ export default function OrganizationEditPage() {
     website: '',
     email: '',
     registrationNumber: '',
+    linkedin: '',
+    facebook: '',
+    instagram: '',
   });
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
   const [logoFile, setLogoFile] = useState(null);
@@ -87,6 +92,9 @@ export default function OrganizationEditPage() {
             website: orgData.website || '',
             email: orgData.email || '',
             registrationNumber: orgData.registrationNumber || '',
+            linkedin: orgData.linkedin || '',
+            facebook: orgData.facebook || '',
+            instagram: orgData.instagram || '',
           });
         }
       } catch (error) {
@@ -121,11 +129,20 @@ export default function OrganizationEditPage() {
 
     setIsSaving(true);
     try {
+      // Normalize URL fields before saving
+      const normalizedForm = {
+        ...organizationForm,
+        website: organizationForm.website ? normalizeUrl(organizationForm.website) : '',
+        linkedin: organizationForm.linkedin ? normalizeUrl(organizationForm.linkedin) : '',
+        facebook: organizationForm.facebook ? normalizeUrl(organizationForm.facebook) : '',
+        instagram: organizationForm.instagram ? normalizeUrl(organizationForm.instagram) : '',
+      };
+
       // First, upload logo if a new logo file was selected
       if (logoFile && claims.npoId) {
         try {
           const url = await uploadOrgPicture(logoFile, claims.npoId);
-          await updateOrganization(claims.npoId, { ...organizationForm, logo: url });
+          await updateOrganization(claims.npoId, { ...normalizedForm, logo: url });
           setOrganizationForm(prev => ({ ...prev, logo: url }));
           showToast(t('organizationUpdated'), 'success');
         } catch (error) {
@@ -134,7 +151,7 @@ export default function OrganizationEditPage() {
         }
       } else {
         // Update organization without logo change
-        await updateOrganization(claims.npoId, organizationForm);
+        await updateOrganization(claims.npoId, normalizedForm);
         showToast(t('organizationUpdated'), 'success');
       }
 
@@ -167,6 +184,21 @@ export default function OrganizationEditPage() {
       } catch (error) {
         console.error("Error handling logo:", error);
       }
+    }
+  };
+
+  /**
+   * Handles URL field blur to normalize URLs
+   * @param {string} fieldName - The field name to normalize
+   * @param {string} value - The URL value
+   */
+  const handleUrlBlur = (fieldName, value) => {
+    if (value && value.trim() !== '') {
+      const normalized = normalizeUrl(value);
+      setOrganizationForm(prev => ({
+        ...prev,
+        [fieldName]: normalized
+      }));
     }
   };
 
@@ -247,23 +279,17 @@ export default function OrganizationEditPage() {
 
   return (
     <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 max-w-4xl bg-background-page dark:bg-background-page min-h-screen">
-      {/* Header with back button */}
-      <div className="mb-4 sm:mb-6 flex items-center gap-3 sm:gap-4">
-        <button
-          onClick={() => router.push('/mynonprofit')}
-          className="p-2 rounded-full hover:bg-background-hover dark:hover:bg-background-hover transition-colors"
-          aria-label="Go back"
-        >
-          <HiArrowLeft className="h-5 w-5 sm:h-6 sm:w-6 text-text-primary dark:text-text-primary" />
-        </button>
-        <div className="flex items-center gap-2 sm:gap-3">
-          <div className="bg-semantic-info-100 dark:bg-semantic-info-900 p-2 sm:p-3 rounded-full">
-            <HiOfficeBuilding className="h-5 w-5 sm:h-6 sm:w-6 text-semantic-info-600 dark:text-semantic-info-400" />
-          </div>
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-text-primary dark:text-text-primary">
-            {t('editOrganization')}
-          </h1>
+      {/* Back Button */}
+      <BackButton fallbackPath="/mynonprofit" />
+
+      {/* Header */}
+      <div className="mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
+        <div className="bg-semantic-info-100 dark:bg-semantic-info-900 p-2 sm:p-3 rounded-full">
+          <HiOfficeBuilding className="h-5 w-5 sm:h-6 sm:w-6 text-semantic-info-600 dark:text-semantic-info-400" />
         </div>
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-text-primary dark:text-text-primary">
+          {t('editOrganization')}
+        </h1>
       </div>
 
       {/* Form Card */}
@@ -452,15 +478,85 @@ export default function OrganizationEditPage() {
             </Label>
             <TextInput
               id="website"
-              type="url"
-              value={organizationForm.website}
+              type="text"
+              value={formatUrlForDisplay(organizationForm.website || '')}
               onChange={(e) => setOrganizationForm({
                 ...organizationForm,
                 website: e.target.value
               })}
-              placeholder="https://example.com"
+              onBlur={(e) => handleUrlBlur('website', e.target.value)}
+              placeholder="www.example.com or example.com"
               className="w-full bg-background-card dark:bg-background-card !text-text-primary dark:!text-text-primary border-border-light dark:border-border-dark placeholder:text-text-tertiary dark:placeholder:text-text-tertiary"
             />
+            <p className="mt-1 text-xs sm:text-sm text-text-tertiary dark:text-text-tertiary">
+              (https:// will be added automatically)
+            </p>
+          </div>
+
+          {/* LinkedIn Field */}
+          <div>
+            <Label htmlFor="linkedin" className="mb-2 block text-sm sm:text-base font-medium text-text-primary dark:text-text-primary">
+              LinkedIn
+            </Label>
+            <TextInput
+              id="linkedin"
+              type="text"
+              value={formatUrlForDisplay(organizationForm.linkedin || '')}
+              onChange={(e) => setOrganizationForm({
+                ...organizationForm,
+                linkedin: e.target.value
+              })}
+              onBlur={(e) => handleUrlBlur('linkedin', e.target.value)}
+              placeholder="www.linkedin.com/in/yourprofile"
+              className="w-full bg-background-card dark:bg-background-card !text-text-primary dark:!text-text-primary border-border-light dark:border-border-dark placeholder:text-text-tertiary dark:placeholder:text-text-tertiary"
+            />
+            <p className="mt-1 text-xs sm:text-sm text-text-tertiary dark:text-text-tertiary">
+              Enter your profile URL (e.g., https://linkedin.com/in/yourprofile) (https:// will be added automatically)
+            </p>
+          </div>
+
+          {/* Facebook Field */}
+          <div>
+            <Label htmlFor="facebook" className="mb-2 block text-sm sm:text-base font-medium text-text-primary dark:text-text-primary">
+              Facebook
+            </Label>
+            <TextInput
+              id="facebook"
+              type="text"
+              value={formatUrlForDisplay(organizationForm.facebook || '')}
+              onChange={(e) => setOrganizationForm({
+                ...organizationForm,
+                facebook: e.target.value
+              })}
+              onBlur={(e) => handleUrlBlur('facebook', e.target.value)}
+              placeholder="www.facebook.com/yourprofile"
+              className="w-full bg-background-card dark:bg-background-card !text-text-primary dark:!text-text-primary border-border-light dark:border-border-dark placeholder:text-text-tertiary dark:placeholder:text-text-tertiary"
+            />
+            <p className="mt-1 text-xs sm:text-sm text-text-tertiary dark:text-text-tertiary">
+              Enter your profile URL (e.g., https://facebook.com/yourprofile) (https:// will be added automatically)
+            </p>
+          </div>
+
+          {/* Instagram Field */}
+          <div>
+            <Label htmlFor="instagram" className="mb-2 block text-sm sm:text-base font-medium text-text-primary dark:text-text-primary">
+              Instagram
+            </Label>
+            <TextInput
+              id="instagram"
+              type="text"
+              value={formatUrlForDisplay(organizationForm.instagram || '')}
+              onChange={(e) => setOrganizationForm({
+                ...organizationForm,
+                instagram: e.target.value
+              })}
+              onBlur={(e) => handleUrlBlur('instagram', e.target.value)}
+              placeholder="www.instagram.com/yourprofile"
+              className="w-full bg-background-card dark:bg-background-card !text-text-primary dark:!text-text-primary border-border-light dark:border-border-dark placeholder:text-text-tertiary dark:placeholder:text-text-tertiary"
+            />
+            <p className="mt-1 text-xs sm:text-sm text-text-tertiary dark:text-text-tertiary">
+              Enter your profile URL (e.g., https://instagram.com/yourprofile) (https:// will be added automatically)
+            </p>
           </div>
 
           {/* Email Field */}

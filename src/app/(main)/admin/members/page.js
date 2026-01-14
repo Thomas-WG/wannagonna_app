@@ -17,6 +17,7 @@ import { httpsCallable } from 'firebase/functions';
 import { useAuth } from '@/utils/auth/AuthContext';
 import { fetchUserBadges, grantBadgeToUser, removeBadgeFromUser, fetchAllBadges } from '@/utils/crudBadges';
 import Image from 'next/image';
+import BackButton from '@/components/layout/BackButton';
 
 /**
  * MembersManagementPage Component
@@ -293,6 +294,9 @@ export default function MembersManagementPage() {
 
   return (
     <div className="container mx-auto p-3 sm:p-4 space-y-3 sm:space-y-4 md:space-y-6">
+      {/* Back Button */}
+      <BackButton fallbackPath="/admin" />
+
       {/* Page Header */}
       <h1 className="text-lg sm:text-xl md:text-2xl font-bold px-1 sm:px-0">{t('membersManagement')}</h1>
       

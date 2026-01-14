@@ -636,6 +636,35 @@ export async function processActivityValidationRewards(
       const body = `You earned ${xpPart}${badgesPart}` +
         ` for "${activity.title || "an activity"}".`;
 
+      // Build badgeXPMap: map badge IDs to their XP values
+      const badgeXPMap = {};
+      
+      // Add regular badges XP
+      for (const badgeId of badgesToGrant) {
+        const badgeDetail = badgeDetailsMap[badgeId];
+        if (badgeDetail) {
+          const badgeXP = Number(badgeDetail.data?.xp) || 0;
+          if (badgeXP > 0) {
+            badgeXPMap[badgeId] = badgeXP;
+          }
+        }
+      }
+      
+      // Add completion badges XP
+      if (worldBadgeEligible) {
+        const worldXP = Number(worldBadgeEligible.xp) || 0;
+        if (worldXP > 0) {
+          badgeXPMap["world"] = worldXP;
+        }
+      }
+      
+      if (sdgBadgeEligible) {
+        const sdgXP = Number(sdgBadgeEligible.xp) || 0;
+        if (sdgXP > 0) {
+          badgeXPMap["sdg"] = sdgXP;
+        }
+      }
+
       await sendUserNotification({
         userId,
         type: "REWARD",
@@ -646,6 +675,9 @@ export async function processActivityValidationRewards(
           activityId,
           validatedBy,
           badgesGranted: allBadgesGranted,
+          totalXP: finalTotalXP,
+          activityXP: activityXP,
+          badgeXPMap: badgeXPMap,
         },
       });
     } catch (notifError) {
