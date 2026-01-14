@@ -1,0 +1,364 @@
+"use client";
+
+import { Modal, Button, Avatar, Badge } from "flowbite-react";
+import { HiCheck, HiX, HiClock } from "react-icons/hi";
+import { useEffect, useState, useCallback } from "react";
+import { fetchApplicationsForActivity, updateApplicationStatus, countPendingApplicationsForOrganization } from "@/utils/crudApplications";
+import { formatDate } from "@/utils/dateUtils";
+import { fetchOrganizationById } from "@/utils/crudOrganizations";
+import { useAuth } from "@/utils/auth/AuthContext";
+import { useTranslations } from "next-intl";
+import { useModal } from '@/utils/modal/useModal';
+import PublicProfileModal from "@/components/profile/PublicProfileModal";
+
+export default function ReviewApplicationsModal({ isOpen, onClose, activity, onOrganizationDataUpdate }) {
+  const { claims, user } = useAuth();
+  const t = useTranslations('MyNonProfit');
+  const tStatus = useTranslations('Dashboard');
+  const [applications, setApplications] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [processingApplication, setProcessingApplication] = useState(null);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [confirmationData, setConfirmationData] = useState(null);
+  const [npoResponse, setNpoResponse] = useState('');
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState(null);
+  const wrappedOnClose = useModal(isOpen, onClose, 'review-applications-modal');
+
+  const fetchApplications = useCallback(async () => {
+    if (!activity?.id) return;
+    
+    setLoading(true);
+    try {
+      const apps = await fetchApplicationsForActivity(activity.id);
+      setApplications(apps);
+    } catch (error) {
+      console.error("Error fetching applications:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [activity?.id]);
+
+  useEffect(() => {
+    if (isOpen && activity?.id) {
+      fetchApplications();
+    } else if (!isOpen) {
+      // Reset confirmation state when modal closes
+      setShowConfirmation(false);
+      setConfirmationData(null);
+      setNpoResponse('');
+    }
+  }, [isOpen, activity?.id, fetchApplications]);
+
+  const handleApplicationActionClick = (application, status) => {
+    setConfirmationData({
+      application,
+      status,
+      action: status === 'accepted' ? 'accept' : 'reject'
+    });
+    setNpoResponse(''); // Reset response message
+    setShowConfirmation(true);
+  };
+
+  const handleConfirmAction = async () => {
+    if (!confirmationData || !activity?.id) return;
+    
+    const { application, status } = confirmationData;
+    setProcessingApplication(application.id);
+    setShowConfirmation(false);
+    
+    try {
+      // Pass the current user's UID to track who approved/rejected the application
+      const updatedByUserId = user?.uid || null;
+      if (!updatedByUserId) {
+        console.warn("ReviewApplicationsModal: user.uid is not available, lastStatusUpdatedBy will not be set");
+      }
+      await updateApplicationStatus(activity.id, application.id, status, npoResponse, updatedByUserId);
+      
+      // Update local state
+      setApplications(prev => 
+        prev.map(app => 
+          app.id === application.id 
+            ? { ...app, status: status, npoResponse: npoResponse }
+            : app
+        )
+      );
+      
+      // Refresh organization data to update the counter
+      if (claims && claims.npoId && onOrganizationDataUpdate) {
+        const orgData = await fetchOrganizationById(claims.npoId);
+        if (orgData) {
+          // Count pending applications dynamically instead of using stored value
+          const pendingCount = await countPendingApplicationsForOrganization(claims.npoId);
+          onOrganizationDataUpdate({
+            ...orgData,
+            totalNewApplications: pendingCount
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error updating application status:", error);
+    } finally {
+      setProcessingApplication(null);
+      setConfirmationData(null);
+      setNpoResponse('');
+    }
+  };
+
+  const handleCancelAction = () => {
+    setShowConfirmation(false);
+    setConfirmationData(null);
+    setNpoResponse('');
+  };
+  
+  // Wrapped confirmation modal close handler
+  const wrappedConfirmationOnClose = useModal(showConfirmation, handleCancelAction, 'review-confirmation-modal');
+
+
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case 'accepted':
+        return <Badge color="success" icon={HiCheck}>{tStatus('statusAccepted') || 'Accepted'}</Badge>;
+      case 'rejected':
+        return <Badge color="failure" icon={HiX}>{tStatus('statusRejected') || 'Rejected'}</Badge>;
+      case 'cancelled':
+        return <Badge color="gray" icon={HiX}>{tStatus('statusCancelled') || 'Cancelled'}</Badge>;
+      default:
+        return <Badge color="warning" icon={HiClock}>{tStatus('statusPending') || 'Pending'}</Badge>;
+    }
+  };
+
+  // Don't render if activity is null
+  if (!activity) {
+    return null;
+  }
+
+  return (
+    <Modal show={isOpen} onClose={wrappedOnClose} size="4xl">
+      <Modal.Header className="border-b border-border-light dark:border-border-dark">
+        <div className="flex flex-col">
+          <span className="text-lg font-semibold text-text-primary dark:text-text-primary">{t('reviewApplications') || 'Review Applications'}</span>
+          <span className="text-sm text-text-secondary dark:text-text-secondary truncate">{activity?.title}</span>
+        </div>
+      </Modal.Header>
+      <Modal.Body>
+        {loading ? (
+          <div className="flex justify-center items-center h-32">
+            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary-500 dark:border-primary-400"></div>
+          </div>
+        ) : applications.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-text-secondary dark:text-text-secondary">{t('noApplicationsForActivity') || 'No applications found for this activity.'}</p>
+          </div>
+        ) : (
+          <div className="space-y-4 max-h-96 overflow-y-auto">
+            {applications.map((application) => (
+              <div 
+                key={application.id} 
+                className="border border-border-light dark:border-border-dark rounded-lg hover:bg-background-hover dark:hover:bg-background-hover transition-colors bg-background-card dark:bg-background-card"
+              >
+                {/* Mobile-friendly card layout */}
+                <div className="p-4">
+                  {/* Header with profile and status */}
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center space-x-3">
+                      <div
+                        className={application.userId ? "cursor-pointer" : ""}
+                        onClick={() => {
+                          if (application.userId) {
+                            setSelectedUserId(application.userId);
+                            setProfileModalOpen(true);
+                          }
+                        }}
+                      >
+                        <Avatar
+                          img={application.profilePicture || '/favicon.ico'}
+                          alt={application.displayName}
+                          size="md"
+                          rounded
+                        />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-text-primary dark:text-text-primary truncate">
+                          {application.displayName}
+                        </p>
+                        {application.userId && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedUserId(application.userId);
+                              setProfileModalOpen(true);
+                            }}
+                            className="text-xs text-semantic-info-600 dark:text-semantic-info-400 hover:text-semantic-info-700 dark:hover:text-semantic-info-300 hover:underline transition-colors"
+                          >
+                            {t('viewProfile') || 'View profile'}
+                          </button>
+                        )}
+                        <p className="text-xs text-text-tertiary dark:text-text-tertiary">
+                          {formatDate(application.createdAt)}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex-shrink-0">
+                      {getStatusBadge(application.status)}
+                    </div>
+                  </div>
+
+                  {/* Message content */}
+                  <div className="mb-3">
+                    <p className="text-sm text-text-secondary dark:text-text-secondary mb-2">
+                      <span className="font-medium text-text-primary dark:text-text-primary">{t('message') || 'Message'}:</span>
+                    </p>
+                    <p className="text-sm text-text-secondary dark:text-text-secondary bg-background-hover dark:bg-background-hover p-2 rounded">
+                      {application.message || (t('noMessageProvided') || 'No message provided')}
+                    </p>
+                    {application.npoResponse && (
+                      <div className="mt-2">
+                        <p className="text-xs font-medium text-semantic-info-700 dark:text-semantic-info-300 mb-1">{t('npoResponse') || 'NPO Response'}:</p>
+                        <p className="text-xs text-semantic-info-700 dark:text-semantic-info-300 bg-semantic-info-50 dark:bg-semantic-info-900 p-2 rounded">
+                          {application.npoResponse}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Action buttons for pending applications */}
+                  {application.status === 'pending' && (
+                    <div className="flex flex-col sm:flex-row gap-2 pt-2 border-t border-border-light dark:border-border-dark">
+                      <Button
+                        size="sm"
+                        color="success"
+                        onClick={() => handleApplicationActionClick(application, 'accepted')}
+                        disabled={processingApplication === application.id}
+                        className="flex items-center justify-center space-x-1 flex-1"
+                      >
+                        <HiCheck className="h-4 w-4" />
+                        <span>{t('accept') || 'Accept'}</span>
+                      </Button>
+                      <Button
+                        size="sm"
+                        color="failure"
+                        onClick={() => handleApplicationActionClick(application, 'rejected')}
+                        disabled={processingApplication === application.id}
+                        className="flex items-center justify-center space-x-1 flex-1"
+                      >
+                        <HiX className="h-4 w-4" />
+                        <span>{t('reject') || 'Reject'}</span>
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </Modal.Body>
+      <Modal.Footer className="border-t border-border-light dark:border-border-dark">
+        <div className="flex justify-center sm:justify-end">
+          <Button 
+            color="gray" 
+            onClick={wrappedOnClose}
+            className="w-full sm:w-auto"
+          >
+            {t('close') || 'Close'}
+          </Button>
+        </div>
+      </Modal.Footer>
+
+      {/* Confirmation Modal */}
+      <Modal show={showConfirmation} onClose={wrappedConfirmationOnClose} size="md">
+        <Modal.Header className="border-b border-border-light dark:border-border-dark">
+          <span className="text-text-primary dark:text-text-primary">{t('confirmAction') || 'Confirm Action'}</span>
+        </Modal.Header>
+        <Modal.Body>
+          <div className="text-center">
+            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-semantic-warning-100 dark:bg-semantic-warning-900 mb-4">
+              {confirmationData?.action === 'accept' ? (
+                <HiCheck className="h-6 w-6 text-semantic-success-600 dark:text-semantic-success-400" />
+              ) : (
+                <HiX className="h-6 w-6 text-semantic-error-600 dark:text-semantic-error-400" />
+              )}
+            </div>
+            <h3 className="text-lg font-medium text-text-primary dark:text-text-primary mb-2">
+              {confirmationData?.action === 'accept' ? (t('acceptApplication') || 'Accept Application') : (t('rejectApplication') || 'Reject Application')}
+            </h3>
+            <p className="text-sm text-text-secondary dark:text-text-secondary mb-4">
+              {t('confirmActionMessage') || 'Are you sure you want to'} {confirmationData?.action === 'accept' ? (t('accept').toLowerCase() || 'accept') : (t('reject').toLowerCase() || 'reject')} {t('theApplicationFrom') || 'the application from'}{' '}
+              <span className="font-medium">{confirmationData?.application?.displayName}</span>?
+            </p>
+            <div className="bg-background-hover dark:bg-background-hover p-3 rounded-lg text-left">
+              <p className="text-xs text-text-secondary dark:text-text-secondary mb-1">
+                <strong className="text-text-primary dark:text-text-primary">{t('activity') || 'Activity'}:</strong> {activity?.title}
+              </p>
+              <p className="text-xs text-text-secondary dark:text-text-secondary mb-1">
+                <strong className="text-text-primary dark:text-text-primary">{t('applicant') || 'Applicant'}:</strong> {confirmationData?.application?.displayName}
+              </p>
+              <p className="text-xs text-text-secondary dark:text-text-secondary">
+                <strong className="text-text-primary dark:text-text-primary">{t('message') || 'Message'}:</strong> {confirmationData?.application?.message || (t('noMessageProvided') || 'No message provided')}
+              </p>
+            </div>
+            
+            {/* NPO Response Message */}
+            <div className="mt-4">
+              <label htmlFor="npoResponse" className="block text-sm font-medium text-text-primary dark:text-text-primary mb-2">
+                {t('messageToVolunteer') || 'Message to volunteer (optional)'}
+              </label>
+              <textarea
+                id="npoResponse"
+                rows={3}
+                value={npoResponse}
+                onChange={(e) => setNpoResponse(e.target.value)}
+                placeholder={t('addPersonalMessagePlaceholder', { name: confirmationData?.application?.displayName || t('theVolunteer') || 'the volunteer' }) || `Add a personal message for ${confirmationData?.application?.displayName}...`}
+                className="w-full px-3 py-2 border border-border-light dark:border-border-dark rounded-md shadow-sm bg-background-card dark:bg-background-card text-text-primary dark:text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 focus:border-primary-500 dark:focus:border-primary-400 text-sm"
+                maxLength={500}
+              />
+              <p className="text-xs text-text-tertiary dark:text-text-tertiary mt-1">
+                {npoResponse.length}/500 {t('characters') || 'characters'}
+              </p>
+            </div>
+            
+            <p className="text-xs text-semantic-error-600 dark:text-semantic-error-400 mt-3">
+              {t('actionCannotBeUndone') || '⚠️ This action cannot be undone and will notify the volunteer.'}
+            </p>
+          </div>
+        </Modal.Body>
+        <Modal.Footer className="border-t border-border-light dark:border-border-dark">
+          <div className="flex flex-col sm:flex-row gap-2 sm:justify-end">
+            <Button 
+              color="gray" 
+              onClick={wrappedConfirmationOnClose}
+              className="w-full sm:w-auto"
+            >
+              {t('cancel') || 'Cancel'}
+            </Button>
+            <Button
+              color={confirmationData?.action === 'accept' ? 'success' : 'failure'}
+              onClick={handleConfirmAction}
+              disabled={processingApplication === confirmationData?.application?.id}
+              className="w-full sm:w-auto"
+            >
+              {processingApplication === confirmationData?.application?.id ? (
+                <div className="flex items-center justify-center space-x-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
+                  <span>{t('processing') || 'Processing...'}</span>
+                </div>
+              ) : (
+                `${t('yes') || 'Yes'}, ${confirmationData?.action === 'accept' ? (t('accept') || 'Accept') : (t('reject') || 'Reject')}`
+              )}
+            </Button>
+          </div>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Public Profile Modal */}
+      <PublicProfileModal
+        isOpen={profileModalOpen}
+        onClose={() => {
+          setProfileModalOpen(false);
+          setSelectedUserId(null);
+        }}
+        userId={selectedUserId}
+      />
+    </Modal>
+  );
+}
