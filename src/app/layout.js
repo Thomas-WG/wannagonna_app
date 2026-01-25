@@ -59,10 +59,6 @@ export const metadata = {
       { url: '/favicon/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
     ],
   },
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#f97316' },
-    { media: '(prefers-color-scheme: dark)', color: '#f97316' },
-  ],
 };
 
 // Viewport configuration for mobile app-like experience
