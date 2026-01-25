@@ -30,7 +30,6 @@ import { AuthProvider } from '@/utils/auth/AuthContext';
 import { ThemeProvider } from '@/utils/theme/ThemeContext';
 import ModalProviderWrapper from '@/components/modal/ModalProviderWrapper';
 import QueryProvider from '@/components/providers/QueryProvider';
-import ServiceWorkerProvider from '@/components/providers/ServiceWorkerProvider';
 
 /**
  * Providers - Consolidated provider component with error boundaries
@@ -40,26 +39,23 @@ import ServiceWorkerProvider from '@/components/providers/ServiceWorkerProvider'
  */
 export default function Providers({ children }) {
   return (
-    <>
-      <ServiceWorkerProvider />
-      <ErrorBoundary>
-        <QueryProvider>
-          <ErrorBoundary>
-            <AuthProvider>
-              <ErrorBoundary>
-                <ThemeProvider>
-                  <ErrorBoundary>
-                    <ModalProviderWrapper>
-                      {children}
-                    </ModalProviderWrapper>
-                  </ErrorBoundary>
-                </ThemeProvider>
-              </ErrorBoundary>
-            </AuthProvider>
-          </ErrorBoundary>
-        </QueryProvider>
-      </ErrorBoundary>
-    </>
+    <ErrorBoundary>
+      <QueryProvider>
+        <ErrorBoundary>
+          <AuthProvider>
+            <ErrorBoundary>
+              <ThemeProvider>
+                <ErrorBoundary>
+                  <ModalProviderWrapper>
+                    {children}
+                  </ModalProviderWrapper>
+                </ErrorBoundary>
+              </ThemeProvider>
+            </ErrorBoundary>
+          </AuthProvider>
+        </ErrorBoundary>
+      </QueryProvider>
+    </ErrorBoundary>
   );
 }
 
