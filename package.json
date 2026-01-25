@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@swc/helpers": "0.5.18",
     "@cospired/i18n-iso-languages": "^4.2.0",
     "@hookform/resolvers": "^5.2.2",
     "@tanstack/react-query": "^5.90.12",
