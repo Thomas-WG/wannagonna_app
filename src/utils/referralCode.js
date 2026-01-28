@@ -2,11 +2,14 @@
  * Utility functions for referral code validation and user code generation
  */
 
-import { collection, query, where, getDocs } from 'firebase/firestore';
-import { db } from 'firebaseConfig';
+import { httpsCallable } from 'firebase/functions';
+import { functions } from 'firebaseConfig';
 
 /**
- * Validate referral code by checking if it exists in members collection
+ * Validate referral code by calling a Cloud Function that securely checks
+ * if the code exists in the members collection using Admin SDK privileges.
+ * This prevents unauthenticated users from querying the members database.
+ * 
  * @param {string} code - The referral code to validate
  * @param {Function} t - Translation function for error messages
  * @returns {Promise<{valid: boolean, error?: string}>} Validation result
@@ -17,23 +20,32 @@ export async function validateReferralCode(code, t) {
   }
   
   try {
-    const membersRef = collection(db, 'members');
-    const q = query(membersRef, where('code', '==', code.toUpperCase().trim()));
-    const querySnapshot = await getDocs(q);
+    const validateCodeFn = httpsCallable(functions, 'validateReferralCode');
+    const result = await validateCodeFn({ code }); 
+    const { valid, error } = result.data || {};
     
-    if (querySnapshot.empty) {
-      return { valid: false, error: t('invalidReferralCode') };
+    if (valid === undefined) {
+      return { valid: false, error: t('errorValidatingCode') };
     }
     
-    return { valid: true };
+    return {
+      valid,
+      error: error ? t(error) : undefined
+    };
   } catch (error) {
-    console.error('Error validating referral code:', error);
+    console.error('[validateReferralCode] Error calling Cloud Function:', error);
+    console.error('[validateReferralCode] Error details:', {
+      code: error.code,
+      message: error.message,
+      details: error.details
+    });
     return { valid: false, error: t('errorValidatingCode') };
   }
 }
 
 /**
  * Generate a unique 5-character code based on user email
+ * Uses Cloud Function to check code uniqueness securely
  * @param {string} email - User's email address
  * @param {string} displayName - User's display name (optional)
  * @returns {Promise<string>} Generated unique code
@@ -59,18 +71,37 @@ export async function generateUserCode(email, displayName = '') {
   // Combine: 3 from email + 1 from name + 1 from hash = 5 characters
   let generatedCode = emailPrefix.substring(0, 3) + nameLetter + lastChar;
   
-  // Ensure uniqueness by checking and modifying if needed
+  // Ensure uniqueness by checking via Cloud Function
   let attempts = 0;
+  const checkCodeUniquenessFn = httpsCallable(functions, 'checkCodeUniqueness');
+  
   while (attempts < 10) {
-    const membersRef = collection(db, 'members');
-    const q = query(membersRef, where('code', '==', generatedCode));
-    const querySnapshot = await getDocs(q);
-    
-    if (querySnapshot.empty) {
-      return generatedCode; // Code is unique
+    try {
+      console.log(`[generateUserCode] Checking uniqueness of code: "${generatedCode}" (attempt ${attempts + 1})`);
+      const result = await checkCodeUniquenessFn({ code: generatedCode });
+      const { isUnique } = result.data || {};
+      
+      if (isUnique === true) {
+        console.log(`[generateUserCode] Code "${generatedCode}" is unique`);
+        return generatedCode; // Code is unique
+      }
+      
+      if (isUnique === false) {
+        console.log(`[generateUserCode] Code "${generatedCode}" is not unique, trying next variation`);
+      } else {
+        console.warn(`[generateUserCode] Unexpected response format, isUnique: ${isUnique}`);
+      }
+    } catch (error) {
+      console.error('[generateUserCode] Error checking code uniqueness:', error);
+      console.error('[generateUserCode] Error details:', {
+        code: error.code,
+        message: error.message,
+        details: error.details
+      });
+      // If check fails, try modifying the code and continue to next attempt
     }
     
-    // If not unique, modify last character
+    // If not unique or check failed, modify last character and try again
     const newIndex = (emailHash + attempts) % chars.length;
     generatedCode = generatedCode.substring(0, 4) + chars[newIndex];
     attempts++;
