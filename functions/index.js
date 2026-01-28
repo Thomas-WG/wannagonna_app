@@ -105,12 +105,11 @@ export const onApplicationStatusChangedNotifyUser = onDocumentUpdated(
       const applicationId = event.params.applicationId;
 
       try {
-        // Handle cancelled status separately - notify NPO members, not the applicant
+        // Handle cancelled status separately - notify NPO members
         if (afterStatus === "cancelled" && after.organizationId) {
           const organizationId = after.organizationId;
-          
+
           // Decrement applicants count if previous status was NOT cancelled
-          // (to avoid double-decrementing if status changes from cancelled to something else and back)
           if (beforeStatus !== "cancelled") {
             try {
               await db.runTransaction(async (transaction) => {
@@ -119,13 +118,22 @@ export const onApplicationStatusChangedNotifyUser = onDocumentUpdated(
 
                 if (activitySnap.exists) {
                   const activity = activitySnap.data();
-                  const newApplicantCount = Math.max((activity.applicants || 0) - 1, 0);
-                  transaction.update(activityRef, {applicants: newApplicantCount});
-                  console.log("Decremented applicants count to:", newApplicantCount);
+                  const newApplicantCount =
+                    Math.max((activity.applicants || 0) - 1, 0);
+                  transaction.update(activityRef, {
+                    applicants: newApplicantCount,
+                  });
+                  console.log(
+                      "Decremented applicants count to:",
+                      newApplicantCount,
+                  );
                 }
               });
             } catch (countError) {
-              console.error("Failed to decrement applicants count:", countError);
+              console.error(
+                  "Failed to decrement applicants count:",
+                  countError,
+              );
               // Don't fail the entire function if count update fails
             }
           }
@@ -449,35 +457,194 @@ export const notifyReferralReward = onCall(async (request) => {
  * This wraps sendUserNotification so it can also send push
  * based on user preferences.
  */
-export const notifyBadgeEarned = onCall(async (request) => {
-  if (!request.auth) {
-    throw new Error("Unauthorized");
-  }
+export const notifyBadgeEarned = onCall(
+    {invoker: "public"},
+    async (request) => {
+      if (!request.auth) {
+        throw new Error("Unauthorized");
+      }
 
-  const {userId, badgeTitle, badgeXP, badgeId} = request.data || {};
+      const {userId, badgeTitle, badgeXP, badgeId} = request.data || {};
 
-  if (!userId || !badgeTitle) {
-    throw new Error("userId and badgeTitle are required");
-  }
+      if (!userId || !badgeTitle) {
+        throw new Error("userId and badgeTitle are required");
+      }
 
-  const xpPart = badgeXP > 0 ? ` and ${badgeXP} XP` : "";
-  const title = "Badge earned";
-  const body = `You earned the "${badgeTitle}" badge${xpPart}!`;
+      const xpPart = badgeXP > 0 ? ` and ${badgeXP} XP` : "";
+      const title = "Badge earned";
+      const body = `You earned the "${badgeTitle}" badge${xpPart}!`;
 
-  await sendUserNotification({
-    userId,
-    type: "REWARD",
-    title,
-    body,
-    link: "/badges",
-    metadata: {
-      badgeId: badgeId || null,
-      badgeXP: Number(badgeXP) || 0,
-    },
-  });
+      await sendUserNotification({
+        userId,
+        type: "REWARD",
+        title,
+        body,
+        link: "/badges",
+        metadata: {
+          badgeId: badgeId || null,
+          badgeXP: Number(badgeXP) || 0,
+        },
+      });
 
-  return {success: true};
-});
+      return {success: true};
+    });
+
+/**
+ * Callable function to validate referral codes.
+ * This function uses Admin SDK privileges to securely check if a referral code
+ * exists in the members collection without exposing member data to
+ * unauthenticated users.
+ *
+ * Note: This function does not require authentication since users don't exist
+ * yet when they're trying to sign up with a referral code.
+ */
+export const validateReferralCode = onCall(
+    {invoker: "public"},
+    async (request) => {
+      const {code} = request.data || {};
+
+      // Validate input - ensure code is a non-empty string
+      if (!code || typeof code !== "string" || code.trim().length === 0) {
+        console.log("[validateReferralCode] Missing or empty code");
+        return {valid: false, error: "referralCodeRequired"};
+      }
+
+      try {
+        const normalizedCode = code.toUpperCase().trim();
+        console.log(`[validateReferralCode] Validating code: 
+          "${normalizedCode}"`);
+
+        const membersRef = db.collection("members");
+        const querySnapshot = await membersRef
+            .where("code", "==", normalizedCode)
+            .limit(1)
+            .get();
+
+        const resultMsg = querySnapshot.empty ?
+      "empty" :
+      `found ${querySnapshot.docs.length} document(s)`;
+        console.log(`[validateReferralCode] Query result: ${resultMsg}`);
+
+        if (querySnapshot.empty) {
+          console.log(
+              `[validateReferralCode] Code "${normalizedCode}" not found`,
+          );
+          return {valid: false, error: "invalidReferralCode"};
+        }
+
+        console.log(`[validateReferralCode] Code "${normalizedCode}" is valid`);
+        return {valid: true};
+      } catch (error) {
+        console.error(
+            "[validateReferralCode] Error validating referral code:",
+            error,
+        );
+        return {valid: false, error: "errorValidatingCode"};
+      }
+    });
+
+/**
+ * Callable function to check if a user code is unique.
+ * This function uses Admin SDK privileges to securely check if a code
+ * already exists in the members collection.
+ *
+ * Note: This function does not require authentication since it only returns
+ * a boolean indicating uniqueness and doesn't expose sensitive member data.
+ */
+export const checkCodeUniqueness = onCall(
+    {invoker: "public"},
+    async (request) => {
+      const {code} = request.data || {};
+
+      if (!code || typeof code !== "string" || code.trim().length === 0) {
+        return {isUnique: false};
+      }
+
+      try {
+        const normalizedCode = code.toUpperCase().trim();
+        console.log(
+            `[checkCodeUniqueness] Checking uniqueness of code: ` +
+      `"${normalizedCode}"`,
+        );
+
+        const membersRef = db.collection("members");
+        const querySnapshot = await membersRef
+            .where("code", "==", normalizedCode)
+            .limit(1)
+            .get();
+
+        const isUnique = querySnapshot.empty;
+        const statusMsg = isUnique ? "unique" : "already exists";
+        console.log(
+            `[checkCodeUniqueness] Code "${normalizedCode}" is ${statusMsg}`,
+        );
+
+        return {isUnique};
+      } catch (error) {
+        console.error(
+            "[checkCodeUniqueness] Error checking code uniqueness:",
+            error,
+        );
+        return {isUnique: false};
+      }
+    });
+
+/**
+ * Callable function to find a user by their referral code.
+ * This function uses Admin SDK privileges to securely find a user
+ * without exposing member data unnecessarily.
+ *
+ * Note: This function requires authentication since it's called
+ * after a user has signed up to reward their referrer.
+ */
+export const findUserByCode = onCall(
+    {invoker: "public"},
+    async (request) => {
+      if (!request.auth) {
+        throw new Error("Unauthorized");
+      }
+
+      const {code} = request.data || {};
+
+      if (!code || typeof code !== "string" || code.trim().length === 0) {
+        return {user: null};
+      }
+
+      try {
+        const normalizedCode = code.toUpperCase().trim();
+        console.log(
+            `[findUserByCode] Looking up user with code: "${normalizedCode}"`,
+        );
+
+        const membersRef = db.collection("members");
+        const querySnapshot = await membersRef
+            .where("code", "==", normalizedCode)
+            .limit(1)
+            .get();
+
+        if (querySnapshot.empty) {
+          console.log(
+              `[findUserByCode] No user found with code: "${normalizedCode}"`,
+          );
+          return {user: null};
+        }
+
+        const userDoc = querySnapshot.docs[0];
+        console.log(`[findUserByCode] Found user: ${userDoc.id}`);
+
+        // Return only necessary data (id is needed for rewards)
+        return {
+          user: {
+            id: userDoc.id,
+            // Only return fields needed for referral rewards
+            // Don't expose sensitive data unnecessarily
+          },
+        };
+      } catch (error) {
+        console.error("[findUserByCode] Error finding user by code:", error);
+        return {user: null};
+      }
+    });
 
 // Export validation reward triggers
 export {onValidationCreated, onValidationUpdated};
