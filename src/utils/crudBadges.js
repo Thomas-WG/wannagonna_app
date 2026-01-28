@@ -652,18 +652,45 @@ export async function handleReferralReward(referralCode) {
       return;
     }
 
-    // Import findUserByCode dynamically to avoid circular dependencies
-    const { findUserByCode } = await import('./crudMemberProfile');
-    
-    // Find the referrer user by their code
+    // Find the referrer user by their code using Cloud Function
     console.log(`[handleReferralReward] Looking up referrer with code: ${referralCode}`);
-    const referrer = await findUserByCode(referralCode);
-    if (!referrer || !referrer.id) {
-      console.error(`Referrer not found for code: ${referralCode}`);
+    
+    // Use Cloud Function to find user by code (secure backend lookup)
+    let referrerId = null;
+    try {
+      if (!functions) {
+        throw new Error('Firebase functions not initialized');
+      }
+      
+      const findUserByCodeFn = httpsCallable(functions, 'findUserByCode');
+      console.log(`[handleReferralReward] Calling Cloud Function findUserByCode with code: ${referralCode}`);
+      
+      const result = await findUserByCodeFn({ code: referralCode });
+      console.log(`[handleReferralReward] Cloud Function response:`, result);
+      
+      const { user } = result.data || {};
+      
+      if (user && user.id) {
+        referrerId = user.id;
+        console.log(`[handleReferralReward] Found referrer: ${referrerId}`);
+      } else {
+        console.warn(`[handleReferralReward] Referrer not found for code: ${referralCode} - user data:`, user);
+        return;
+      }
+    } catch (error) {
+      console.error(`[handleReferralReward] Error finding referrer:`, error);
+      console.error(`[handleReferralReward] Error details:`, {
+        message: error?.message || String(error),
+        code: error?.code || 'NO_CODE',
+        details: error?.details || error?.toString() || 'No details',
+        stack: error?.stack || 'No stack trace',
+        errorType: error?.constructor?.name || typeof error,
+        errorString: String(error),
+        fullError: error
+      });
+      // Don't throw - referral reward failure shouldn't block account creation
       return;
     }
-
-    const referrerId = referrer.id;
     const badgeId = 'buddyBuilder';
     console.log(`[handleReferralReward] Found referrer: ${referrerId}, checking for badge: ${badgeId}`);
 
@@ -742,9 +769,13 @@ export async function handleReferralReward(referralCode) {
     // Log error but don't throw - account creation should succeed even if reward fails
     console.error('[handleReferralReward] Error handling referral reward:', error);
     console.error('[handleReferralReward] Error details:', {
-      message: error.message,
-      stack: error.stack,
-      referralCode: referralCode
+      message: error?.message || 'Unknown error',
+      code: error?.code || 'NO_CODE',
+      details: error?.details || 'No details',
+      stack: error?.stack || 'No stack trace',
+      errorType: error?.constructor?.name || typeof error,
+      referralCode: referralCode,
+      fullError: error
     });
   }
 }
