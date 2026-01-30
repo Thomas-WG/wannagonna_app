@@ -666,6 +666,14 @@ export async function processActivityValidationRewards(
         }
       }
 
+      console.log(
+          `[processActivityValidationRewards] Sending validation reward notification to user ${userId}`,
+          {
+            activityId,
+            totalXP: finalTotalXP,
+            badgesCount: allBadgesGranted.length,
+          },
+      );
       await sendUserNotification({
         userId,
         type: "REWARD",
@@ -681,8 +689,25 @@ export async function processActivityValidationRewards(
           badgeXPMap: badgeXPMap,
         },
       });
+      console.log(
+          `[processActivityValidationRewards] Validation reward notification sent successfully to user ${userId}`,
+      );
     } catch (notifError) {
-      console.error("Failed to send reward notification:", notifError);
+      console.error(
+          `[processActivityValidationRewards] Failed to send reward notification to user ${userId}:`,
+          notifError,
+      );
+      console.error(
+          `[processActivityValidationRewards] Notification error details:`,
+          {
+            message: notifError.message,
+            stack: notifError.stack,
+            code: notifError.code,
+            userId,
+            activityId,
+            totalXP: finalTotalXP,
+          },
+      );
     }
 
     return {

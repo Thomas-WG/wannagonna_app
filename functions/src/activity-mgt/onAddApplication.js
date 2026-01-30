@@ -51,31 +51,80 @@ export const updateApplicantsCountOnAdd = async (activityId) => {
   // After transaction completes, send a notification to all NPO members
   const {organizationId, activityTitle} = result;
   try {
+    console.log(
+        `[updateApplicantsCountOnAdd] Sending notifications to NPO members for organization ${organizationId}`,
+    );
     // Find all members whose npoId matches the organizationId
     const membersSnap = await db.collection("members")
         .where("npoId", "==", organizationId)
         .get();
 
+    console.log(
+        `[updateApplicantsCountOnAdd] Found ${membersSnap.size} NPO member(s) for organization ${organizationId}`,
+    );
+
     if (!membersSnap.empty) {
-      const promises = membersSnap.docs.map((memberDoc) =>
-        sendUserNotification({
-          userId: memberDoc.id,
-          type: "APPLICATION",
-          title: "New application received",
-          body: `A volunteer applied to "${activityTitle}".`,
-          link: "/mynonprofit/activities/applications",
-          metadata: {
-            activityId,
-            organizationId,
-          },
-        }),
-      );
+      const promises = membersSnap.docs.map(async (memberDoc) => {
+        try {
+          console.log(
+              `[updateApplicantsCountOnAdd] Sending notification to NPO member ${memberDoc.id}`,
+          );
+          await sendUserNotification({
+            userId: memberDoc.id,
+            type: "APPLICATION",
+            title: "New application received",
+            body: `A volunteer applied to "${activityTitle}".`,
+            link: "/mynonprofit/activities/applications",
+            metadata: {
+              activityId,
+              organizationId,
+            },
+          });
+          console.log(
+              `[updateApplicantsCountOnAdd] Notification sent successfully to NPO member ${memberDoc.id}`,
+          );
+        } catch (memberNotifError) {
+          // Log error for this member but continue with others
+          console.error(
+              `[updateApplicantsCountOnAdd] Failed to send notification to NPO member ${memberDoc.id}:`,
+              memberNotifError,
+          );
+          console.error(
+              `[updateApplicantsCountOnAdd] Member notification error details:`,
+              {
+                message: memberNotifError.message,
+                stack: memberNotifError.stack,
+                code: memberNotifError.code,
+                userId: memberDoc.id,
+                activityId,
+                organizationId,
+              },
+          );
+        }
+      });
       await Promise.all(promises);
+      console.log(
+          `[updateApplicantsCountOnAdd] Completed sending notifications to all NPO members`,
+      );
+    } else {
+      console.log(
+          `[updateApplicantsCountOnAdd] No NPO members found for organization ${organizationId}`,
+      );
     }
   } catch (notifError) {
     console.error(
-        "Failed to create new application notifications:",
+        `[updateApplicantsCountOnAdd] Failed to create new application notifications:`,
         notifError,
+    );
+    console.error(
+        `[updateApplicantsCountOnAdd] Notification error details:`,
+        {
+          message: notifError.message,
+          stack: notifError.stack,
+          code: notifError.code,
+          activityId,
+          organizationId,
+        },
     );
   }
 
