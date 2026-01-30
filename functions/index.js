@@ -144,14 +144,17 @@ export const onApplicationStatusChangedNotifyUser = onDocumentUpdated(
               .get();
 
           console.log(
-              `[onApplicationStatusChangedNotifyUser] Found ${membersSnap.size} NPO member(s) for cancelled application notification`,
+              `[onApplicationStatusChangedNotifyUser] Found ` +
+              `${membersSnap.size} NPO member(s) for cancelled ` +
+              `application notification`,
           );
 
           if (!membersSnap.empty) {
             const promises = membersSnap.docs.map(async (memberDoc) => {
               try {
                 console.log(
-                    `[onApplicationStatusChangedNotifyUser] Sending cancelled notification to NPO member ${memberDoc.id}`,
+                    `[onApplicationStatusChangedNotifyUser] Sending ` +
+                    `cancelled notification to NPO member ${memberDoc.id}`,
                 );
                 await sendUserNotification({
                   userId: memberDoc.id,
@@ -169,16 +172,20 @@ export const onApplicationStatusChangedNotifyUser = onDocumentUpdated(
                   },
                 });
                 console.log(
-                    `[onApplicationStatusChangedNotifyUser] Cancelled notification sent successfully to NPO member ${memberDoc.id}`,
+                    `[onApplicationStatusChangedNotifyUser] Cancelled ` +
+                    `notification sent successfully to NPO member ` +
+                    `${memberDoc.id}`,
                 );
               } catch (memberNotifError) {
                 // Log error for this member but continue with others
                 console.error(
-                    `[onApplicationStatusChangedNotifyUser] Failed to send cancelled notification to NPO member ${memberDoc.id}:`,
+                    `[onApplicationStatusChangedNotifyUser] Failed to send ` +
+                    `cancelled notification to NPO member ${memberDoc.id}:`,
                     memberNotifError,
                 );
                 console.error(
-                    `[onApplicationStatusChangedNotifyUser] Member notification error details:`,
+                    `[onApplicationStatusChangedNotifyUser] Member ` +
+                    `notification error details:`,
                     {
                       message: memberNotifError.message,
                       stack: memberNotifError.stack,
@@ -193,7 +200,8 @@ export const onApplicationStatusChangedNotifyUser = onDocumentUpdated(
             });
             await Promise.all(promises);
             console.log(
-                `[onApplicationStatusChangedNotifyUser] Completed sending cancelled notifications to all NPO members`,
+                `[onApplicationStatusChangedNotifyUser] Completed sending ` +
+                `cancelled notifications to all NPO members`,
             );
           }
           return; // Exit early after handling cancelled status
@@ -216,7 +224,8 @@ export const onApplicationStatusChangedNotifyUser = onDocumentUpdated(
 
         try {
           console.log(
-              `[onApplicationStatusChangedNotifyUser] Sending ${afterStatus} notification to user ${userId}`,
+              `[onApplicationStatusChangedNotifyUser] Sending ` +
+              `${afterStatus} notification to user ${userId}`,
           );
           await sendUserNotification({
             userId,
@@ -231,16 +240,19 @@ export const onApplicationStatusChangedNotifyUser = onDocumentUpdated(
             },
           });
           console.log(
-              `[onApplicationStatusChangedNotifyUser] ${afterStatus} notification sent successfully to user ${userId}`,
+              `[onApplicationStatusChangedNotifyUser] ${afterStatus} ` +
+              `notification sent successfully to user ${userId}`,
           );
         } catch (notifError) {
           // Log error but don't fail the entire function
           console.error(
-              `[onApplicationStatusChangedNotifyUser] Failed to send ${afterStatus} notification to user ${userId}:`,
+              `[onApplicationStatusChangedNotifyUser] Failed to send ` +
+              `${afterStatus} notification to user ${userId}:`,
               notifError,
           );
           console.error(
-              `[onApplicationStatusChangedNotifyUser] Notification error details:`,
+              `[onApplicationStatusChangedNotifyUser] Notification ` +
+              `error details:`,
               {
                 message: notifError.message,
                 stack: notifError.stack,
@@ -819,10 +831,12 @@ export const grantBadgeToUser = onCall(
               timestamp: Timestamp.now(),
             });
 
-        // Send notification (wrapped in try-catch so badge grant succeeds even if notification fails)
+        // Send notification (wrapped in try-catch so badge grant succeeds
+        // even if notification fails)
         try {
           console.log(
-              `[grantBadgeToUser] Attempting to send notification for badge ${badgeId} to user ${userId}`,
+              `[grantBadgeToUser] Attempting to send notification for ` +
+              `badge ${badgeId} to user ${userId}`,
           );
           await sendUserNotification({
             userId,
@@ -837,12 +851,14 @@ export const grantBadgeToUser = onCall(
             },
           });
           console.log(
-              `[grantBadgeToUser] Notification sent successfully for badge ${badgeId} to user ${userId}`,
+              `[grantBadgeToUser] Notification sent successfully for ` +
+              `badge ${badgeId} to user ${userId}`,
           );
         } catch (notifError) {
           // Log error but don't fail badge grant
           console.error(
-              `[grantBadgeToUser] Failed to send notification for badge ${badgeId} to user ${userId}:`,
+              `[grantBadgeToUser] Failed to send notification for ` +
+              `badge ${badgeId} to user ${userId}:`,
               notifError,
           );
           console.error(
