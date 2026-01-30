@@ -667,7 +667,8 @@ export async function processActivityValidationRewards(
       }
 
       console.log(
-          `[processActivityValidationRewards] Sending validation reward notification to user ${userId}`,
+          `[processActivityValidationRewards] Sending validation reward ` +
+          `notification to user ${userId}`,
           {
             activityId,
             totalXP: finalTotalXP,
@@ -690,11 +691,13 @@ export async function processActivityValidationRewards(
         },
       });
       console.log(
-          `[processActivityValidationRewards] Validation reward notification sent successfully to user ${userId}`,
+          `[processActivityValidationRewards] Validation reward ` +
+          `notification sent successfully to user ${userId}`,
       );
     } catch (notifError) {
       console.error(
-          `[processActivityValidationRewards] Failed to send reward notification to user ${userId}:`,
+          `[processActivityValidationRewards] Failed to send reward ` +
+          `notification to user ${userId}:`,
           notifError,
       );
       console.error(

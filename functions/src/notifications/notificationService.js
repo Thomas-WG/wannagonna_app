@@ -58,12 +58,14 @@ export async function createNotification({
     });
 
     console.log(
-        `[createNotification] Notification created successfully: ${docRef.id} for user ${userId}`,
+        `[createNotification] Notification created successfully: ` +
+        `${docRef.id} for user ${userId}`,
     );
     return docRef.id;
   } catch (error) {
     console.error(
-        `[createNotification] Failed to create notification for user ${userId}:`,
+        `[createNotification] Failed to create notification for user ` +
+        `${userId}:`,
         error,
     );
     console.error(`[createNotification] Error details:`, {
@@ -214,11 +216,13 @@ export async function sendUserNotification({
 
   const category = getCategoryFromType(type);
 
-  console.log(`[sendUserNotification] Starting notification for user ${userId}`, {
-    type,
-    category,
-    title,
-  });
+  console.log(
+      `[sendUserNotification] Starting notification for user ${userId}`,
+      {
+        type,
+        category,
+        title,
+      });
 
   // Load user document for preferences and tokens
   const userRef = db.collection("members").doc(userId);
@@ -228,7 +232,8 @@ export async function sendUserNotification({
     userSnap = await userRef.get();
     userData = userSnap.exists ? userSnap.data() : {};
     console.log(
-        `[sendUserNotification] Loaded user data for ${userId}, exists: ${userSnap.exists}`,
+        `[sendUserNotification] Loaded user data for ${userId}, ` +
+        `exists: ${userSnap.exists}`,
     );
   } catch (userLoadError) {
     console.error(
@@ -249,21 +254,27 @@ export async function sendUserNotification({
   const shouldInApp = categoryPrefs.inApp !== false;
   const shouldPush = categoryPrefs.push === true;
 
-  console.log(`[sendUserNotification] User preferences for ${userId}`, {
-    category,
-    categoryPrefs,
-    shouldInApp,
-    shouldPush,
-    hasFcmTokens: Array.isArray(userData.fcmTokens) && userData.fcmTokens.length > 0,
-    fcmTokensCount: Array.isArray(userData.fcmTokens) ? userData.fcmTokens.length : 0,
-  });
+  console.log(
+      `[sendUserNotification] User preferences for ${userId}`,
+      {
+        category,
+        categoryPrefs,
+        shouldInApp,
+        shouldPush,
+        hasFcmTokens: Array.isArray(userData.fcmTokens) &&
+          userData.fcmTokens.length > 0,
+        fcmTokensCount: Array.isArray(userData.fcmTokens) ?
+          userData.fcmTokens.length : 0,
+      },
+  );
 
   let notificationId = null;
 
   if (shouldInApp) {
     try {
       console.log(
-          `[sendUserNotification] Creating in-app notification for user ${userId}`,
+          `[sendUserNotification] Creating in-app notification for ` +
+          `user ${userId}`,
       );
       notificationId = await createNotification({
         userId,
@@ -274,12 +285,14 @@ export async function sendUserNotification({
         metadata,
       });
       console.log(
-          `[sendUserNotification] In-app notification created successfully: ${notificationId}`,
+          `[sendUserNotification] In-app notification created ` +
+          `successfully: ${notificationId}`,
       );
     } catch (error) {
       // Log error but continue to try push notification if enabled
       console.error(
-          `[sendUserNotification] Failed to create in-app notification for user ${userId}:`,
+          `[sendUserNotification] Failed to create in-app notification ` +
+          `for user ${userId}:`,
           error,
       );
       console.error(
@@ -299,13 +312,15 @@ export async function sendUserNotification({
   if (shouldPush) {
     const tokens = Array.isArray(userData.fcmTokens) ? userData.fcmTokens : [];
     console.log(
-        `[sendUserNotification] Push notification requested for user ${userId}, tokens count: ${tokens.length}`,
+        `[sendUserNotification] Push notification requested for user ` +
+        `${userId}, tokens count: ${tokens.length}`,
     );
 
     if (tokens.length > 0) {
       try {
         console.log(
-            `[sendUserNotification] Sending push notification to ${tokens.length} token(s) for user ${userId}`,
+            `[sendUserNotification] Sending push notification to ` +
+            `${tokens.length} token(s) for user ${userId}`,
         );
         const message = {
           tokens,
@@ -323,7 +338,8 @@ export async function sendUserNotification({
 
         const response = await messaging.sendEachForMulticast(message);
         console.log(
-            `[sendUserNotification] Push notification response for user ${userId}:`,
+            `[sendUserNotification] Push notification response for ` +
+            `user ${userId}:`,
             {
               successCount: response.successCount,
               failureCount: response.failureCount,
@@ -336,7 +352,8 @@ export async function sendUserNotification({
           if (!res.success) {
             const code = res.error?.code || "";
             console.error(
-                `[sendUserNotification] Push notification failed for token ${idx}:`,
+                `[sendUserNotification] Push notification failed for ` +
+                `token ${idx}:`,
                 {
                   code,
                   message: res.error?.message,
@@ -353,14 +370,16 @@ export async function sendUserNotification({
 
         if (invalidTokens.length > 0) {
           console.log(
-              `[sendUserNotification] Removing ${invalidTokens.length} invalid token(s) for user ${userId}`,
+              `[sendUserNotification] Removing ${invalidTokens.length} ` +
+              `invalid token(s) for user ${userId}`,
           );
           const remaining = tokens.filter((t) => !invalidTokens.includes(t));
           await userRef.update({fcmTokens: remaining});
         }
       } catch (error) {
         console.error(
-            `[sendUserNotification] Failed to send push notification for user ${userId}:`,
+            `[sendUserNotification] Failed to send push notification ` +
+            `for user ${userId}:`,
             error,
         );
         console.error(
@@ -376,13 +395,15 @@ export async function sendUserNotification({
       }
     } else {
       console.log(
-          `[sendUserNotification] No FCM tokens found for user ${userId}, skipping push notification`,
+          `[sendUserNotification] No FCM tokens found for user ` +
+          `${userId}, skipping push notification`,
       );
     }
   }
 
   console.log(
-      `[sendUserNotification] Completed notification process for user ${userId}`,
+      `[sendUserNotification] Completed notification process for ` +
+      `user ${userId}`,
       {
         notificationId,
         inAppSent: shouldInApp && notificationId !== null,
