@@ -1,9 +1,8 @@
 'use client';
 
 import { memo, useCallback } from 'react';
-import { Card, Progress, Button } from 'flowbite-react';
+import { Card, Progress, Button, Avatar } from 'flowbite-react';
 import { HiUser, HiBadgeCheck, HiClipboardCopy } from 'react-icons/hi';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useDashboardStore } from '@/stores/dashboardStore';
@@ -62,19 +61,13 @@ const ProfileSection = memo(function ProfileSection({
             className="relative cursor-pointer hover:opacity-80 transition-opacity"
             onClick={handleProfileClick}
           >
-            {profilePicture ? (
-              <Image
-                src={profilePicture}
-                alt={displayName}
-                width={100}
-                height={100}
-                className="rounded-full border-4 border-white shadow-lg"
-              />
-            ) : (
-              <div className="rounded-full bg-primary-500 dark:bg-primary-600 w-24 h-24 flex items-center justify-center border-4 border-white dark:border-neutral-800 shadow-lg">
-                <HiUser className="w-12 h-12 text-white" />
-              </div>
-            )}
+            <Avatar
+              img={profilePicture || undefined}
+              alt={displayName}
+              size="xl"
+              rounded
+              className="border-4 border-white dark:border-neutral-800 shadow-lg"
+            />
           </div>
 
           {/* Profile Info and Gamification */}

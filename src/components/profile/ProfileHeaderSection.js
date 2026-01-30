@@ -1,8 +1,7 @@
 'use client';
 
-import Image from 'next/image';
 import { HiUser, HiGlobeAlt } from 'react-icons/hi';
-import { Progress } from 'flowbite-react';
+import { Progress, Avatar } from 'flowbite-react';
 import { formatJoinedDate } from '@/utils/crudMemberProfile';
 import { countries } from 'countries-list';
 import { useTranslations } from 'next-intl';
@@ -36,20 +35,13 @@ export default function ProfileHeaderSection({ profileData }) {
         <div className="flex items-center gap-3 md:gap-4">
           {/* Profile Picture - Left */}
           <div className="relative flex-shrink-0">
-            {profileData.profilePicture ? (
-              <Image
-                src={profileData.profilePicture}
-                alt={profileData.displayName || 'User'}
-                width={70}
-                height={70}
-                className="md:w-[90px] md:h-[90px] rounded-full border-2 border-white shadow-md object-cover"
-                priority
-              />
-            ) : (
-              <div className="w-[70px] h-[70px] md:w-[90px] md:h-[90px] rounded-full bg-semantic-info-500 dark:bg-semantic-info-600 flex items-center justify-center border-2 border-white dark:border-neutral-800 shadow-md">
-                <HiUser className="w-8 h-8 md:w-10 md:h-10 text-white" />
-              </div>
-            )}
+            <Avatar
+              img={profileData.profilePicture || undefined}
+              alt={profileData.displayName || 'User'}
+              size="lg"
+              rounded
+              className="border-2 border-white dark:border-neutral-800 shadow-md"
+            />
           </div>
           
           {/* Middle: Name + Country */}
