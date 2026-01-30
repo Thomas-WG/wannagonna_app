@@ -25,19 +25,30 @@ service cloud.firestore {
     // MEMBERS COLLECTION
     // ============================================
     match /members/{userId} {
-      // Read: Open for code search (unauthenticated users need to validate referral codes)
-      // Authenticated users can read all member information
-      allow read: if true;
+      // All authenticated users can read member information (including list operations)
+      // Owner and admin always have access
+      allow read: if isAuthenticated();
 
-      // Create: Open for account creation (users don't exist yet)
-      // Allow authenticated users to create their own document, or unauthenticated for account creation
-      allow create: if request.auth == null || 
-                       (isAuthenticated() && request.resource.data.userId == request.auth.uid);
+      // Only create own doc
+      allow create: if isOwner(userId);
 
-      // Update: Any authenticated user can update any member document
-      allow update: if isAuthenticated();
+      // Owner can update own "safe" fields only (block privilege/points tampering)
+      // Admin can update anything
+      // NPO staff can update members that belong to their org, but still block sensitive fields
+      allow update: if isAuthenticated() && (
+        isAdmin() ||
 
-      // Delete: Only admins can delete profiles
+        (isOwner(userId) && unchanged([
+          "role", "npoId", "member_level", "member_credit", "member_xp",
+          "teamId", "countryId", "member_status"
+        ])) ||
+
+        (isNpoStaff() && resource.data.npoId == npoId() && unchanged([
+          "role", "npoId", "member_level", "member_credit", "member_xp"
+        ]))
+      );
+
+      // Only admins can delete profiles
       allow delete: if isAdmin();
 
       // ============================================
@@ -49,11 +60,22 @@ service cloud.firestore {
         // All authenticated users can read applications
         allow read: if isAuthenticated();
 
-        // Any authenticated user can create applications
-        allow create: if isOwner(userId);
+        // Only owner can create an application under their member doc
+        allow create: if isOwner(userId) &&
+          request.resource.data.userId == request.auth.uid;
 
-        // Any authenticated user can update applications
-        allow update: if isAuthenticated();
+        // Owner can update their app but not impersonate/change critical fields
+        // Admin and NPO staff can update applications for their organization
+        allow update: if isAuthenticated() && (
+          isAdmin() ||
+          (isOwner(userId) &&
+            resource.data.userId == request.auth.uid &&
+            request.resource.data.userId == request.auth.uid &&
+            unchanged(["userId", "organizationId", "activityId", "createdAt"])
+          ) ||
+          (isNpoStaff() && resource.data.organizationId == request.auth.token.npoId) ||
+          (isAmbassador() && resource.data.organizationId == request.auth.token.npoId)
+        );
 
         // Only admins can delete applications
         allow delete: if isAdmin();
@@ -64,8 +86,8 @@ service cloud.firestore {
         // Read: All authenticated users can read history
         allow read: if isAuthenticated();
 
-        // Create: Any authenticated user can create history entries
-        allow create: if isAuthenticated();
+        // Create: System-only (normally via Admin SDK which bypasses rules)
+        allow create: if isSystem();
 
         // Update/Delete: Only admins
         allow update, delete: if isAdmin();
@@ -73,11 +95,19 @@ service cloud.firestore {
 
       // XP History subcollection
       match /xpHistory/{xpHistoryId} {
-        // Read: All authenticated users can read XP history
-        allow read: if isAuthenticated();
+        // Read: Only owner and admins can read XP history
+        allow read: if isAuthenticated() && (
+          isOwner(userId) ||
+          isAdmin()
+        );
 
-        // Create: Any authenticated user can create XP history entries
-        allow create: if isAuthenticated();
+        // Create: Owner can create their own XP history entries, system/admin can create any
+        // Note: Frontend calls logXpHistory which creates entries in user's own history
+        allow create: if isAuthenticated() && (
+          isOwner(userId) ||
+          isAdmin() ||
+          isSystem()
+        );
 
         // Update/Delete: Only admins
         allow update, delete: if isAdmin();
