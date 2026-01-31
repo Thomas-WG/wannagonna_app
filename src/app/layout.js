@@ -28,6 +28,14 @@ import ErrorBoundary from '@/components/ErrorBoundary'; // Error boundary for er
 import { Roboto } from 'next/font/google'; // Roboto font from Google Fonts
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
+import { metadata as siteMetadata } from '@/constant/config';
+
+export const metadata = siteMetadata;
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+};
 
 // Configure Roboto font settings for the app
 const roboto = Roboto({
