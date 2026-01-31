@@ -322,7 +322,7 @@ export async function sendUserNotification({
             `[sendUserNotification] Sending push notification to ` +
             `${tokens.length} token(s) for user ${userId}`,
         );
-        // Data-only message: SW displays the notification (avoids duplicate with FCM auto-display)
+        // Data-only message: SW displays the notification (avoids duplicate)
         const message = {
           tokens,
           data: {
