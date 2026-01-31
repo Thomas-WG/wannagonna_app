@@ -66,7 +66,7 @@ const ProfileSection = memo(function ProfileSection({
               alt={displayName}
               size="xl"
               rounded
-              className="border-4 border-white dark:border-neutral-800 shadow-lg"
+              className="shadow-lg"
             />
           </div>
 
