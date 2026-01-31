@@ -237,7 +237,7 @@ export default function Navbar() {
       <aside
         ref={sidebarRef}
         id='logo-sidebar'
-        className={`fixed top-0 left-0 sm:z-10 z-40 w-64 h-screen transition-transform ${
+        className={`fixed top-0 left-0 sm:z-10 z-40 w-64 h-dvh transition-transform ${
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         } sm:static sm:translate-x-0`}
         aria-label='Sidebar'
