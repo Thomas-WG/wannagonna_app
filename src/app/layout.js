@@ -113,7 +113,7 @@ export default async function RootLayout({ children }) {
         <link rel="apple-touch-icon" href="/favicon/apple-touch-icon.png" />
         {/* iOS splash screens - add apple-touch-startup-image links here when splash images are generated */}
       </head>
-      <body className='h-screen flex overflow-hidden' suppressHydrationWarning>
+      <body className='h-dvh flex overflow-hidden' suppressHydrationWarning>
       {/* Wrap the entire app in NextIntlClientProvider for access to internationalization services */}
         <NextIntlClientProvider messages={messages}>
           {/* Wrap the entire app in ErrorBoundary for error handling (outermost catch-all) */}
