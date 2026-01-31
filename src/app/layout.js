@@ -71,15 +71,15 @@ export default async function RootLayout({ children }) {
           }}
         />
       </head>
-      <body className='h-dvh flex overflow-hidden' suppressHydrationWarning>
+      <body className='min-h-dvh overflow-y-auto scroll-touch' suppressHydrationWarning>
       {/* Wrap the entire app in NextIntlClientProvider for access to internationalization services */}
         <NextIntlClientProvider messages={messages}>
           {/* Wrap the entire app in ErrorBoundary for error handling (outermost catch-all) */}
           <ErrorBoundary>
             {/* Consolidated providers component with individual error boundaries for each provider */}
             <Providers>
-              {/* Main content area, which displays the child components */}
-              <main className='flex-1'>{children}</main>
+              {/* Main content area - block flow so body scrolls (enables native pull-to-refresh) */}
+              <main>{children}</main>
             </Providers>
           </ErrorBoundary>
         </NextIntlClientProvider>
