@@ -129,7 +129,7 @@ const Header = () => {
               <button
                 type="button"
                 onClick={toggleNotifications}
-                className="relative p-2 rounded-full hover:bg-background-hover dark:hover:bg-background-hover focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 transition-all duration-200 hover:scale-110 active:scale-95"
+                className="relative inline-flex items-center justify-center min-touch-target p-2 rounded-full hover:bg-background-hover dark:hover:bg-background-hover focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 transition-all duration-200 hover:scale-110 active:scale-95"
                 aria-label="Notifications"
                 aria-haspopup="true"
                 aria-expanded={isNotifOpen}
@@ -245,7 +245,7 @@ const Header = () => {
             {/* User menu */}
             <button
               onClick={() => handleMenuClick('/complete-profile')}
-              className="p-2 rounded-full hover:bg-background-hover dark:hover:bg-background-hover hover:scale-110 hover:shadow-warm-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400"
+              className="inline-flex items-center justify-center min-touch-target p-2 rounded-full hover:bg-background-hover dark:hover:bg-background-hover hover:scale-110 hover:shadow-warm-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400"
             >
               <svg
                 className="h-6 w-6 text-text-primary dark:text-text-primary"
