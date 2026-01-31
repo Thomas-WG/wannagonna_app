@@ -17,34 +17,39 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-// Called when a push message is received while the app is in the background
+// Data-only messages: we display the notification (single source, no duplicate with FCM auto-display)
 messaging.onBackgroundMessage((payload) => {
   console.log("[firebase-messaging-sw.js] Received background message ", payload);
-  const notificationTitle = payload.notification?.title || "Notification";
+  const data = payload.data || {};
+  const notificationTitle = data.title || "Notification";
   const notificationOptions = {
-    body: payload.notification?.body || "",
-    icon: "/favicon/android-chrome-192x192.png", // adjust to your icon
-    data: payload.data || {},
+    body: data.body || "",
+    icon: "/favicon/android-chrome-192x192.png",
+    data: data,
   };
 
   self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
-// Handle clicks on notifications
+// Same behavior as in-app notification click: navigate to notification.link
 self.addEventListener("notificationclick", function (event) {
   event.notification.close();
-  const url = event.notification.data?.click_action || "/dashboard";
+  const path = event.notification.data?.link || "/dashboard";
+  const urlToOpen = path.startsWith("http") ? path : self.location.origin + path;
+
   event.waitUntil(
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
       for (const client of clientList) {
-        if (client.url.includes(self.location.origin) && "focus" in client) {
+        if (client.url.startsWith(self.location.origin) && "focus" in client) {
           client.focus();
-          client.postMessage({ type: "NOTIFICATION_CLICKED", data: event.notification.data });
-          return;
+          if (typeof client.navigate === "function") {
+            return client.navigate(urlToOpen);
+          }
+          return Promise.resolve();
         }
       }
       if (self.clients.openWindow) {
-        return self.clients.openWindow(url);
+        return self.clients.openWindow(urlToOpen);
       }
     })
   );

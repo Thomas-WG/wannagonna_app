@@ -63,7 +63,7 @@ export default async function RootLayout({ children }) {
           }}
         />
       </head>
-      <body className='h-screen flex overflow-hidden' suppressHydrationWarning>
+      <body className='h-dvh flex overflow-hidden' suppressHydrationWarning>
       {/* Wrap the entire app in NextIntlClientProvider for access to internationalization services */}
         <NextIntlClientProvider messages={messages}>
           {/* Wrap the entire app in ErrorBoundary for error handling (outermost catch-all) */}

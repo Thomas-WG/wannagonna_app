@@ -21,6 +21,7 @@ const Header = () => {
   const {
     notifications,
     unreadCount,
+    error: notificationsError,
   } = useNotificationsListener(user?.uid || null);
 
   const handleMenuClick = (path) => {
@@ -188,7 +189,12 @@ const Header = () => {
                   </div>
 
                   <div className="divide-y divide-border-light dark:divide-border-dark">
-                    {notifications.length === 0 && (
+                    {notificationsError && (
+                      <div className="px-4 py-6 text-sm text-semantic-error-600 dark:text-semantic-error-400 text-center">
+                        Unable to load notifications. Check the browser console for details.
+                      </div>
+                    )}
+                    {!notificationsError && notifications.length === 0 && (
                       <div className="px-4 py-6 text-sm text-text-tertiary dark:text-text-tertiary text-center">
                         You have no notifications yet.
                       </div>
