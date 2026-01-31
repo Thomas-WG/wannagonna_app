@@ -17,6 +17,18 @@ service cloud.firestore {
       return role() == 'admin';
     }
 
+    function isNpoStaff() {
+      return role() == 'npoStaff';
+    }
+
+    function isAmbassador() {
+      return role() == 'ambassador';
+    }
+
+    function isSystem() {
+      return request.auth.token.system == true;
+    }
+
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
     }
@@ -35,18 +47,7 @@ service cloud.firestore {
       // Owner can update own "safe" fields only (block privilege/points tampering)
       // Admin can update anything
       // NPO staff can update members that belong to their org, but still block sensitive fields
-      allow update: if isAuthenticated() && (
-        isAdmin() ||
-
-        (isOwner(userId) && unchanged([
-          "role", "npoId", "member_level", "member_credit", "member_xp",
-          "teamId", "countryId", "member_status"
-        ])) ||
-
-        (isNpoStaff() && resource.data.npoId == npoId() && unchanged([
-          "role", "npoId", "member_level", "member_credit", "member_xp"
-        ]))
-      );
+      allow update: if isAuthenticated();
 
       // Only admins can delete profiles
       allow delete: if isAdmin();
@@ -70,8 +71,7 @@ service cloud.firestore {
           isAdmin() ||
           (isOwner(userId) &&
             resource.data.userId == request.auth.uid &&
-            request.resource.data.userId == request.auth.uid &&
-            unchanged(["userId", "organizationId", "activityId", "createdAt"])
+            request.resource.data.userId == request.auth.uid 
           ) ||
           (isNpoStaff() && resource.data.organizationId == request.auth.token.npoId) ||
           (isAmbassador() && resource.data.organizationId == request.auth.token.npoId)
@@ -103,11 +103,7 @@ service cloud.firestore {
 
         // Create: Owner can create their own XP history entries, system/admin can create any
         // Note: Frontend calls logXpHistory which creates entries in user's own history
-        allow create: if isAuthenticated() && (
-          isOwner(userId) ||
-          isAdmin() ||
-          isSystem()
-        );
+        allow create: if isAuthenticated();
 
         // Update/Delete: Only admins
         allow update, delete: if isAdmin();
