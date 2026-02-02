@@ -58,6 +58,13 @@ export default async function RootLayout({ children }) {
                     document.documentElement.classList.remove('dark');
                   }
                 } catch (e) {}
+                
+                // Preserve native Image constructor to prevent conflicts
+                // Store reference before any imports can shadow it
+                // Code that needs the native Image constructor should use window.__nativeImageConstructor
+                if (typeof window !== 'undefined' && window.Image && !window.__nativeImageConstructor) {
+                  window.__nativeImageConstructor = window.Image;
+                }
               })();
             `,
           }}
