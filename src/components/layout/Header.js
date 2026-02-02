@@ -24,6 +24,7 @@ const Header = () => {
   const {
     notifications,
     unreadCount,
+    error: notificationsError,
   } = useNotificationsListener(user?.uid || null);
 
   // Sync optimistic count with real count from Firebase
@@ -168,7 +169,7 @@ const Header = () => {
               <button
                 type="button"
                 onClick={toggleNotifications}
-                className="relative p-2 rounded-full hover:bg-background-hover dark:hover:bg-background-hover focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 transition-all duration-200 hover:scale-110 active:scale-95"
+                className="relative inline-flex items-center justify-center min-touch-target p-2 rounded-full hover:bg-background-hover dark:hover:bg-background-hover focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 transition-all duration-200 hover:scale-110 active:scale-95"
                 aria-label="Notifications"
                 aria-haspopup="true"
                 aria-expanded={isNotifOpen}
@@ -228,7 +229,12 @@ const Header = () => {
                   </div>
 
                   <div className="divide-y divide-border-light dark:divide-border-dark">
-                    {notifications.length === 0 && (
+                    {notificationsError && (
+                      <div className="px-4 py-6 text-sm text-semantic-error-600 dark:text-semantic-error-400 text-center">
+                        Unable to load notifications. Check the browser console for details.
+                      </div>
+                    )}
+                    {!notificationsError && notifications.length === 0 && (
                       <div className="px-4 py-6 text-sm text-text-tertiary dark:text-text-tertiary text-center">
                         You have no notifications yet.
                       </div>
@@ -279,7 +285,7 @@ const Header = () => {
             {/* User menu */}
             <button
               onClick={() => handleMenuClick('/complete-profile')}
-              className="p-2 rounded-full hover:bg-background-hover dark:hover:bg-background-hover hover:scale-110 hover:shadow-warm-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400"
+              className="inline-flex items-center justify-center min-touch-target p-2 rounded-full hover:bg-background-hover dark:hover:bg-background-hover hover:scale-110 hover:shadow-warm-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400"
             >
               <svg
                 className="h-6 w-6 text-text-primary dark:text-text-primary"

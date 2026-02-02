@@ -22,29 +22,27 @@ export default function XpHistoryPage() {
   const [lastDoc, setLastDoc] = useState(null);
   const observerTarget = useRef(null);
 
-  // Load initial batch of XP history
+  const loadInitialXpHistory = useCallback(async () => {
+    if (!user?.uid) {
+      setLoading(false);
+      return;
+    }
+    try {
+      setLoading(true);
+      const result = await fetchXpHistoryPaginated(user.uid, PAGE_SIZE, null);
+      setXpHistory(result.entries);
+      setHasMore(result.hasNextPage);
+      setLastDoc(result.lastDoc);
+    } catch (error) {
+      console.error('Error loading XP history:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.uid]);
+
   useEffect(() => {
-    const loadInitialXpHistory = async () => {
-      if (!user?.uid) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        setLoading(true);
-        const result = await fetchXpHistoryPaginated(user.uid, PAGE_SIZE, null);
-        setXpHistory(result.entries);
-        setHasMore(result.hasNextPage);
-        setLastDoc(result.lastDoc);
-      } catch (error) {
-        console.error('Error loading XP history:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     loadInitialXpHistory();
-  }, [user]);
+  }, [loadInitialXpHistory]);
 
   // Load more entries when scrolling
   const loadMoreEntries = useCallback(async () => {

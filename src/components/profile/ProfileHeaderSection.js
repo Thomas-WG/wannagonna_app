@@ -1,8 +1,7 @@
 'use client';
 
-import Image from 'next/image';
 import { HiUser, HiGlobeAlt } from 'react-icons/hi';
-import { Progress } from 'flowbite-react';
+import { Progress, Avatar } from 'flowbite-react';
 import { formatJoinedDate } from '@/utils/crudMemberProfile';
 import { countries } from 'countries-list';
 import { useTranslations } from 'next-intl';

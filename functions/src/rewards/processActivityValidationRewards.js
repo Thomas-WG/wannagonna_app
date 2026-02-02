@@ -543,7 +543,8 @@ export async function processActivityValidationRewards(
     }
 
     // Add to history - store only reference, not duplicated activity data
-    // Best practice: Store only activityId reference to prevent data inconsistency
+    // Best practice: Store only activityId reference to prevent
+    // data inconsistency
     const historyRef = userRef.collection("history");
     const historyData = {
       activityId: activityId,
@@ -638,7 +639,7 @@ export async function processActivityValidationRewards(
 
       // Build badgeXPMap: map badge IDs to their XP values
       const badgeXPMap = {};
-      
+
       // Add regular badges XP
       for (const badgeId of badgesToGrant) {
         const badgeDetail = badgeDetailsMap[badgeId];
@@ -649,7 +650,7 @@ export async function processActivityValidationRewards(
           }
         }
       }
-      
+
       // Add completion badges XP
       if (worldBadgeEligible) {
         const worldXP = Number(worldBadgeEligible.xp) || 0;
@@ -657,7 +658,7 @@ export async function processActivityValidationRewards(
           badgeXPMap["world"] = worldXP;
         }
       }
-      
+
       if (sdgBadgeEligible) {
         const sdgXP = Number(sdgBadgeEligible.xp) || 0;
         if (sdgXP > 0) {
@@ -665,6 +666,15 @@ export async function processActivityValidationRewards(
         }
       }
 
+      console.log(
+          `[processActivityValidationRewards] Sending validation reward ` +
+          `notification to user ${userId}`,
+          {
+            activityId,
+            totalXP: finalTotalXP,
+            badgesCount: allBadgesGranted.length,
+          },
+      );
       await sendUserNotification({
         userId,
         type: "REWARD",
@@ -680,8 +690,27 @@ export async function processActivityValidationRewards(
           badgeXPMap: badgeXPMap,
         },
       });
+      console.log(
+          `[processActivityValidationRewards] Validation reward ` +
+          `notification sent successfully to user ${userId}`,
+      );
     } catch (notifError) {
-      console.error("Failed to send reward notification:", notifError);
+      console.error(
+          `[processActivityValidationRewards] Failed to send reward ` +
+          `notification to user ${userId}:`,
+          notifError,
+      );
+      console.error(
+          `[processActivityValidationRewards] Notification error details:`,
+          {
+            message: notifError.message,
+            stack: notifError.stack,
+            code: notifError.code,
+            userId,
+            activityId,
+            totalXP: finalTotalXP,
+          },
+      );
     }
 
     return {

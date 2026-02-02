@@ -44,7 +44,8 @@ async function processValidationRewards(event, isUpdate = false) {
 
   try {
     // Check if rewards have already been processed
-    // For update events, use event.data.after.ref, for create events use event.data.ref
+    // For update events, use event.data.after.ref,
+    // for create events use event.data.ref
     const validationRef = validationSnapshot?.ref;
     if (!validationRef) {
       throw new Error("Validation reference not found");

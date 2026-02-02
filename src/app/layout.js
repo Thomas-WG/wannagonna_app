@@ -28,6 +28,14 @@ import ErrorBoundary from '@/components/ErrorBoundary'; // Error boundary for er
 import { Roboto } from 'next/font/google'; // Roboto font from Google Fonts
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
+import { metadata as siteMetadata } from '@/constant/config';
+
+export const metadata = siteMetadata;
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+};
 
 // Configure Roboto font settings for the app
 const roboto = Roboto({
@@ -63,15 +71,15 @@ export default async function RootLayout({ children }) {
           }}
         />
       </head>
-      <body className='h-screen flex overflow-hidden' suppressHydrationWarning>
+      <body className='min-h-dvh overflow-y-auto scroll-touch' suppressHydrationWarning>
       {/* Wrap the entire app in NextIntlClientProvider for access to internationalization services */}
         <NextIntlClientProvider messages={messages}>
           {/* Wrap the entire app in ErrorBoundary for error handling (outermost catch-all) */}
           <ErrorBoundary>
             {/* Consolidated providers component with individual error boundaries for each provider */}
             <Providers>
-              {/* Main content area, which displays the child components */}
-              <main className='flex-1'>{children}</main>
+              {/* Main content area - block flow so body scrolls (enables native pull-to-refresh) */}
+              <main>{children}</main>
             </Providers>
           </ErrorBoundary>
         </NextIntlClientProvider>
