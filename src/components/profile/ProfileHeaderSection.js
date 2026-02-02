@@ -36,7 +36,7 @@ export default function ProfileHeaderSection({ profileData }) {
         <div className="flex items-center gap-3 md:gap-4">
           {/* Profile Picture - Left */}
           <div className="relative flex-shrink-0">
-            {profileData.profilePicture ? (
+            {profileData.profilePicture && profileData.profilePicture.trim() !== '' ? (
               <Image
                 src={profileData.profilePicture}
                 alt={profileData.displayName || 'User'}

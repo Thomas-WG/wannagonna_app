@@ -10,6 +10,7 @@ import { useAuth } from "@/utils/auth/AuthContext";
 import { useTranslations } from "next-intl";
 import { useModal } from '@/utils/modal/useModal';
 import PublicProfileModal from "@/components/profile/PublicProfileModal";
+import Image from "next/image";
 
 export default function ReviewApplicationsModal({ isOpen, onClose, activity, onOrganizationDataUpdate }) {
   const { claims, user } = useAuth();
@@ -171,12 +172,22 @@ export default function ReviewApplicationsModal({ isOpen, onClose, activity, onO
                           }
                         }}
                       >
-                        <Avatar
-                          img={application.profilePicture || '/favicon.ico'}
-                          alt={application.displayName}
-                          size="md"
-                          rounded
-                        />
+                        {application.profilePicture && application.profilePicture.trim() !== '' ? (
+                          <Image
+                            src={application.profilePicture}
+                            alt={application.displayName}
+                            width={40}
+                            height={40}
+                            className="rounded-full object-cover"
+                          />
+                        ) : (
+                          <Avatar
+                            img=""
+                            alt={application.displayName}
+                            size="md"
+                            rounded
+                          />
+                        )}
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium text-text-primary dark:text-text-primary truncate">

@@ -306,7 +306,7 @@ export default function ParticipantListModal({ isOpen, onClose, activity, activi
                   onClick={() => handleParticipantClick(participant.userId)}
                           title={t('viewProfile') || 'View profile'}
                 >
-                    {participant.profilePicture ? (
+                    {participant.profilePicture && participant.profilePicture.trim() !== '' ? (
                       <Image
                         src={participant.profilePicture}
                         alt={participant.displayName}

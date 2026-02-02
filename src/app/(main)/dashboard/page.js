@@ -258,9 +258,10 @@ export default function DashboardPage() {
             displayName={
               profileData?.displayName || user?.displayName || user?.email || 'Volunteer'
             }
-            profilePicture={
-              profileData?.profilePicture || user?.photoURL || null
-            }
+            profilePicture={(() => {
+              const profilePictureValue = profileData?.profilePicture || user?.photoURL || null;
+              return profilePictureValue && profilePictureValue.trim() !== '' ? profilePictureValue : null;
+            })()}
             onApplicationUpdated={handleApplicationUpdated}
           />
         </DashboardErrorBoundary>

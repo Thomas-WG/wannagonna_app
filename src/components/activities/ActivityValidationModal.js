@@ -15,6 +15,7 @@ import {
 } from '@/utils/crudActivityValidation';
 import { useAuth } from '@/utils/auth/AuthContext';
 import { updateActivityStatus } from '@/utils/crudActivities';
+import Image from 'next/image';
 
 export default function ActivityValidationModal({ 
   isOpen, 
@@ -330,13 +331,23 @@ export default function ActivityValidationModal({
                   >
                     <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                       <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0 pr-2">
-                        <Avatar
-                          img={application.profilePicture || '/favicon.ico'}
-                          alt={application.displayName}
-                          size="sm"
-                          className="sm:!w-10 sm:!h-10 flex-shrink-0"
-                          rounded
-                        />
+                        {application.profilePicture && application.profilePicture.trim() !== '' ? (
+                          <Image
+                            src={application.profilePicture}
+                            alt={application.displayName}
+                            width={40}
+                            height={40}
+                            className="rounded-full object-cover flex-shrink-0"
+                          />
+                        ) : (
+                          <Avatar
+                            img=""
+                            alt={application.displayName}
+                            size="sm"
+                            className="sm:!w-10 sm:!h-10 flex-shrink-0"
+                            rounded
+                          />
+                        )}
                         <div className="min-w-0 flex-1 overflow-hidden">
                           <p className="text-sm sm:text-base font-medium text-gray-900 truncate" title={application.displayName}>
                             {application.displayName}

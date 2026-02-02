@@ -49,7 +49,8 @@ export default function ApplicationCard({
   const orgName = activity.organization_name;
   const activityTitle = activity.title;
 
-  const memberAvatar = memberProfile?.profilePicture || null;
+  const memberAvatarValue = memberProfile?.profilePicture || null;
+  const memberAvatar = memberAvatarValue && memberAvatarValue.trim() !== '' ? memberAvatarValue : null;
   const memberName =
     memberProfile?.displayName || memberProfile?.name || t("you") || "You";
 
@@ -246,7 +247,9 @@ export default function ApplicationCard({
           {npoResponse &&
             renderMessageBubble(
               "left",
-              application.lastUpdatedByProfilePicture || orgLogo,
+              (application.lastUpdatedByProfilePicture && application.lastUpdatedByProfilePicture.trim() !== '') 
+                ? application.lastUpdatedByProfilePicture 
+                : orgLogo,
               application.lastUpdatedByDisplayName || orgName,
               npoResponse,
               responseDateLabel,

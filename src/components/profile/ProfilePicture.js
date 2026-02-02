@@ -4,13 +4,16 @@ import { useTranslations } from 'next-intl';
 export default function ProfilePicture({profileData, handleProfilePictureChange}) {
   const t = useTranslations('CompleteProfile');
 
+  const profilePictureValue = profileData?.profilePicture || null;
+  const profilePicture = profilePictureValue && profilePictureValue.trim() !== '' ? profilePictureValue : null;
+
   return (
     <div className='flex flex-col items-center mb-6'>
       <div className='relative'>
         <Avatar
           rounded
           size='lg'
-          img={profileData.profilePicture}
+          img={profilePicture || ''}
           alt='Profile picture'
           className='cursor-pointer'
         />
