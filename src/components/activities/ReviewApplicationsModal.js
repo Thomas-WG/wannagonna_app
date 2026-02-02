@@ -1,6 +1,6 @@
 "use client";
 
-import { Modal, Button, Avatar, Badge } from "flowbite-react";
+import { Modal, Button, Badge } from "flowbite-react";
 import { HiCheck, HiX, HiClock } from "react-icons/hi";
 import { useEffect, useState, useCallback } from "react";
 import { fetchApplicationsForActivity, updateApplicationStatus, countPendingApplicationsForOrganization } from "@/utils/crudApplications";
@@ -10,7 +10,7 @@ import { useAuth } from "@/utils/auth/AuthContext";
 import { useTranslations } from "next-intl";
 import { useModal } from '@/utils/modal/useModal';
 import PublicProfileModal from "@/components/profile/PublicProfileModal";
-import Image from "next/image";
+import ProfilePicture from "@/components/common/ProfilePicture";
 
 export default function ReviewApplicationsModal({ isOpen, onClose, activity, onOrganizationDataUpdate }) {
   const { claims, user } = useAuth();
@@ -172,22 +172,14 @@ export default function ReviewApplicationsModal({ isOpen, onClose, activity, onO
                           }
                         }}
                       >
-                        {application.profilePicture && application.profilePicture.trim() !== '' ? (
-                          <Image
-                            src={application.profilePicture}
-                            alt={application.displayName}
-                            width={40}
-                            height={40}
-                            className="rounded-full object-cover"
-                          />
-                        ) : (
-                          <Avatar
-                            img=""
-                            alt={application.displayName}
-                            size="md"
-                            rounded
-                          />
-                        )}
+                        <ProfilePicture
+                          src={application.profilePicture}
+                          alt={application.displayName}
+                          size={40}
+                          showInitials={true}
+                          name={application.displayName}
+                          loading="lazy"
+                        />
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium text-text-primary dark:text-text-primary truncate">

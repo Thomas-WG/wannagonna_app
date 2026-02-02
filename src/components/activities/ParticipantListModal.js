@@ -1,6 +1,6 @@
 'use client';
 
-import { Modal, Avatar, Spinner, Button, Badge, Dropdown } from 'flowbite-react';
+import { Modal, Spinner, Button, Badge, Dropdown } from 'flowbite-react';
 import { useEffect, useState, useCallback } from 'react';
 import { fetchValidationsForActivity, validateApplicant, rejectApplicant } from '@/utils/crudActivityValidation';
 import { getDoc, doc } from 'firebase/firestore';
@@ -9,7 +9,7 @@ import { useTranslations } from 'next-intl';
 import { useModal } from '@/utils/modal/useModal';
 import { useAuth } from '@/utils/auth/AuthContext';
 import PublicProfileModal from '@/components/profile/PublicProfileModal';
-import Image from 'next/image';
+import ProfilePicture from '@/components/common/ProfilePicture';
 import { HiCheck, HiX, HiMail, HiChevronDown } from 'react-icons/hi';
 
 export default function ParticipantListModal({ isOpen, onClose, activity, activityId }) {
@@ -303,31 +303,19 @@ export default function ParticipantListModal({ isOpen, onClose, activity, activi
                       >
                         <div 
                           className="flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
-                  onClick={() => handleParticipantClick(participant.userId)}
+                          onClick={() => handleParticipantClick(participant.userId)}
                           title={t('viewProfile') || 'View profile'}
-                >
-                    {participant.profilePicture && participant.profilePicture.trim() !== '' ? (
-                      <Image
-                        src={participant.profilePicture}
-                        alt={participant.displayName}
-                        width={48}
-                        height={48}
-                              className="rounded-full w-10 h-10 sm:w-12 sm:h-12 object-cover cursor-pointer"
-                      />
-                    ) : (
-                      <Avatar
-                        img=""
-                        alt={participant.displayName}
-                        rounded
-                              size="sm"
-                              className="sm:!w-10 sm:!h-10 flex-shrink-0 bg-gray-300 dark:bg-gray-600 cursor-pointer"
-                      >
-                              <span className="text-gray-600 dark:text-gray-300 font-medium text-sm sm:text-base">
-                          {participant.displayName.charAt(0).toUpperCase()}
-                        </span>
-                      </Avatar>
-                    )}
-                  </div>
+                        >
+                          <ProfilePicture
+                            src={participant.profilePicture}
+                            alt={participant.displayName}
+                            size={48}
+                            showInitials={true}
+                            name={participant.displayName}
+                            loading="lazy"
+                            className="w-10 h-10 sm:w-12 sm:h-12"
+                          />
+                        </div>
                   
                         {/* Name, Status, and Date */}
                         <div 
