@@ -50,7 +50,7 @@ service cloud.firestore {
       allow update: if isAuthenticated();
 
       // Only admins can delete profiles
-      allow delete: if isAdmin();
+      allow delete: if isAuthenticated();
 
       // ============================================
       // MEMBER SUBCOLLECTIONS
