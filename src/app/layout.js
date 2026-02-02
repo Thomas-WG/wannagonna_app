@@ -67,11 +67,30 @@ export default async function RootLayout({ children }) {
                   }
                 } catch (e) {}
                 
-                // Preserve native Image constructor to prevent conflicts
-                // Store reference before any imports can shadow it
-                // Code that needs the native Image constructor should use window.__nativeImageConstructor
-                if (typeof window !== 'undefined' && window.Image && !window.__nativeImageConstructor) {
-                  window.__nativeImageConstructor = window.Image;
+                // Preserve native Image constructor to prevent conflicts with Next.js Image component
+                // This ensures window.Image always refers to the native DOM Image constructor
+                if (typeof window !== 'undefined' && window.Image) {
+                  var NativeImage = window.Image;
+                  
+                  // Store reference for fallback
+                  if (!window.__nativeImageConstructor) {
+                    window.__nativeImageConstructor = NativeImage;
+                  }
+                  
+                  // Ensure window.Image always returns the native constructor
+                  // This prevents Next.js Image imports from shadowing the native constructor
+                  try {
+                    Object.defineProperty(window, 'Image', {
+                      get: function() {
+                        return NativeImage;
+                      },
+                      configurable: true,
+                      enumerable: true
+                    });
+                  } catch (e) {
+                    // If defineProperty fails, at least we have the reference stored
+                    console.warn('Could not protect native Image constructor:', e);
+                  }
                 }
               })();
             `,

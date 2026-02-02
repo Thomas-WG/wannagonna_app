@@ -27,6 +27,16 @@ const nextConfig = {
         hostname: '*.firebasestorage.app',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.googleusercontent.com',
+        pathname: '/**',
+      },
     ],
     // Disable image optimization for localhost in development
     unoptimized: process.env.NODE_ENV === 'development',
