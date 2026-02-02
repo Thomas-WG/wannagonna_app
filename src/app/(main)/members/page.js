@@ -24,7 +24,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import PublicProfileModal from '@/components/profile/PublicProfileModal';
-import { Card, Avatar, Select, Badge } from 'flowbite-react';
+import { Card, Select, Badge } from 'flowbite-react';
 import { useAuth } from '@/utils/auth/AuthContext';
 import { HiSearch, HiX, HiBadgeCheck, HiLocationMarker, HiFilter, HiChevronDown, HiChevronUp } from 'react-icons/hi';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -33,6 +33,7 @@ import { countries } from 'countries-list';
 import { useMembersPaginated } from '@/hooks/members/useMembersPaginated';
 import MemberCardSkeleton from '@/components/members/MemberCardSkeleton';
 import MembersPagination from '@/components/members/MembersPagination';
+import ProfilePicture from '@/components/common/ProfilePicture';
 
 export default function MembersPage() {
   const t = useTranslations('Members');
@@ -410,11 +411,13 @@ export default function MembersPage() {
                 <div className="flex md:hidden items-center gap-3">
                   {/* Profile Picture - Left */}
                   <div className="flex-shrink-0">
-                    <Avatar
-                      img={member.profilePicture || '/favicon.ico'}
+                    <ProfilePicture
+                      src={member.profilePicture}
                       alt={member.displayName || 'Member'}
-                      size="lg"
-                      rounded
+                      size={48}
+                      showInitials={true}
+                      name={member.displayName || 'Member'}
+                      loading="lazy"
                     />
                   </div>
 
@@ -465,11 +468,13 @@ export default function MembersPage() {
                 <div className="hidden md:flex items-center gap-4">
                   {/* Profile Picture - Left */}
                   <div className="flex-shrink-0">
-                    <Avatar
-                      img={member.profilePicture || '/favicon.ico'}
+                    <ProfilePicture
+                      src={member.profilePicture}
                       alt={member.displayName || 'Member'}
-                      size="lg"
-                      rounded
+                      size={48}
+                      showInitials={true}
+                      name={member.displayName || 'Member'}
+                      loading="lazy"
                     />
                   </div>
 

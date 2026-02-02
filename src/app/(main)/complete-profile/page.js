@@ -183,6 +183,7 @@ export default function CompleteProfilePage() {
         setSelectedFile(file);
         const imageUrl = URL.createObjectURL(file);
         setValue('profilePicture', imageUrl, { shouldValidate: true });
+        // Note: We'll revoke the blob URL after upload in onSubmit
       } catch (error) {
         console.error("Error handling profile picture:", error);
       }
@@ -198,7 +199,17 @@ export default function CompleteProfilePage() {
         try {
           const downloadURL = await uploadProfilePicture(selectedFile, user.uid);
           finalProfileData.profilePicture = downloadURL;
-          setValue('profilePicture', downloadURL);
+          // Update form value with Firebase URL
+          setValue('profilePicture', downloadURL, { shouldValidate: true });
+          
+          // Revoke the blob URL to free memory
+          const currentProfilePicture = watch('profilePicture');
+          if (currentProfilePicture && currentProfilePicture.startsWith('blob:')) {
+            URL.revokeObjectURL(currentProfilePicture);
+          }
+          
+          // Clear selected file after successful upload
+          setSelectedFile(null);
         } catch (error) {
           console.error("Error uploading profile picture:", error);
         }

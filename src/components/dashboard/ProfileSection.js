@@ -2,11 +2,11 @@
 
 import { memo, useCallback } from 'react';
 import { Card, Progress, Button } from 'flowbite-react';
-import { HiUser, HiBadgeCheck, HiClipboardCopy } from 'react-icons/hi';
-import Image from 'next/image';
+import { HiBadgeCheck, HiClipboardCopy } from 'react-icons/hi';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useDashboardStore } from '@/stores/dashboardStore';
+import ProfilePicture from '@/components/common/ProfilePicture';
 
 /**
  * ProfileSection Component
@@ -57,24 +57,14 @@ const ProfileSection = memo(function ProfileSection({
       <Card className="bg-background-card dark:bg-background-card border-2 border-primary-200 dark:border-primary-700 shadow-lg">
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
           {/* Profile Picture */}
-          <div
-            className="relative cursor-pointer hover:opacity-80 transition-opacity"
+          <ProfilePicture
+            src={profilePicture}
+            alt={displayName}
+            size={100}
+            priority={true}
             onClick={handleProfileClick}
-          >
-            {profilePicture ? (
-              <Image
-                src={profilePicture}
-                alt={displayName}
-                width={100}
-                height={100}
-                className="rounded-full border-4 border-white shadow-lg"
-              />
-            ) : (
-              <div className="rounded-full bg-primary-500 dark:bg-primary-600 w-24 h-24 flex items-center justify-center border-4 border-white dark:border-neutral-800 shadow-lg">
-                <HiUser className="w-12 h-12 text-white" />
-              </div>
-            )}
-          </div>
+            className="border-4 border-white shadow-lg"
+          />
 
           {/* Profile Info and Gamification */}
           <div className="flex-1 w-full sm:w-auto text-center sm:text-left">
