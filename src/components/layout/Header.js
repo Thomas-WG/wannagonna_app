@@ -1,6 +1,6 @@
 'use client';
 
-import {useState} from 'react';
+import {useState, useEffect, useRef} from 'react';
 import {useRouter} from 'next/navigation';
 import {useAuth} from '@/utils/auth/AuthContext';
 import {
@@ -17,11 +17,42 @@ const Header = () => {
   const {user} = useAuth();
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const {setNotificationValidationResult} = useDashboardStore();
+  const notificationRef = useRef(null);
+  // Optimistic unread count for immediate UI updates
+  const [optimisticUnreadCount, setOptimisticUnreadCount] = useState(null);
 
   const {
     notifications,
     unreadCount,
   } = useNotificationsListener(user?.uid || null);
+
+  // Sync optimistic count with real count from Firebase
+  useEffect(() => {
+    if (optimisticUnreadCount === null) {
+      // Initialize with real count on first load
+      setOptimisticUnreadCount(unreadCount);
+    } else {
+      // Sync when Firebase updates (reconciles optimistic updates)
+      setOptimisticUnreadCount(unreadCount);
+    }
+  }, [unreadCount]);
+
+  // Close notification panel when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isNotifOpen && notificationRef.current && !notificationRef.current.contains(event.target)) {
+        setIsNotifOpen(false);
+      }
+    };
+
+    if (isNotifOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isNotifOpen]);
 
   const handleMenuClick = (path) => {
     router.push(path); // Navigate to the desired path
@@ -34,6 +65,8 @@ const Header = () => {
   const handleNotificationClick = async (notification) => {
     try {
       if (!notification.readAt) {
+        // Optimistically update count
+        setOptimisticUnreadCount((prev) => Math.max(0, (prev ?? unreadCount) - 1));
         // Fire-and-forget; realtime listener will refresh state
         void markNotificationAsReadClient(notification.id);
       }
@@ -75,6 +108,8 @@ const Header = () => {
   };
 
   const handleMarkAllAsRead = async () => {
+    // Optimistically update count to 0 immediately
+    setOptimisticUnreadCount(0);
     setIsNotifOpen(false);
     try {
       void markAllNotificationsAsReadClient();
@@ -86,6 +121,8 @@ const Header = () => {
   };
 
   const handleClearAll = async () => {
+    // Optimistically update count to 0 immediately
+    setOptimisticUnreadCount(0);
     setIsNotifOpen(false);
     try {
       void clearAllNotificationsClient();
@@ -101,6 +138,9 @@ const Header = () => {
     router.push('/xp-history');
     setIsNotifOpen(false);
   };
+
+  // Use optimistic count for display, fallback to real count
+  const displayUnreadCount = optimisticUnreadCount ?? unreadCount;
 
   // Simple mapping for type-based accent color using design tokens
   const getTypeAccentClass = (type) => {
@@ -124,7 +164,7 @@ const Header = () => {
         <div className="flex justify-end items-center p-2">
           <div className="flex space-x-2 items-center">
             {/* Notification icon + dropdown */}
-            <div className="relative">
+            <div className="relative" ref={notificationRef}>
               <button
                 type="button"
                 onClick={toggleNotifications}
@@ -144,9 +184,9 @@ const Header = () => {
                 >
                   <path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
                 </svg>
-                {unreadCount > 0 && (
+                {displayUnreadCount > 0 && (
                   <span className="absolute -top-1 -right-1 inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-gradient-to-r from-semantic-error-500 to-semantic-error-600 px-1 text-[10px] font-semibold text-white shadow-md animate-pulse-warm">
-                    {unreadCount > 9 ? '9+' : unreadCount}
+                    {displayUnreadCount > 9 ? '9+' : displayUnreadCount}
                   </span>
                 )}
               </button>
@@ -161,9 +201,9 @@ const Header = () => {
                       <span className="text-sm font-semibold text-text-primary dark:text-text-primary">
                         Notifications
                       </span>
-                      {unreadCount > 0 && (
+                      {displayUnreadCount > 0 && (
                         <span className="text-xs text-text-secondary dark:text-text-secondary">
-                          {unreadCount} unread
+                          {displayUnreadCount} unread
                         </span>
                       )}
                     </div>
