@@ -33,6 +33,7 @@ import { countries } from 'countries-list';
 import { useMembersPaginated } from '@/hooks/members/useMembersPaginated';
 import MemberCardSkeleton from '@/components/members/MemberCardSkeleton';
 import MembersPagination from '@/components/members/MembersPagination';
+import Image from 'next/image';
 
 export default function MembersPage() {
   const t = useTranslations('Members');
@@ -410,12 +411,22 @@ export default function MembersPage() {
                 <div className="flex md:hidden items-center gap-3">
                   {/* Profile Picture - Left */}
                   <div className="flex-shrink-0">
-                    <Avatar
-                      img={member.profilePicture || '/favicon.ico'}
-                      alt={member.displayName || 'Member'}
-                      size="lg"
-                      rounded
-                    />
+                    {member.profilePicture && member.profilePicture.trim() !== '' ? (
+                      <Image
+                        src={member.profilePicture}
+                        alt={member.displayName || 'Member'}
+                        width={64}
+                        height={64}
+                        className="rounded-full object-cover"
+                      />
+                    ) : (
+                      <Avatar
+                        img=""
+                        alt={member.displayName || 'Member'}
+                        size="lg"
+                        rounded
+                      />
+                    )}
                   </div>
 
                   {/* Middle: Name + Country */}
@@ -465,12 +476,22 @@ export default function MembersPage() {
                 <div className="hidden md:flex items-center gap-4">
                   {/* Profile Picture - Left */}
                   <div className="flex-shrink-0">
-                    <Avatar
-                      img={member.profilePicture || '/favicon.ico'}
-                      alt={member.displayName || 'Member'}
-                      size="lg"
-                      rounded
-                    />
+                    {member.profilePicture && member.profilePicture.trim() !== '' ? (
+                      <Image
+                        src={member.profilePicture}
+                        alt={member.displayName || 'Member'}
+                        width={64}
+                        height={64}
+                        className="rounded-full object-cover"
+                      />
+                    ) : (
+                      <Avatar
+                        img=""
+                        alt={member.displayName || 'Member'}
+                        size="lg"
+                        rounded
+                      />
+                    )}
                   </div>
 
                   {/* Middle: Name + Country */}

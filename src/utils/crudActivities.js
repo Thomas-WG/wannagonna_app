@@ -500,3 +500,59 @@ export async function getAcceptedApplicationsCount(activityId) {
     return 0;
   }
 }
+
+/**
+ * Update all activities for an organization with new logo and name.
+ * This ensures that all existing activities display the updated organization information.
+ * @param {string} organizationId - Organization ID
+ * @param {string} logoUrl - New logo URL
+ * @param {string} organizationName - New organization name (optional)
+ * @returns {Promise<number>} Number of activities updated
+ */
+export async function updateActivitiesForOrganization(organizationId, logoUrl, organizationName = null) {
+  try {
+    if (!organizationId) {
+      throw new Error('organizationId is required');
+    }
+    if (!logoUrl) {
+      throw new Error('logoUrl is required');
+    }
+
+    // Fetch all activities for this organization
+    const activities = await fetchActivitiesByCriteria(organizationId, 'any', 'any');
+    
+    if (activities.length === 0) {
+      console.log(`No activities found for organization ${organizationId}`);
+      return 0;
+    }
+
+    // Prepare update data
+    const updateData = {
+      organization_logo: logoUrl
+    };
+    
+    // Include organization name if provided
+    if (organizationName) {
+      updateData.organization_name = organizationName;
+    }
+
+    // Use batch write for efficient updates
+    const batch = writeBatch(db);
+    let updateCount = 0;
+
+    activities.forEach((activity) => {
+      const activityRef = doc(db, 'activities', activity.id);
+      batch.update(activityRef, updateData);
+      updateCount++;
+    });
+
+    // Commit all updates
+    await batch.commit();
+    console.log(`Updated ${updateCount} activities for organization ${organizationId} with new logo`);
+    
+    return updateCount;
+  } catch (error) {
+    console.error('Error updating activities for organization:', error);
+    throw error;
+  }
+}

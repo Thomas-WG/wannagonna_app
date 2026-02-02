@@ -258,9 +258,10 @@ export default function DashboardPage() {
             displayName={
               profileData?.displayName || user?.displayName || user?.email || 'Volunteer'
             }
-            profilePicture={
-              profileData?.profilePicture || user?.photoURL || null
-            }
+            profilePicture={(() => {
+              const profilePictureValue = profileData?.profilePicture || user?.photoURL || null;
+              return profilePictureValue && profilePictureValue.trim() !== '' ? profilePictureValue : null;
+            })()}
             onApplicationUpdated={handleApplicationUpdated}
           />
         </DashboardErrorBoundary>
@@ -327,7 +328,7 @@ function QRScannerButton() {
     <div className="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-50">
       <button
         onClick={() => setShowQRScanner(true)}
-        className="bg-blue-500 text-white text-xl sm:text-2xl w-12 h-12 sm:w-14 sm:h-14 rounded-full shadow-lg hover:bg-blue-600 active:bg-blue-700 transition-colors touch-manipulation flex items-center justify-center"
+        className="bg-blue-500 text-white text-xl sm:text-2xl w-14 h-14 sm:w-16 sm:h-16 rounded-full shadow-lg hover:bg-blue-600 active:bg-blue-700 transition-colors touch-manipulation flex items-center justify-center min-w-[56px] min-h-[56px]"
         aria-label="Scan QR Code"
       >
         <HiQrcode className="h-6 w-6 sm:h-7 sm:w-7" />

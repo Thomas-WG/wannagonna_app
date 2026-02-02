@@ -18,6 +18,7 @@ import {
   fetchOrganizationById,
   updateOrganization 
 } from '@/utils/crudOrganizations';
+import { updateActivitiesForOrganization } from '@/utils/crudActivities';
 import { uploadOrgPicture } from '@/utils/storage';
 import { countries } from 'countries-list';
 import languages from '@cospired/i18n-iso-languages';
@@ -143,6 +144,20 @@ export default function OrganizationEditPage() {
         try {
           const url = await uploadOrgPicture(logoFile, claims.npoId);
           await updateOrganization(claims.npoId, { ...normalizedForm, logo: url });
+          
+          // Update all activities for this organization with the new logo
+          try {
+            const updatedCount = await updateActivitiesForOrganization(
+              claims.npoId, 
+              url, 
+              normalizedForm.name
+            );
+            console.log(`Updated ${updatedCount} activities with new organization logo`);
+          } catch (activityUpdateError) {
+            // Log error but don't fail the organization update
+            console.error('Error updating activities with new logo:', activityUpdateError);
+          }
+          
           setOrganizationForm(prev => ({ ...prev, logo: url }));
           showToast(t('organizationUpdated'), 'success');
         } catch (error) {

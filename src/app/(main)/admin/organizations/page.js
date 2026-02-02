@@ -15,6 +15,7 @@ import {
   updateOrganization, 
   deleteOrganization 
 } from '@/utils/crudOrganizations';
+import { updateActivitiesForOrganization } from '@/utils/crudActivities';
 import { uploadOrgPicture } from '@/utils/storage';
 import { countries } from 'countries-list';
 import languages from '@cospired/i18n-iso-languages';
@@ -115,10 +116,41 @@ export default function OrganizationsManagementPage() {
       };
 
       let organizationId;
+      let logoUpdated = false;
+      let newLogoUrl = null;
+      
       if (selectedOrganization) {
         // Update existing organization
         organizationId = selectedOrganization.id;
-        await updateOrganization(selectedOrganization.id, normalizedForm);
+        
+        // Check if logo is being updated (either via file upload or direct URL change)
+        const oldLogoUrl = selectedOrganization.logo || '';
+        const newLogoFromForm = normalizedForm.logo || '';
+        const logoChanged = logoFile || (newLogoFromForm && newLogoFromForm !== oldLogoUrl);
+        
+        if (logoFile) {
+          // Handle logo upload if a new logo file was selected
+          try {
+            const url = await uploadOrgPicture(logoFile, organizationId);
+            newLogoUrl = url;
+            logoUpdated = true;
+            await updateOrganization(organizationId, { ...normalizedForm, logo: url });
+            setOrganizationForm(prev => ({ ...prev, logo: url }));
+          } catch (error) {
+            console.error('Error uploading logo:', error);
+            showToast('Error uploading logo', 'error');
+            return; // Exit early if logo upload fails
+          }
+        } else if (logoChanged && newLogoFromForm) {
+          // Logo URL changed directly (without file upload)
+          newLogoUrl = newLogoFromForm;
+          logoUpdated = true;
+          await updateOrganization(organizationId, normalizedForm);
+        } else {
+          // No logo change, just update organization
+          await updateOrganization(organizationId, normalizedForm);
+        }
+        
         showToast('Organization updated successfully', 'success');
       } else {
         // Create new organization
@@ -126,20 +158,47 @@ export default function OrganizationsManagementPage() {
           ...normalizedForm,
           createdAt: new Date().toISOString()
         };
-        const newOrg = await addOrganization(organizationWithCreatedAt);
-        organizationId = newOrg.id;
+        
+        // Handle logo upload for new organization
+        if (logoFile) {
+          try {
+            const newOrg = await addOrganization(organizationWithCreatedAt);
+            organizationId = newOrg.id;
+            const url = await uploadOrgPicture(logoFile, organizationId);
+            newLogoUrl = url;
+            logoUpdated = true;
+            await updateOrganization(organizationId, { ...normalizedForm, logo: url });
+            setOrganizationForm(prev => ({ ...prev, logo: url }));
+          } catch (error) {
+            console.error('Error uploading logo:', error);
+            showToast('Error uploading logo', 'error');
+            return; // Exit early if logo upload fails
+          }
+        } else {
+          const newOrg = await addOrganization(organizationWithCreatedAt);
+          organizationId = newOrg.id;
+          // If logo is provided in form for new org, mark as updated
+          if (normalizedForm.logo) {
+            newLogoUrl = normalizedForm.logo;
+            logoUpdated = true;
+          }
+        }
+        
         showToast('Organization added successfully', 'success');
       }
 
-      // Handle logo upload if a new logo file was selected
-      if (logoFile && organizationId) {
+      // Update all activities for this organization with the new logo if logo was updated
+      if (logoUpdated && organizationId && newLogoUrl) {
         try {
-          const url = await uploadOrgPicture(logoFile, organizationId);
-          await updateOrganization(organizationId, { ...normalizedForm, logo: url });
-          setOrganizationForm(prev => ({ ...prev, logo: url }));
-        } catch (error) {
-          console.error('Error uploading logo:', error);
-          showToast('Error uploading logo', 'error');
+          const updatedCount = await updateActivitiesForOrganization(
+            organizationId, 
+            newLogoUrl, 
+            normalizedForm.name
+          );
+          console.log(`Updated ${updatedCount} activities with new organization logo`);
+        } catch (activityUpdateError) {
+          // Log error but don't fail the organization update
+          console.error('Error updating activities with new logo:', activityUpdateError);
         }
       }
 
