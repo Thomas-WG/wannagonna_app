@@ -43,11 +43,12 @@ const ProfileSection = memo(function ProfileSection({
     }
   }, [profileData?.code, onCopyCodeSuccess, onCopyCodeError]);
 
-  const profilePictureValue = profileData?.profilePicture || user?.photoURL || null;
-  const profilePicture =
-    profilePictureValue && profilePictureValue.trim() !== ''
-      ? profilePictureValue
-      : null;
+  // Explicitly check if profileData.profilePicture is a valid non-empty string
+  // Otherwise fall back to user?.photoURL (from Google auth)
+  const profilePictureFromData = profileData?.profilePicture;
+  const hasValidProfilePicture = profilePictureFromData && profilePictureFromData.trim() !== '';
+  const profilePicture = hasValidProfilePicture ? profilePictureFromData : (user?.photoURL || null);
+  
   const displayName =
     profileData?.displayName || user?.displayName || user?.email || 'Volunteer';
   const userCode = profileData?.code || null;

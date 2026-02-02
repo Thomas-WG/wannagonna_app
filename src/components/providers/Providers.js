@@ -30,6 +30,7 @@ import { AuthProvider } from '@/utils/auth/AuthContext';
 import { ThemeProvider } from '@/utils/theme/ThemeContext';
 import ModalProviderWrapper from '@/components/modal/ModalProviderWrapper';
 import QueryProvider from '@/components/providers/QueryProvider';
+import ThemeColorMeta from '@/components/layout/ThemeColorMeta';
 
 /**
  * Providers - Consolidated provider component with error boundaries
@@ -45,6 +46,7 @@ export default function Providers({ children }) {
           <AuthProvider>
             <ErrorBoundary>
               <ThemeProvider>
+                <ThemeColorMeta />
                 <ErrorBoundary>
                   <ModalProviderWrapper>
                     {children}

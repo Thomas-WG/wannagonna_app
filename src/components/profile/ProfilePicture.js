@@ -22,6 +22,9 @@ export default function ProfilePicture({profileData, handleProfilePictureChange}
     // htmlFor attribute automatically triggers the input click - no manual trigger needed
   };
 
+  const profilePictureValue = profileData?.profilePicture || null;
+  const profilePicture = profilePictureValue && profilePictureValue.trim() !== '' ? profilePictureValue : null;
+
   return (
     <div className='flex flex-col items-center mb-6'>
       <div className='relative' onClick={(e) => {

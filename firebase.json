@@ -44,7 +44,8 @@
       "port": 9099
     },
     "firestore": {
-      "port": 8080
+      "port": 8080,
+      "rules": "firestore.rules"
     },
     "functions": {
       "port": 5001
@@ -59,6 +60,10 @@
     },
     "exportOnExit": ".firebase/emulator-data",
     "importOnStart": ".firebase/emulator-data"
+  },
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
   },
   "storage": {
     "rules": "storage.rules"
