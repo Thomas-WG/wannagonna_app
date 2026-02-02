@@ -371,7 +371,7 @@ export default function MembersManagementPage() {
                 <Table.Row key={member.id}>
                   <Table.Cell>
                     {/* Member Profile Picture */}
-                    {member.profilePicture && (
+                    {member.profilePicture && member.profilePicture.trim() !== '' ? (
                       <Image 
                         src={member.profilePicture} 
                         alt={member.displayName} 
@@ -379,7 +379,7 @@ export default function MembersManagementPage() {
                         height={40}
                         className="rounded-full object-cover"
                       />
-                    )}
+                    ) : null}
                   </Table.Cell>
                   <Table.Cell className="max-w-[150px] truncate">{member.displayName}</Table.Cell>
                   <Table.Cell className="max-w-[200px] truncate">{member.email}</Table.Cell>
@@ -423,7 +423,7 @@ export default function MembersManagementPage() {
           <Card key={member.id} className="p-4">
             <div className="flex items-start gap-3">
               {/* Profile Picture */}
-              {member.profilePicture && (
+              {member.profilePicture && member.profilePicture.trim() !== '' ? (
                 <Image 
                   src={member.profilePicture} 
                   alt={member.displayName} 
@@ -431,7 +431,7 @@ export default function MembersManagementPage() {
                   height={50}
                   className="rounded-full object-cover flex-shrink-0"
                 />
-              )}
+              ) : null}
               <div className="flex-1 min-w-0">
                 <h3 className="font-semibold text-base truncate">{member.displayName}</h3>
                 <p className="text-sm text-gray-600 truncate">{member.email}</p>
