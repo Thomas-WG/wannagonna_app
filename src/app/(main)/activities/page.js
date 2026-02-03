@@ -468,7 +468,7 @@ export default function ActivitiesPage() {
   if (!user && !authLoading) return null;
 
   return (
-    <div className="min-h-screen bg-background-page dark:bg-background-page">
+    <div className="min-h-dvh bg-background-page dark:bg-background-page">
       <div className="container mx-auto px-4 py-6 max-w-7xl">
         {/* Header */}
         <div className="mb-6">

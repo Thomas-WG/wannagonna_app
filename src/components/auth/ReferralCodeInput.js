@@ -6,6 +6,7 @@
 'use client';
 
 import { Label, TextInput } from 'flowbite-react';
+import useInputFocusScroll from '@/hooks/useInputFocusScroll';
 
 /**
  * ReferralCodeInput component
@@ -26,6 +27,8 @@ export default function ReferralCodeInput({
   requiredNote,
   t 
 }) {
+  const handleInputFocus = useInputFocusScroll();
+  
   return (
     <div className="mb-4">
       <Label htmlFor="referralCode" className="text-text-primary dark:text-text-primary">
@@ -41,6 +44,7 @@ export default function ReferralCodeInput({
           onChange(e.target.value.toUpperCase());
           // Clear error when user starts typing (if onChange handler doesn't do it)
         }}
+        onFocus={handleInputFocus}
         maxLength={5}
         className="uppercase bg-background-card dark:bg-background-card !text-text-primary dark:!text-text-primary border-border-light dark:border-border-dark placeholder:text-text-tertiary dark:placeholder:text-text-tertiary"
       />

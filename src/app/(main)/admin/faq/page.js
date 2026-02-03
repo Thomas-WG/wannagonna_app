@@ -22,6 +22,7 @@ import { useModal } from '@/utils/modal/useModal';
 import { HiSearch } from 'react-icons/hi';
 import { useDebounce } from '@/hooks/useDebounce';
 import BackButton from '@/components/layout/BackButton';
+import useInputFocusScroll from '@/hooks/useInputFocusScroll';
 
 const locales = ['en', 'fr', 'es', 'ja'];
 const localeLabels = {
@@ -40,6 +41,7 @@ const localeLabels = {
 export default function FAQManagementPage() {
   const { isDark } = useTheme();
   const t = useTranslations('Admin');
+  const handleInputFocus = useInputFocusScroll();
   
   // State management
   const [faqs, setFaqs] = useState([]); // List of all FAQs
@@ -367,7 +369,7 @@ export default function FAQManagementPage() {
           </div>
         </Modal.Header>
         <Modal.Body className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 max-h-[85vh] sm:max-h-[80vh] overflow-y-auto overflow-x-hidden w-full">
-          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6 w-full max-w-full overflow-hidden">
+          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6 w-full max-w-full overflow-hidden pb-safe-bottom pb-20 sm:pb-24">
             {/* Language Tabs */}
             <div className="w-full">
               <Tabs aria-label="Language tabs" variant="underline" onActiveTabChange={(tab) => setActiveTab(tab)}>
@@ -383,6 +385,7 @@ export default function FAQManagementPage() {
                           id={`question-${locale}`}
                           value={faqForm.question[locale] || ''}
                           onChange={(e) => handleMultilingualChange('question', locale, e.target.value)}
+                          onFocus={handleInputFocus}
                           required={locale === 'en'}
                           className="text-sm sm:text-base w-full"
                           rows={2}
@@ -399,6 +402,7 @@ export default function FAQManagementPage() {
                           id={`answer-${locale}`}
                           value={faqForm.answer[locale] || ''}
                           onChange={(e) => handleMultilingualChange('answer', locale, e.target.value)}
+                          onFocus={handleInputFocus}
                           required={locale === 'en'}
                           className="text-sm sm:text-base w-full"
                           rows={4}
@@ -419,6 +423,7 @@ export default function FAQManagementPage() {
                 type="number"
                 value={faqForm.order}
                 onChange={handleOrderChange}
+                onFocus={handleInputFocus}
                 className="text-sm sm:text-base w-full"
                 placeholder={t('orderHelper')}
               />
