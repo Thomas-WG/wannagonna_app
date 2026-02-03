@@ -18,6 +18,7 @@ export default function QRCodeScanner({ isOpen, onClose, onScanSuccess }) {
   const [error, setError] = useState(null);
   const [cameraId, setCameraId] = useState(null);
   const [availableCameras, setAvailableCameras] = useState([]);
+  const [isSwitchingCamera, setIsSwitchingCamera] = useState(false);
   const scannerRef = useRef(null);
   const html5QrCodeRef = useRef(null);
   const isStartingRef = useRef(false);
@@ -137,12 +138,13 @@ export default function QRCodeScanner({ isOpen, onClose, onScanSuccess }) {
   };
 
   const switchCamera = async () => {
-    if (!scanning || availableCameras.length < 2 || isStartingRef.current || isStoppingRef.current) {
+    if (!scanning || availableCameras.length < 2 || isStartingRef.current || isStoppingRef.current || isSwitchingCamera) {
       return;
     }
 
     try {
       isStoppingRef.current = true;
+      setIsSwitchingCamera(true);
       
       // Stop current camera
       await html5QrCodeRef.current.stop();
@@ -172,10 +174,12 @@ export default function QRCodeScanner({ isOpen, onClose, onScanSuccess }) {
       );
       
       isStoppingRef.current = false;
+      setIsSwitchingCamera(false);
     } catch (err) {
       console.error('Error switching camera:', err);
       setError('Failed to switch camera. Please try again.');
       isStoppingRef.current = false;
+      setIsSwitchingCamera(false);
       // Try to restart with the original camera
       try {
         await startScanning();
@@ -259,6 +263,7 @@ export default function QRCodeScanner({ isOpen, onClose, onScanSuccess }) {
     setError(null);
     setScanning(false);
     setAvailableCameras([]);
+    setIsSwitchingCamera(false);
     isStartingRef.current = false;
     isStoppingRef.current = false;
     hasScannedRef.current = false; // Reset scan flag when closing
@@ -338,7 +343,7 @@ export default function QRCodeScanner({ isOpen, onClose, onScanSuccess }) {
                     onClick={switchCamera}
                     color="blue"
                     className="flex-1"
-                    disabled={isStoppingRef.current}
+                    disabled={isSwitchingCamera}
                   >
                     <HiRefresh className="mr-2 h-5 w-5" />
                     Switch Camera
