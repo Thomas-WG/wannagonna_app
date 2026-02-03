@@ -205,7 +205,7 @@ export default function Navbar() {
   }, [isSidebarOpen]); // Re-run effect if `isSidebarOpen` changes
 
   return (
-    <div className='relative min-h-screen grid '>
+    <div className='relative min-h-dvh grid '>
       {/* Navbar button to toggle the sidebar */}
       {!isSidebarOpen && (
         <button

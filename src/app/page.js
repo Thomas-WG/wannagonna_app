@@ -121,7 +121,7 @@ export default function Home() {
   // Show loading state while checking authentication
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background-page dark:bg-background-page">
+      <div className="min-h-dvh flex items-center justify-center bg-background-page dark:bg-background-page">
         <div className="text-text-primary dark:text-text-primary">Loading...</div>
       </div>
     );
@@ -134,7 +134,7 @@ export default function Home() {
 
   // Render the landing page
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-background-page dark:bg-background-page p-4 sm:p-8">
+    <div className="min-h-dvh flex flex-col items-center justify-center bg-background-page dark:bg-background-page p-4 sm:p-8">
       {/* Logo */}
       {logoUrl && !logoError && (
         <div className="mb-8 flex justify-center">

@@ -5,6 +5,7 @@ import { useLocale } from 'next-intl';
 import Select from 'react-select';
 import { getSkillsForSelect } from '@/utils/crudSkills';
 import { useTheme } from '@/utils/theme/ThemeContext';
+import useInputFocusScroll from '@/hooks/useInputFocusScroll';
 import { 
   HiCalendar, 
   HiUsers, 
@@ -25,6 +26,7 @@ export default function ActivityDetailsForm({ formData, handleChange, setFormDat
   const t = useTranslations('ManageActivities');
   const locale = useLocale();
   const { isDark } = useTheme();
+  const handleInputFocus = useInputFocusScroll();
   
   const [skillOptions, setSkillOptions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -138,6 +140,7 @@ export default function ActivityDetailsForm({ formData, handleChange, setFormDat
                   handleChange(e);
                 }
               }}
+              onFocus={handleInputFocus}
               maxLength={50}
               className="text-base sm:text-lg w-full"
             />
@@ -230,6 +233,7 @@ export default function ActivityDetailsForm({ formData, handleChange, setFormDat
                 name='location'
                 value={formData.location || ''}
                 onChange={handleChange}
+                onFocus={handleInputFocus}
                 className="text-base sm:text-lg"
               />
             </div>
@@ -432,6 +436,7 @@ export default function ActivityDetailsForm({ formData, handleChange, setFormDat
                   setFormData((prev) => ({ ...prev, participantTarget: value }));
                 }
               }}
+              onFocus={handleInputFocus}
               type='number'
               min="1"
               className="text-base sm:text-lg"
@@ -539,7 +544,7 @@ export default function ActivityDetailsForm({ formData, handleChange, setFormDat
 
       {/* Skills Selector - Local and Online Only */}
       {(formData.type === 'local' || formData.type === 'online') && (
-        <Card className="p-4 sm:p-6 shadow-lg border-0 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900">
+        <Card className="p-4 sm:p-6 shadow-lg border-0 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 overflow-visible">
           <div className="flex items-start sm:items-center gap-3 mb-6">
             <div className="p-2 bg-indigo-100 dark:bg-indigo-900 rounded-lg shrink-0">
               <HiUsers className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-600 dark:text-indigo-400" />
@@ -568,6 +573,10 @@ export default function ActivityDetailsForm({ formData, handleChange, setFormDat
               isSearchable={true}
               isClearable={true}
               closeMenuOnSelect={false}
+              menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
+              menuPosition="fixed"
+              menuShouldScrollIntoView={true}
+              onFocus={handleInputFocus}
               styles={{
                 control: (base) => ({
                   ...base,
@@ -584,6 +593,16 @@ export default function ActivityDetailsForm({ formData, handleChange, setFormDat
                   ...base,
                   backgroundColor: isDark ? '#1e293b' : '#ffffff',
                   borderColor: isDark ? '#334155' : '#e2e8f0',
+                  zIndex: 9999,
+                  maxHeight: '60vh', // Limit menu height to 60% of viewport
+                }),
+                menuList: (base) => ({
+                  ...base,
+                  maxHeight: '60vh', // Ensure menu list respects max height
+                  padding: '4px',
+                }),
+                menuPortal: (base) => ({
+                  ...base,
                   zIndex: 9999,
                 }),
                 groupHeading: (base, { group }) => {

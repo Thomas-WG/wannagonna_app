@@ -263,7 +263,7 @@ export default function CompleteProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-dvh">
         <div className="text-text-primary dark:text-text-primary">Loading...</div>
       </div>
     );
@@ -276,7 +276,7 @@ export default function CompleteProfilePage() {
         <ProfileProgress formData={formValues} />
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 pb-safe-bottom pb-20 sm:pb-24">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           {/* Left Column - Profile Information (takes 3/5 of width) */}
           <div className="lg:col-span-3">
