@@ -433,7 +433,7 @@ export default function CreateUpdateActivityPage() {
   if (!user) return null;
 
   return (
-    <div className='min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800'>
+    <div className='min-h-dvh bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800'>
       <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8'>
         {/* Header Section */}
         <div className='mb-6 sm:mb-8'>
@@ -468,7 +468,7 @@ export default function CreateUpdateActivityPage() {
 
         {/* Form Content */}
         {!loading && (
-          <form onSubmit={handleSubmit} className='space-y-4 sm:space-y-6'>
+          <form onSubmit={handleSubmit} className='space-y-4 sm:space-y-6 pb-safe-bottom pb-20 sm:pb-24'>
             {/* Step 1 */}
             {currentStep === 1 && (
               <div className='animate-fadeIn'>

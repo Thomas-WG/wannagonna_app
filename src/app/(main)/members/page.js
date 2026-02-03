@@ -24,7 +24,8 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import PublicProfileModal from '@/components/profile/PublicProfileModal';
-import { Card, Select, Badge } from 'flowbite-react';
+import { Card, Badge } from 'flowbite-react';
+import Select from 'react-select';
 import { useAuth } from '@/utils/auth/AuthContext';
 import { HiSearch, HiX, HiBadgeCheck, HiLocationMarker, HiFilter, HiChevronDown, HiChevronUp } from 'react-icons/hi';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -34,10 +35,59 @@ import { useMembersPaginated } from '@/hooks/members/useMembersPaginated';
 import MemberCardSkeleton from '@/components/members/MemberCardSkeleton';
 import MembersPagination from '@/components/members/MembersPagination';
 import ProfilePicture from '@/components/common/ProfilePicture';
+import { useTheme } from '@/utils/theme/ThemeContext';
 
 export default function MembersPage() {
   const t = useTranslations('Members');
   const { user, loading: authLoading } = useAuth();
+  const { isDark } = useTheme();
+
+  // Custom styles for react-select with dark mode support
+  const selectStyles = {
+    control: (base) => ({
+      ...base,
+      backgroundColor: isDark ? '#1e293b' : '#ffffff',
+      borderColor: isDark ? '#334155' : '#e2e8f0',
+      color: isDark ? '#f8fafc' : '#0f172a',
+      minHeight: '44px', // Better touch target on mobile
+      fontSize: '14px',
+      '&:hover': {
+        borderColor: isDark ? '#fb923c' : '#f97316',
+      },
+    }),
+    menu: (base) => ({
+      ...base,
+      backgroundColor: isDark ? '#1e293b' : '#ffffff',
+      borderColor: isDark ? '#334155' : '#e2e8f0',
+      zIndex: 9999,
+    }),
+    option: (base, state) => ({
+      ...base,
+      backgroundColor: state.isSelected
+        ? (isDark ? '#334155' : '#e0f2fe')
+        : state.isFocused
+        ? (isDark ? '#334155' : '#f1f5f9')
+        : isDark ? '#1e293b' : '#ffffff',
+      color: state.isSelected
+        ? (isDark ? '#f8fafc' : '#0284c7')
+        : isDark ? '#f8fafc' : '#0f172a',
+      padding: '12px 14px',
+      minHeight: '44px',
+      fontSize: '14px',
+      cursor: 'pointer',
+      '&:active': {
+        backgroundColor: isDark ? '#475569' : '#e0f2fe',
+      },
+    }),
+    placeholder: (base) => ({
+      ...base,
+      color: isDark ? '#94a3b8' : '#64748b',
+    }),
+    singleValue: (base) => ({
+      ...base,
+      color: isDark ? '#f8fafc' : '#0f172a',
+    }),
+  };
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -178,7 +228,7 @@ export default function MembersPage() {
   if (!user && !authLoading) return null;
 
   return (
-    <div className="min-h-screen bg-background-page dark:bg-background-page">
+    <div className="min-h-dvh bg-background-page dark:bg-background-page">
       <div className="container mx-auto px-4 py-6 max-w-7xl">
         {/* Header */}
         <div className="mb-6">
@@ -244,21 +294,25 @@ export default function MembersPage() {
                       {t('filterCountry')}
                     </label>
                     <Select
-                      value={filters.country}
-                      onChange={(e) => handleFilterChange('country', e.target.value)}
-                      className="w-full bg-background-card dark:bg-background-card text-text-primary dark:text-text-primary border-border-light dark:border-border-dark"
-                    >
-                      <option value="all">{t('allCountries')}</option>
-                      {availableCountries.map((countryCode) => {
-                        const countryData = countries[countryCode];
-                        const countryName = countryData ? countryData.name : countryCode;
-                        return (
-                          <option key={countryCode} value={countryCode}>
-                            {countryName}
-                          </option>
-                        );
-                      })}
-                    </Select>
+                      options={[
+                        { value: 'all', label: t('allCountries') },
+                        ...availableCountries.map((countryCode) => {
+                          const countryData = countries[countryCode];
+                          const countryName = countryData ? countryData.name : countryCode;
+                          return { value: countryCode, label: countryName };
+                        })
+                      ]}
+                      value={filters.country === 'all' ? { value: 'all', label: t('allCountries') } :
+                        availableCountries.includes(filters.country) ? {
+                          value: filters.country,
+                          label: countries[filters.country] ? countries[filters.country].name : filters.country
+                        } : null}
+                      onChange={(selectedOption) => handleFilterChange('country', selectedOption ? selectedOption.value : 'all')}
+                      placeholder={t('filterCountry')}
+                      className="basic-single-select w-full"
+                      classNamePrefix="select"
+                      styles={selectStyles}
+                    />
                   </div>
                 )}
                 {hasActiveFilters && (
@@ -282,21 +336,25 @@ export default function MembersPage() {
                   {t('filterCountry')}
                 </label>
                 <Select
-                  value={filters.country}
-                  onChange={(e) => handleFilterChange('country', e.target.value)}
-                  className="w-full bg-background-card dark:bg-background-card text-text-primary dark:text-text-primary border-border-light dark:border-border-dark"
-                >
-                  <option value="all">{t('allCountries')}</option>
-                  {availableCountries.map((countryCode) => {
-                    const countryData = countries[countryCode];
-                    const countryName = countryData ? countryData.name : countryCode;
-                    return (
-                      <option key={countryCode} value={countryCode}>
-                        {countryName}
-                      </option>
-                    );
-                  })}
-                </Select>
+                  options={[
+                    { value: 'all', label: t('allCountries') },
+                    ...availableCountries.map((countryCode) => {
+                      const countryData = countries[countryCode];
+                      const countryName = countryData ? countryData.name : countryCode;
+                      return { value: countryCode, label: countryName };
+                    })
+                  ]}
+                  value={filters.country === 'all' ? { value: 'all', label: t('allCountries') } :
+                    availableCountries.includes(filters.country) ? {
+                      value: filters.country,
+                      label: countries[filters.country] ? countries[filters.country].name : filters.country
+                    } : null}
+                  onChange={(selectedOption) => handleFilterChange('country', selectedOption ? selectedOption.value : 'all')}
+                  placeholder={t('filterCountry')}
+                  className="basic-single-select w-full"
+                  classNamePrefix="select"
+                  styles={selectStyles}
+                />
               </div>
             )}
             {hasActiveFilters && (
@@ -345,12 +403,24 @@ export default function MembersPage() {
           </div>
           <div className="flex items-center gap-2">
             <label className="text-sm font-medium text-text-primary dark:text-text-primary">{t('sortBy')}</label>
-            <Select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="w-full sm:w-auto bg-background-card dark:bg-background-card text-text-primary dark:text-text-primary border-border-light dark:border-border-dark">
-              <option value="name_az">{t('sortNameAZ')}</option>
-              <option value="name_za">{t('sortNameZA')}</option>
-              <option value="joined_newest">{t('sortJoinedNewest')}</option>
-              <option value="joined_oldest">{t('sortJoinedOldest')}</option>
-            </Select>
+            <Select
+              options={[
+                { value: 'name_az', label: t('sortNameAZ') },
+                { value: 'name_za', label: t('sortNameZA') },
+                { value: 'joined_newest', label: t('sortJoinedNewest') },
+                { value: 'joined_oldest', label: t('sortJoinedOldest') },
+              ]}
+              value={[
+                { value: 'name_az', label: t('sortNameAZ') },
+                { value: 'name_za', label: t('sortNameZA') },
+                { value: 'joined_newest', label: t('sortJoinedNewest') },
+                { value: 'joined_oldest', label: t('sortJoinedOldest') },
+              ].find(opt => opt.value === sortBy) || null}
+              onChange={(selectedOption) => setSortBy(selectedOption ? selectedOption.value : 'name_az')}
+              className="basic-single-select w-full sm:w-auto"
+              classNamePrefix="select"
+              styles={selectStyles}
+            />
           </div>
         </div>
 

@@ -310,7 +310,7 @@ export default function SettingsPage() {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen py-6 px-4 bg-background-page dark:bg-background-page">
+    <div className="min-h-dvh py-6 px-4 bg-background-page dark:bg-background-page">
       <div className="mx-auto max-w-xl flex flex-col gap-6">
         {/* Language selector */}
         <div className="w-full bg-background-card dark:bg-background-card rounded-lg shadow-md p-4 sm:p-6 border border-border-light dark:border-border-dark">

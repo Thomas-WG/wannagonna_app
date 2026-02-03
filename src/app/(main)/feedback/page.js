@@ -13,11 +13,13 @@ import { useTranslations } from 'next-intl';
 import { useTheme } from '@/utils/theme/ThemeContext';
 import { useAuth } from '@/utils/auth/AuthContext';
 import { addIdeaBoxEntry } from '@/utils/crudIdeaBox';
+import useInputFocusScroll from '@/hooks/useInputFocusScroll';
 
 export default function FeedbackPage() {
   const t = useTranslations('Feedback');
   const { isDark } = useTheme();
   const { user } = useAuth();
+  const handleInputFocus = useInputFocusScroll();
   
   const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -91,7 +93,7 @@ export default function FeedbackPage() {
 
       {/* Feedback Form */}
       <Card className="w-full">
-        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6 pb-safe-bottom pb-20 sm:pb-24">
           <div>
             <Label 
               htmlFor="feedback-content" 
@@ -107,6 +109,7 @@ export default function FeedbackPage() {
                 setContent(e.target.value);
                 setError('');
               }}
+              onFocus={handleInputFocus}
               rows={8}
               className="w-full text-sm sm:text-base"
               color={error ? 'failure' : (isDark ? 'gray' : 'gray')}
