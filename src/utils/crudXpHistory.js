@@ -6,10 +6,14 @@ import { db } from 'firebaseConfig';
  * @param {string} userId - The user's ID
  * @param {string} title - The title/description of the XP earning event
  * @param {number} points - The number of XP points earned
- * @param {string} type - The type of XP earning (e.g., "badge", "activity")
+ * @param {string} type - The type of XP earning (e.g., "badge", "activity", "referral")
+ * @param {Object} metadata - Optional metadata (badgeId, activityId, memberId)
+ * @param {string} metadata.badgeId - Badge ID (for badge type)
+ * @param {string} metadata.activityId - Activity ID (for activity type)
+ * @param {string} metadata.memberId - Member ID (for referral type - the referrer's ID)
  * @returns {Promise<string|null>} Document ID of the created entry, or null if error
  */
-export async function logXpHistory(userId, title, points, type = 'unknown') {
+export async function logXpHistory(userId, title, points, type = 'unknown', metadata = {}) {
   try {
     if (!userId || !title || points === undefined || points === null) {
       console.error('Invalid parameters for logXpHistory:', { userId, title, points, type });
@@ -25,6 +29,17 @@ export async function logXpHistory(userId, title, points, type = 'unknown') {
       points: points,
       type: type
     };
+
+    // Add metadata IDs based on type
+    if (type === 'badge' && metadata.badgeId) {
+      historyEntry.badgeId = metadata.badgeId;
+    }
+    if (type === 'activity' && metadata.activityId) {
+      historyEntry.activityId = metadata.activityId;
+    }
+    if (type === 'referral' && metadata.memberId) {
+      historyEntry.memberId = metadata.memberId;
+    }
 
     const docRef = await addDoc(xpHistoryCollection, historyEntry);
     console.log(`XP history entry logged for user ${userId}: ${title} (+${points} XP)`);
@@ -71,7 +86,10 @@ export async function fetchXpHistory(userId) {
         title: data.title || '',
         timestamp: timestamp,
         points: data.points || 0,
-        type: data.type || 'unknown'
+        type: data.type || 'unknown',
+        badgeId: data.badgeId || null,
+        activityId: data.activityId || null,
+        memberId: data.memberId || null
       });
     });
     
@@ -138,7 +156,10 @@ export async function fetchXpHistoryPaginated(userId, pageSize = 20, lastDoc = n
         title: data.title || '',
         timestamp: timestamp,
         points: data.points || 0,
-        type: data.type || 'unknown'
+        type: data.type || 'unknown',
+        badgeId: data.badgeId || null,
+        activityId: data.activityId || null,
+        memberId: data.memberId || null
       });
     });
     

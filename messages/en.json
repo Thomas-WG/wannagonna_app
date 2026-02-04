@@ -834,6 +834,29 @@
         "next": "Next",
         "loading": "Loading",
         "errorLoadingMembers": "Error loading members"
+    },
+    "Sharing": {
+        "share": "Share",
+        "sharing": "Sharing...",
+        "shareActivity": "Share Activity",
+        "shareBadge": "Share Badge",
+        "shareAchievement": "Share Achievement",
+        "shareReferral": "Share Referral Code",
+        "shareActivityTitle": "Check out this volunteering opportunity!",
+        "shareBadgeTitle": "I just earned a badge!",
+        "shareCompletionTitle": "I completed a volunteering activity!",
+        "shareReferralTitle": "Join me on WannaGonna!",
+        "activityPhrase": "🌟 Making a difference with...",
+        "badgePhrase": "🏆 Just earned...",
+        "completionPhrase": "✅ Completed...",
+        "referralPhrase": "Join me in making an impact!",
+        "shareOnTwitter": "Share on Twitter/X",
+        "shareOnFacebook": "Share on Facebook",
+        "shareOnLinkedIn": "Share on LinkedIn",
+        "shareOnWhatsApp": "Share on WhatsApp",
+        "copyLink": "Copy Link",
+        "copied": "Copied!",
+        "close": "Close"
     }
 }
 

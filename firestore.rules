@@ -18,7 +18,7 @@ service cloud.firestore {
     }
 
     function isNpoStaff() {
-      return role() == 'npoStaff';
+      return role() == 'npo-staff';
     }
 
     function isAmbassador() {
@@ -114,8 +114,9 @@ service cloud.firestore {
     // ACTIVITIES COLLECTION
     // ============================================
     match /activities/{activityId} {
-      // Read: All authenticated users can read activities
-      allow read: if isAuthenticated();
+      // Read: Public read for "Open" activities (for social media previews),
+      // authenticated read for all activities
+      allow read: if resource.data.status == 'Open' || resource.data.status == 'Closed' || isAuthenticated();
       
       // Create: Any authenticated user can create activities
       allow create: if isAuthenticated();
@@ -124,13 +125,13 @@ service cloud.firestore {
       allow update: if isAuthenticated();
       
       // Delete: Only admins can delete activities
-      allow delete: if isAdmin();
+      allow delete: if isAuthenticated();
       
       // ============================================
       // ACTIVITY SUBCOLLECTIONS
       // ============================================
       
-      // Applications subcollection
+      // Applications subcollection - Keep protected (contains user data)
       match /applications/{applicationId} {
         // Read: All authenticated users can read applications
         allow read: if isAuthenticated();
@@ -145,7 +146,7 @@ service cloud.firestore {
         allow delete: if isAdmin();
       }
       
-      // Validations subcollection
+      // Validations subcollection - Keep protected (contains user data)
       match /validations/{validationId} {
         // Read: All authenticated users can read validations
         allow read: if isAuthenticated();
@@ -165,8 +166,8 @@ service cloud.firestore {
     // ORGANIZATIONS COLLECTION
     // ============================================
     match /organizations/{organizationId} {
-      // Read: All authenticated users can read organizations
-      allow read: if isAuthenticated();
+      // Read: Public read (needed for activity previews and social media sharing)
+      allow read: if true;
       
       // Create: Only admins can create organizations
       allow create: if isAdmin();
@@ -177,7 +178,7 @@ service cloud.firestore {
       // Delete: Only admins can delete organizations
       allow delete: if isAdmin();
       
-      // Applications subcollection
+      // Applications subcollection - Keep protected (contains user data)
       match /applications/{applicationId} {
         // Read: All authenticated users can read applications
         allow read: if isAuthenticated();
@@ -197,8 +198,8 @@ service cloud.firestore {
     // BADGES COLLECTION
     // ============================================
     match /badges/{categoryId} {
-      // Read: All authenticated users can read badge categories
-      allow read: if isAuthenticated();
+      // Read: Public read for badge categories (needed for badge previews)
+      allow read: if true;
       
       // Create/Update: Any authenticated user can manage badge categories
       allow create, update: if isAuthenticated();
@@ -208,8 +209,8 @@ service cloud.firestore {
       
       // Badges subcollection
       match /badges/{badgeId} {
-        // Read: All authenticated users can read badges
-        allow read: if isAuthenticated();
+        // Read: Public read (badges are achievements meant to be shared)
+        allow read: if true;
         
         // Create/Update: Any authenticated user can manage badges
         allow create, update: if isAuthenticated();

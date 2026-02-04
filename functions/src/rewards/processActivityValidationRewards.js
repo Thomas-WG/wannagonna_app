@@ -561,6 +561,7 @@ export async function processActivityValidationRewards(
         title: `Activity: ${activity.title || "Unknown Activity"}`,
         points: activityXP,
         type: "activity",
+        activityId: activityId,
         timestamp: FieldValue.serverTimestamp(),
       });
     }
@@ -575,6 +576,7 @@ export async function processActivityValidationRewards(
           title: `Badge Earned: ${badgeTitle}`,
           points: badgeDetail.data.xp,
           type: "badge",
+          badgeId: badgeId,
           timestamp: FieldValue.serverTimestamp(),
         });
       }
@@ -587,6 +589,7 @@ export async function processActivityValidationRewards(
         title: `Badge Earned: ${worldBadgeEligible.title}`,
         points: worldBadgeEligible.xp,
         type: "badge",
+        badgeId: "world",
         timestamp: FieldValue.serverTimestamp(),
       });
     }
@@ -597,6 +600,7 @@ export async function processActivityValidationRewards(
         title: `Badge Earned: ${sdgBadgeEligible.title}`,
         points: sdgBadgeEligible.xp,
         type: "badge",
+        badgeId: "sdg",
         timestamp: FieldValue.serverTimestamp(),
       });
     }
