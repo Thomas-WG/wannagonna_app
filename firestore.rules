@@ -116,7 +116,7 @@ service cloud.firestore {
     match /activities/{activityId} {
       // Read: Public read for "Open" activities (for social media previews),
       // authenticated read for all activities
-      allow read: if resource.data.status == 'Open' || isAuthenticated();
+      allow read: if resource.data.status == 'Open' || resource.data.status == 'Closed' || isAuthenticated();
       
       // Create: Any authenticated user can create activities
       allow create: if isAuthenticated();
@@ -125,7 +125,7 @@ service cloud.firestore {
       allow update: if isAuthenticated();
       
       // Delete: Only admins can delete activities
-      allow delete: if isAdmin();
+      allow delete: if isAuthenticated();
       
       // ============================================
       // ACTIVITY SUBCOLLECTIONS
