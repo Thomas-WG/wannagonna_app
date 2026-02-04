@@ -834,5 +834,28 @@
         "next": "次へ",
         "loading": "読み込み中",
         "errorLoadingMembers": "メンバーの読み込みエラー"
+    },
+    "Sharing": {
+        "share": "共有",
+        "sharing": "共有中...",
+        "shareActivity": "アクティビティを共有",
+        "shareBadge": "バッジを共有",
+        "shareAchievement": "実績を共有",
+        "shareReferral": "紹介コードを共有",
+        "shareActivityTitle": "このボランティアの機会をチェックしてください！",
+        "shareBadgeTitle": "バッジを獲得しました！",
+        "shareCompletionTitle": "ボランティア活動を完了しました！",
+        "shareReferralTitle": "WannaGonnaに参加しませんか！",
+        "activityPhrase": "🌟 違いを生み出すために...",
+        "badgePhrase": "🏆 獲得しました...",
+        "completionPhrase": "✅ 完了しました...",
+        "referralPhrase": "一緒に影響を与えましょう！",
+        "shareOnTwitter": "Twitter/Xで共有",
+        "shareOnFacebook": "Facebookで共有",
+        "shareOnLinkedIn": "LinkedInで共有",
+        "shareOnWhatsApp": "WhatsAppで共有",
+        "copyLink": "リンクをコピー",
+        "copied": "コピーしました！",
+        "close": "閉じる"
     }
 }

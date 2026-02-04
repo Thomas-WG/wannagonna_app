@@ -568,9 +568,10 @@ export async function fetchUserBadges(userId) {
  * @param {number} points - The number of XP points to award
  * @param {string} title - The title/description of the XP earning event
  * @param {string} type - The type of XP earning (e.g., "referral", "activity")
+ * @param {Object} metadata - Optional metadata (badgeId, activityId, memberId)
  * @returns {Promise<boolean>} True if successful, false otherwise
  */
-export async function awardXpToUser(userId, points, title, type = 'unknown') {
+export async function awardXpToUser(userId, points, title, type = 'unknown', metadata = {}) {
   try {
     if (!userId || !points || points <= 0) {
       console.error('Invalid parameters for awardXpToUser:', { userId, points, title, type });
@@ -593,8 +594,8 @@ export async function awardXpToUser(userId, points, title, type = 'unknown') {
 
     console.log(`Awarded ${points} XP to user ${userId} for: ${title}`);
 
-    // Log to XP history
-    await logXpHistory(userId, title, points, type);
+    // Log to XP history with metadata
+    await logXpHistory(userId, title, points, type, metadata);
 
     return true;
   } catch (error) {
@@ -712,7 +713,8 @@ export async function handleReferralReward(referralCode) {
           referrerId,
           badgeXP,
           'Referred member',
-          'referral'
+          'referral',
+          { memberId: referrerId }
         );
         if (success) {
           try {

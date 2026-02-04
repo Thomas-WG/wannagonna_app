@@ -828,6 +828,7 @@ export const grantBadgeToUser = onCall(
               title: historyTitle,
               points: badgeXP,
               type: "badge",
+              badgeId: badgeId,
               timestamp: Timestamp.now(),
             });
 

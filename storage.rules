@@ -2,8 +2,65 @@ rules_version = '2';
 
 service firebase.storage {
   match /b/{bucket}/o {
+    // =========================
+    // Helpers
+    // =========================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function role() {
+      return isAuthenticated() && 'role' in request.auth.token ? request.auth.token.role : null;
+    }
+
+    function isAdmin() {
+      return role() == 'admin';
+    }
+
+    function isNpoStaff() {
+      return role() == 'npo-staff';
+    }
+
+    function isAmbassador() {
+      return role() == 'ambassador';
+    }
+
+    function isNpoUser() {
+      return isNpoStaff() || isAmbassador();
+    }
+
+    // =========================
+    // Storage Rules
+    // =========================
+    
+    // Badge images - public read, admin-only write
+    match /badges/{categoryId}/{badgeId}.{ext} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    // Organization logos - public read, admin and NPO users can write
+    match /organizations/{organizationId}/{logoPath=**} {
+      allow read: if true;
+      allow write: if isAdmin() || isNpoUser();
+    }
+    
+    // WannaGonna logo and favicon - public read, admin-only write
+    match /logo/{logoPath=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    // Members folder - protected read and write (contains user profile pictures)
+    match /members/{memberPath=**} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+    
+    // Default: protected access for all other paths
     match /{allPaths=**} {
-      allow read, write: if true;  // Allow all access in development
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
     }
   }
 }

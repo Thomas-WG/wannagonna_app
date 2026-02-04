@@ -8,6 +8,7 @@ import { HiStar, HiArrowLeft, HiClock } from 'react-icons/hi';
 import { useRouter } from 'next/navigation';
 import { formatDate, getRelativeTime } from '@/utils/dateUtils';
 import { useTranslations } from 'next-intl';
+import XpHistoryShareButton from '@/components/sharing/XpHistoryShareButton';
 
 const PAGE_SIZE = 20;
 
@@ -149,9 +150,17 @@ export default function XpHistoryPage() {
                       </div>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
-                        {entry.title}
-                      </h3>
+                      <div className="flex items-start justify-between gap-2">
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
+                          {entry.title}
+                        </h3>
+                        <XpHistoryShareButton 
+                          entry={entry}
+                          variant="icon"
+                          size="sm"
+                          className="flex-shrink-0"
+                        />
+                      </div>
                       <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                         <HiClock className="h-4 w-4" />
                         <span>
