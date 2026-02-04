@@ -863,6 +863,7 @@
         "errorLoadingOrganizations": "Error al cargar organizaciones",
         "errorLoadingOrganizationsFallback": "Por favor, inténtalo de nuevo más tarde",
         "anonymousOrganization": "Organización"
+    },
     "Sharing": {
         "share": "Compartir",
         "sharing": "Compartiendo...",

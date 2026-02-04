@@ -863,6 +863,7 @@
         "errorLoadingOrganizations": "団体の読み込み中にエラーが発生しました",
         "errorLoadingOrganizationsFallback": "しばらくしてからもう一度お試しください",
         "anonymousOrganization": "団体"
+    },
     "Sharing": {
         "share": "共有",
         "sharing": "共有中...",
