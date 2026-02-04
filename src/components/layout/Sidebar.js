@@ -24,7 +24,7 @@ import Image from 'next/image';
 import { HiChartPie, HiQuestionMarkCircle, HiLightBulb } from 'react-icons/hi';
 import { MdOutlineExplore, MdOutlineLeaderboard } from 'react-icons/md';
 import { RiTeamLine } from 'react-icons/ri';
-import { BiDonateHeart } from 'react-icons/bi';
+import { BiDonateHeart, BiBuildings } from 'react-icons/bi';
 import { FaPeopleCarryBox } from 'react-icons/fa6';
 import { IoSettingsOutline } from 'react-icons/io5';
 import { LuFileBadge2 } from 'react-icons/lu';
@@ -277,6 +277,13 @@ export default function Navbar() {
                 className='cursor-pointer min-h-[44px] flex items-center text-text-primary dark:text-text-primary hover:text-primary-600 dark:hover:text-primary-400 hover:bg-background-hover dark:hover:bg-background-hover transition-all duration-200 rounded-lg'
               >
                 {t('explore')}
+              </Sidebar.Item>
+              <Sidebar.Item
+                onClick={() => handleLinkClick('/organizations')}
+                icon={BiBuildings}
+                className='cursor-pointer text-text-primary dark:text-text-primary hover:text-primary-600 dark:hover:text-primary-400 hover:bg-background-hover dark:hover:bg-background-hover transition-all duration-200 rounded-lg'
+              >
+                {t('organizations')}
               </Sidebar.Item>
               <Sidebar.Item
                 onClick={() => handleLinkClick('/badges')}
