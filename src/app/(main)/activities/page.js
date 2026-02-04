@@ -24,7 +24,8 @@
 
 'use client'; // Enable client-side rendering for this page
 
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import ActivityCard from '@/components/activities/ActivityCard';
 import ActivityDetailsModal from '@/components/activities/ActivityDetailsModal';
 import ActivityFilters from '@/components/activities/ActivityFilters';
@@ -47,7 +48,13 @@ import { getSkillsForSelect } from '@/utils/crudSkills';
 export default function ActivitiesPage() {
   const t = useTranslations('Activities');
   const locale = useLocale();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, loading: authLoading } = useAuth();
+  const urlActivityIdProcessed = useRef(false);
+
+  // Extract activityId from URL as stable value using useMemo
+  const activityIdFromUrl = useMemo(() => searchParams.get('activityId'), [searchParams]);
 
   // Data hooks
   const { activities: allActivities, isLoading: activitiesLoading } = useOpenActivities();
@@ -85,6 +92,21 @@ export default function ActivitiesPage() {
 
   // Debounce search query
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
+
+  // Handle activityId from URL parameter (for shared links)
+  useEffect(() => {
+    // Only run on client side and after auth is loaded
+    if (typeof window === 'undefined' || authLoading || urlActivityIdProcessed.current || !activityIdFromUrl) return;
+
+    // Open the activity details modal
+    openDetailsModal(activityIdFromUrl);
+    urlActivityIdProcessed.current = true;
+    
+    // Clean up URL by removing the query parameter
+    const newUrl = new URL(window.location.href);
+    newUrl.searchParams.delete('activityId');
+    router.replace(newUrl.pathname + (newUrl.search ? newUrl.search : ''), { scroll: false });
+  }, [activityIdFromUrl, authLoading, openDetailsModal, router]);
 
   // Helper function to get date from activity start_date
   const getActivityDate = (date) => {
