@@ -38,6 +38,7 @@
         "myteam": "Mon Équipe",
         "mynonprofit": "Mon Association",
         "members": "Membres",
+        "organizations": "Organisations",
         "donate": "Faire un don",
         "settings": "Paramètres",
         "logout": "Déconnexion"
@@ -834,6 +835,34 @@
         "next": "Suivant",
         "loading": "Chargement",
         "errorLoadingMembers": "Erreur lors du chargement des membres"
+    },
+    "Organizations": {
+        "title": "Organisations à but non lucratif",
+        "subtitle": "Découvrez les organisations qui font la différence",
+        "searchPlaceholder": "Rechercher des organisations par nom ou description...",
+        "filters": "Filtres",
+        "active": "Actif",
+        "filterCountry": "Pays",
+        "filterLanguage": "Langue",
+        "filterSdg": "ODD",
+        "allCountries": "Tous les pays",
+        "allLanguages": "Toutes les langues",
+        "allSdgs": "Tous les ODD",
+        "clearAllFilters": "Effacer tous les filtres",
+        "clearAll": "Tout effacer",
+        "showing": "Affichage",
+        "of": "de",
+        "organizations": "organisations",
+        "sortBy": "Trier par",
+        "sortNameAZ": "Nom (A-Z)",
+        "sortNameZA": "Nom (Z-A)",
+        "noOrganizationsFound": "Aucune organisation trouvée",
+        "noOrganizations": "Aucune organisation trouvée dans le système",
+        "tryAdjustingFilters": "Essayez d'ajuster vos filtres",
+        "loading": "Chargement",
+        "errorLoadingOrganizations": "Erreur lors du chargement des organisations",
+        "errorLoadingOrganizationsFallback": "Veuillez réessayer plus tard",
+        "anonymousOrganization": "Organisation"
     }
 }
 
