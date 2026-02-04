@@ -1,10 +1,11 @@
 'use client';
 
-import { Card, Button, Badge, Avatar } from "flowbite-react";
+import { Card, Button, Badge } from "flowbite-react";
 import { HiCheck, HiX, HiClock, HiDocumentText } from "react-icons/hi";
-import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { formatDate } from "@/utils/dateUtils";
+import ProfilePicture from "@/components/common/ProfilePicture";
+import Image from "next/image";
 
 /**
  * Pure presentational chat-style application card component.
@@ -49,7 +50,8 @@ export default function ApplicationCard({
   const orgName = activity.organization_name;
   const activityTitle = activity.title;
 
-  const memberAvatar = memberProfile?.profilePicture || null;
+  const memberAvatarValue = memberProfile?.profilePicture || null;
+  const memberAvatar = memberAvatarValue && memberAvatarValue.trim() !== '' ? memberAvatarValue : null;
   const memberName =
     memberProfile?.displayName || memberProfile?.name || t("you") || "You";
 
@@ -111,22 +113,15 @@ export default function ApplicationCard({
       >
         {!isRight && (
           <div className="flex-shrink-0">
-            {avatarSrc ? (
-              <Avatar 
-                img={avatarSrc} 
-                rounded 
-                size="sm" 
-                className={onAvatarClick ? "cursor-pointer" : ""}
-                onClick={onAvatarClick}
-              />
-            ) : (
-              <div 
-                className={`w-8 h-8 rounded-full bg-neutral-300 dark:bg-neutral-600 flex items-center justify-center text-xs font-semibold text-white ${onAvatarClick ? "cursor-pointer" : ""}`}
-                onClick={onAvatarClick}
-              >
-                {name?.[0]?.toUpperCase() || "?"}
-              </div>
-            )}
+            <ProfilePicture
+              src={avatarSrc}
+              alt={name}
+              size={32}
+              showInitials={true}
+              name={name}
+              onClick={onAvatarClick}
+              loading="lazy"
+            />
           </div>
         )}
 
@@ -161,22 +156,15 @@ export default function ApplicationCard({
 
         {isRight && (
           <div className="flex-shrink-0">
-            {avatarSrc ? (
-              <Avatar 
-                img={avatarSrc} 
-                rounded 
-                size="sm" 
-                className={onAvatarClick ? "cursor-pointer" : ""}
-                onClick={onAvatarClick}
-              />
-            ) : (
-              <div 
-                className={`w-8 h-8 rounded-full bg-primary-500 dark:bg-primary-600 flex items-center justify-center text-xs font-semibold text-white ${onAvatarClick ? "cursor-pointer" : ""}`}
-                onClick={onAvatarClick}
-              >
-                {name?.[0]?.toUpperCase() || "?"}
-              </div>
-            )}
+            <ProfilePicture
+              src={avatarSrc}
+              alt={name}
+              size={32}
+              showInitials={true}
+              name={name}
+              onClick={onAvatarClick}
+              loading="lazy"
+            />
           </div>
         )}
       </div>
@@ -196,14 +184,19 @@ export default function ApplicationCard({
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-2 min-w-0">
             {orgLogo ? (
-              <Image
-                src={orgLogo}
-                alt={`${orgName} logo`}
-                width={40}
-                height={40}
-                className={`rounded-full flex-shrink-0 ${onOrgLogoClick ? "cursor-pointer" : ""}`}
+              <div
+                className={`rounded-full flex-shrink-0 overflow-hidden ${onOrgLogoClick ? "cursor-pointer hover:opacity-80 transition-opacity" : ""}`}
                 onClick={onOrgLogoClick}
-              />
+              >
+                <Image
+                  src={orgLogo}
+                  alt={`${orgName} logo`}
+                  width={40}
+                  height={40}
+                  className="rounded-full object-cover"
+                  unoptimized
+                />
+              </div>
             ) : (
               <div 
                 className={`w-10 h-10 rounded-full bg-neutral-300 dark:bg-neutral-700 flex items-center justify-center text-xs font-semibold text-white flex-shrink-0 ${onOrgLogoClick ? "cursor-pointer" : ""}`}
@@ -246,7 +239,9 @@ export default function ApplicationCard({
           {npoResponse &&
             renderMessageBubble(
               "left",
-              application.lastUpdatedByProfilePicture || orgLogo,
+              (application.lastUpdatedByProfilePicture && application.lastUpdatedByProfilePicture.trim() !== '') 
+                ? application.lastUpdatedByProfilePicture 
+                : orgLogo,
               application.lastUpdatedByDisplayName || orgName,
               npoResponse,
               responseDateLabel,

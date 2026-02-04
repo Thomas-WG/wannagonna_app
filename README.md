@@ -122,7 +122,32 @@ To create an optimized production build, run:
 
    ```bash
    npm run build
+   ```
 
+### Deploying
+
+The app uses **Firebase App Hosting** for the Next.js frontend and **Cloud Functions** for the backend.
+
+**App Hosting (Next.js)**
+
+- **With GitHub**: Connect your repo in Firebase Console (Build → App Hosting). Push to the configured live branch to trigger rollouts.
+- **From local**: Ensure `apphosting` is configured in `firebase.json` and env in `apphosting.yaml`, then run:
+  ```bash
+  firebase deploy
+  ```
+  Or to deploy only the app: `firebase deploy --only apphosting:<backendId>`
+- Set environment variables (and secrets) in `apphosting.yaml` or in the App Hosting backend in the Firebase Console. Replace `YOUR_BACKEND_ID` in `firebase.json` with your App Hosting backend ID.
+
+**Cloud Functions (backend)**
+
+- Deploy Firestore triggers and callable functions:
+  ```bash
+  firebase deploy --only functions
+  ```
+
+**After first deploy**
+
+- Add the App Hosting domain to **Firebase Console → Authentication → Settings → Authorized domains** (e.g. `your-backend-id--your-project-id.us-central1.hosted.app`). If you use a custom domain, add it too. Without this, Auth and FCM can fail on the new domain.
 
 ---
 

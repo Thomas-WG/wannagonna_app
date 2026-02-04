@@ -18,6 +18,7 @@ import {
   fetchOrganizationById,
   updateOrganization 
 } from '@/utils/crudOrganizations';
+import { updateActivitiesForOrganization } from '@/utils/crudActivities';
 import { uploadOrgPicture } from '@/utils/storage';
 import { countries } from 'countries-list';
 import languages from '@cospired/i18n-iso-languages';
@@ -143,6 +144,20 @@ export default function OrganizationEditPage() {
         try {
           const url = await uploadOrgPicture(logoFile, claims.npoId);
           await updateOrganization(claims.npoId, { ...normalizedForm, logo: url });
+          
+          // Update all activities for this organization with the new logo
+          try {
+            const updatedCount = await updateActivitiesForOrganization(
+              claims.npoId, 
+              url, 
+              normalizedForm.name
+            );
+            console.log(`Updated ${updatedCount} activities with new organization logo`);
+          } catch (activityUpdateError) {
+            // Log error but don't fail the organization update
+            console.error('Error updating activities with new logo:', activityUpdateError);
+          }
+          
           setOrganizationForm(prev => ({ ...prev, logo: url }));
           showToast(t('organizationUpdated'), 'success');
         } catch (error) {
@@ -269,7 +284,7 @@ export default function OrganizationEditPage() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 bg-background-page dark:bg-background-page min-h-screen">
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 bg-background-page dark:bg-background-page min-h-dvh">
         <div className="flex justify-center items-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500 dark:border-primary-400"></div>
         </div>
@@ -278,7 +293,7 @@ export default function OrganizationEditPage() {
   }
 
   return (
-    <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 max-w-4xl bg-background-page dark:bg-background-page min-h-screen">
+    <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 max-w-4xl bg-background-page dark:bg-background-page min-h-dvh">
       {/* Back Button */}
       <BackButton fallbackPath="/mynonprofit" />
 
@@ -294,7 +309,7 @@ export default function OrganizationEditPage() {
 
       {/* Form Card */}
       <Card className="shadow-md bg-background-card dark:bg-background-card border-border-light dark:border-border-dark">
-        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6 pb-safe-bottom pb-20 sm:pb-24">
           {/* Logo Upload Section */}
           <div>
             <Label htmlFor="logo" className="mb-2 block text-sm sm:text-base font-medium text-text-primary dark:text-text-primary">

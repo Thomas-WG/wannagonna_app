@@ -1,6 +1,6 @@
 "use client";
 
-import { Modal, Button, Avatar, Badge } from "flowbite-react";
+import { Modal, Button, Badge } from "flowbite-react";
 import { HiCheck, HiX, HiClock } from "react-icons/hi";
 import { useEffect, useState, useCallback } from "react";
 import { fetchApplicationsForActivity, updateApplicationStatus, countPendingApplicationsForOrganization } from "@/utils/crudApplications";
@@ -10,6 +10,7 @@ import { useAuth } from "@/utils/auth/AuthContext";
 import { useTranslations } from "next-intl";
 import { useModal } from '@/utils/modal/useModal';
 import PublicProfileModal from "@/components/profile/PublicProfileModal";
+import ProfilePicture from "@/components/common/ProfilePicture";
 
 export default function ReviewApplicationsModal({ isOpen, onClose, activity, onOrganizationDataUpdate }) {
   const { claims, user } = useAuth();
@@ -171,11 +172,13 @@ export default function ReviewApplicationsModal({ isOpen, onClose, activity, onO
                           }
                         }}
                       >
-                        <Avatar
-                          img={application.profilePicture || '/favicon.ico'}
+                        <ProfilePicture
+                          src={application.profilePicture}
                           alt={application.displayName}
-                          size="md"
-                          rounded
+                          size={40}
+                          showInitials={true}
+                          name={application.displayName}
+                          loading="lazy"
                         />
                       </div>
                       <div className="min-w-0 flex-1">

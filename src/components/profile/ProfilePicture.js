@@ -1,20 +1,47 @@
-import { Avatar } from 'flowbite-react';
+import { useRef } from 'react';
 import { useTranslations } from 'next-intl';
+import ProfilePictureDisplay from '@/components/common/ProfilePicture';
 
 export default function ProfilePicture({profileData, handleProfilePictureChange}) {
   const t = useTranslations('CompleteProfile');
+  const fileInputRef = useRef(null);
+
+  const handleImageClick = (e) => {
+    // Don't trigger if clicking on the label (camera icon)
+    if (e.target.closest('label')) {
+      e.stopPropagation();
+      return;
+    }
+    e.stopPropagation();
+    fileInputRef.current?.click();
+  };
+
+  const handleLabelClick = (e) => {
+    // Stop propagation to prevent triggering the image click handler
+    e.stopPropagation();
+    // htmlFor attribute automatically triggers the input click - no manual trigger needed
+  };
+
+  const profilePictureValue = profileData?.profilePicture || null;
+  const profilePicture = profilePictureValue && profilePictureValue.trim() !== '' ? profilePictureValue : null;
 
   return (
     <div className='flex flex-col items-center mb-6'>
-      <div className='relative'>
-        <Avatar
-          rounded
-          size='lg'
-          img={profileData.profilePicture}
+      <div className='relative' onClick={(e) => {
+        // If clicking on label, prevent event from reaching ProfilePictureDisplay
+        if (e.target.closest('label')) {
+          e.stopPropagation();
+        }
+      }}>
+        <ProfilePictureDisplay
+          src={profileData.profilePicture}
           alt='Profile picture'
+          size={96}
           className='cursor-pointer'
+          onClick={handleImageClick}
         />
         <input
+          ref={fileInputRef}
           type='file'
           accept='image/*'
           onChange={handleProfilePictureChange}
@@ -23,7 +50,8 @@ export default function ProfilePicture({profileData, handleProfilePictureChange}
         />
         <label
           htmlFor='profile-picture-input'
-          className='absolute bottom-0 right-0 bg-blue-500 text-white rounded-full p-2 cursor-pointer hover:bg-blue-600 transition-colors'
+          className='absolute bottom-0 right-0 bg-blue-500 text-white rounded-full p-2 cursor-pointer hover:bg-blue-600 transition-colors z-10'
+          onClick={handleLabelClick}
         >
           <svg
             className='w-4 h-4'

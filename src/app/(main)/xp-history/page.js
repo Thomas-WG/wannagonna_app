@@ -8,6 +8,7 @@ import { HiStar, HiArrowLeft, HiClock } from 'react-icons/hi';
 import { useRouter } from 'next/navigation';
 import { formatDate, getRelativeTime } from '@/utils/dateUtils';
 import { useTranslations } from 'next-intl';
+import XpHistoryShareButton from '@/components/sharing/XpHistoryShareButton';
 
 const PAGE_SIZE = 20;
 
@@ -22,29 +23,27 @@ export default function XpHistoryPage() {
   const [lastDoc, setLastDoc] = useState(null);
   const observerTarget = useRef(null);
 
-  // Load initial batch of XP history
+  const loadInitialXpHistory = useCallback(async () => {
+    if (!user?.uid) {
+      setLoading(false);
+      return;
+    }
+    try {
+      setLoading(true);
+      const result = await fetchXpHistoryPaginated(user.uid, PAGE_SIZE, null);
+      setXpHistory(result.entries);
+      setHasMore(result.hasNextPage);
+      setLastDoc(result.lastDoc);
+    } catch (error) {
+      console.error('Error loading XP history:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.uid]);
+
   useEffect(() => {
-    const loadInitialXpHistory = async () => {
-      if (!user?.uid) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        setLoading(true);
-        const result = await fetchXpHistoryPaginated(user.uid, PAGE_SIZE, null);
-        setXpHistory(result.entries);
-        setHasMore(result.hasNextPage);
-        setLastDoc(result.lastDoc);
-      } catch (error) {
-        console.error('Error loading XP history:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     loadInitialXpHistory();
-  }, [user]);
+  }, [loadInitialXpHistory]);
 
   // Load more entries when scrolling
   const loadMoreEntries = useCallback(async () => {
@@ -151,9 +150,17 @@ export default function XpHistoryPage() {
                       </div>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
-                        {entry.title}
-                      </h3>
+                      <div className="flex items-start justify-between gap-2">
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
+                          {entry.title}
+                        </h3>
+                        <XpHistoryShareButton 
+                          entry={entry}
+                          variant="icon"
+                          size="sm"
+                          className="flex-shrink-0"
+                        />
+                      </div>
                       <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                         <HiClock className="h-4 w-4" />
                         <span>

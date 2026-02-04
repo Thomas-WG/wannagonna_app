@@ -863,6 +863,28 @@
         "errorLoadingOrganizations": "Error al cargar organizaciones",
         "errorLoadingOrganizationsFallback": "Por favor, inténtalo de nuevo más tarde",
         "anonymousOrganization": "Organización"
+    "Sharing": {
+        "share": "Compartir",
+        "sharing": "Compartiendo...",
+        "shareActivity": "Compartir actividad",
+        "shareBadge": "Compartir insignia",
+        "shareAchievement": "Compartir logro",
+        "shareReferral": "Compartir código de referencia",
+        "shareActivityTitle": "¡Mira esta oportunidad de voluntariado!",
+        "shareBadgeTitle": "¡Acabo de ganar una insignia!",
+        "shareCompletionTitle": "¡Completé una actividad de voluntariado!",
+        "shareReferralTitle": "¡Únete a mí en WannaGonna!",
+        "activityPhrase": "🌟 Haciendo la diferencia con...",
+        "badgePhrase": "🏆 Acabo de ganar...",
+        "completionPhrase": "✅ Completado...",
+        "referralPhrase": "¡Únete a mí para generar impacto!",
+        "shareOnTwitter": "Compartir en Twitter/X",
+        "shareOnFacebook": "Compartir en Facebook",
+        "shareOnLinkedIn": "Compartir en LinkedIn",
+        "shareOnWhatsApp": "Compartir en WhatsApp",
+        "copyLink": "Copiar enlace",
+        "copied": "¡Copiado!",
+        "close": "Cerrar"
     }
 }
 

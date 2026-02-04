@@ -7,6 +7,7 @@
 
 import { useState } from 'react';
 import { Button, Label, TextInput } from 'flowbite-react';
+import useInputFocusScroll from '@/hooks/useInputFocusScroll';
 
 /**
  * EmailPasswordLogin component
@@ -17,6 +18,7 @@ import { Button, Label, TextInput } from 'flowbite-react';
 export default function EmailPasswordLogin({ onSubmit, errorMessage, t }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const handleInputFocus = useInputFocusScroll();
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -37,6 +39,7 @@ export default function EmailPasswordLogin({ onSubmit, errorMessage, t }) {
             required 
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            onFocus={handleInputFocus}
             autoComplete="username"
             className="bg-background-card dark:bg-background-card !text-text-primary dark:!text-text-primary border-border-light dark:border-border-dark placeholder:text-text-tertiary dark:placeholder:text-text-tertiary"
           />
@@ -51,6 +54,7 @@ export default function EmailPasswordLogin({ onSubmit, errorMessage, t }) {
             required 
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            onFocus={handleInputFocus}
             autoComplete="current-password"
             className="bg-background-card dark:bg-background-card !text-text-primary dark:!text-text-primary border-border-light dark:border-border-dark"
           />

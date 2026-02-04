@@ -61,9 +61,8 @@ export function useNotificationsListener(userId, limitCount = DEFAULT_LIMIT) {
           setLoading(false);
         },
         (err) => {
-          if (process.env.NODE_ENV === "development") {
-            console.error("Notifications listener error:", err);
-          }
+          // Log in all environments so production failures (e.g. missing index) are visible in console
+          console.error("Notifications listener error:", err);
           setError(err);
           setLoading(false);
         },

@@ -159,7 +159,7 @@ export default function ReviewApplicationsPage() {
   if (!user) return null
 
   return (
-    <div className="p-4 max-w-5xl mx-auto bg-background-page dark:bg-background-page min-h-screen">
+    <div className="p-4 max-w-5xl mx-auto bg-background-page dark:bg-background-page min-h-dvh">
       {/* Back Button */}
       <BackButton fallbackPath="/mynonprofit" />
 
