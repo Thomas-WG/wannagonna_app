@@ -9,15 +9,17 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
-import { Card, Button, Label, Select, Table, Modal, Toast, TextInput } from 'flowbite-react';
+import { Card, Button, Label, Table, Modal, Toast, TextInput } from 'flowbite-react';
+import Select from 'react-select';
 import { fetchMembers, updateMember } from '@/utils/crudMemberProfile';
 import { fetchOrganizations } from '@/utils/crudOrganizations';
 import { functions } from 'firebaseConfig';
 import { httpsCallable } from 'firebase/functions';
 import { useAuth } from '@/utils/auth/AuthContext';
 import { fetchUserBadges, grantBadgeToUser, removeBadgeFromUser, fetchAllBadges } from '@/utils/crudBadges';
-import Image from 'next/image';
 import BackButton from '@/components/layout/BackButton';
+import ProfilePicture from '@/components/common/ProfilePicture';
+import { useTheme } from '@/utils/theme/ThemeContext';
 
 /**
  * MembersManagementPage Component
@@ -29,6 +31,54 @@ export default function MembersManagementPage() {
   // Translation hook for internationalization
   const t = useTranslations('Admin');
   const { user } = useAuth();
+  const { isDark } = useTheme();
+  
+  // Custom styles for react-select with dark mode support
+  const selectStyles = {
+    control: (base) => ({
+      ...base,
+      backgroundColor: isDark ? '#1e293b' : '#ffffff',
+      borderColor: isDark ? '#334155' : '#e2e8f0',
+      color: isDark ? '#f8fafc' : '#0f172a',
+      minHeight: '44px', // Better touch target on mobile
+      fontSize: '14px',
+      '&:hover': {
+        borderColor: isDark ? '#fb923c' : '#f97316',
+      },
+    }),
+    menu: (base) => ({
+      ...base,
+      backgroundColor: isDark ? '#1e293b' : '#ffffff',
+      borderColor: isDark ? '#334155' : '#e2e8f0',
+      zIndex: 9999,
+    }),
+    option: (base, state) => ({
+      ...base,
+      backgroundColor: state.isSelected
+        ? (isDark ? '#334155' : '#e0f2fe')
+        : state.isFocused
+        ? (isDark ? '#334155' : '#f1f5f9')
+        : isDark ? '#1e293b' : '#ffffff',
+      color: state.isSelected
+        ? (isDark ? '#f8fafc' : '#0284c7')
+        : isDark ? '#f8fafc' : '#0f172a',
+      padding: '12px 14px',
+      minHeight: '44px',
+      fontSize: '14px',
+      cursor: 'pointer',
+      '&:active': {
+        backgroundColor: isDark ? '#475569' : '#e0f2fe',
+      },
+    }),
+    placeholder: (base) => ({
+      ...base,
+      color: isDark ? '#94a3b8' : '#64748b',
+    }),
+    singleValue: (base) => ({
+      ...base,
+      color: isDark ? '#f8fafc' : '#0f172a',
+    }),
+  };
   
   // State management
   const [members, setMembers] = useState([]); // List of all members
@@ -371,15 +421,14 @@ export default function MembersManagementPage() {
                 <Table.Row key={member.id}>
                   <Table.Cell>
                     {/* Member Profile Picture */}
-                    {member.profilePicture && (
-                      <Image 
-                        src={member.profilePicture} 
-                        alt={member.displayName} 
-                        width={40}
-                        height={40}
-                        className="rounded-full object-cover"
-                      />
-                    )}
+                    <ProfilePicture
+                      src={member.profilePicture}
+                      alt={member.displayName}
+                      size={40}
+                      showInitials={true}
+                      name={member.displayName}
+                      loading="lazy"
+                    />
                   </Table.Cell>
                   <Table.Cell className="max-w-[150px] truncate">{member.displayName}</Table.Cell>
                   <Table.Cell className="max-w-[200px] truncate">{member.email}</Table.Cell>
@@ -423,15 +472,14 @@ export default function MembersManagementPage() {
           <Card key={member.id} className="p-4">
             <div className="flex items-start gap-3">
               {/* Profile Picture */}
-              {member.profilePicture && (
-                <Image 
-                  src={member.profilePicture} 
-                  alt={member.displayName} 
-                  width={50}
-                  height={50}
-                  className="rounded-full object-cover flex-shrink-0"
-                />
-              )}
+              <ProfilePicture
+                src={member.profilePicture}
+                alt={member.displayName}
+                size={50}
+                showInitials={true}
+                name={member.displayName}
+                loading="lazy"
+              />
               <div className="flex-1 min-w-0">
                 <h3 className="font-semibold text-base truncate">{member.displayName}</h3>
                 <p className="text-sm text-gray-600 truncate">{member.email}</p>
@@ -510,22 +558,30 @@ export default function MembersManagementPage() {
               <Label htmlFor="role" className="mb-2 block text-sm font-medium">{t('role')}</Label>
               <Select
                 id="role"
-                value={roleForm.role}
-                onChange={(e) => setRoleForm({
+                options={[
+                  { value: 'admin', label: t('roleAdmin') },
+                  { value: 'ambassador', label: t('roleAmbassador') },
+                  { value: 'npo-staff', label: t('roleNpoStaff') },
+                  { value: 'member', label: t('roleNone') },
+                ]}
+                value={roleForm.role ? { value: roleForm.role, label: 
+                  roleForm.role === 'admin' ? t('roleAdmin') :
+                  roleForm.role === 'ambassador' ? t('roleAmbassador') :
+                  roleForm.role === 'npo-staff' ? t('roleNpoStaff') :
+                  t('roleNone')
+                } : null}
+                onChange={(selectedOption) => setRoleForm({
                   ...roleForm,
-                  role: e.target.value,
+                  role: selectedOption ? selectedOption.value : '',
                   // Reset npoId if role is not npo-staff
-                  npoId: e.target.value !== 'npo-staff' ? '' : roleForm.npoId
+                  npoId: selectedOption?.value !== 'npo-staff' ? '' : roleForm.npoId
                 })}
-                required
-                className="w-full text-base"
-              >
-                <option value="">{t('selectRole')}</option>
-                <option value="admin">{t('roleAdmin')}</option>
-                <option value="ambassador">{t('roleAmbassador')}</option>
-                <option value="npo-staff">{t('roleNpoStaff')}</option>
-                <option value="member">{t('roleNone')}</option>
-              </Select>
+                placeholder={t('selectRole')}
+                className="basic-single-select w-full"
+                classNamePrefix="select"
+                styles={selectStyles}
+                isClearable
+              />
             </div>
             
             {/* Organization Selection Field (only for npo-staff role) */}
@@ -534,21 +590,19 @@ export default function MembersManagementPage() {
                 <Label htmlFor="npoId" className="mb-2 block text-sm font-medium">{t('organization')}</Label>
                 <Select
                   id="npoId"
-                  value={roleForm.npoId}
-                  onChange={(e) => setRoleForm({
+                  options={organizations.map(org => ({ value: org.id, label: org.name }))}
+                  value={roleForm.npoId ? organizations.find(org => org.id === roleForm.npoId) ? 
+                    { value: roleForm.npoId, label: organizations.find(org => org.id === roleForm.npoId).name } : null : null}
+                  onChange={(selectedOption) => setRoleForm({
                     ...roleForm,
-                    npoId: e.target.value
+                    npoId: selectedOption ? selectedOption.value : ''
                   })}
-                  required
-                  className="w-full text-base"
-                >
-                  <option value="">{t('selectOrganization')}</option>
-                  {organizations.map(org => (
-                    <option key={org.id} value={org.id}>
-                      {org.name}
-                    </option>
-                  ))}
-                </Select>
+                  placeholder={t('selectOrganization')}
+                  className="basic-single-select w-full"
+                  classNamePrefix="select"
+                  styles={selectStyles}
+                  isClearable
+                />
               </div>
             )}
 
@@ -620,19 +674,17 @@ export default function MembersManagementPage() {
               <div className="flex flex-col sm:flex-row gap-2">
                 <div className="flex-1">
                   <Select
-                    value={badgeToAdd}
-                    onChange={(e) => setBadgeToAdd(e.target.value)}
-                    className="w-full text-base"
-                  >
-                    <option value="">{t('selectBadge') || 'Select a badge...'}</option>
-                    {allBadges
+                    options={allBadges
                       .filter(badge => !memberBadges.some(mb => mb.id === badge.id))
-                      .map(badge => (
-                        <option key={badge.id} value={badge.id}>
-                          {badge.title || badge.id}
-                        </option>
-                      ))}
-                  </Select>
+                      .map(badge => ({ value: badge.id, label: badge.title || badge.id }))}
+                    value={badgeToAdd ? { value: badgeToAdd, label: allBadges.find(b => b.id === badgeToAdd)?.title || badgeToAdd } : null}
+                    onChange={(selectedOption) => setBadgeToAdd(selectedOption ? selectedOption.value : '')}
+                    placeholder={t('selectBadge') || 'Select a badge...'}
+                    className="basic-single-select w-full"
+                    classNamePrefix="select"
+                    styles={selectStyles}
+                    isClearable
+                  />
                 </div>
                 <Button 
                   onClick={handleAddBadge} 

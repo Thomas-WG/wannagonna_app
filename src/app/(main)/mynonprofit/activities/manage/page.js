@@ -18,6 +18,7 @@ import ProgressStepper from '@/components/layout/ProgressStepper';
 import { useAuth } from '@/utils/auth/AuthContext'; // Hook for accessing user authentication status
 import { useTranslations } from 'use-intl';
 import BackButton from '@/components/layout/BackButton';
+import { countries } from 'countries-list';
 
 // Import the new components
 import CategorySelector from '@/components/activities/CategorySelector';
@@ -25,6 +26,45 @@ import ActivityDetailsForm from '@/components/activities/ActivityDetailsForm';
 import SDGSelector from '@/components/activities/SDGSelector';
 import FormNavigation from '@/components/activities/FormNavigation';
 import PublishDraftModal from '@/components/activities/PublishDraftModal';
+
+/**
+ * Normalize country value to country code
+ * Converts country names to codes (e.g., "Japan" -> "JP")
+ * If already a code, returns it uppercase
+ * @param {string} countryValue - Country code or name
+ * @returns {string} Normalized country code
+ */
+function normalizeCountryToCode(countryValue) {
+  if (!countryValue || typeof countryValue !== 'string') {
+    return countryValue || '';
+  }
+
+  const trimmedValue = countryValue.trim();
+  if (!trimmedValue) {
+    return '';
+  }
+
+  // Check if it's already a valid country code (2 uppercase letters)
+  const upperValue = trimmedValue.toUpperCase();
+  if (upperValue.length === 2 && /^[A-Z]{2}$/.test(upperValue)) {
+    // Check if it exists in countries list
+    if (countries[upperValue]) {
+      return upperValue;
+    }
+  }
+
+  // Try to find by country name (case-insensitive)
+  const foundEntry = Object.entries(countries).find(
+    ([code, country]) => country.name.toLowerCase() === trimmedValue.toLowerCase()
+  );
+
+  if (foundEntry) {
+    return foundEntry[0]; // Return the country code
+  }
+
+  // If not found, return the original value (might be a valid code we don't recognize)
+  return upperValue.length === 2 ? upperValue : trimmedValue;
+}
 
 export default function CreateUpdateActivityPage() {
   // Retrieve query parameters from URL
@@ -90,7 +130,7 @@ export default function CreateUpdateActivityPage() {
               organizationId: claims.npoId,
               organization_name: orgData.name || prev.organization_name,
               organization_logo: orgData.logo || prev.organization_logo,
-              country: orgData.country || prev.country,
+              country: orgData.country ? normalizeCountryToCode(orgData.country) : prev.country,
               city: orgData.city || prev.city,
               languages: orgData.languages || prev.languages,
               sdg: orgData.sdg || prev.sdg,
@@ -300,7 +340,9 @@ export default function CreateUpdateActivityPage() {
       externalPlatformLink: formData.externalPlatformLink || formData.activity_url || '',
       activity_url: formData.activity_url || formData.externalPlatformLink || '',
       // Normalize skills to store only values
-      skills: normalizedSkills
+      skills: normalizedSkills,
+      // Normalize country to ensure it's always a country code (e.g., "JP" not "Japan")
+      country: formData.country ? normalizeCountryToCode(formData.country) : formData.country
     };
     
     try {
@@ -391,7 +433,7 @@ export default function CreateUpdateActivityPage() {
   if (!user) return null;
 
   return (
-    <div className='min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800'>
+    <div className='min-h-dvh bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800'>
       <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8'>
         {/* Header Section */}
         <div className='mb-6 sm:mb-8'>
@@ -426,7 +468,7 @@ export default function CreateUpdateActivityPage() {
 
         {/* Form Content */}
         {!loading && (
-          <form onSubmit={handleSubmit} className='space-y-4 sm:space-y-6'>
+          <form onSubmit={handleSubmit} className='space-y-4 sm:space-y-6 pb-safe-bottom pb-20 sm:pb-24'>
             {/* Step 1 */}
             {currentStep === 1 && (
               <div className='animate-fadeIn'>

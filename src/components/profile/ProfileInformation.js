@@ -1,10 +1,11 @@
-import { Card, Label, TextInput, Textarea, Select as FlowbiteSelect } from 'flowbite-react';
+import { Card, Label, TextInput, Textarea } from 'flowbite-react';
 import ProfilePicture from './ProfilePicture';
 import { useTranslations } from 'next-intl';
 import Select from 'react-select';
 import { useTheme } from '@/utils/theme/ThemeContext';
 import { Controller } from 'react-hook-form';
 import FormError from './FormError';
+import useInputFocusScroll from '@/hooks/useInputFocusScroll';
 
 export default function ProfileInformation({ 
   control, 
@@ -16,6 +17,7 @@ export default function ProfileInformation({
 }) {
   const t = useTranslations('CompleteProfile');
   const { isDark } = useTheme();
+  const handleInputFocus = useInputFocusScroll();
   
   // Watch profilePicture for ProfilePicture component
   const profilePicture = watch('profilePicture');
@@ -156,6 +158,10 @@ export default function ProfileInformation({
                   {...field}
                   id="bio" 
                   placeholder="A few words about yourself" 
+                  onFocus={(e) => {
+                    field.onFocus?.(e);
+                    handleInputFocus(e);
+                  }}
                   className="w-full bg-background-card dark:bg-background-card !text-text-primary dark:!text-text-primary border-border-light dark:border-border-dark placeholder:text-text-tertiary dark:placeholder:text-text-tertiary"
                 />
               )}
@@ -178,6 +184,10 @@ export default function ProfileInformation({
                   id="cause" 
                   placeholder="What cause are you passionate about?" 
                   rows={3}
+                  onFocus={(e) => {
+                    field.onFocus?.(e);
+                    handleInputFocus(e);
+                  }}
                   className="w-full bg-background-card dark:bg-background-card !text-text-primary dark:!text-text-primary border-border-light dark:border-border-dark placeholder:text-text-tertiary dark:placeholder:text-text-tertiary"
                 />
               )}
@@ -200,6 +210,10 @@ export default function ProfileInformation({
                   id="hobbies" 
                   placeholder="What are your hobbies and interests?" 
                   rows={3}
+                  onFocus={(e) => {
+                    field.onFocus?.(e);
+                    handleInputFocus(e);
+                  }}
                   className="w-full bg-background-card dark:bg-background-card !text-text-primary dark:!text-text-primary border-border-light dark:border-border-dark placeholder:text-text-tertiary dark:placeholder:text-text-tertiary"
                 />
               )}
@@ -217,18 +231,23 @@ export default function ProfileInformation({
               name="country"
               control={control}
               render={({ field }) => (
-                <FlowbiteSelect
+                <Select
                   {...field}
                   id="country"
-                  className="w-full bg-background-card dark:bg-background-card text-text-primary dark:text-text-primary border-border-light dark:border-border-dark"
-                >
-                  <option value="">Select a country</option>
-                  {countryOptions.map(({ value, label }) => (
-                    <option key={value} value={value}>
-                      {label}
-                    </option>
-                  ))}
-                </FlowbiteSelect>
+                  options={countryOptions}
+                  value={countryOptions.find(option => option.value === field.value) || null}
+                  onChange={(selectedOption) => {
+                    field.onChange(selectedOption ? selectedOption.value : '');
+                  }}
+                  onFocus={(e) => {
+                    field.onFocus?.(e);
+                    handleInputFocus(e);
+                  }}
+                  placeholder="Select a country"
+                  className="basic-single-select w-full"
+                  classNamePrefix="select"
+                  styles={selectStyles}
+                />
               )}
             />
             <FormError message={errors.country?.message} />

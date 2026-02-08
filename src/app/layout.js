@@ -28,51 +28,20 @@ import ErrorBoundary from '@/components/ErrorBoundary'; // Error boundary for er
 import { Roboto } from 'next/font/google'; // Roboto font from Google Fonts
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
-import { siteConfig } from '@/constant/config';
+import { metadata as siteMetadata } from '@/constant/config';
+
+export const metadata = siteMetadata;
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+};
 
 // Configure Roboto font settings for the app
 const roboto = Roboto({
   weight: ['400', '500', '700'], // Font weights used in the app
   subsets: ['latin'], // Character subset to include
 });
-
-// PWA Metadata configuration
-export const metadata = {
-  metadataBase: new URL(siteConfig.url),
-  title: {
-    default: siteConfig.title,
-    template: `%s | ${siteConfig.title}`,
-  },
-  description: siteConfig.description,
-  manifest: '/manifest.webmanifest',
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: 'default',
-    title: 'WannaGonna',
-  },
-  icons: {
-    icon: [
-      { url: '/favicon/favicon.ico' },
-      { url: '/favicon/favicon-96x96.png', sizes: '96x96', type: 'image/png' },
-    ],
-    apple: [
-      { url: '/favicon/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
-    ],
-  },
-};
-
-// Viewport configuration for mobile app-like experience
-export const viewport = {
-  width: 'device-width',
-  initialScale: 1,
-  maximumScale: 5,
-  userScalable: true,
-  viewportFit: 'cover', // Allows content to extend under notch/status bar
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#f97316' },
-    { media: '(prefers-color-scheme: dark)', color: '#f97316' },
-  ],
-};
 
 /**
  * RootLayout - Main layout component for the app
@@ -85,7 +54,6 @@ export default async function RootLayout({ children }) {
   return (
     <html lang={locale} className={roboto.className} suppressHydrationWarning>
       <head>
-        {/* Theme initialization script - must run before first paint */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -98,26 +66,46 @@ export default async function RootLayout({ children }) {
                     document.documentElement.classList.remove('dark');
                   }
                 } catch (e) {}
+                
+                // Preserve native Image constructor to prevent conflicts with Next.js Image component
+                // This ensures window.Image always refers to the native DOM Image constructor
+                if (typeof window !== 'undefined' && window.Image) {
+                  var NativeImage = window.Image;
+                  
+                  // Store reference for fallback
+                  if (!window.__nativeImageConstructor) {
+                    window.__nativeImageConstructor = NativeImage;
+                  }
+                  
+                  // Ensure window.Image always returns the native constructor
+                  // This prevents Next.js Image imports from shadowing the native constructor
+                  try {
+                    Object.defineProperty(window, 'Image', {
+                      get: function() {
+                        return NativeImage;
+                      },
+                      configurable: true,
+                      enumerable: true
+                    });
+                  } catch (e) {
+                    // If defineProperty fails, at least we have the reference stored
+                    console.warn('Could not protect native Image constructor:', e);
+                  }
+                }
               })();
             `,
           }}
         />
-        {/* iOS-specific PWA meta tags */}
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="WannaGonna" />
-        <link rel="apple-touch-icon" href="/favicon/apple-touch-icon.png" />
-        {/* iOS splash screens - add apple-touch-startup-image links here when splash images are generated */}
       </head>
-      <body className='h-screen flex overflow-hidden' suppressHydrationWarning>
+      <body className='min-h-dvh overflow-y-auto scroll-touch' suppressHydrationWarning>
       {/* Wrap the entire app in NextIntlClientProvider for access to internationalization services */}
         <NextIntlClientProvider messages={messages}>
           {/* Wrap the entire app in ErrorBoundary for error handling (outermost catch-all) */}
           <ErrorBoundary>
             {/* Consolidated providers component with individual error boundaries for each provider */}
             <Providers>
-              {/* Main content area, which displays the child components */}
-              <main className='flex-1'>{children}</main>
+              {/* Main content area - block flow so body scrolls (enables native pull-to-refresh) */}
+              <main>{children}</main>
             </Providers>
           </ErrorBoundary>
         </NextIntlClientProvider>

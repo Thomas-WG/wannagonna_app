@@ -20,7 +20,11 @@ export const metadata = {
     apple: '/favicon/apple-touch-icon.png',
   },
   manifest: '/favicon/site.webmanifest',
-
+  appleWebApp: {
+    capable: true,
+    title: 'WannaGonna',
+    statusBarStyle: 'default',
+  },
   authors: [
     {
       name: 'Thomas BERTIN',
