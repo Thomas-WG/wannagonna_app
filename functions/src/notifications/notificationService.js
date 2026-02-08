@@ -1,5 +1,7 @@
-import {db, messaging} from "../init.js";
+import {db, messaging, auth} from "../init.js";
 import {FieldValue} from "firebase-admin/firestore";
+import {sendMailgunEmail} from "./emailService.js";
+import {generateNotificationEmail} from "./emailTemplates.js";
 
 /**
  * Notification schema (Firestore collection: notifications)
@@ -197,10 +199,12 @@ export async function sendUserNotification({
   const categoryPrefs = prefsRoot[category] || {
     inApp: true,
     push: false,
+    email: false,
   };
 
   const shouldInApp = categoryPrefs.inApp !== false;
   const shouldPush = categoryPrefs.push === true;
+  const shouldEmail = categoryPrefs.email === true;
 
   let notificationId = null;
 
@@ -257,6 +261,28 @@ export async function sendUserNotification({
       } catch (error) {
         console.error("Failed to send push notification:", error);
       }
+    }
+  }
+
+  if (shouldEmail) {
+    try {
+      const userRecord = await auth.getUser(userId);
+      const userEmail = userRecord.email;
+      if (userEmail) {
+        const email = generateNotificationEmail({
+          title,
+          body,
+          link: link || null,
+        });
+        await sendMailgunEmail({
+          to: userEmail,
+          subject: email.subject,
+          text: email.text,
+          html: email.html,
+        });
+      }
+    } catch (error) {
+      console.error("Failed to send notification email:", error);
     }
   }
 }

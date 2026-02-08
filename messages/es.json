@@ -79,6 +79,7 @@
         "category": "Categoría",
         "inApp": "En la aplicación",
         "push": "Push",
+        "email": "Correo electrónico",
         "gamification": "Gamificación (insignias, XP, referidos)",
         "activities": "Actividades (solicitudes y actualizaciones)",
         "saving": "Guardando preferencias...",
@@ -95,7 +96,7 @@
         "successLanguageChange": "Idioma cambiado exitosamente.",
         "savingLanguage": "Cambiando idioma...",
         "confirmDisableAllNotifications": "¿Desactivar todas las notificaciones?",
-        "confirmDisableAllNotificationsMessage": "¿Estás seguro de que quieres desactivar todas las notificaciones? No recibirás ninguna notificación en la aplicación ni push para gamificación o actividades.",
+        "confirmDisableAllNotificationsMessage": "¿Estás seguro de que quieres desactivar todas las notificaciones? No recibirás ninguna notificación en la aplicación, push ni por correo para gamificación o actividades.",
         "confirm": "Confirmar",
         "cancel": "Cancelar"
     },

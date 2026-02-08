@@ -252,16 +252,27 @@ export const onApplicationStatusChangedNotifyUser = onDocumentUpdated(
                   );
                 }
 
-                // Send introduction email to both users
-                if (participantEmail && validatorEmail) {
-                  console.log("Sending introduction email to both users:", {
-                    participant: participantEmail,
-                    validator: validatorEmail,
+                // Build recipient list: only users who have ACTIVITY.email enabled
+                const participantPrefs = (await db.collection("members")
+                  .doc(userId).get()).data()?.notificationPreferences?.ACTIVITY;
+                const validatorPrefs = (await db.collection("members")
+                  .doc(after.lastStatusUpdatedBy).get())
+                  .data()?.notificationPreferences?.ACTIVITY;
+                const recipientList = [];
+                if (participantEmail && participantPrefs?.email === true) {
+                  recipientList.push(participantEmail);
+                }
+                if (validatorEmail && validatorPrefs?.email === true) {
+                  recipientList.push(validatorEmail);
+                }
+
+                if (recipientList.length > 0) {
+                  console.log("Sending introduction email to recipients:", {
+                    recipientList,
                   });
 
                   const activityTitle = activity.title || "the activity";
 
-                  // Generate email using template
                   const email = generateApplicationApprovalEmail({
                     activityTitle,
                     participantName,
@@ -273,7 +284,7 @@ export const onApplicationStatusChangedNotifyUser = onDocumentUpdated(
                   });
 
                   await sendMailgunEmail({
-                    to: [participantEmail, validatorEmail],
+                    to: recipientList,
                     subject: email.subject,
                     text: email.text,
                     html: email.html,
@@ -287,6 +298,12 @@ export const onApplicationStatusChangedNotifyUser = onDocumentUpdated(
                   if (!validatorEmail) {
                     console.log(
                         "Skipping email - validator email not available",
+                    );
+                  }
+                  if (recipientList.length === 0 && (participantEmail ||
+                    validatorEmail)) {
+                    console.log(
+                        "Skipping email - no recipient has ACTIVITY.email on",
                     );
                   }
                 }

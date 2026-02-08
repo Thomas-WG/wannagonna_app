@@ -79,6 +79,7 @@
         "category": "Category",
         "inApp": "In-app",
         "push": "Push",
+        "email": "Email",
         "gamification": "Gamification (badges, XP, referrals)",
         "activities": "Activities (applications & updates)",
         "saving": "Saving preferences...",
@@ -95,7 +96,7 @@
         "successLanguageChange": "Language changed successfully.",
         "savingLanguage": "Changing language...",
         "confirmDisableAllNotifications": "Disable All Notifications?",
-        "confirmDisableAllNotificationsMessage": "Are you sure you want to disable all notifications? You will not receive any in-app or push notifications for gamification or activities.",
+        "confirmDisableAllNotificationsMessage": "Are you sure you want to disable all notifications? You will not receive any in-app, push, or email notifications for gamification or activities.",
         "confirm": "Confirm",
         "cancel": "Cancel"
     },

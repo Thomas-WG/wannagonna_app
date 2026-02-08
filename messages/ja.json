@@ -79,6 +79,7 @@
         "category": "カテゴリ",
         "inApp": "アプリ内",
         "push": "プッシュ通知",
+        "email": "メール",
         "gamification": "ゲーミフィケーション（バッジ、XP、紹介など）",
         "activities": "アクティビティ（応募と更新）",
         "saving": "設定を保存しています...",
@@ -95,7 +96,7 @@
         "successLanguageChange": "言語が正常に変更されました。",
         "savingLanguage": "言語を変更しています...",
         "confirmDisableAllNotifications": "すべての通知を無効にしますか？",
-        "confirmDisableAllNotificationsMessage": "すべての通知を無効にしてもよろしいですか？ゲーミフィケーションやアクティビティに関するアプリ内通知やプッシュ通知は一切受け取れなくなります。",
+        "confirmDisableAllNotificationsMessage": "すべての通知を無効にしてもよろしいですか？ゲーミフィケーションやアクティビティに関するアプリ内・プッシュ・メール通知は一切受け取れなくなります。",
         "confirm": "確認",
         "cancel": "キャンセル"
     },
