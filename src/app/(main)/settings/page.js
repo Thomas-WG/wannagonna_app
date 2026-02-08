@@ -35,8 +35,8 @@ export default function SettingsPage() {
   const [savingToggle, setSavingToggle] = useState(null); // Track which toggle is being saved
   const [changingLanguage, setChangingLanguage] = useState(false);
   const [prefs, setPrefs] = useState({
-    GAMIFICATION: {inApp: true, push: false},
-    ACTIVITY: {inApp: true, push: false},
+    GAMIFICATION: {inApp: true, push: false, email: false},
+    ACTIVITY: {inApp: true, push: false, email: false},
   });
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState({ type: 'success', message: '' });
@@ -94,10 +94,12 @@ export default function SettingsPage() {
             GAMIFICATION: {
               inApp: storedPrefs.GAMIFICATION?.inApp !== false,
               push: storedPrefs.GAMIFICATION?.push === true,
+              email: storedPrefs.GAMIFICATION?.email === true,
             },
             ACTIVITY: {
               inApp: storedPrefs.ACTIVITY?.inApp !== false,
               push: storedPrefs.ACTIVITY?.push === true,
+              email: storedPrefs.ACTIVITY?.email === true,
             },
           });
         }
@@ -126,20 +128,21 @@ export default function SettingsPage() {
     loadPreferences();
   }, [user]);
 
+  const channels = ['inApp', 'push', 'email'];
+
   // Check if disabling this toggle would disable all notifications
   const wouldDisableAllNotifications = (category, channel, nextPrefs) => {
     const otherCategory = category === 'GAMIFICATION' ? 'ACTIVITY' : 'GAMIFICATION';
-    const otherChannel = channel === 'inApp' ? 'push' : 'inApp';
-    
-    // If disabling this channel
+    const otherChannelsInCategory = channels.filter((ch) => ch !== channel);
+    const anyOtherInCategory = otherChannelsInCategory.some(
+      (ch) => nextPrefs[category][ch] === true,
+    );
+    const otherCategoryFullyDisabled = channels.every(
+      (ch) => !nextPrefs[otherCategory][ch],
+    );
+
     if (!nextPrefs[category][channel]) {
-      // Check if the other channel in this category is also disabled
-      const otherChannelDisabled = !nextPrefs[category][otherChannel];
-      // Check if both channels in the other category are disabled
-      const otherCategoryFullyDisabled = !nextPrefs[otherCategory].inApp && !nextPrefs[otherCategory].push;
-      
-      // If this is the last enabled channel across all categories
-      if (otherChannelDisabled && otherCategoryFullyDisabled) {
+      if (!anyOtherInCategory && otherCategoryFullyDisabled) {
         return true;
       }
     }
@@ -442,6 +445,21 @@ export default function SettingsPage() {
                       )}
                     </span>
                   </label>
+                  <label className="flex items-center gap-2 text-xs sm:text-sm text-text-primary dark:text-text-primary cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={prefs.GAMIFICATION.email}
+                      onChange={() => handleToggle('GAMIFICATION', 'email')}
+                      disabled={savingPrefs || savingToggle === 'GAMIFICATION-email'}
+                      className="h-4 w-4 rounded border-border-light dark:border-border-dark text-primary-600 focus:ring-primary-500 focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    />
+                    <span className="flex items-center gap-1">
+                      {t('email')}
+                      {savingToggle === 'GAMIFICATION-email' && (
+                        <span className="text-xs text-text-tertiary dark:text-text-tertiary">({t('saving')})</span>
+                      )}
+                    </span>
+                  </label>
                 </div>
               </div>
 
@@ -479,6 +497,21 @@ export default function SettingsPage() {
                     <span className="flex items-center gap-1">
                       {t('push')}
                       {savingToggle === 'ACTIVITY-push' && (
+                        <span className="text-xs text-text-tertiary dark:text-text-tertiary">({t('saving')})</span>
+                      )}
+                    </span>
+                  </label>
+                  <label className="flex items-center gap-2 text-xs sm:text-sm text-text-primary dark:text-text-primary cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={prefs.ACTIVITY.email}
+                      onChange={() => handleToggle('ACTIVITY', 'email')}
+                      disabled={savingPrefs || savingToggle === 'ACTIVITY-email'}
+                      className="h-4 w-4 rounded border-border-light dark:border-border-dark text-primary-600 focus:ring-primary-500 focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    />
+                    <span className="flex items-center gap-1">
+                      {t('email')}
+                      {savingToggle === 'ACTIVITY-email' && (
                         <span className="text-xs text-text-tertiary dark:text-text-tertiary">({t('saving')})</span>
                       )}
                     </span>
