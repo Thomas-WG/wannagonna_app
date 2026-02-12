@@ -11,15 +11,16 @@ import { memo } from 'react';
  */
 const KPISection = memo(function KPISection({ orgData, closedActivitiesCount, totalActivities }) {
   const t = useTranslations('MyNonProfit');
+  const tDashboard = useTranslations('Dashboard');
 
   return (
     <div className="mb-6 sm:mb-8">
       <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 px-1 text-text-primary dark:text-text-primary">
-        {t('metricsAndFilters')}
+        {tDashboard('yourStatistics')}
       </h2>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
         {/* All Activities Card */}
-        <div className="bg-background-card dark:bg-background-card rounded-lg shadow-md border border-border-light dark:border-border-dark hover:shadow-lg transition-shadow">
+        <div className="bg-background-card dark:bg-background-card rounded-lg border border-border-light dark:border-border-dark">
           <div className="flex items-center gap-2 sm:gap-3 py-1 sm:py-1.5 px-2 sm:px-2.5">
             <div className="bg-neutral-100 dark:bg-neutral-800 p-2 rounded-full flex-shrink-0">
               <HiViewGrid className="h-5 w-5 sm:h-6 sm:w-6 text-neutral-600 dark:text-neutral-400" />
@@ -34,7 +35,7 @@ const KPISection = memo(function KPISection({ orgData, closedActivitiesCount, to
         </div>
 
         {/* Online Activities Card */}
-        <div className="bg-background-card dark:bg-background-card rounded-lg shadow-md border border-border-light dark:border-border-dark hover:shadow-lg transition-shadow">
+        <div className="bg-background-card dark:bg-background-card rounded-lg border border-border-light dark:border-border-dark">
           <div className="flex items-center gap-2 sm:gap-3 py-1 sm:py-1.5 px-2 sm:px-2.5">
             <div className="bg-activityType-online-100 dark:bg-activityType-online-900 p-2 rounded-full flex-shrink-0">
               <MdOutlineSocialDistance className="h-5 w-5 sm:h-6 sm:w-6 text-activityType-online-600 dark:text-activityType-online-400" />
@@ -49,7 +50,7 @@ const KPISection = memo(function KPISection({ orgData, closedActivitiesCount, to
         </div>
 
         {/* Local Activities Card */}
-        <div className="bg-background-card dark:bg-background-card rounded-lg shadow-md border border-border-light dark:border-border-dark hover:shadow-lg transition-shadow">
+        <div className="bg-background-card dark:bg-background-card rounded-lg border border-border-light dark:border-border-dark">
           <div className="flex items-center gap-2 sm:gap-3 py-1 sm:py-1.5 px-2 sm:px-2.5">
             <div className="bg-activityType-local-100 dark:bg-activityType-local-900 p-2 rounded-full flex-shrink-0">
               <HiOfficeBuilding className="h-5 w-5 sm:h-6 sm:w-6 text-activityType-local-600 dark:text-activityType-local-400" />
@@ -64,7 +65,7 @@ const KPISection = memo(function KPISection({ orgData, closedActivitiesCount, to
         </div>
 
         {/* Total Events Card */}
-        <div className="bg-background-card dark:bg-background-card rounded-lg shadow-md border border-border-light dark:border-border-dark hover:shadow-lg transition-shadow">
+        <div className="bg-background-card dark:bg-background-card rounded-lg border border-border-light dark:border-border-dark">
           <div className="flex items-center gap-2 sm:gap-3 py-1 sm:py-1.5 px-2 sm:px-2.5">
             <div className="bg-activityType-event-100 dark:bg-activityType-event-900 p-2 rounded-full flex-shrink-0">
               <HiCalendar className="h-5 w-5 sm:h-6 sm:w-6 text-activityType-event-600 dark:text-activityType-event-400" />
@@ -79,7 +80,7 @@ const KPISection = memo(function KPISection({ orgData, closedActivitiesCount, to
         </div>
 
         {/* Closed Activities Card */}
-        <div className="bg-background-card dark:bg-background-card rounded-lg shadow-md border border-border-light dark:border-border-dark hover:shadow-lg transition-shadow">
+        <div className="bg-background-card dark:bg-background-card rounded-lg border border-border-light dark:border-border-dark">
           <div className="flex items-center gap-2 sm:gap-3 py-1 sm:py-1.5 px-2 sm:px-2.5">
             <div className="bg-primary-100 dark:bg-primary-900 p-2 rounded-full flex-shrink-0">
               <HiLockClosed className="h-5 w-5 sm:h-6 sm:w-6 text-primary-600 dark:text-primary-400" />
@@ -94,7 +95,7 @@ const KPISection = memo(function KPISection({ orgData, closedActivitiesCount, to
         </div>
 
         {/* Total Participants Card */}
-        <div className="bg-background-card dark:bg-background-card rounded-lg shadow-md border border-border-light dark:border-border-dark hover:shadow-lg transition-shadow">
+        <div className="bg-background-card dark:bg-background-card rounded-lg border border-border-light dark:border-border-dark">
           <div className="flex items-center gap-2 sm:gap-3 py-1 sm:py-1.5 px-2 sm:px-2.5">
             <div className="bg-semantic-error-100 dark:bg-semantic-error-900 p-2 rounded-full flex-shrink-0">
               <HiUsers className="h-5 w-5 sm:h-6 sm:w-6 text-semantic-error-600 dark:text-semantic-error-400" />

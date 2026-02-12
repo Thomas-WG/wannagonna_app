@@ -15,6 +15,7 @@ import {
 import { calculateActivityXP } from '@/utils/calculateActivityXP';
 import {fetchOrganizationById} from '@/utils/crudOrganizations';
 import ProgressStepper from '@/components/layout/ProgressStepper';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/utils/auth/AuthContext'; // Hook for accessing user authentication status
 import { useTranslations } from 'use-intl';
 import BackButton from '@/components/layout/BackButton';
@@ -30,10 +31,12 @@ export default function CreateUpdateActivityPage() {
   // Retrieve query parameters from URL
   const searchParams = useSearchParams();
   const router = useRouter(); //for changing page
+  const queryClient = useQueryClient();
   const activityId = searchParams.get('activityId'); // Retrieve activity ID if present (edit mode)
   const prefillType = searchParams.get('type'); // Prefill type when coming from NPO radial menu
   const isEditMode = Boolean(activityId); // Determine if the page is in edit mode
   const { user, claims, loading } = useAuth(); // Get authenticated user information and loading status
+  const organizationId = claims?.npoId;
   const t = useTranslations('ManageActivities'); // Internationalization function for translations
 
   // State to manage form data
@@ -308,6 +311,9 @@ export default function CreateUpdateActivityPage() {
     if (isEditMode) {
           // For updates, just save and navigate back (no status modal)
           await updateActivity(activityId, baseDataToSave);
+          if (organizationId) {
+            queryClient.invalidateQueries({ queryKey: ['npoDashboardActivities', organizationId] });
+          }
           router.back();
     } else {
           // For new activities, create first, then show status modal
@@ -336,7 +342,10 @@ export default function CreateUpdateActivityPage() {
       await updateActivityStatus(savedActivityId, 'Open');
       console.log('Activity status updated successfully');
       setShowStatusModal(false);
-      // Redirect to NPO dashboard after successful status update
+      // Invalidate dashboard activities so the list refreshes when we land
+      if (organizationId) {
+        queryClient.invalidateQueries({ queryKey: ['npoDashboardActivities', organizationId] });
+      }
       router.push('/mynonprofit');
     } catch (error) {
       console.error('Error updating activity status:', error);
@@ -360,7 +369,9 @@ export default function CreateUpdateActivityPage() {
       await updateActivityStatus(savedActivityId, 'Draft');
       console.log('Activity status updated successfully');
       setShowStatusModal(false);
-      // Navigate back after successful status update
+      if (organizationId) {
+        queryClient.invalidateQueries({ queryKey: ['npoDashboardActivities', organizationId] });
+      }
       router.back();
     } catch (error) {
       console.error('Error updating activity status:', error);

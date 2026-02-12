@@ -3,7 +3,74 @@ import {onDocumentCreated, onDocumentUpdated} from
 import {processActivityValidationRewards} from
   "./processActivityValidationRewards.js";
 import {db} from "../init.js";
-import {FieldValue} from "firebase-admin/firestore";
+import {FieldValue, Timestamp} from "firebase-admin/firestore";
+
+/**
+ * Upsert a participant record under the NPO so the participants list can query
+ * one doc per user per org with online/local/event booleans and timestamps.
+ * @param {string} activityId - Activity ID
+ * @param {string} userId - User ID of the validated volunteer
+ * @return {Promise<void>}
+ */
+async function upsertParticipantRecord(activityId, userId) {
+  const activityRef = db.collection("activities").doc(activityId);
+  const activitySnap = await activityRef.get();
+  if (!activitySnap.exists) {
+    console.warn("upsertParticipantRecord: activity not found", activityId);
+    return;
+  }
+  const activity = activitySnap.data();
+  const organizationId = activity.organizationId;
+  const activityType = activity.type; // 'online' | 'local' | 'event'
+  if (!organizationId || !activityType) {
+    console.warn(
+        "upsertParticipantRecord: missing organizationId or type",
+        {activityId, organizationId, activityType},
+    );
+    return;
+  }
+  const orgRef = db.collection("organizations").doc(organizationId);
+  const participantRef = orgRef.collection("participant_records").doc(userId);
+  const now = Timestamp.now();
+  const typeField = activityType === "online" ?
+    "online" : activityType === "local" ? "local" : "event";
+
+  const participantSnap = await participantRef.get();
+  if (!participantSnap.exists) {
+    const data = {
+      userId,
+      online: activityType === "online",
+      local: activityType === "local",
+      event: activityType === "event",
+      createdAt: now,
+      lastValidatedAt: now,
+    };
+    await db.runTransaction(async (transaction) => {
+      transaction.set(participantRef, data);
+      transaction.update(orgRef, {
+        totalParticipants: FieldValue.increment(1),
+      });
+    });
+    console.log(
+        "Participant record created for org",
+        organizationId,
+        "user",
+        userId,
+    );
+  } else {
+    const updates = {
+      [typeField]: true,
+      lastValidatedAt: now,
+    };
+    await participantRef.update(updates);
+    console.log(
+        "Participant record updated for org",
+        organizationId,
+        "user",
+        userId,
+    );
+  }
+}
 
 /**
  * Helper function to process rewards for a validation
@@ -43,8 +110,8 @@ async function processValidationRewards(event, isUpdate = false) {
   const validatedBy = validationData?.validatedBy || null;
 
   try {
-    // Check if rewards have already been processed
-    // For update events, use event.data.after.ref, for create events use event.data.ref
+    // Check if rewards have already been processed.
+    // Update: event.data.after.ref; create: event.data.ref
     const validationRef = validationSnapshot?.ref;
     if (!validationRef) {
       throw new Error("Validation reference not found");
@@ -83,6 +150,16 @@ async function processValidationRewards(event, isUpdate = false) {
         `Rewards processed successfully for validation ${validationId}:`,
         result,
     );
+
+    // Upsert NPO participant record for participants list
+    try {
+      await upsertParticipantRecord(activityId, userId);
+    } catch (participantError) {
+      console.error(
+          "Error upserting participant record (non-fatal):",
+          participantError,
+      );
+    }
   } catch (error) {
     // Log error but don't fail - validation is already recorded
     console.error(
