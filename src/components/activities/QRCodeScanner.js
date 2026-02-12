@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
 import { Button, Alert } from 'flowbite-react';
-import { HiX, HiCamera } from 'react-icons/hi';
+import { HiX, HiCamera, HiRefresh } from 'react-icons/hi';
 
 /**
  * QRCodeScanner Component
@@ -17,6 +17,8 @@ export default function QRCodeScanner({ isOpen, onClose, onScanSuccess }) {
   const [scanning, setScanning] = useState(false);
   const [error, setError] = useState(null);
   const [cameraId, setCameraId] = useState(null);
+  const [availableCameras, setAvailableCameras] = useState([]);
+  const [isSwitchingCamera, setIsSwitchingCamera] = useState(false);
   const scannerRef = useRef(null);
   const html5QrCodeRef = useRef(null);
   const isStartingRef = useRef(false);
@@ -52,6 +54,32 @@ export default function QRCodeScanner({ isOpen, onClose, onScanSuccess }) {
     };
   }, [isOpen]);
 
+  // Helper function to find back camera (environment-facing)
+  const findBackCamera = (devices) => {
+    if (!devices || devices.length === 0) return null;
+    
+    // Try to find environment-facing camera (back camera)
+    const backCamera = devices.find(device => {
+      const label = device.label?.toLowerCase() || '';
+      return label.includes('back') || 
+             label.includes('rear') || 
+             label.includes('environment') ||
+             label.includes('facing back');
+    });
+    
+    // If no back camera found by label, try to find by position
+    if (!backCamera && devices.length > 1) {
+      // On mobile, usually the second camera is the back camera
+      // But we'll prefer environment-facing if available
+      return devices.find(device => {
+        // Try to get facing mode from constraints if available
+        return device.deviceId && devices.indexOf(device) > 0;
+      }) || devices[devices.length - 1];
+    }
+    
+    return backCamera || devices[0];
+  };
+
   const startScanning = async () => {
     // Prevent multiple simultaneous start calls
     if (isStartingRef.current || scanning || isStoppingRef.current) {
@@ -70,7 +98,15 @@ export default function QRCodeScanner({ isOpen, onClose, onScanSuccess }) {
       // Get available cameras
       const devices = await Html5Qrcode.getCameras();
       if (devices && devices.length > 0) {
-        const selectedCameraId = cameraId || devices[0].id;
+        setAvailableCameras(devices);
+        
+        // Find back camera or use selected camera
+        let selectedCameraId = cameraId;
+        if (!selectedCameraId) {
+          const backCamera = findBackCamera(devices);
+          selectedCameraId = backCamera?.id || devices[0].id;
+        }
+        
         setCameraId(selectedCameraId);
 
         await html5QrCodeRef.current.start(
@@ -98,6 +134,58 @@ export default function QRCodeScanner({ isOpen, onClose, onScanSuccess }) {
       console.error('Error starting scanner:', err);
       setError(err.message || 'Failed to start camera. Please check permissions.');
       isStartingRef.current = false;
+    }
+  };
+
+  const switchCamera = async () => {
+    if (!scanning || availableCameras.length < 2 || isStartingRef.current || isStoppingRef.current || isSwitchingCamera) {
+      return;
+    }
+
+    try {
+      isStoppingRef.current = true;
+      setIsSwitchingCamera(true);
+      
+      // Stop current camera
+      await html5QrCodeRef.current.stop();
+      html5QrCodeRef.current.clear();
+      
+      // Find the other camera
+      const currentIndex = availableCameras.findIndex(cam => cam.id === cameraId);
+      const nextIndex = (currentIndex + 1) % availableCameras.length;
+      const nextCameraId = availableCameras[nextIndex].id;
+      
+      setCameraId(nextCameraId);
+      
+      // Start with the new camera
+      await html5QrCodeRef.current.start(
+        nextCameraId,
+        {
+          fps: 10,
+          qrbox: { width: 250, height: 250 },
+          aspectRatio: 1.0,
+        },
+        (decodedText, decodedResult) => {
+          handleScanSuccess(decodedText);
+        },
+        (errorMessage) => {
+          // Ignore scanning errors
+        }
+      );
+      
+      isStoppingRef.current = false;
+      setIsSwitchingCamera(false);
+    } catch (err) {
+      console.error('Error switching camera:', err);
+      setError('Failed to switch camera. Please try again.');
+      isStoppingRef.current = false;
+      setIsSwitchingCamera(false);
+      // Try to restart with the original camera
+      try {
+        await startScanning();
+      } catch (restartErr) {
+        console.error('Error restarting scanner:', restartErr);
+      }
     }
   };
 
@@ -174,6 +262,8 @@ export default function QRCodeScanner({ isOpen, onClose, onScanSuccess }) {
     // Additional cleanup
     setError(null);
     setScanning(false);
+    setAvailableCameras([]);
+    setIsSwitchingCamera(false);
     isStartingRef.current = false;
     isStoppingRef.current = false;
     hasScannedRef.current = false; // Reset scan flag when closing
@@ -247,13 +337,26 @@ export default function QRCodeScanner({ isOpen, onClose, onScanSuccess }) {
               <p className="text-sm text-gray-600 mb-4">
                 Point your camera at the QR code
               </p>
-              <Button
-                onClick={stopScanning}
-                color="gray"
-                className="w-full"
-              >
-                Stop Scanning
-              </Button>
+              <div className="flex gap-2">
+                {availableCameras.length > 1 && (
+                  <Button
+                    onClick={switchCamera}
+                    color="blue"
+                    className="flex-1"
+                    disabled={isSwitchingCamera}
+                  >
+                    <HiRefresh className="mr-2 h-5 w-5" />
+                    Switch Camera
+                  </Button>
+                )}
+                <Button
+                  onClick={stopScanning}
+                  color="gray"
+                  className={availableCameras.length > 1 ? "flex-1" : "w-full"}
+                >
+                  Stop Scanning
+                </Button>
+              </div>
             </div>
           )}
         </div>

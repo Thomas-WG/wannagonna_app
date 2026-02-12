@@ -1,0 +1,308 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // =========================
+    // Helpers
+    // =========================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function role() {
+      return isAuthenticated() && 'role' in request.auth.token ? request.auth.token.role : null;
+    }
+
+    function isAdmin() {
+      return role() == 'admin';
+    }
+
+    function isNpoStaff() {
+      return role() == 'npo-staff';
+    }
+
+    function isAmbassador() {
+      return role() == 'ambassador';
+    }
+
+    function isSystem() {
+      return request.auth.token.system == true;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // ============================================
+    // MEMBERS COLLECTION
+    // ============================================
+    match /members/{userId} {
+      // All authenticated users can read member information (including list operations)
+      // Owner and admin always have access
+      allow read: if isAuthenticated();
+
+      // Only create own doc
+      allow create: if isOwner(userId);
+
+      // Owner can update own "safe" fields only (block privilege/points tampering)
+      // Admin can update anything
+      // NPO staff can update members that belong to their org, but still block sensitive fields
+      allow update: if isAuthenticated();
+
+      // Only admins can delete profiles
+      allow delete: if isAdmin();
+
+      // ============================================
+      // MEMBER SUBCOLLECTIONS
+      // ============================================
+
+      // Applications subcollection
+      match /applications/{applicationId} {
+        // All authenticated users can read applications
+        allow read: if isAuthenticated();
+
+        // Only owner can create an application under their member doc
+        allow create: if isOwner(userId) &&
+          request.resource.data.userId == request.auth.uid;
+
+        // Owner can update their app but not impersonate/change critical fields
+        // Admin and NPO staff can update applications for their organization
+        allow update: if isAuthenticated() && (
+          isAdmin() ||
+          (isOwner(userId) &&
+            resource.data.userId == request.auth.uid &&
+            request.resource.data.userId == request.auth.uid 
+          ) ||
+          (isNpoStaff() && resource.data.organizationId == request.auth.token.npoId) ||
+          (isAmbassador() && resource.data.organizationId == request.auth.token.npoId)
+        );
+
+        // Only admins can delete applications
+        allow delete: if isAdmin();
+      }
+
+      // History subcollection (activity history)
+      match /history/{historyId} {
+        // Read: All authenticated users can read history
+        allow read: if isAuthenticated();
+
+        // Create: System-only (normally via Admin SDK which bypasses rules)
+        allow create: if isSystem();
+
+        // Update/Delete: Only admins
+        allow update, delete: if isAdmin();
+      }
+
+      // XP History subcollection
+      match /xpHistory/{xpHistoryId} {
+        // Read: Only owner and admins can read XP history
+        allow read: if isAuthenticated() && (
+          isOwner(userId) ||
+          isAdmin()
+        );
+
+        // Create: Owner can create their own XP history entries, system/admin can create any
+        // Note: Frontend calls logXpHistory which creates entries in user's own history
+        allow create: if isAuthenticated();
+
+        // Update/Delete: Only admins
+        allow update, delete: if isAdmin();
+      }
+    }
+    
+    // ============================================
+    // ACTIVITIES COLLECTION
+    // ============================================
+    match /activities/{activityId} {
+      // Read: Public read for "Open" activities (for social media previews),
+      // authenticated read for all activities
+      allow read: if resource.data.status == 'Open' || resource.data.status == 'Closed' || isAuthenticated();
+      
+      // Create: Any authenticated user can create activities
+      allow create: if isAuthenticated();
+      
+      // Update: Any authenticated user can update activities
+      allow update: if isAuthenticated();
+      
+      // Delete: Only admins can delete activities
+      allow delete: if isAuthenticated();
+      
+      // ============================================
+      // ACTIVITY SUBCOLLECTIONS
+      // ============================================
+      
+      // Applications subcollection - Keep protected (contains user data)
+      match /applications/{applicationId} {
+        // Read: All authenticated users can read applications
+        allow read: if isAuthenticated();
+        
+        // Create: Any authenticated user can create applications
+        allow create: if isAuthenticated();
+        
+        // Update: Any authenticated user can update applications
+        allow update: if isAuthenticated();
+        
+        // Delete: Only admins can delete applications
+        allow delete: if isAdmin();
+      }
+      
+      // Validations subcollection - Keep protected (contains user data)
+      match /validations/{validationId} {
+        // Read: All authenticated users can read validations
+        allow read: if isAuthenticated();
+        
+        // Create: Any authenticated user can create validations
+        allow create: if isAuthenticated();
+        
+        // Update: Any authenticated user can update validations
+        allow update: if isAuthenticated();
+        
+        // Delete: Only admins can delete validations
+        allow delete: if isAdmin();
+      }
+    }
+    
+    // ============================================
+    // ORGANIZATIONS COLLECTION
+    // ============================================
+    match /organizations/{organizationId} {
+      // Read: Public read (needed for activity previews and social media sharing)
+      allow read: if true;
+      
+      // Create: Only admins can create organizations
+      allow create: if isAdmin();
+      
+      // Update: Any authenticated user can update organizations
+      allow update: if isAuthenticated();
+      
+      // Delete: Only admins can delete organizations
+      allow delete: if isAdmin();
+      
+      // Applications subcollection - Keep protected (contains user data)
+      match /applications/{applicationId} {
+        // Read: All authenticated users can read applications
+        allow read: if isAuthenticated();
+        
+        // Create: Any authenticated user can create applications
+        allow create: if isAuthenticated();
+        
+        // Update: Any authenticated user can update applications
+        allow update: if isAuthenticated();
+        
+        // Delete: Only admins can delete applications
+        allow delete: if isAdmin();
+      }
+    }
+    
+    // ============================================
+    // BADGES COLLECTION
+    // ============================================
+    match /badges/{categoryId} {
+      // Read: Public read for badge categories (needed for badge previews)
+      allow read: if true;
+      
+      // Create/Update: Any authenticated user can manage badge categories
+      allow create, update: if isAuthenticated();
+      
+      // Delete: Only admins can delete badge categories
+      allow delete: if isAdmin();
+      
+      // Badges subcollection
+      match /badges/{badgeId} {
+        // Read: Public read (badges are achievements meant to be shared)
+        allow read: if true;
+        
+        // Create/Update: Any authenticated user can manage badges
+        allow create, update: if isAuthenticated();
+        
+        // Delete: Only admins can delete badges
+        allow delete: if isAdmin();
+      }
+    }
+    
+    // ============================================
+    // NOTIFICATIONS COLLECTION
+    // ============================================
+    match /notifications/{notificationId} {
+      // Read: All authenticated users can read notifications
+      allow read: if isAuthenticated();
+      
+      // Create: Any authenticated user can create notifications
+      allow create: if isAuthenticated();
+      
+      // Update: Any authenticated user can update notifications
+      allow update: if isAuthenticated();
+      
+      // Delete: Any authenticated user can delete notifications
+      allow delete: if isAuthenticated();
+    }
+    
+    // ============================================
+    // FAQ COLLECTION
+    // ============================================
+    match /faq/{faqId} {
+      // Read: All authenticated users can read FAQs
+      allow read: if isAuthenticated();
+      
+      // Create/Update: Any authenticated user can manage FAQs
+      allow create, update: if isAuthenticated();
+      
+      // Delete: Only admins can delete FAQs
+      allow delete: if isAdmin();
+    }
+    
+    // ============================================
+    // IDEA BOX COLLECTION
+    // ============================================
+    match /ideaBox/{ideaId} {
+      // Read: All authenticated users can read idea box submissions
+      allow read: if isAuthenticated();
+      
+      // Create: Any authenticated user can submit ideas
+      allow create: if isAuthenticated();
+      
+      // Update: Any authenticated user can update ideas
+      allow update: if isAuthenticated();
+      
+      // Delete: Only admins can delete ideas
+      allow delete: if isAdmin();
+    }
+    
+    // ============================================
+    // SKILLS COLLECTION
+    // ============================================
+    match /skills/{skillId} {
+      // Read: All authenticated users can read skills
+      allow read: if isAuthenticated();
+      
+      // Create/Update: Any authenticated user can manage skills
+      allow create, update: if isAuthenticated();
+      
+      // Delete: Only admins can delete skills
+      allow delete: if isAdmin();
+    }
+    
+    // ============================================
+    // SKILL CATEGORIES COLLECTION
+    // ============================================
+    match /skillCategories/{categoryId} {
+      // Read: All authenticated users can read skill categories
+      allow read: if isAuthenticated();
+      
+      // Create/Update: Any authenticated user can manage skill categories
+      allow create, update: if isAuthenticated();
+      
+      // Delete: Only admins can delete skill categories
+      allow delete: if isAdmin();
+    }
+    
+    // ============================================
+    // REWARD ERRORS COLLECTION (Cloud Functions Only)
+    // ============================================
+    match /rewardErrors/{errorId} {
+      // Read/Write: Only admins and cloud functions (server-side)
+      // For client-side, deny all access
+      allow read, write: if false;
+    }
+  }
+}

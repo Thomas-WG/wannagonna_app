@@ -142,7 +142,7 @@ export default function ErrorPage({
   const descriptionArray = Array.isArray(description) ? description : [description];
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background-page dark:bg-background-page p-4 sm:p-6">
+    <div className="min-h-dvh flex items-center justify-center bg-background-page dark:bg-background-page p-4 sm:p-6">
       <div className="w-full max-w-2xl">
         <div className="bg-background-card dark:bg-background-card rounded-xl shadow-lg border border-border-light dark:border-border-dark p-6 sm:p-8 md:p-10 text-center">
           {/* Status Code */}

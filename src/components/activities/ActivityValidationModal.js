@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Modal, Button, Avatar, Badge, Spinner } from 'flowbite-react';
+import { Modal, Button, Badge, Spinner } from 'flowbite-react';
 import { HiCheck, HiX } from 'react-icons/hi';
 import { useTranslations } from 'next-intl';
 import { useModal } from '@/utils/modal/useModal';
@@ -15,6 +15,7 @@ import {
 } from '@/utils/crudActivityValidation';
 import { useAuth } from '@/utils/auth/AuthContext';
 import { updateActivityStatus } from '@/utils/crudActivities';
+import ProfilePicture from '@/components/common/ProfilePicture';
 
 export default function ActivityValidationModal({ 
   isOpen, 
@@ -330,12 +331,14 @@ export default function ActivityValidationModal({
                   >
                     <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                       <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0 pr-2">
-                        <Avatar
-                          img={application.profilePicture || '/favicon.ico'}
+                        <ProfilePicture
+                          src={application.profilePicture}
                           alt={application.displayName}
-                          size="sm"
+                          size={40}
+                          showInitials={true}
+                          name={application.displayName}
+                          loading="lazy"
                           className="sm:!w-10 sm:!h-10 flex-shrink-0"
-                          rounded
                         />
                         <div className="min-w-0 flex-1 overflow-hidden">
                           <p className="text-sm sm:text-base font-medium text-gray-900 truncate" title={application.displayName}>
