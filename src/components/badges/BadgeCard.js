@@ -67,6 +67,9 @@ export default function BadgeCard({ badge, imageUrl, isEarned = false }) {
       );
     }
 
+    const dropShadowFilter = 'drop-shadow(0 0 2px rgba(255,255,255,0.95)) drop-shadow(0 0 6px rgba(255,255,255,0.7)) drop-shadow(0 2px 4px rgba(0,0,0,0.1)) drop-shadow(0 4px 14px rgba(0,0,0,0.12))';
+    const imageFilter = !isEarned ? `grayscale(100%) ${dropShadowFilter}` : dropShadowFilter;
+
     return (
       <>
         {!imgLoaded && (
@@ -80,10 +83,8 @@ export default function BadgeCard({ badge, imageUrl, isEarned = false }) {
             alt={badge.title || 'Badge'}
             width={imageSize}
             height={imageSize}
-            className={`object-contain w-full h-full ${!isEarned ? 'grayscale' : ''}`}
-            style={{
-              filter: !isEarned ? 'grayscale(100%)' : 'none'
-            }}
+            className="object-contain w-full h-full"
+            style={{ filter: imageFilter }}
             onLoad={handleImageLoad}
             onError={handleImageError}
             sizes={`${imageSize}px`}

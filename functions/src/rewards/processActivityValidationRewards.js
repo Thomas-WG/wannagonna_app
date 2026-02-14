@@ -1,6 +1,7 @@
 import {db} from "../init.js";
 import {FieldValue, Timestamp} from "firebase-admin/firestore";
 import {sendUserNotification} from "../notifications/notificationService.js";
+import {upsertParticipantRecord} from "./upsertParticipantRecord.js";
 
 /**
  * Continent mapping - matches client-side logic
@@ -607,6 +608,24 @@ export async function processActivityValidationRewards(
 
     // Execute batch
     await batch.commit();
+
+    // Upsert NPO participant record (one doc per volunteer per org)
+    if (activity.organizationId) {
+      try {
+        await upsertParticipantRecord(
+            activity.organizationId,
+            userId,
+            activity.type,
+        );
+      } catch (participantErr) {
+        console.error(
+            "[processActivityValidationRewards] Failed to " +
+            "upsert participant_record:",
+            participantErr,
+        );
+        // Do not throw; rewards are already committed
+      }
+    }
 
     const allBadgesGranted = [
       ...newBadges.map((b) => b.id),

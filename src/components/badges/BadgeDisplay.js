@@ -67,30 +67,39 @@ export default function BadgeDisplay({ badge, size = 'default' }) {
       onMouseEnter={() => setShowTooltip(true)}
       onMouseLeave={() => setShowTooltip(false)}
     >
-      {/* Badge Image with Shadow */}
+      {/* Badge image: drop-shadow follows transparent image shape (white halo + depth) */}
       <div className="relative mb-2 flex items-center justify-center">
         {loading ? (
           <div className="bg-transparent animate-pulse flex items-center justify-center">
             <div className={`${isSmall ? 'w-6 h-6' : 'w-8 h-8'} border-2 border-gray-400 border-t-transparent rounded-full animate-spin`}></div>
           </div>
         ) : imageUrl ? (
-          <img
-            src={imageUrl}
-            alt={badge.title || 'Badge'}
-            className="object-contain"
+          <div
+            className="flex items-center justify-center"
             style={{
               width: imageWidth,
-              height: 'auto',
-              maxWidth: imageMaxWidth,
-              display: 'block'
+              maxWidth: imageMaxWidth
             }}
-            onError={(e) => {
-              console.error(`Failed to load badge image: ${imageUrl}`, e);
-              setImageUrl(null);
-            }}
-          />
+          >
+            <img
+              src={imageUrl}
+              alt={badge.title || 'Badge'}
+              className="object-contain w-full h-auto block"
+              style={{
+                width: imageWidth,
+                height: 'auto',
+                maxWidth: imageMaxWidth,
+                display: 'block',
+                filter: 'drop-shadow(0 0 2px rgba(255,255,255,0.95)) drop-shadow(0 0 6px rgba(255,255,255,0.7)) drop-shadow(0 2px 4px rgba(0,0,0,0.1)) drop-shadow(0 4px 14px rgba(0,0,0,0.12))'
+              }}
+              onError={(e) => {
+                console.error(`Failed to load badge image: ${imageUrl}`, e);
+                setImageUrl(null);
+              }}
+            />
+          </div>
         ) : (
-          <div className="bg-transparent flex items-center justify-center">
+          <div className="flex items-center justify-center" style={{ width: imageWidth, maxWidth: imageMaxWidth }}>
             <span className={`text-gray-500 ${isSmall ? 'text-xs' : 'text-sm'}`}>?</span>
           </div>
         )}
