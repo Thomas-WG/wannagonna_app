@@ -19,7 +19,7 @@ const StatsSection = memo(function StatsSection({ stats }) {
       </h2>
       <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {/* Local Activities */}
-        <div className="bg-background-card dark:bg-background-card rounded-lg border border-border-light dark:border-border-dark">
+        <div className="bg-background-card dark:bg-background-card rounded-lg shadow-md border border-border-light dark:border-border-dark hover:shadow-lg transition-shadow">
           <div className="flex items-center gap-2 sm:gap-3 py-1 sm:py-1.5 px-2 sm:px-2.5">
             <div className="bg-activityType-local-100 dark:bg-activityType-local-900 p-2 rounded-full flex-shrink-0">
               <HiOfficeBuilding className="h-5 w-5 sm:h-6 sm:w-6 text-activityType-local-600 dark:text-activityType-local-400" />
@@ -34,7 +34,7 @@ const StatsSection = memo(function StatsSection({ stats }) {
         </div>
 
         {/* Online Activities */}
-        <div className="bg-background-card dark:bg-background-card rounded-lg border border-border-light dark:border-border-dark">
+        <div className="bg-background-card dark:bg-background-card rounded-lg shadow-md border border-border-light dark:border-border-dark hover:shadow-lg transition-shadow">
           <div className="flex items-center gap-2 sm:gap-3 py-1 sm:py-1.5 px-2 sm:px-2.5">
             <div className="bg-activityType-online-100 dark:bg-activityType-online-900 p-2 rounded-full flex-shrink-0">
               <MdOutlineSocialDistance className="h-5 w-5 sm:h-6 sm:w-6 text-activityType-online-600 dark:text-activityType-online-400" />
@@ -49,7 +49,7 @@ const StatsSection = memo(function StatsSection({ stats }) {
         </div>
 
         {/* Events */}
-        <div className="bg-background-card dark:bg-background-card rounded-lg border border-border-light dark:border-border-dark">
+        <div className="bg-background-card dark:bg-background-card rounded-lg shadow-md border border-border-light dark:border-border-dark hover:shadow-lg transition-shadow">
           <div className="flex items-center gap-2 sm:gap-3 py-1 sm:py-1.5 px-2 sm:px-2.5">
             <div className="bg-activityType-event-100 dark:bg-activityType-event-900 p-2 rounded-full flex-shrink-0">
               <HiCalendar className="h-5 w-5 sm:h-6 sm:w-6 text-activityType-event-600 dark:text-activityType-event-400" />
@@ -64,7 +64,7 @@ const StatsSection = memo(function StatsSection({ stats }) {
         </div>
 
         {/* Total Applications */}
-        <div className="bg-background-card dark:bg-background-card rounded-lg border border-border-light dark:border-border-dark">
+        <div className="bg-background-card dark:bg-background-card rounded-lg shadow-md border border-border-light dark:border-border-dark hover:shadow-lg transition-shadow">
           <div className="flex items-center gap-2 sm:gap-3 py-1 sm:py-1.5 px-2 sm:px-2.5">
             <div className="bg-semantic-warning-100 dark:bg-semantic-warning-900 p-2 rounded-full flex-shrink-0">
               <HiDocumentText className="h-5 w-5 sm:h-6 sm:w-6 text-semantic-warning-600 dark:text-semantic-warning-400" />

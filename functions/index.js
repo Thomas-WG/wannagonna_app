@@ -28,8 +28,6 @@ import {
   onValidationCreated,
   onValidationUpdated,
 } from "./src/rewards/onValidationCreated.js";
-import {backfillParticipantRecords} from
-  "./src/rewards/backfillParticipantRecords.js";
 
 export const onActivityCreatedUpdateActivityCount = onDocumentCreated(
     "activities/{activityId}",
@@ -108,12 +106,11 @@ export const onApplicationStatusChangedNotifyUser = onDocumentUpdated(
       const applicationId = event.params.applicationId;
 
       try {
-        // Handle cancelled: notify NPO members, not the applicant
+        // Handle cancelled status separately - notify NPO members
         if (afterStatus === "cancelled" && after.organizationId) {
           const organizationId = after.organizationId;
 
           // Decrement applicants count if previous status was NOT cancelled
-          // (avoid double-decrement if status flips cancelled <-> other)
           if (beforeStatus !== "cancelled") {
             try {
               await db.runTransaction(async (transaction) => {
@@ -122,16 +119,22 @@ export const onApplicationStatusChangedNotifyUser = onDocumentUpdated(
 
                 if (activitySnap.exists) {
                   const activity = activitySnap.data();
-                  const n = (activity.applicants || 0) - 1;
-                  const newApplicantCount = Math.max(n, 0);
+                  const newApplicantCount =
+                    Math.max((activity.applicants || 0) - 1, 0);
                   transaction.update(activityRef, {
                     applicants: newApplicantCount,
                   });
-                  console.log("Applicants decremented to", newApplicantCount);
+                  console.log(
+                      "Decremented applicants count to:",
+                      newApplicantCount,
+                  );
                 }
               });
             } catch (countError) {
-              console.error("Decrement applicants count failed:", countError);
+              console.error(
+                  "Failed to decrement applicants count:",
+                  countError,
+              );
               // Don't fail the entire function if count update fails
             }
           }
@@ -906,6 +909,3 @@ export const grantBadgeToUser = onCall(
 
 // Export validation reward triggers
 export {onValidationCreated, onValidationUpdated};
-
-// One-time backfill for NPO participant_records
-export {backfillParticipantRecords};

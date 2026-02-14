@@ -543,7 +543,8 @@ export async function processActivityValidationRewards(
     }
 
     // Add to history - store only reference, not duplicated activity data
-    // Store only activityId reference to prevent data inconsistency
+    // Best practice: Store only activityId reference to prevent
+    // data inconsistency
     const historyRef = userRef.collection("history");
     const historyData = {
       activityId: activityId,

@@ -93,16 +93,6 @@ export const createApplication = async ({ activityId, userId, userEmail, message
       return docRef.id;
     });
 
-    // If auto-accept is enabled, create pending validation document (same as manual acceptance)
-    if (shouldAutoAccept) {
-      try {
-        await initializeValidationDocument(activityId, userId);
-        console.log(`Validation document initialized for user ${userId} on activity ${activityId} (auto-accepted)`);
-      } catch (validationError) {
-        console.error('Error initializing validation document for auto-accepted application:', validationError);
-      }
-    }
-
     // Grant badge if this is the first application (after transaction succeeds)
     let badgeDetails = null;
     if (isFirstApplication) {

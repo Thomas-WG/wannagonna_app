@@ -1,60 +1,12 @@
 {
   "indexes": [
     {
-      "collectionGroup": "participant_records",
-      "queryScope": "COLLECTION_GROUP",
-      "fields": [
-        { "fieldPath": "online", "order": "ASCENDING" },
-        { "fieldPath": "lastValidatedAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "participant_records",
-      "queryScope": "COLLECTION_GROUP",
-      "fields": [
-        { "fieldPath": "local", "order": "ASCENDING" },
-        { "fieldPath": "lastValidatedAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "participant_records",
-      "queryScope": "COLLECTION_GROUP",
-      "fields": [
-        { "fieldPath": "event", "order": "ASCENDING" },
-        { "fieldPath": "lastValidatedAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "participant_records",
-      "queryScope": "COLLECTION_GROUP",
-      "fields": [
-        { "fieldPath": "online", "order": "ASCENDING" },
-        { "fieldPath": "createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "participant_records",
-      "queryScope": "COLLECTION_GROUP",
-      "fields": [
-        { "fieldPath": "local", "order": "ASCENDING" },
-        { "fieldPath": "createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "participant_records",
-      "queryScope": "COLLECTION_GROUP",
-      "fields": [
-        { "fieldPath": "event", "order": "ASCENDING" },
-        { "fieldPath": "createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
       "collectionGroup": "notifications",
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "userId", "order": "ASCENDING" },
-        { "fieldPath": "createdAt", "order": "DESCENDING" },
-        { "fieldPath": "__name__", "order": "DESCENDING" }
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []
