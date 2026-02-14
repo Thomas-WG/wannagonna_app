@@ -3,6 +3,7 @@
 import { HiUsers, HiOfficeBuilding, HiCalendar, HiViewGrid, HiLockClosed } from 'react-icons/hi';
 import { MdOutlineSocialDistance } from 'react-icons/md';
 import { useTranslations } from 'next-intl';
+import { useRouter } from 'next/navigation';
 import { memo } from 'react';
 
 /**
@@ -11,6 +12,7 @@ import { memo } from 'react';
  */
 const KPISection = memo(function KPISection({ orgData, closedActivitiesCount, totalActivities }) {
   const t = useTranslations('MyNonProfit');
+  const router = useRouter();
 
   return (
     <div className="mb-6 sm:mb-8">
@@ -93,8 +95,12 @@ const KPISection = memo(function KPISection({ orgData, closedActivitiesCount, to
           </div>
         </div>
 
-        {/* Total Participants Card */}
-        <div className="bg-background-card dark:bg-background-card rounded-lg shadow-md border border-border-light dark:border-border-dark hover:shadow-lg transition-shadow overflow-hidden">
+        {/* Total Participants Card - clickable to participants list */}
+        <button
+          type="button"
+          onClick={() => router.push('/mynonprofit/participants')}
+          className="w-full text-left bg-background-card dark:bg-background-card rounded-lg shadow-md border border-border-light dark:border-border-dark hover:shadow-lg transition-shadow overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary-500"
+        >
           <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 py-1.5 sm:py-2 px-2 sm:px-2.5 min-w-0">
             <div className="bg-semantic-error-100 dark:bg-semantic-error-900 p-1.5 sm:p-2 rounded-full flex-shrink-0">
               <HiUsers className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-semantic-error-600 dark:text-semantic-error-400" />
@@ -106,7 +112,7 @@ const KPISection = memo(function KPISection({ orgData, closedActivitiesCount, to
               {orgData?.totalParticipants || 0}
             </p>
           </div>
-        </div>
+        </button>
       </div>
     </div>
   );
