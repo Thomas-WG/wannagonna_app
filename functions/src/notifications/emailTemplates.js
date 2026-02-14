@@ -22,13 +22,15 @@ export function generateNotificationEmail({title, body, link = null}) {
 
   let emailHtml = `<div style="font-family: Arial, sans-serif; ` +
     `line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto;">`;
-  emailHtml += `<p style="font-size: 16px; margin-bottom: 20px; white-space: pre-wrap;">` +
-    `${(body || "").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>`;
+  const escapedBody = (body || "").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  emailHtml += `<p style="font-size: 16px; margin-bottom: 20px; ` +
+    `white-space: pre-wrap;">${escapedBody}</p>`;
   if (link) {
     emailHtml += `<p style="margin-top: 16px; font-size: 14px; color: #666;">` +
       `View in app: ${link.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>`;
   }
-  emailHtml += `<p style="margin-top: 24px; font-size: 12px; color: #999;">— WannaGonna</p>`;
+  emailHtml += `<p style="margin-top: 24px; font-size: 12px; color: #999;">` +
+    `— WannaGonna</p>`;
   emailHtml += `</div>`;
 
   return {

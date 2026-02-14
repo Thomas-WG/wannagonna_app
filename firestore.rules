@@ -192,6 +192,14 @@ service cloud.firestore {
         // Delete: Only admins can delete applications
         allow delete: if isAdmin();
       }
+      
+      // Participant records subcollection - written by Cloud Functions only
+      match /participant_records/{userId} {
+        // Read: NPO staff for this organization, or admin
+        allow read: if isAuthenticated() && (isAdmin() || (isNpoStaff() && request.auth.token.npoId == organizationId));
+        // Create/Update/Delete: Cloud Functions (Admin SDK) only; no client writes
+        allow create, update, delete: if false;
+      }
     }
     
     // ============================================

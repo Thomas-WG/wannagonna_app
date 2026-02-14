@@ -332,12 +332,13 @@ export const onApplicationStatusChangedNotifyUser = onDocumentUpdated(
                   );
                 }
 
-                // Build recipient list: only users who have ACTIVITY.email enabled
+                // Build recipient list: users who have ACTIVITY.email enabled
                 const participantPrefs = (await db.collection("members")
-                  .doc(userId).get()).data()?.notificationPreferences?.ACTIVITY;
+                    .doc(userId).get())
+                    .data()?.notificationPreferences?.ACTIVITY;
                 const validatorPrefs = (await db.collection("members")
-                  .doc(after.lastStatusUpdatedBy).get())
-                  .data()?.notificationPreferences?.ACTIVITY;
+                    .doc(after.lastStatusUpdatedBy).get())
+                    .data()?.notificationPreferences?.ACTIVITY;
                 const recipientList = [];
                 if (participantEmail && participantPrefs?.email === true) {
                   recipientList.push(participantEmail);

@@ -34,7 +34,7 @@ service firebase.storage {
     // =========================
     
     // Badge images - public read, admin-only write
-    match /badges/{categoryId}/{badgeId}.{ext} {
+    match /badges/{categoryId}/{allFiles=**} {
       allow read: if true;
       allow write: if isAdmin();
     }
