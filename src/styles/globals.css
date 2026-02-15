@@ -346,6 +346,11 @@ select option,
   color: #94a3b8 !important;
 }
 
+/* Landing page only: force label text dark (overrides .dark so labels stay readable) */
+.landing-page-bg label {
+  color: #0f172a !important;
+}
+
 /* Hero: dots + gradient; slightly stronger dots so they read clearly */
 .landing-hero-pattern {
   background-image:
