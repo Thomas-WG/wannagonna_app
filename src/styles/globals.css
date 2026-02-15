@@ -321,6 +321,36 @@ select option,
   background-size: 24px 24px;
 }
 
+/* Landing page only: force light inputs (overrides .dark rules so inputs stay readable) */
+.landing-page-bg input[type="text"],
+.landing-page-bg input[type="email"],
+.landing-page-bg textarea {
+  color: #0f172a !important;
+  background-color: #f8fafc !important;
+}
+
+.landing-page-bg input[type="text"]::placeholder,
+.landing-page-bg input[type="email"]::placeholder,
+.landing-page-bg textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+.landing-page-bg .flowbite-textinput input,
+.landing-page-bg .flowbite-textarea textarea {
+  color: #0f172a !important;
+  background-color: #f8fafc !important;
+}
+
+.landing-page-bg .flowbite-textinput input::placeholder,
+.landing-page-bg .flowbite-textarea textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* Landing page only: force label text dark (overrides .dark so labels stay readable) */
+.landing-page-bg label {
+  color: #0f172a !important;
+}
+
 /* Hero: dots + gradient; slightly stronger dots so they read clearly */
 .landing-hero-pattern {
   background-image:
