@@ -33,6 +33,8 @@ export default function ActivityCard({
   description,
   start_date,
   end_date,
+  start_time,
+  end_time,
   sdg,
   status,
   qrCodeToken,
@@ -236,12 +238,7 @@ export default function ActivityCard({
         return `${startStr} - ${endStr}`;
       }
 
-      // No end date: if today is after start date, show "start - present"
-      if (today && startDay && today.getTime() > startDay.getTime()) {
-        return `${startStr} - ${t('present')}`;
-      }
-
-      // Default: just show start date
+      // No end date: show only start date (no hyphen)
       return startStr;
     } catch (e) {
       return null;
@@ -568,12 +565,18 @@ export default function ActivityCard({
                 </span>
               </div>
             </div>
-            {/* Date range (no time component) */}
+            {/* Date range */}
             {activityDateLine && (
               <div className='flex items-center text-xs sm:text-sm text-text-secondary dark:text-text-secondary'>
                 <HiClock className='mr-1.5 h-3.5 w-3.5 text-text-tertiary dark:text-text-tertiary flex-shrink-0' />
                 <span className='truncate'>
                   {activityDateLine}
+                  {(start_time || end_time) && (
+                    <span className='text-text-tertiary dark:text-text-tertiary'>
+                      {' · '}
+                      {start_time && end_time ? `${start_time} – ${end_time}` : start_time || end_time}
+                    </span>
+                  )}
                 </span>
               </div>
             )}
