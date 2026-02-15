@@ -31,11 +31,11 @@ const LANGUAGE_OPTIONS = [
 const PLACEHOLDER = {
   npo: '/placeholders/npo-features.jpg',
   volunteer: '/placeholders/volunteers-features.jpg',
-  impact1: 'https://picsum.photos/seed/wannagonna-impact1/400/300',
-  impact2: 'https://picsum.photos/seed/wannagonna-impact2/400/300',
-  impact3: 'https://picsum.photos/seed/wannagonna-impact3/400/300',
-  appMobile: 'https://picsum.photos/seed/wannagonna-mobile/400/700',
-  appDesktop: 'https://picsum.photos/seed/wannagonna-desktop/1200/600',
+  impact1: '/placeholders/impact-1.png',
+  impact2: '/placeholders/impact-2.png',
+  impact3: '/placeholders/impact-3.png',
+  appMobile: '/placeholders/app-mobile.png',
+  appDesktop: '/placeholders/app-desktop.png',
 };
 
 /* Background for Hero + Intro block; overlay stays solid (transition is in Stay in touch section) */
@@ -388,14 +388,22 @@ export default function Home() {
                 </div>
               </div>
             </div>
-            <div className="relative rounded-2xl overflow-hidden border border-[#e2e8f0] shadow-md aspect-[2/1] max-h-[400px]">
-              <Image
-                src={PLACEHOLDER.appDesktop}
-                alt={t('placeholderAppDesktop')}
-                fill
-                className="object-cover"
-                sizes="(max-width: 768px) 100vw, 1200px"
-              />
+            {/* Desktop: laptop-style frame (bezel + base) */}
+            <div className="flex justify-center">
+              <div className="w-full max-w-4xl">
+                <div className="rounded-t-xl border-4 border-b-0 border-[#334155] bg-[#1e293b] p-2 shadow-xl">
+                  <div className="relative aspect-video w-full overflow-hidden rounded-t-lg bg-white">
+                    <Image
+                      src={PLACEHOLDER.appDesktop}
+                      alt={t('placeholderAppDesktop')}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, 896px"
+                    />
+                  </div>
+                </div>
+                <div className="h-5 rounded-b-xl bg-[#334155] shadow-lg" aria-hidden="true" />
+              </div>
             </div>
           </div>
         </section>

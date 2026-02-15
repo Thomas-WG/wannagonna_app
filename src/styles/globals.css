@@ -376,6 +376,9 @@ select option,
   }
   .landing-animate-in.is-visible {
     transform: none;
+  }
+}
+
 /* FullCalendar dark mode – header, toolbar, day grid, list */
 .dark .activities-calendar {
   background-color: var(--bg-card);
