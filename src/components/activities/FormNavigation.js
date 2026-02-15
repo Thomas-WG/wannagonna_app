@@ -10,9 +10,33 @@ export default function FormNavigation({ currentStep, prevStep, nextStep, formDa
   const isExternalLinkRequired = formData.type === 'local' && formData.acceptApplicationsWG === false;
   const hasRequiredExternalLink = !isExternalLinkRequired || (isExternalLinkRequired && externalLink.trim() !== '');
 
-  const canProceed = 
+  // Step 2 date/time: required for events and local once/regular; validate end >= start when set
+  const isEvent = formData.type === 'event';
+  const isLocalOnceOrRegular = formData.type === 'local' && formData.frequency !== 'role';
+  const hasEventDateTime = formData.start_date && formData.start_time && formData.end_time;
+  const hasLocalStartDate = formData.start_date;
+  const endNotBeforeStart = (() => {
+    if (!formData.start_date) return true;
+    const end = formData.end_date || formData.start_date;
+    const startD = formData.start_date instanceof Date ? formData.start_date : new Date(formData.start_date);
+    const endD = end instanceof Date ? end : new Date(end);
+    if (endD.getTime() < startD.getTime()) return false;
+    const sameDay = startD.toDateString() === endD.toDateString();
+    if (sameDay && formData.start_time && formData.end_time) {
+      return formData.start_time <= formData.end_time;
+    }
+    return true;
+  })();
+
+  const step2Base = formData.title && formData.description && formData.frequency && hasRequiredExternalLink;
+  const step2DateTime =
+    (isEvent && hasEventDateTime && endNotBeforeStart) ||
+    (isLocalOnceOrRegular && hasLocalStartDate && endNotBeforeStart) ||
+    ((formData.type === 'online' || (formData.type === 'local' && formData.frequency === 'role')) && endNotBeforeStart);
+
+  const canProceed =
     (currentStep === 1 && formData.category) ||
-    (currentStep === 2 && formData.title && formData.description && formData.frequency && hasRequiredExternalLink) ||
+    (currentStep === 2 && step2Base && step2DateTime) ||
     (currentStep === 3 && formData.sdg);
 
 

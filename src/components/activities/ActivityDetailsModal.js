@@ -5,7 +5,7 @@ import { Modal, Badge, Button, Spinner } from 'flowbite-react';
 import Image from 'next/image';
 import { fetchActivityById, getAcceptedApplicationsCount } from '@/utils/crudActivities';
 import { fetchOrganizationById } from '@/utils/crudOrganizations';
-import { formatDateOnly } from '@/utils/dateUtils';
+import { formatDateOnly, convertTimestampToDate } from '@/utils/dateUtils';
 import { useTranslations, useLocale } from 'next-intl';
 import { getSkillsForSelect } from '@/utils/crudSkills';
 import { useTheme } from '@/utils/theme/ThemeContext';
@@ -397,21 +397,39 @@ export default function ActivityDetailsModal({ isOpen, onClose, activityId, onAp
                   </div>
                   <div className="space-y-3">
                     <div>
-                      <p className="text-xs text-text-tertiary dark:text-text-tertiary mb-1">Start Date</p>
+                      <p className="text-xs text-text-tertiary dark:text-text-tertiary mb-1">Date</p>
                       <p className="text-sm font-medium text-text-primary dark:text-text-primary">
                         {activity.start_date
                           ? formatDateOnly(activity.start_date)
                           : 'Not specified'}
+                        {(activity.start_time || activity.end_time) && (
+                          <span className="text-text-secondary dark:text-text-secondary">
+                            {activity.start_time && activity.end_time
+                              ? ` · ${activity.start_time} – ${activity.end_time}`
+                              : activity.start_time
+                                ? ` · ${activity.start_time}`
+                                : ` · ${activity.end_time}`}
+                          </span>
+                        )}
                       </p>
                     </div>
-                    {activity.end_date && (
-                      <div>
-                        <p className="text-xs text-text-tertiary dark:text-text-tertiary mb-1">End Date</p>
-                        <p className="text-sm font-medium text-text-primary dark:text-text-primary">
-                          {formatDateOnly(activity.end_date)}
-                        </p>
-                      </div>
-                    )}
+                    {(() => {
+                      if (!activity.end_date) return null;
+                      const startD = convertTimestampToDate(activity.start_date);
+                      const endD = convertTimestampToDate(activity.end_date);
+                      if (!startD || !endD || startD.toDateString() === endD.toDateString()) return null;
+                      return (
+                        <div>
+                          <p className="text-xs text-text-tertiary dark:text-text-tertiary mb-1">End day</p>
+                          <p className="text-sm font-medium text-text-primary dark:text-text-primary">
+                            {formatDateOnly(activity.end_date)}
+                            {activity.end_time && (
+                              <span className="text-text-secondary dark:text-text-secondary"> · {activity.end_time}</span>
+                            )}
+                          </p>
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
 

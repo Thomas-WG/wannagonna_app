@@ -506,6 +506,69 @@ export const clearAllNotifications = onCall(
       return {success: true, deletedCount};
     });
 
+const CONTACT_EMAIL_TO = "contact@wannagonna.org";
+
+/**
+ * Callable function to send the landing-page contact form as an email to
+ * contact@wannagonna.org. Does not require authentication.
+ */
+export const sendContactEmail = onCall(
+    {invoker: "public"},
+    async (request) => {
+      const {name, email, message} = request.data || {};
+
+      if (!name || typeof name !== "string" || !name.trim()) {
+        throw new Error("Name is required");
+      }
+      if (!email || typeof email !== "string" || !email.trim()) {
+        throw new Error("Email is required");
+      }
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email.trim())) {
+        throw new Error("Invalid email address");
+      }
+      if (!message || typeof message !== "string" || !message.trim()) {
+        throw new Error("Message is required");
+      }
+      if (message.trim().length < 10) {
+        throw new Error("Message must be at least 10 characters");
+      }
+
+      const n = name.trim();
+      const e = email.trim().toLowerCase();
+      const m = message.trim();
+
+      const subject = `Contact form: ${n}`;
+      const text = `Name: ${n}\nEmail: ${e}\n\nMessage:\n${m}`;
+      const msgHtml = m.replace(/\n/g, "<br>");
+      const html =
+        `<p><strong>Name:</strong> ${n}</p><p><strong>Email:</strong> ${e}` +
+        `</p><p><strong>Message:</strong></p><p>${msgHtml}</p>`;
+
+      await sendMailgunEmail({
+        to: CONTACT_EMAIL_TO,
+        subject,
+        text,
+        html,
+      });
+
+      try {
+        await db.collection("contactSubmissions").add({
+          name: n,
+          email: e,
+          message: m,
+          createdAt: FieldValue.serverTimestamp(),
+        });
+      } catch (firestoreErr) {
+        console.warn(
+            "Contact form: email sent but Firestore write failed",
+            firestoreErr,
+        );
+      }
+
+      return {success: true};
+    });
+
 /**
  * Callable used by the client to send referral notifications
  * to the referrer (who owns the referral code).
