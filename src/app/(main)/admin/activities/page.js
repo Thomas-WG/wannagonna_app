@@ -535,6 +535,8 @@ export default function AdminActivitiesPage() {
                   country={activity.country}
                   start_date={activity.start_date}
                   end_date={activity.end_date}
+                  start_time={activity.start_time}
+                  end_time={activity.end_time}
                   sdg={activity.sdg}
                   applicants={activity.applicants}
                   xp_reward={activity.xp_reward}
