@@ -5,7 +5,7 @@ import { Modal, Badge, Button, Spinner } from 'flowbite-react';
 import Image from 'next/image';
 import { fetchActivityById, getAcceptedApplicationsCount } from '@/utils/crudActivities';
 import { fetchOrganizationById } from '@/utils/crudOrganizations';
-import { formatDateOnly } from '@/utils/dateUtils';
+import { formatDateOnly, convertTimestampToDate } from '@/utils/dateUtils';
 import { useTranslations, useLocale } from 'next-intl';
 import { getSkillsForSelect } from '@/utils/crudSkills';
 import { useTheme } from '@/utils/theme/ThemeContext';
@@ -28,6 +28,8 @@ import NPODetailsModal from './NPODetailsModal';
 import { categoryIcons } from '@/constant/categoryIcons';
 import { useRouter } from 'next/navigation';
 import { useModal } from '@/utils/modal/useModal';
+import ShareButton from '@/components/sharing/ShareButton';
+import { prepareActivityShareData } from '@/utils/sharing/shareUtils';
 
 export default function ActivityDetailsModal({ isOpen, onClose, activityId, onApply, hasApplied = false }) {
   // Register this modal with the global modal manager for ESC key and browser back button support
@@ -35,6 +37,7 @@ export default function ActivityDetailsModal({ isOpen, onClose, activityId, onAp
   const wrappedOnClose = useModal(isOpen, onClose, 'activity-details-modal');
   const t = useTranslations('ActivityCard');
   const tManage = useTranslations('ManageActivities');
+  const tSharing = useTranslations('Sharing');
   const locale = useLocale();
   const router = useRouter();
   const { isDark } = useTheme();
@@ -197,6 +200,19 @@ export default function ActivityDetailsModal({ isOpen, onClose, activityId, onAp
       return activity.category;
     }
   })() : '';
+
+  // Prepare share data for activity
+  const shareData = activity && organization 
+    ? prepareActivityShareData(activity, organization, {
+        activityPhrase: tSharing('activityPhrase'),
+        shareActivityTitle: tSharing('shareActivityTitle')
+      })
+    : activity 
+    ? prepareActivityShareData(activity, null, {
+        activityPhrase: tSharing('activityPhrase'),
+        shareActivityTitle: tSharing('shareActivityTitle')
+      })
+    : null;
 
 
   return (
@@ -381,21 +397,39 @@ export default function ActivityDetailsModal({ isOpen, onClose, activityId, onAp
                   </div>
                   <div className="space-y-3">
                     <div>
-                      <p className="text-xs text-text-tertiary dark:text-text-tertiary mb-1">Start Date</p>
+                      <p className="text-xs text-text-tertiary dark:text-text-tertiary mb-1">Date</p>
                       <p className="text-sm font-medium text-text-primary dark:text-text-primary">
                         {activity.start_date
                           ? formatDateOnly(activity.start_date)
                           : 'Not specified'}
+                        {(activity.start_time || activity.end_time) && (
+                          <span className="text-text-secondary dark:text-text-secondary">
+                            {activity.start_time && activity.end_time
+                              ? ` · ${activity.start_time} – ${activity.end_time}`
+                              : activity.start_time
+                                ? ` · ${activity.start_time}`
+                                : ` · ${activity.end_time}`}
+                          </span>
+                        )}
                       </p>
                     </div>
-                    {activity.end_date && (
-                      <div>
-                        <p className="text-xs text-text-tertiary dark:text-text-tertiary mb-1">End Date</p>
-                        <p className="text-sm font-medium text-text-primary dark:text-text-primary">
-                          {formatDateOnly(activity.end_date)}
-                        </p>
-                      </div>
-                    )}
+                    {(() => {
+                      if (!activity.end_date) return null;
+                      const startD = convertTimestampToDate(activity.start_date);
+                      const endD = convertTimestampToDate(activity.end_date);
+                      if (!startD || !endD || startD.toDateString() === endD.toDateString()) return null;
+                      return (
+                        <div>
+                          <p className="text-xs text-text-tertiary dark:text-text-tertiary mb-1">End day</p>
+                          <p className="text-sm font-medium text-text-primary dark:text-text-primary">
+                            {formatDateOnly(activity.end_date)}
+                            {activity.end_time && (
+                              <span className="text-text-secondary dark:text-text-secondary"> · {activity.end_time}</span>
+                            )}
+                          </p>
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
 
@@ -521,38 +555,51 @@ export default function ActivityDetailsModal({ isOpen, onClose, activityId, onAp
         </Modal.Body>
         
         <Modal.Footer className="bg-background-card dark:bg-background-card border-t border-border-light dark:border-border-dark">
-          {hasApplied ? (
-            <>
-              <Button
-                color="green"
-                onClick={() => {
-                  wrappedOnClose();
-                  router.push('/dashboard');
-                }}
-                className="flex items-center gap-2 bg-semantic-success-600 hover:bg-semantic-success-700 dark:bg-semantic-success-500 dark:hover:bg-semantic-success-600"
-              >
-                <HiCheckCircle className="h-5 w-5" />
-                View Application Status
-              </Button>
-              <Button color="gray" onClick={wrappedOnClose} className="bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-300 dark:hover:bg-neutral-600">
-                Close
-              </Button>
-            </>
-          ) : (
-            <>
-              {/* Hide Apply button for events or local activities with external platform only */}
-              {onApply && 
-               activity?.type !== 'event' && 
-               !(activity?.type === 'local' && activity?.acceptApplicationsWG === false) && (
-                <Button onClick={onApply} className="bg-primary-500 hover:bg-primary-600 dark:bg-primary-600 dark:hover:bg-primary-700 text-white">
-                  Apply Now
-                </Button>
+          <div className="flex flex-wrap items-center justify-between gap-3 w-full">
+            <div className="flex items-center gap-2">
+              {shareData && (
+                <ShareButton 
+                  shareData={shareData}
+                  variant="default"
+                  size="sm"
+                />
               )}
-              <Button color="gray" onClick={wrappedOnClose} className="bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-300 dark:hover:bg-neutral-600">
-                Close
-              </Button>
-            </>
-          )}
+            </div>
+            <div className="flex items-center gap-2">
+              {hasApplied ? (
+                <>
+                  <Button
+                    color="green"
+                    onClick={() => {
+                      wrappedOnClose();
+                      router.push('/dashboard');
+                    }}
+                    className="flex items-center gap-2 bg-semantic-success-600 hover:bg-semantic-success-700 dark:bg-semantic-success-500 dark:hover:bg-semantic-success-600"
+                  >
+                    <HiCheckCircle className="h-5 w-5" />
+                    View Application Status
+                  </Button>
+                  <Button color="gray" onClick={wrappedOnClose} className="bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-300 dark:hover:bg-neutral-600">
+                    Close
+                  </Button>
+                </>
+              ) : (
+                <>
+                  {/* Hide Apply button for events or local activities with external platform only */}
+                  {onApply && 
+                   activity?.type !== 'event' && 
+                   !(activity?.type === 'local' && activity?.acceptApplicationsWG === false) && (
+                    <Button onClick={onApply} className="bg-primary-500 hover:bg-primary-600 dark:bg-primary-600 dark:hover:bg-primary-700 text-white">
+                      Apply Now
+                    </Button>
+                  )}
+                  <Button color="gray" onClick={wrappedOnClose} className="bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-300 dark:hover:bg-neutral-600">
+                    Close
+                  </Button>
+                </>
+              )}
+            </div>
+          </div>
         </Modal.Footer>
       </Modal>
 

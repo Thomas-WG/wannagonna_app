@@ -27,6 +27,21 @@ const nextConfig = {
         hostname: '*.firebasestorage.app',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.googleusercontent.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'picsum.photos',
+        pathname: '/**',
+      },
     ],
     // Disable image optimization for localhost in development
     unoptimized: process.env.NODE_ENV === 'development',
@@ -39,6 +54,13 @@ const nextConfig = {
       },
       {
         source: '/manifest.webmanifest',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=3600' },
+          { key: 'Content-Type', value: 'application/manifest+json' },
+        ],
+      },
+      {
+        source: '/favicon/site.webmanifest',
         headers: [
           { key: 'Cache-Control', value: 'public, max-age=3600' },
           { key: 'Content-Type', value: 'application/manifest+json' },

@@ -183,6 +183,7 @@ export default function CompleteProfilePage() {
         setSelectedFile(file);
         const imageUrl = URL.createObjectURL(file);
         setValue('profilePicture', imageUrl, { shouldValidate: true });
+        // Note: We'll revoke the blob URL after upload in onSubmit
       } catch (error) {
         console.error("Error handling profile picture:", error);
       }
@@ -198,7 +199,17 @@ export default function CompleteProfilePage() {
         try {
           const downloadURL = await uploadProfilePicture(selectedFile, user.uid);
           finalProfileData.profilePicture = downloadURL;
-          setValue('profilePicture', downloadURL);
+          // Update form value with Firebase URL
+          setValue('profilePicture', downloadURL, { shouldValidate: true });
+          
+          // Revoke the blob URL to free memory
+          const currentProfilePicture = watch('profilePicture');
+          if (currentProfilePicture && currentProfilePicture.startsWith('blob:')) {
+            URL.revokeObjectURL(currentProfilePicture);
+          }
+          
+          // Clear selected file after successful upload
+          setSelectedFile(null);
         } catch (error) {
           console.error("Error uploading profile picture:", error);
         }
@@ -252,7 +263,7 @@ export default function CompleteProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-dvh">
         <div className="text-text-primary dark:text-text-primary">Loading...</div>
       </div>
     );
@@ -265,7 +276,7 @@ export default function CompleteProfilePage() {
         <ProfileProgress formData={formValues} />
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 pb-safe-bottom pb-20 sm:pb-24">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           {/* Left Column - Profile Information (takes 3/5 of width) */}
           <div className="lg:col-span-3">

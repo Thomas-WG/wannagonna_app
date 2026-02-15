@@ -328,92 +328,57 @@ export async function batchLoadBadgeImageUrls(badges, batchSize = 10) {
  * @returns {Promise<Object|null>} Badge details object if successful, null otherwise
  * Returns { id, title, description, xp } if badge was granted, null if already exists or error
  */
+/**
+ * Grant a badge to a user using Cloud Function (bypasses Firestore rules)
+ * This function now uses a Cloud Function to grant badges, which allows
+ * cross-user operations and bypasses Firestore security rules.
+ * 
+ * @param {string} userId - The user's ID
+ * @param {string} badgeId - The badge ID to grant
+ * @returns {Promise<Object|null>} Badge details object if successful, null otherwise
+ */
 export async function grantBadgeToUser(userId, badgeId) {
   try {
-    const memberDoc = doc(db, 'members', userId);
-    
-    // Search for badge across all categories
-    const badgeDetails = await findBadgeById(badgeId);
-    console.log(`Badge details for ${badgeId}:`, badgeDetails);
-    
-    if (!badgeDetails) {
-      console.error(`Badge document ${badgeId} not found in Firestore`);
+    if (!functions) {
+      console.error('Firebase functions not initialized');
       return null;
     }
+
+    console.log(`[grantBadgeToUser] Calling Cloud Function to grant badge ${badgeId} to user ${userId}`);
     
-    const badgeXP = badgeDetails.xp || 0;
-    console.log(`XP value from badge ${badgeId}: ${badgeXP}`);
+    // Use Cloud Function to grant badge (bypasses Firestore rules)
+    const grantBadgeFn = httpsCallable(functions, 'grantBadgeToUser');
+    const result = await grantBadgeFn({ userId, badgeId });
     
-    // Check if user already has this badge
-    const memberSnap = await getDoc(memberDoc);
-    if (!memberSnap.exists()) {
-      console.error(`Member document ${userId} does not exist`);
-      return null;
-    }
-    
-    const memberData = memberSnap.data();
-    const existingBadges = memberData.badges || [];
-    
-    // Check if badge already exists
-    const badgeExists = existingBadges.some(badge => badge.id === badgeId);
-    if (badgeExists) {
-      console.log(`User ${userId} already has badge ${badgeId} - skipping XP grant`);
-      return null;
-    }
-    
-    // Prepare update data
-    const updateData = {
-      badges: arrayUnion({
-        id: badgeId,
-        earnedDate: Timestamp.now()
-      })
-    };
-    
-    // Add XP increment if badge has XP value
-    if (badgeXP > 0) {
-      updateData.xp = increment(badgeXP);
-      console.log(`Adding ${badgeXP} XP for badge ${badgeId}`);
+    if (result.data?.success) {
+      const badge = result.data.badge;
+      console.log(`[grantBadgeToUser] Badge ${badgeId} granted successfully to user ${userId}`);
+      
+      // Return badge details in the same format as before for compatibility
+      return {
+        id: badge.id,
+        title: badge.title,
+        description: badge.description,
+        xp: badge.xp || 0
+      };
     } else {
-      console.warn(`Badge ${badgeId} has no XP value (xp field missing or 0)`);
+      const errorMsg = result.data?.error || 'Unknown error';
+      console.error(`[grantBadgeToUser] Failed to grant badge: ${errorMsg}`);
+      
+      // Return null if user already has badge (maintains backward compatibility)
+      if (errorMsg.includes('already has')) {
+        return null;
+      }
+      
+      return null;
     }
-    
-    console.log(`Update data:`, updateData);
-    await updateDoc(memberDoc, updateData);
-    
-    console.log(`Badge ${badgeId} granted to user ${userId}${badgeXP > 0 ? ` with ${badgeXP} XP` : ''}`);
-    
-    // Log XP history if XP was awarded (always log badge earning, even if XP is 0)
-    const historyTitle = `Badge Earned: ${badgeDetails.title}`;
-    if (badgeXP > 0) {
-      await logXpHistory(userId, historyTitle, badgeXP, 'badge');
-    } else {
-      // Log badge earning even without XP for tracking purposes
-      await logXpHistory(userId, historyTitle, 0, 'badge');
-    }
-    
-    // Send notification to user (in-app and/or push based on preferences)
-    try {
-      const notifyFn = httpsCallable(functions, 'notifyBadgeEarned');
-      await notifyFn({
-        userId,
-        badgeTitle: badgeDetails.title,
-        badgeXP,
-        badgeId
-      });
-    } catch (notifyError) {
-      console.error(`Failed to send badge notification for ${badgeId}:`, notifyError);
-      // Don't fail the badge grant if notification fails
-    }
-    
-    // Return badge details for animation/display
-    return {
-      id: badgeId,
-      title: badgeDetails.title,
-      description: badgeDetails.description,
-      xp: badgeXP
-    };
   } catch (error) {
-    console.error(`Error granting badge ${badgeId} to user ${userId}:`, error);
+    console.error(`[grantBadgeToUser] Error calling Cloud Function:`, error);
+    console.error(`[grantBadgeToUser] Error details:`, {
+      code: error.code,
+      message: error.message,
+      details: error.details
+    });
     return null;
   }
 }
@@ -603,9 +568,10 @@ export async function fetchUserBadges(userId) {
  * @param {number} points - The number of XP points to award
  * @param {string} title - The title/description of the XP earning event
  * @param {string} type - The type of XP earning (e.g., "referral", "activity")
+ * @param {Object} metadata - Optional metadata (badgeId, activityId, memberId)
  * @returns {Promise<boolean>} True if successful, false otherwise
  */
-export async function awardXpToUser(userId, points, title, type = 'unknown') {
+export async function awardXpToUser(userId, points, title, type = 'unknown', metadata = {}) {
   try {
     if (!userId || !points || points <= 0) {
       console.error('Invalid parameters for awardXpToUser:', { userId, points, title, type });
@@ -628,8 +594,8 @@ export async function awardXpToUser(userId, points, title, type = 'unknown') {
 
     console.log(`Awarded ${points} XP to user ${userId} for: ${title}`);
 
-    // Log to XP history
-    await logXpHistory(userId, title, points, type);
+    // Log to XP history with metadata
+    await logXpHistory(userId, title, points, type, metadata);
 
     return true;
   } catch (error) {
@@ -700,6 +666,7 @@ export async function handleReferralReward(referralCode) {
 
     if (!hasBadge) {
       // First referral - grant the badge (which will award XP automatically)
+      // grantBadgeToUser now uses Cloud Function internally (bypasses Firestore rules)
       console.log(`Granting ${badgeId} badge to referrer ${referrerId} for first referral`);
       const badgeDetails = await grantBadgeToUser(referrerId, badgeId);
       if (badgeDetails) {
@@ -746,7 +713,8 @@ export async function handleReferralReward(referralCode) {
           referrerId,
           badgeXP,
           'Referred member',
-          'referral'
+          'referral',
+          { memberId: referrerId }
         );
         if (success) {
           try {

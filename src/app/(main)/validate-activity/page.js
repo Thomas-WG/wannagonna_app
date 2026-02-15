@@ -100,7 +100,7 @@ export default function ValidateActivityPage() {
 
   // Show loading spinner while processing
   return (
-    <div className="flex items-center justify-center min-h-screen">
+    <div className="flex items-center justify-center min-h-dvh">
       <div className="text-center">
         <Spinner size="xl" className="mx-auto mb-4" />
         <p className="text-gray-600">Validating activity...</p>

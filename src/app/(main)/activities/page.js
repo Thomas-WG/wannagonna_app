@@ -24,16 +24,18 @@
 
 'use client'; // Enable client-side rendering for this page
 
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import ActivityCard from '@/components/activities/ActivityCard';
 import ActivityDetailsModal from '@/components/activities/ActivityDetailsModal';
 import ActivityFilters from '@/components/activities/ActivityFilters';
 import ApplyActivityModal from '@/components/activities/ApplyActivityModal';
+import ActivitiesCalendar from '@/components/activities/ActivitiesCalendar';
 import { Toast, Select, Spinner, Badge, Button } from 'flowbite-react';
 import { createApplication } from '@/utils/crudApplications';
 import { useAuth } from '@/utils/auth/AuthContext';
 import BadgeAnimation from '@/components/badges/BadgeAnimation';
-import { HiSearch, HiX, HiCheckCircle, HiChevronLeft, HiChevronRight } from 'react-icons/hi';
+import { HiSearch, HiX, HiCheckCircle, HiChevronLeft, HiChevronRight, HiViewGrid, HiCalendar } from 'react-icons/hi';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useTranslations, useLocale } from 'next-intl';
 import { countries } from 'countries-list';
@@ -47,7 +49,13 @@ import { getSkillsForSelect } from '@/utils/crudSkills';
 export default function ActivitiesPage() {
   const t = useTranslations('Activities');
   const locale = useLocale();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, loading: authLoading } = useAuth();
+  const urlActivityIdProcessed = useRef(false);
+
+  // Extract activityId from URL as stable value using useMemo
+  const activityIdFromUrl = useMemo(() => searchParams.get('activityId'), [searchParams]);
 
   // Data hooks
   const { activities: allActivities, isLoading: activitiesLoading } = useOpenActivities();
@@ -75,6 +83,9 @@ export default function ActivitiesPage() {
     closeApplyModal,
   } = useActivitiesStore();
 
+  // View mode: list or calendar (calendar shows only activities with start_date)
+  const [viewMode, setViewMode] = useState('list');
+
   // Local state for toast and badge animation
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState({ type: '', message: '' });
@@ -85,6 +96,21 @@ export default function ActivitiesPage() {
 
   // Debounce search query
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
+
+  // Handle activityId from URL parameter (for shared links)
+  useEffect(() => {
+    // Only run on client side and after auth is loaded
+    if (typeof window === 'undefined' || authLoading || urlActivityIdProcessed.current || !activityIdFromUrl) return;
+
+    // Open the activity details modal
+    openDetailsModal(activityIdFromUrl);
+    urlActivityIdProcessed.current = true;
+    
+    // Clean up URL by removing the query parameter
+    const newUrl = new URL(window.location.href);
+    newUrl.searchParams.delete('activityId');
+    router.replace(newUrl.pathname + (newUrl.search ? newUrl.search : ''), { scroll: false });
+  }, [activityIdFromUrl, authLoading, openDetailsModal, router]);
 
   // Helper function to get date from activity start_date
   const getActivityDate = (date) => {
@@ -380,6 +406,12 @@ export default function ActivitiesPage() {
     hasPreviousPage,
   } = useActivitiesPagination(sortedActivities, currentPage, itemsPerPage);
 
+  // Activities with start_date only (for calendar view)
+  const calendarActivities = useMemo(
+    () => sortedActivities.filter((a) => a.start_date != null),
+    [sortedActivities]
+  );
+
   // Handle card click - show details modal
   const handleCardClick = (activity) => {
     openDetailsModal(activity.id);
@@ -468,7 +500,7 @@ export default function ActivitiesPage() {
   if (!user && !authLoading) return null;
 
   return (
-    <div className="min-h-screen bg-background-page dark:bg-background-page">
+    <div className="min-h-dvh bg-background-page dark:bg-background-page">
       <div className="container mx-auto px-4 py-6 max-w-7xl">
         {/* Header */}
         <div className="mb-6">
@@ -530,15 +562,54 @@ export default function ActivitiesPage() {
           </div>
         </div>
 
-        {/* Sort and Results Count */}
+        {/* View toggle (List / Calendar) and Sort and Results Count */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-          <div className="text-sm text-text-secondary dark:text-text-secondary">
-            {t('showing')} <span className="font-semibold">{startIndex}-{endIndex}</span> {t('of')}{' '}
-            <span className="font-semibold">{sortedActivities.length}</span> {t('activities')}
-            {allActivities.length !== sortedActivities.length && (
-              <span> ({t('filtered')} {allActivities.length} {t('total')})</span>
-            )}
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex rounded-lg border border-border-light dark:border-border-dark p-0.5 bg-background-card dark:bg-background-card">
+              <button
+                type="button"
+                onClick={() => setViewMode('list')}
+                className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium min-h-[44px] touch-manipulation ${
+                  viewMode === 'list'
+                    ? 'bg-primary-500 text-white dark:bg-primary-500 dark:text-white'
+                    : 'text-text-secondary dark:text-text-secondary hover:bg-gray-100 dark:hover:bg-gray-700'
+                }`}
+                aria-pressed={viewMode === 'list'}
+              >
+                <HiViewGrid className="h-5 w-5" />
+                {t('viewList')}
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('calendar')}
+                className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium min-h-[44px] touch-manipulation ${
+                  viewMode === 'calendar'
+                    ? 'bg-primary-500 text-white dark:bg-primary-500 dark:text-white'
+                    : 'text-text-secondary dark:text-text-secondary hover:bg-gray-100 dark:hover:bg-gray-700'
+                }`}
+                aria-pressed={viewMode === 'calendar'}
+              >
+                <HiCalendar className="h-5 w-5" />
+                {t('viewCalendar')}
+              </button>
+            </div>
+            <div className="text-sm text-text-secondary dark:text-text-secondary">
+              {viewMode === 'list' ? (
+                <>
+                  {t('showing')} <span className="font-semibold">{startIndex}-{endIndex}</span> {t('of')}{' '}
+                  <span className="font-semibold">{sortedActivities.length}</span> {t('activities')}
+                  {allActivities.length !== sortedActivities.length && (
+                    <span> ({t('filtered')} {allActivities.length} {t('total')})</span>
+                  )}
+                </>
+              ) : (
+                <>
+                  <span className="font-semibold">{calendarActivities.length}</span> {t('activities')} {t('onCalendar')}
+                </>
+              )}
+            </div>
           </div>
+          {viewMode === 'list' && (
           <div className="flex items-center gap-2">
             <label className="text-sm font-medium text-text-primary dark:text-text-primary">{t('sortBy')}</label>
             <Select value={sortBy} onChange={(e) => setStoreSortBy(e.target.value)} className="w-full sm:w-auto bg-background-card dark:bg-background-card text-text-primary dark:text-text-primary border-border-light dark:border-border-dark">
@@ -551,6 +622,7 @@ export default function ActivitiesPage() {
               <option value="alphabetical">{t('sortAlphabetical')}</option>
             </Select>
           </div>
+          )}
         </div>
 
         {/* Active Filter Badges */}
@@ -647,8 +719,30 @@ export default function ActivitiesPage() {
           </div>
         )}
 
-        {/* Top Pagination Controls */}
-        {!activitiesLoading && totalPages > 1 && paginatedActivities.length > 0 && (
+        {/* Calendar view: only activities with start_date */}
+        {viewMode === 'calendar' && !activitiesLoading && (
+          <>
+            {calendarActivities.length === 0 ? (
+              <div className="text-center py-12 bg-background-card dark:bg-background-card rounded-lg shadow-sm">
+                <p className="text-lg text-text-secondary dark:text-text-secondary mb-2">{t('noActivitiesFound')}</p>
+                <p className="text-sm text-text-tertiary dark:text-text-tertiary">
+                  {sortedActivities.length === 0
+                    ? (allActivities.length === 0 ? t('noOpenActivities') : t('tryAdjustingFilters'))
+                    : t('noActivitiesOnCalendar')}
+                </p>
+              </div>
+            ) : (
+              <ActivitiesCalendar
+                activities={calendarActivities}
+                onEventClick={(id) => openDetailsModal(id)}
+                locale={locale}
+              />
+            )}
+          </>
+        )}
+
+        {/* List view: Top Pagination Controls */}
+        {viewMode === 'list' && !activitiesLoading && totalPages > 1 && paginatedActivities.length > 0 && (
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6 pb-6 border-b border-border-light dark:border-border-dark">
             <div className="text-sm text-text-secondary dark:text-text-secondary">
               {t('page')} {currentPage} {t('of')} {totalPages}
@@ -707,8 +801,8 @@ export default function ActivitiesPage() {
           </div>
         )}
 
-        {/* Activities Grid */}
-        {!activitiesLoading && paginatedActivities.length > 0 && (
+        {/* Activities Grid (list view only) */}
+        {viewMode === 'list' && !activitiesLoading && paginatedActivities.length > 0 && (
           <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
               {paginatedActivities.map((activity) => (
@@ -722,6 +816,8 @@ export default function ActivitiesPage() {
                   country={activity.country}
                   start_date={activity.start_date}
                   end_date={activity.end_date}
+                  start_time={activity.start_time}
+                  end_time={activity.end_time}
                   sdg={activity.sdg}
                   applicants={activity.applicants}
                   xp_reward={activity.xp_reward}

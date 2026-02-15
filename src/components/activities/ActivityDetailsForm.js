@@ -5,6 +5,7 @@ import { useLocale } from 'next-intl';
 import Select from 'react-select';
 import { getSkillsForSelect } from '@/utils/crudSkills';
 import { useTheme } from '@/utils/theme/ThemeContext';
+import useInputFocusScroll from '@/hooks/useInputFocusScroll';
 import { 
   HiCalendar, 
   HiUsers, 
@@ -25,6 +26,7 @@ export default function ActivityDetailsForm({ formData, handleChange, setFormDat
   const t = useTranslations('ManageActivities');
   const locale = useLocale();
   const { isDark } = useTheme();
+  const handleInputFocus = useInputFocusScroll();
   
   const [skillOptions, setSkillOptions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -138,6 +140,7 @@ export default function ActivityDetailsForm({ formData, handleChange, setFormDat
                   handleChange(e);
                 }
               }}
+              onFocus={handleInputFocus}
               maxLength={50}
               className="text-base sm:text-lg w-full"
             />
@@ -230,56 +233,145 @@ export default function ActivityDetailsForm({ formData, handleChange, setFormDat
                 name='location'
                 value={formData.location || ''}
                 onChange={handleChange}
+                onFocus={handleInputFocus}
                 className="text-base sm:text-lg"
               />
             </div>
           )}
 
-          {/* Dates */}
-          <div className="lg:col-span-2 space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor='start_date' className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                  <HiCalendar className="h-4 w-4" />
-                  {t('start_date')}
-                </Label>
-                <Datepicker 
-                  weekStart={1}
-                  value={(() => {
-                    try {
-                      return formData.start_date ? (formData.start_date instanceof Date ? formData.start_date : new Date(formData.start_date)) : new Date();
-                    } catch (error) {
-                      console.error('Error with start_date Datepicker value:', error, 'formData.start_date:', formData.start_date);
-                      return new Date();
-                    }
-                  })()}
-                  name='start_date'
-                  onChange={(date) => setFormData((prev) => ({ ...prev, start_date: date }))}
-                  className="w-full"
-                />
+          {/* Date and time – visibility by type and frequency */}
+          {(() => {
+            const isEvent = formData.type === 'event';
+            const isLocalRole = formData.type === 'local' && formData.frequency === 'role';
+            const isOnline = formData.type === 'online';
+            const showOptionalBlock = (isOnline || isLocalRole) && formData.showDateTimeOnCalendar;
+            const showDateTimeBlock = isEvent || (formData.type === 'local' && !isLocalRole) || showOptionalBlock;
+
+            const startDateValue = (() => {
+              try {
+                return formData.start_date ? (formData.start_date instanceof Date ? formData.start_date : new Date(formData.start_date)) : new Date();
+              } catch {
+                return new Date();
+              }
+            })();
+            const endDateValue = (() => {
+              try {
+                return formData.end_date ? (formData.end_date instanceof Date ? formData.end_date : new Date(formData.end_date)) : new Date();
+              } catch {
+                return new Date();
+              }
+            })();
+
+            return (
+              <div className="lg:col-span-2 space-y-4">
+                {/* Optional "Add date and time" for online and local long-term role */}
+                {(isOnline || isLocalRole) && (
+                  <div className="flex items-start gap-3 p-4 rounded-lg border-2 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 min-h-[44px]">
+                    <Checkbox
+                      id="showDateTimeOnCalendar"
+                      checked={formData.showDateTimeOnCalendar === true}
+                      onChange={(e) => setFormData((prev) => ({ ...prev, showDateTimeOnCalendar: e.target.checked }))}
+                      className="mt-1"
+                    />
+                    <Label htmlFor="showDateTimeOnCalendar" className="text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer flex-1">
+                      {t('addDateAndTimeShowOnCalendar')}
+                    </Label>
+                  </div>
+                )}
+
+                {showDateTimeBlock && (
+                  <>
+                    <fieldset className="space-y-4">
+                      <legend className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{t('dateAndTimeSameDay')}</legend>
+                      <p className="text-xs text-text-tertiary dark:text-text-tertiary mb-2">{t('dateAndTimeSameDayHelper')}</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="start_date" className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                            <HiCalendar className="h-4 w-4" />
+                            {t('date')}{isEvent ? ' *' : ''}
+                          </Label>
+                          <Datepicker
+                            weekStart={1}
+                            value={startDateValue}
+                            name="start_date"
+                            onChange={(date) => setFormData((prev) => ({ ...prev, start_date: date }))}
+                            className="w-full"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="start_time" className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                            <HiClock className="h-4 w-4" />
+                            {t('start_time')}{isEvent ? ' *' : ` (${t('optional')})`}
+                          </Label>
+                          <input
+                            type="time"
+                            id="start_time"
+                            value={formData.start_time || ''}
+                            onChange={(e) => setFormData((prev) => ({ ...prev, start_time: e.target.value || null }))}
+                            className="w-full min-h-[44px] rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2 text-base"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="end_time" className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                            <HiClock className="h-4 w-4" />
+                            {t('end_time')}{isEvent ? ' *' : ` (${t('optional')})`}
+                          </Label>
+                          <input
+                            type="time"
+                            id="end_time"
+                            value={formData.end_time || ''}
+                            onChange={(e) => setFormData((prev) => ({ ...prev, end_time: e.target.value || null }))}
+                            className="w-full min-h-[44px] rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2 text-base"
+                          />
+                        </div>
+                      </div>
+                    </fieldset>
+                    <div className="flex items-start gap-3 p-4 rounded-lg border-2 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 min-h-[44px]">
+                      <Checkbox
+                        id="spansSeveralDays"
+                        checked={formData.spansSeveralDays === true}
+                        onChange={(e) => {
+                          const checked = e.target.checked;
+                          setFormData((prev) => ({
+                            ...prev,
+                            spansSeveralDays: checked,
+                            ...(checked ? {} : { end_date: null }),
+                          }));
+                        }}
+                        className="mt-1"
+                      />
+                      <Label htmlFor="spansSeveralDays" className="text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer flex-1">
+                        {t('spansSeveralDays')}
+                      </Label>
+                    </div>
+                    {formData.spansSeveralDays && (
+                      <fieldset className="space-y-4">
+                        <legend className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{t('endDay')}</legend>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="end_date" className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                              <HiCalendar className="h-4 w-4" />
+                              {t('end_date')}
+                            </Label>
+                            <Datepicker
+                              weekStart={1}
+                              value={endDateValue}
+                              name="end_date"
+                              onChange={(date) => setFormData((prev) => ({ ...prev, end_date: date }))}
+                              className="w-full"
+                            />
+                          </div>
+                        </div>
+                      </fieldset>
+                    )}
+                    {isEvent && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{t('eventTimeRequired')}</p>
+                    )}
+                  </>
+                )}
               </div>
-              <div className="space-y-2">
-                <Label htmlFor='end_date' className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                  <HiCalendar className="h-4 w-4" />
-                  {t('end_date')}
-                </Label>
-                <Datepicker 
-                  weekStart={1}
-                  name='end_date'
-                  value={(() => {
-                    try {
-                      return formData.end_date ? (formData.end_date instanceof Date ? formData.end_date : new Date(formData.end_date)) : new Date();
-                    } catch (error) {
-                      console.error('Error with end_date Datepicker value:', error, 'formData.end_date:', formData.end_date);
-                      return new Date();
-                    }
-                  })()}
-                  onChange={(date) => setFormData((prev) => ({ ...prev, end_date: date }))}
-                  className="w-full"
-                />
-              </div>
-            </div>
-          </div>
+            );
+          })()}
         </div>
       </Card>
 
@@ -432,6 +524,7 @@ export default function ActivityDetailsForm({ formData, handleChange, setFormDat
                   setFormData((prev) => ({ ...prev, participantTarget: value }));
                 }
               }}
+              onFocus={handleInputFocus}
               type='number'
               min="1"
               className="text-base sm:text-lg"
@@ -539,7 +632,7 @@ export default function ActivityDetailsForm({ formData, handleChange, setFormDat
 
       {/* Skills Selector - Local and Online Only */}
       {(formData.type === 'local' || formData.type === 'online') && (
-        <Card className="p-4 sm:p-6 shadow-lg border-0 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900">
+        <Card className="p-4 sm:p-6 shadow-lg border-0 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 overflow-visible">
           <div className="flex items-start sm:items-center gap-3 mb-6">
             <div className="p-2 bg-indigo-100 dark:bg-indigo-900 rounded-lg shrink-0">
               <HiUsers className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-600 dark:text-indigo-400" />
@@ -568,6 +661,10 @@ export default function ActivityDetailsForm({ formData, handleChange, setFormDat
               isSearchable={true}
               isClearable={true}
               closeMenuOnSelect={false}
+              menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
+              menuPosition="fixed"
+              menuShouldScrollIntoView={true}
+              onFocus={handleInputFocus}
               styles={{
                 control: (base) => ({
                   ...base,
@@ -584,6 +681,16 @@ export default function ActivityDetailsForm({ formData, handleChange, setFormDat
                   ...base,
                   backgroundColor: isDark ? '#1e293b' : '#ffffff',
                   borderColor: isDark ? '#334155' : '#e2e8f0',
+                  zIndex: 9999,
+                  maxHeight: '60vh', // Limit menu height to 60% of viewport
+                }),
+                menuList: (base) => ({
+                  ...base,
+                  maxHeight: '60vh', // Ensure menu list respects max height
+                  padding: '4px',
+                }),
+                menuPortal: (base) => ({
+                  ...base,
                   zIndex: 9999,
                 }),
                 groupHeading: (base, { group }) => {

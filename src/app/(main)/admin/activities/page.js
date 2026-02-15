@@ -358,7 +358,7 @@ export default function AdminActivitiesPage() {
   };
 
   return (
-    <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 bg-background-page dark:bg-background-page min-h-screen">
+    <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 bg-background-page dark:bg-background-page min-h-dvh">
       {/* Back Button */}
       <BackButton fallbackPath="/admin" />
 
@@ -535,6 +535,8 @@ export default function AdminActivitiesPage() {
                   country={activity.country}
                   start_date={activity.start_date}
                   end_date={activity.end_date}
+                  start_time={activity.start_time}
+                  end_time={activity.end_time}
                   sdg={activity.sdg}
                   applicants={activity.applicants}
                   xp_reward={activity.xp_reward}

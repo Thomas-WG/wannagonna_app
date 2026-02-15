@@ -283,7 +283,7 @@ export default function LoginPage() {
 
   // Render the login UI
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-background-page dark:bg-background-page">
+    <div className="min-h-dvh flex flex-col items-center justify-center bg-background-page dark:bg-background-page">
       <LanguageSelector 
         options={languageOptions} 
         onChangeLocale={handleLanguageChange}

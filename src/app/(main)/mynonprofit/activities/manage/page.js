@@ -18,6 +18,8 @@ import ProgressStepper from '@/components/layout/ProgressStepper';
 import { useAuth } from '@/utils/auth/AuthContext'; // Hook for accessing user authentication status
 import { useTranslations } from 'use-intl';
 import BackButton from '@/components/layout/BackButton';
+import { countries } from 'countries-list';
+import { convertTimestampToDate } from '@/utils/dateUtils';
 
 // Import the new components
 import CategorySelector from '@/components/activities/CategorySelector';
@@ -25,6 +27,45 @@ import ActivityDetailsForm from '@/components/activities/ActivityDetailsForm';
 import SDGSelector from '@/components/activities/SDGSelector';
 import FormNavigation from '@/components/activities/FormNavigation';
 import PublishDraftModal from '@/components/activities/PublishDraftModal';
+
+/**
+ * Normalize country value to country code
+ * Converts country names to codes (e.g., "Japan" -> "JP")
+ * If already a code, returns it uppercase
+ * @param {string} countryValue - Country code or name
+ * @returns {string} Normalized country code
+ */
+function normalizeCountryToCode(countryValue) {
+  if (!countryValue || typeof countryValue !== 'string') {
+    return countryValue || '';
+  }
+
+  const trimmedValue = countryValue.trim();
+  if (!trimmedValue) {
+    return '';
+  }
+
+  // Check if it's already a valid country code (2 uppercase letters)
+  const upperValue = trimmedValue.toUpperCase();
+  if (upperValue.length === 2 && /^[A-Z]{2}$/.test(upperValue)) {
+    // Check if it exists in countries list
+    if (countries[upperValue]) {
+      return upperValue;
+    }
+  }
+
+  // Try to find by country name (case-insensitive)
+  const foundEntry = Object.entries(countries).find(
+    ([code, country]) => country.name.toLowerCase() === trimmedValue.toLowerCase()
+  );
+
+  if (foundEntry) {
+    return foundEntry[0]; // Return the country code
+  }
+
+  // If not found, return the original value (might be a valid code we don't recognize)
+  return upperValue.length === 2 ? upperValue : trimmedValue;
+}
 
 export default function CreateUpdateActivityPage() {
   // Retrieve query parameters from URL
@@ -58,6 +99,10 @@ export default function CreateUpdateActivityPage() {
     creation_date: new Date(),  // Current date and time as default
     start_date: new Date(),     // Default start date
     end_date: new Date(),        // Default end date
+    start_time: null,            // "HH:mm" or null – optional for online/local, required for events
+    end_time: null,              // "HH:mm" or null
+    showDateTimeOnCalendar: false, // For online / local role: true when user opts in to show on calendar
+    spansSeveralDays: false,       // When true, show end date (multi-day); when false, single day, no end_date
     status: 'created',
     // New fields
     externalPlatformLink: '', // External platform/event link
@@ -90,13 +135,17 @@ export default function CreateUpdateActivityPage() {
               organizationId: claims.npoId,
               organization_name: orgData.name || prev.organization_name,
               organization_logo: orgData.logo || prev.organization_logo,
-              country: orgData.country || prev.country,
+              country: orgData.country ? normalizeCountryToCode(orgData.country) : prev.country,
               city: orgData.city || prev.city,
               languages: orgData.languages || prev.languages,
               sdg: orgData.sdg || prev.sdg,
-              // Explicitly preserve date fields to prevent them from being overwritten
+              // Explicitly preserve date/time fields to prevent them from being overwritten
               start_date: prev.start_date,
               end_date: prev.end_date,
+              start_time: prev.start_time,
+              end_time: prev.end_time,
+              showDateTimeOnCalendar: prev.showDateTimeOnCalendar,
+              spansSeveralDays: prev.spansSeveralDays,
               creation_date: prev.creation_date
             }));
           }
@@ -118,51 +167,16 @@ export default function CreateUpdateActivityPage() {
           console.log('Raw activity data from Firestore:', data);
           
           if (data) {
-            // Convert Firestore timestamps to Date objects
+            // Convert Firestore timestamps to Date objects; same structure as create (same day first, optional multi-day)
+            const startDate = convertTimestampToDate(data.start_date) || new Date();
+            const endDateRaw = data.end_date ? convertTimestampToDate(data.end_date) : null;
+            const isMultiDay = endDateRaw != null && startDate.toDateString() !== endDateRaw.toDateString();
             const processedData = {
-          ...data,
-              start_date: data.start_date ? (() => {
-                console.log('Processing start_date:', data.start_date, 'Type:', typeof data.start_date);
-                try {
-                  // Handle Firestore Timestamp objects
-                  if (data.start_date && typeof data.start_date === 'object' && 'seconds' in data.start_date) {
-                    return new Date(data.start_date.seconds * 1000);
-                  }
-                  // Handle regular Date objects or strings
-                  return new Date(data.start_date);
-                } catch (error) {
-                  console.error('Error converting start_date:', error);
-                  return new Date();
-                }
-              })() : new Date(),
-              end_date: data.end_date ? (() => {
-                console.log('Processing end_date:', data.end_date, 'Type:', typeof data.end_date);
-                try {
-                  // Handle Firestore Timestamp objects
-                  if (data.end_date && typeof data.end_date === 'object' && 'seconds' in data.end_date) {
-                    return new Date(data.end_date.seconds * 1000);
-                  }
-                  // Handle regular Date objects or strings
-                  return new Date(data.end_date);
-                } catch (error) {
-                  console.error('Error converting end_date:', error);
-                  return new Date();
-                }
-              })() : new Date(),
-              creation_date: data.creation_date ? (() => {
-                console.log('Processing creation_date:', data.creation_date, 'Type:', typeof data.creation_date);
-                try {
-                  // Handle Firestore Timestamp objects
-                  if (data.creation_date && typeof data.creation_date === 'object' && 'seconds' in data.creation_date) {
-                    return new Date(data.creation_date.seconds * 1000);
-                  }
-                  // Handle regular Date objects or strings
-                  return new Date(data.creation_date);
-                } catch (error) {
-                  console.error('Error converting creation_date:', error);
-                  return new Date();
-                }
-              })() : new Date(),
+              ...data,
+              start_date: startDate,
+              // Single-day: no end date in form; multi-day: keep end date so form shows same info as saved
+              end_date: isMultiDay ? endDateRaw : null,
+              creation_date: convertTimestampToDate(data.creation_date) || new Date(),
               // Handle backward compatibility for external platform link
               externalPlatformLink: data.externalPlatformLink || data.activity_url || '',
               activity_url: data.activity_url || data.externalPlatformLink || '',
@@ -176,6 +190,11 @@ export default function CreateUpdateActivityPage() {
               // Backward compatibility: default to 50 if fields are missing
               timeCommitment: data.timeCommitment !== undefined ? data.timeCommitment : 50,
               complexity: data.complexity !== undefined ? data.complexity : 50,
+              // Date/time – store as "HH:mm" or null (same as create)
+              start_time: data.start_time ?? null,
+              end_time: data.end_time ?? null,
+              showDateTimeOnCalendar: !!(data.start_date != null),
+              spansSeveralDays: isMultiDay,
             };
             console.log('Processed form data:', processedData);
             setFormData(processedData);
@@ -269,13 +288,12 @@ export default function CreateUpdateActivityPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Ensure dates are valid Date objects before comparing
-    const creationDate = formData.creation_date instanceof Date ? formData.creation_date : new Date(formData.creation_date);
-    const endDate = formData.end_date instanceof Date ? formData.end_date : new Date(formData.end_date);
-    
-    if (creationDate.getTime() === endDate.getTime()) {
-      formData.end_date = null;
-    }
+    // Same as create/edit: single day = no end_date; multi-day = use end_date when "Spans several days" is checked
+    const finalEndDate = formData.spansSeveralDays ? formData.end_date : null;
+
+    // For online and local long-term role: if user did not opt in to show on calendar, clear date/time
+    const isOnlineOrLocalRole = formData.type === 'online' || (formData.type === 'local' && formData.frequency === 'role');
+    const clearDateTime = isOnlineOrLocalRole && !formData.showDateTimeOnCalendar;
 
     // Normalize skills to store only values (IDs) for consistency
     // This prevents storing full react-select objects which can't be rendered directly
@@ -291,6 +309,13 @@ export default function CreateUpdateActivityPage() {
 
     const baseDataToSave = {
       ...formData,
+      end_date: finalEndDate,
+      ...(clearDateTime && {
+        start_date: null,
+        end_date: null,
+        start_time: null,
+        end_time: null,
+      }),
       // Add automatic attributes here if needed (e.g., organizationId, creatorId)
       organizationId: claims?.npoId || formData.organizationId, // Ensure organizationId is set
       creatorId: user?.uid, // Add the creator's ID
@@ -300,9 +325,13 @@ export default function CreateUpdateActivityPage() {
       externalPlatformLink: formData.externalPlatformLink || formData.activity_url || '',
       activity_url: formData.activity_url || formData.externalPlatformLink || '',
       // Normalize skills to store only values
-      skills: normalizedSkills
+      skills: normalizedSkills,
+      // Normalize country to ensure it's always a country code (e.g., "JP" not "Japan")
+      country: formData.country ? normalizeCountryToCode(formData.country) : formData.country
     };
-    
+    delete baseDataToSave.showDateTimeOnCalendar; // UI-only, do not persist
+    delete baseDataToSave.spansSeveralDays; // UI-only, do not persist
+
     try {
         // Handle single activity
     if (isEditMode) {
@@ -391,7 +420,7 @@ export default function CreateUpdateActivityPage() {
   if (!user) return null;
 
   return (
-    <div className='min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800'>
+    <div className='min-h-dvh bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800'>
       <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8'>
         {/* Header Section */}
         <div className='mb-6 sm:mb-8'>
@@ -426,7 +455,7 @@ export default function CreateUpdateActivityPage() {
 
         {/* Form Content */}
         {!loading && (
-          <form onSubmit={handleSubmit} className='space-y-4 sm:space-y-6'>
+          <form onSubmit={handleSubmit} className='space-y-4 sm:space-y-6 pb-safe-bottom pb-20 sm:pb-24'>
             {/* Step 1 */}
             {currentStep === 1 && (
               <div className='animate-fadeIn'>

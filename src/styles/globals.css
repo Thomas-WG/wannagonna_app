@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -48,6 +49,11 @@
   --easing-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+/* Base font size - respects system font size preferences (Android & iOS) */
+html {
+  font-size: 100%; /* Uses browser default (typically 16px), respects user accessibility settings */
+}
+
 .dark {
   /* Design Token CSS Variables - Dark Mode */
   --background: #0f172a;
@@ -77,6 +83,31 @@ body {
   font-family: Roboto, Helvetica, sans-serif;
   transition: background-color var(--transition-normal) var(--easing-default),
               color var(--transition-normal) var(--easing-default);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Safe area insets for notched devices / home indicator */
+.pt-safe-top {
+  padding-top: env(safe-area-inset-top, 0);
+}
+.pb-safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+.pl-safe-left {
+  padding-left: env(safe-area-inset-left, 0);
+}
+.pr-safe-right {
+  padding-right: env(safe-area-inset-right, 0);
+}
+.min-touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* iOS momentum scrolling for main content area */
+.scroll-touch {
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Custom animations - Joyful and Dynamic */
@@ -273,4 +304,269 @@ select option,
 .flowbite-select option {
   background-color: var(--bg-card);
   color: var(--text-primary);
+}
+
+/* ============================================
+   Landing page (light only)
+   ============================================ */
+.landing-hero-title {
+  font-family: 'Plus Jakarta Sans', Roboto, sans-serif;
+  letter-spacing: -0.02em;
+}
+
+/* Full-page subtle dot texture (use on landing root wrapper) */
+.landing-page-bg {
+  background-color: #f8fafc;
+  background-image: radial-gradient(circle at 1px 1px, rgba(249, 115, 22, 0.05) 1px, transparent 0);
+  background-size: 24px 24px;
+}
+
+/* Hero: dots + gradient; slightly stronger dots so they read clearly */
+.landing-hero-pattern {
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(249, 115, 22, 0.18) 1px, transparent 0),
+    linear-gradient(to bottom, #fff7ed 0%, #ffedd5 50%, #f8fafc 100%);
+  background-size: 28px 28px, 100% 100%;
+  background-position: 0 0, 0 0;
+}
+
+/* Alternating section tint (use on every other section) */
+.landing-section-alt {
+  background-color: rgba(255, 247, 237, 0.25);
+}
+
+/* Subtle dot pattern for Intro, Stay in touch, Contact sections */
+.landing-dots-subtle {
+  background-image: radial-gradient(circle at 1px 1px, rgba(249, 115, 22, 0.07) 1px, transparent 0);
+  background-size: 28px 28px;
+  background-color: transparent;
+}
+
+/* Combined Hero + Intro: background image with light overlay.
+   Use inline style for backgroundImage: linear-gradient(...), url(...) so overlay + image are one layer. */
+.landing-intro-block {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* Stay in touch: no solid band at top so the image block’s fade shows through; tint fades in lower down */
+.landing-stay-transition {
+  background-image:
+    linear-gradient(to bottom, transparent 0%, transparent 28%, rgba(255, 247, 237, 0.12) 55%, rgba(255, 247, 237, 0.25) 100%),
+    radial-gradient(circle at 1px 1px, rgba(249, 115, 22, 0.07) 1px, transparent 0);
+  background-size: 100% 100%, 28px 28px;
+  background-color: transparent;
+}
+
+.landing-animate-in {
+  opacity: 1;
+  transform: translateY(16px);
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.landing-animate-in.is-visible {
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-animate-in {
+    transform: none;
+    transition: none;
+  }
+  .landing-animate-in.is-visible {
+    transform: none;
+  }
+}
+
+/* FullCalendar dark mode – header, toolbar, day grid, list */
+.dark .activities-calendar {
+  background-color: var(--bg-card);
+  border-radius: 0.5rem;
+}
+
+.dark .activities-calendar .fc {
+  background-color: var(--bg-card);
+  --fc-border-color: var(--border-light);
+  --fc-button-bg-color: var(--bg-hover);
+  --fc-button-border-color: var(--border-light);
+  --fc-button-text-color: var(--text-primary);
+  --fc-button-hover-bg-color: var(--text-tertiary);
+  --fc-button-hover-border-color: var(--border-light);
+  --fc-button-active-bg-color: var(--text-secondary);
+  --fc-today-bg-color: rgba(248, 250, 252, 0.08);
+  --fc-page-bg-color: var(--bg-card);
+  --fc-neutral-bg-color: var(--bg-card);
+  --fc-list-event-hover-bg-color: var(--bg-hover);
+}
+
+.dark .activities-calendar .fc-toolbar-title {
+  color: var(--text-primary) !important;
+}
+
+.dark .activities-calendar .fc-button {
+  background-color: var(--bg-hover) !important;
+  border-color: var(--border-light) !important;
+  color: var(--text-primary) !important;
+}
+
+.dark .activities-calendar .fc-button:hover {
+  background-color: var(--text-tertiary) !important;
+  border-color: var(--border-light) !important;
+  color: var(--text-primary) !important;
+}
+
+.dark .activities-calendar .fc-button:disabled {
+  opacity: 0.5;
+  color: var(--text-tertiary) !important;
+}
+
+.dark .activities-calendar .fc-col-header-cell {
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-light) !important;
+}
+
+.dark .activities-calendar .fc-col-header-cell-cushion {
+  color: var(--text-primary) !important;
+}
+
+.dark .activities-calendar .fc-daygrid-day {
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-light) !important;
+}
+
+.dark .activities-calendar .fc-daygrid-day-frame {
+  background-color: var(--bg-card);
+}
+
+.dark .activities-calendar .fc-daygrid-day-number {
+  color: var(--text-secondary) !important;
+}
+
+.dark .activities-calendar .fc-daygrid-day.fc-day-today .fc-daygrid-day-frame {
+  background-color: var(--fc-today-bg-color);
+}
+
+.dark .activities-calendar .fc-daygrid-day.fc-day-today .fc-daygrid-day-number {
+  color: var(--text-primary) !important;
+}
+
+.dark .activities-calendar .fc-scrollgrid {
+  border-color: var(--border-light) !important;
+}
+
+.dark .activities-calendar .fc-scrollgrid td,
+.dark .activities-calendar .fc-scrollgrid th {
+  border-color: var(--border-light) !important;
+}
+
+/* List view */
+.dark .activities-calendar .fc-list {
+  border-color: var(--border-light);
+}
+
+.dark .activities-calendar .fc-list-event:hover td {
+  background-color: var(--bg-hover) !important;
+}
+
+.dark .activities-calendar .fc-list-event-title,
+.dark .activities-calendar .fc-list-event-time {
+  color: var(--text-primary) !important;
+}
+
+.dark .activities-calendar .fc-list-day-text,
+.dark .activities-calendar .fc-list-day-side-text {
+  color: var(--text-secondary) !important;
+}
+
+/* FullCalendar "more" link popover (dayMaxEvents) – dark mode */
+.dark .activities-calendar .fc-popover {
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-light) !important;
+}
+
+.dark .activities-calendar .fc-popover .fc-popover-header {
+  background-color: var(--bg-hover) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-light) !important;
+}
+
+.dark .activities-calendar .fc-popover .fc-popover-body {
+  background-color: var(--bg-card) !important;
+}
+
+.dark .activities-calendar .fc-popover .fc-event {
+  color: var(--text-primary) !important;
+}
+
+/* FullCalendar mobile: touch-friendly toolbar and day cells */
+@media (max-width: 767px) {
+  .activities-calendar {
+    padding: 0.25rem;
+    min-height: 360px;
+  }
+
+  .activities-calendar .fc-toolbar {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    row-gap: 0.75rem;
+  }
+
+  .activities-calendar .fc-toolbar-chunk {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .activities-calendar .fc-toolbar-title {
+    font-size: 1rem;
+    line-height: 1.25;
+    margin: 0;
+  }
+
+  .activities-calendar .fc-button {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+  }
+
+  .activities-calendar .fc-button .fc-icon {
+    font-size: 1rem;
+  }
+
+  .activities-calendar .fc-daygrid-day-frame {
+    min-height: 56px;
+    padding: 0.25rem;
+  }
+
+  .activities-calendar .fc-daygrid-day-number {
+    min-width: 28px;
+    min-height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    margin: 0.25rem;
+    font-size: 0.875rem;
+  }
+
+  .activities-calendar .fc-daygrid-day.fc-day-today .fc-daygrid-day-number {
+    font-weight: 700;
+  }
+
+  .activities-calendar .fc-event {
+    padding: 2px 4px;
+    font-size: 0.75rem;
+    min-height: 20px;
+  }
+
+  .activities-calendar .fc-list-event {
+    min-height: 44px;
+  }
+
+  .activities-calendar .fc-list-event-title {
+    padding: 0.5rem 0.75rem;
+  }
 }
