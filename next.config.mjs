@@ -37,6 +37,11 @@ const nextConfig = {
         hostname: '*.googleusercontent.com',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'picsum.photos',
+        pathname: '/**',
+      },
     ],
     // Disable image optimization for localhost in development
     unoptimized: process.env.NODE_ENV === 'development',

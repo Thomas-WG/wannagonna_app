@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -303,4 +304,77 @@ select option,
 .flowbite-select option {
   background-color: var(--bg-card);
   color: var(--text-primary);
+}
+
+/* ============================================
+   Landing page (light only)
+   ============================================ */
+.landing-hero-title {
+  font-family: 'Plus Jakarta Sans', Roboto, sans-serif;
+  letter-spacing: -0.02em;
+}
+
+/* Full-page subtle dot texture (use on landing root wrapper) */
+.landing-page-bg {
+  background-color: #f8fafc;
+  background-image: radial-gradient(circle at 1px 1px, rgba(249, 115, 22, 0.05) 1px, transparent 0);
+  background-size: 24px 24px;
+}
+
+/* Hero: dots + gradient; slightly stronger dots so they read clearly */
+.landing-hero-pattern {
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(249, 115, 22, 0.18) 1px, transparent 0),
+    linear-gradient(to bottom, #fff7ed 0%, #ffedd5 50%, #f8fafc 100%);
+  background-size: 28px 28px, 100% 100%;
+  background-position: 0 0, 0 0;
+}
+
+/* Alternating section tint (use on every other section) */
+.landing-section-alt {
+  background-color: rgba(255, 247, 237, 0.25);
+}
+
+/* Subtle dot pattern for Intro, Stay in touch, Contact sections */
+.landing-dots-subtle {
+  background-image: radial-gradient(circle at 1px 1px, rgba(249, 115, 22, 0.07) 1px, transparent 0);
+  background-size: 28px 28px;
+  background-color: transparent;
+}
+
+/* Combined Hero + Intro: background image with light overlay.
+   Use inline style for backgroundImage: linear-gradient(...), url(...) so overlay + image are one layer. */
+.landing-intro-block {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* Stay in touch: no solid band at top so the image block’s fade shows through; tint fades in lower down */
+.landing-stay-transition {
+  background-image:
+    linear-gradient(to bottom, transparent 0%, transparent 28%, rgba(255, 247, 237, 0.12) 55%, rgba(255, 247, 237, 0.25) 100%),
+    radial-gradient(circle at 1px 1px, rgba(249, 115, 22, 0.07) 1px, transparent 0);
+  background-size: 100% 100%, 28px 28px;
+  background-color: transparent;
+}
+
+.landing-animate-in {
+  opacity: 1;
+  transform: translateY(16px);
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.landing-animate-in.is-visible {
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-animate-in {
+    transform: none;
+    transition: none;
+  }
+  .landing-animate-in.is-visible {
+    transform: none;
+  }
 }
