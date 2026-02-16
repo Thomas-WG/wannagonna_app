@@ -88,6 +88,8 @@ export default function CreateUpdateActivityPage() {
     country: '', // Default country
     city: '', // Default city
     location: '', // Specific location/venue for local and event activities
+    addressId: null, // Reference to saved address
+    coordinates: null, // { latitude, longitude } for map display
     xp_reward: 20, // Default XP points (will be auto-calculated)
     timeCommitment: 50, // Time commitment slider value (0-100, default: 50 for standard)
     complexity: 50, // Complexity slider value (0-100, default: 50 for moderate)
@@ -185,6 +187,8 @@ export default function CreateUpdateActivityPage() {
               acceptApplicationsWG: data.acceptApplicationsWG !== undefined ? data.acceptApplicationsWG : (data.type === 'local' ? true : undefined),
               autoAcceptApplications: data.autoAcceptApplications || false,
               location: data.location || '',
+              addressId: data.addressId || null,
+              coordinates: data.coordinates || null,
               // Ensure frequency is 'once' for events
               frequency: data.type === 'event' ? 'once' : (data.frequency || ''),
               // Backward compatibility: default to 50 if fields are missing

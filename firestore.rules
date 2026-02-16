@@ -193,6 +193,24 @@ service cloud.firestore {
         allow delete: if isAdmin();
       }
       
+      // Addresses subcollection
+      match /addresses/{addressId} {
+        // Read: Public (for activity display)
+        allow read: if true;
+        
+        // Create/Update: NPO staff for this organization or admin
+        allow create, update: if isAuthenticated() && (
+          isAdmin() || 
+          (isNpoStaff() && request.auth.token.npoId == organizationId)
+        );
+        
+        // Delete: NPO staff for this organization or admin
+        allow delete: if isAuthenticated() && (
+          isAdmin() || 
+          (isNpoStaff() && request.auth.token.npoId == organizationId)
+        );
+      }
+
       // Participant records subcollection - written by Cloud Functions only
       match /participant_records/{userId} {
         // Read: NPO staff for this organization, or admin
