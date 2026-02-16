@@ -75,6 +75,18 @@ export async function createActivity(data) {
       console.log('Generated QR code token for activity:', activityData.qrCodeToken);
     }
 
+    // Ensure coordinates are stored in Firestore-compatible format
+    if (activityData.coordinates) {
+      // Firestore can store objects directly, but ensure it's properly formatted
+      if (typeof activityData.coordinates.latitude === 'number' && 
+          typeof activityData.coordinates.longitude === 'number') {
+        // Coordinates are valid, keep as is
+      } else {
+        // Invalid coordinates, remove them
+        delete activityData.coordinates;
+      }
+    }
+
     const activitiesCollection = collection(db, 'activities'); // Reference to the activities collection
     const docRef = await addDoc(activitiesCollection, activityData); // Add a new document with the provided data
     console.log('Activity created with ID:', docRef.id); // Log the ID of the created activity

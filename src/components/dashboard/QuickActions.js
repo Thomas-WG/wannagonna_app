@@ -1,7 +1,7 @@
 'use client';
 
 import { Card } from 'flowbite-react';
-import { HiDocumentText, HiCog, HiUsers } from 'react-icons/hi';
+import { HiDocumentText, HiCog, HiUsers, HiLocationMarker } from 'react-icons/hi';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { memo } from 'react';
@@ -91,6 +91,26 @@ const QuickActions = memo(function QuickActions({ orgData }) {
               </h2>
               <p className="text-[10px] sm:text-xs text-semantic-info-600 dark:text-semantic-info-400 font-medium mt-0.5">
                 {t('editInformation')}
+              </p>
+            </div>
+          </div>
+        </Card>
+
+        {/* My Addresses Card */}
+        <Card
+          className="hover:shadow-lg transition-shadow cursor-pointer bg-background-card dark:bg-background-card border-border-light dark:border-border-dark"
+          onClick={() => router.push('/mynonprofit/addresses')}
+        >
+          <div className="flex items-center gap-2 sm:gap-3 py-1 sm:py-1.5 px-2 sm:px-2.5">
+            <div className="bg-primary-100 dark:bg-primary-900 p-2 rounded-full flex-shrink-0">
+              <HiLocationMarker className="h-5 w-5 sm:h-6 sm:w-6 text-primary-600 dark:text-primary-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h2 className="text-xs sm:text-sm font-semibold text-text-primary dark:text-text-primary">
+                {t('myAddresses') || 'My Addresses'}
+              </h2>
+              <p className="text-[10px] sm:text-xs text-primary-600 dark:text-primary-400 font-medium mt-0.5">
+                {t('manageAddresses') || 'Manage addresses'}
               </p>
             </div>
           </div>

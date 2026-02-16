@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@import 'leaflet/dist/leaflet.css';
 
 @tailwind base;
 @tailwind components;
@@ -99,6 +100,90 @@ body {
 }
 .pr-safe-right {
   padding-right: env(safe-area-inset-right, 0);
+}
+
+/* Leaflet Map Dark Mode Styles */
+.dark .leaflet-container {
+  background-color: #1e293b;
+}
+
+.dark .leaflet-control {
+  background-color: #1e293b;
+  color: #f8fafc;
+}
+
+.dark .leaflet-popup-content-wrapper {
+  background-color: #1e293b;
+  color: #f8fafc;
+}
+
+.dark .leaflet-popup-tip {
+  background-color: #1e293b;
+}
+
+.dark .leaflet-control-zoom a {
+  background-color: #1e293b;
+  color: #f8fafc;
+  border-color: #334155;
+}
+
+.dark .leaflet-control-zoom a:hover {
+  background-color: #334155;
+}
+
+.dark .leaflet-bar {
+  border-color: #334155;
+}
+
+/* Google Places PlaceAutocompleteElement Styles */
+gmp-place-autocomplete-element {
+  width: 100%;
+  display: block;
+}
+
+.dark gmp-place-autocomplete-element {
+  --gmpx-color-surface: #1e293b;
+  --gmpx-color-on-surface: #f8fafc;
+  --gmpx-color-on-surface-variant: #cbd5e1;
+  --gmpx-color-primary: #f97316;
+  --gmpx-color-outline: #334155;
+}
+
+gmp-place-autocomplete-element input {
+  width: 100% !important;
+  padding: 0.75rem 0.875rem !important;
+  font-size: 1rem !important;
+  line-height: 1.5rem !important;
+  border: 1px solid rgb(226 232 240) !important;
+  border-radius: 0.5rem !important;
+  background-color: rgb(255 255 255) !important;
+  color: rgb(15 23 42) !important;
+  min-height: 44px !important;
+}
+
+.dark gmp-place-autocomplete-element input {
+  border-color: rgb(51 65 85) !important;
+  background-color: rgb(30 41 59) !important;
+  color: rgb(248 250 252) !important;
+}
+
+gmp-place-autocomplete-element input:focus {
+  outline: 2px solid #f97316 !important;
+  outline-offset: 2px !important;
+  border-color: #f97316 !important;
+}
+
+/* Hide PlaceAutocompleteElement's built-in clear button to avoid double X
+   The element uses shadow DOM, so we need to target it differently */
+gmp-place-autocomplete-element {
+  --gmpx-icon-button-size: 0; /* Hide the clear button */
+}
+
+/* Alternative: Hide via CSS if the part is exposed */
+gmp-place-autocomplete-element::part(clear-button),
+gmp-place-autocomplete-element button[aria-label*="Clear"],
+gmp-place-autocomplete-element button[type="button"] {
+  display: none !important;
 }
 .min-touch-target {
   min-height: 44px;

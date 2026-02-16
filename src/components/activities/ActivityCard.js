@@ -46,6 +46,7 @@ export default function ActivityCard({
   participantTarget,
   acceptApplicationsWG,
   last_updated,
+  distance, // Distance in km when "Around Me" filter is active
 }) {
   const t = useTranslations('ActivityCard');
   const tManage = useTranslations('ManageActivities');
@@ -552,17 +553,25 @@ export default function ActivityCard({
               )}
               
               {/* Location on the right */}
-              <div className='flex items-center text-xs sm:text-sm text-text-secondary dark:text-text-secondary min-w-0 flex-1 justify-end'>
-                <HiLocationMarker className='mr-1.5 text-text-tertiary dark:text-text-tertiary flex-shrink-0' />
-                <span className='truncate'>
-                  {type === 'online' 
-                    ? `Online (${country})`
-                    : type === 'event'
-                      ? `Event - ${city}, ${country}`
-                      : type === 'local' 
-                        ? `Local - ${city}, ${country}`
-                        : ''}
-                </span>
+              <div className='flex items-center text-xs sm:text-sm text-text-secondary dark:text-text-secondary min-w-0 flex-1 justify-end gap-2'>
+                <div className='flex items-center min-w-0'>
+                  <HiLocationMarker className='mr-1.5 text-text-tertiary dark:text-text-tertiary flex-shrink-0' />
+                  <span className='truncate'>
+                    {type === 'online' 
+                      ? `Online (${country})`
+                      : type === 'event'
+                        ? `Event - ${city}, ${country}`
+                        : type === 'local' 
+                          ? `Local - ${city}, ${country}`
+                          : ''}
+                  </span>
+                </div>
+                {/* Distance badge when available */}
+                {distance !== undefined && distance !== null && (
+                  <span className='px-2 py-0.5 rounded-full text-xs font-medium bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 flex-shrink-0'>
+                    {distance.toFixed(1)} km
+                  </span>
+                )}
               </div>
             </div>
             {/* Date range */}
