@@ -18,7 +18,7 @@
 
 'use client';
 
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { auth, db } from 'firebaseConfig';
 import { doc, setDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
@@ -26,16 +26,14 @@ import Image from 'next/image';
 import { FcGoogle } from "react-icons/fc";
 import { useState, useEffect } from 'react';
 import { useTranslations } from "use-intl";
+import { Label, TextInput } from 'flowbite-react';
 import { setUserLocale } from '@/utils/locale';
 import { useAuth } from '@/utils/auth/AuthContext';
 import { handleReferralReward } from '@/utils/crudBadges';
-import { useModal } from '@/utils/modal/useModal';
 import { validateReferralCode, generateUserCode } from '@/utils/referralCode';
 import { useGoogleSignIn } from '@/hooks/useGoogleSignIn';
 import EmailPasswordLogin from '@/components/auth/EmailPasswordLogin';
-import ReferralCodeInput from '@/components/auth/ReferralCodeInput';
 import LanguageSelector from '@/components/auth/LanguageSelector';
-import CreateAccountModal from '@/components/auth/CreateAccountModal';
 
 /**
  * LoginPage - Renders the login UI, orchestrating authentication components.
@@ -47,13 +45,22 @@ export default function LoginPage() {
   const { user, loading } = useAuth();
   const [loginErrorMessage, setLoginErrorMessage] = useState('');
   const [createErrorMessage, setCreateErrorMessage] = useState('');
-  const [modalOpen, setModalOpen] = useState(false);
   const [logoUrl, setLogoUrl] = useState('');
-  const [googleReferralCode, setGoogleReferralCode] = useState('');
   const [hasInteracted, setHasInteracted] = useState(false); // Track if user started a login/signup flow
+  const [activeTab, setActiveTab] = useState('login'); // 'login' | 'create'
 
-  // Register modal with global modal manager
-  const wrappedModalOnClose = useModal(modalOpen, () => setModalOpen(false), 'login-create-account-modal');
+  // Create account form state (Create account tab)
+  const [createEmail, setCreateEmail] = useState('');
+  const [createPassword, setCreatePassword] = useState('');
+  const [createConfirmPassword, setCreateConfirmPassword] = useState('');
+  const [createReferralCode, setCreateReferralCode] = useState('');
+
+  // Lost password state
+  const [showResetPassword, setShowResetPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetMessage, setResetMessage] = useState('');
+  const [resetError, setResetError] = useState('');
+  const [resetLoading, setResetLoading] = useState(false);
 
   // Use Google sign-in hook
   const { signInWithGoogle, isLoading: googleIsLoading, error: googleError, setError: setGoogleError } = useGoogleSignIn();
@@ -155,7 +162,35 @@ export default function LoginPage() {
    */
   const handleGoogleSignInClick = () => {
     setHasInteracted(true);
-    signInWithGoogle(googleReferralCode);
+    // No referral code on the Login tab; new users should go through the Create account tab
+    signInWithGoogle();
+  };
+
+  /**
+   * Handle password reset request
+   */
+  const handlePasswordReset = async (email) => {
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail) {
+      setResetError(t('resetPasswordEmailRequired'));
+      setResetMessage('');
+      return;
+    }
+
+    setResetLoading(true);
+    setResetError('');
+    setResetMessage('');
+
+    try {
+      await sendPasswordResetEmail(auth, trimmedEmail);
+      setResetMessage(t('resetPasswordSuccess'));
+    } catch (error) {
+      console.error('Error sending password reset email:', error);
+      // Use a generic error message to avoid leaking account existence
+      setResetError(t('resetPasswordError'));
+    } finally {
+      setResetLoading(false);
+    }
   };
 
   // Function to handle email/password login
@@ -254,9 +289,6 @@ export default function LoginPage() {
       
       // Log the user in with the newly created credentials
       await signInWithEmailAndPassword(auth, email, password);
-      
-      // After successful account creation and login, close the modal
-      setModalOpen(false);
       setHasInteracted(false);
       
       router.push('/complete-profile');
@@ -307,63 +339,235 @@ export default function LoginPage() {
       )}
       
       <div className="bg-background-card dark:bg-background-card p-6 rounded-lg shadow-lg max-w-md w-full border border-border-light dark:border-border-dark">
-        <h2 className="text-2xl font-semibold text-center mb-6 text-text-primary dark:text-text-primary">{t('login')}</h2>
-        
-        <EmailPasswordLogin 
-          onSubmit={handleEmailLogin}
-          errorMessage={loginErrorMessage}
-          t={t}
-        />
-
-        {/* Separator with "or" */}
-        <div className="text-center my-4">
-          <span className="text-text-tertiary dark:text-text-tertiary">{t('or')}</span>
-        </div>
-
-        {/* Referral Code Input - Optional for returning users, required for new accounts */}
-        <ReferralCodeInput
-          value={googleReferralCode}
-          onChange={(value) => {
-            setGoogleReferralCode(value);
-            // Clear error when user starts typing
-            if (googleError) setGoogleError('');
-          }}
-          error={googleError}
-          helperText={`${t('referralCodeHelper')} Required for new accounts.`}
-          label={t('referralCode')}
-          requiredNote="optional for returning users"
-          t={t}
-        />
-
-        <button
-          onClick={handleGoogleSignInClick}
-          disabled={googleIsLoading}
-          className="w-full max-w-xs mx-auto py-3 px-6 bg-background-card dark:bg-background-card border border-border-light dark:border-border-dark rounded-lg flex items-center justify-center gap-3 hover:bg-background-hover dark:hover:bg-background-hover transition-colors duration-200 text-text-primary dark:text-text-primary text-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <FcGoogle className="text-2xl" />
-          <span>{googleIsLoading ? 'Signing in...' : t('google')}</span>
-        </button>
-
-        {/* Registration prompt */}
-        <div className="text-center mt-6">
-          <span className="text-text-tertiary dark:text-text-tertiary">{t('noaccount')} </span>
-          <button 
-            onClick={() => setModalOpen(true)}
-            className="text-semantic-info-600 dark:text-semantic-info-400 hover:text-semantic-info-700 dark:hover:text-semantic-info-300 hover:underline"
+        {/* Tabs */}
+        <div className="flex mb-6 border-b border-border-light dark:border-border-dark">
+          <button
+            type="button"
+            className={`flex-1 py-2 text-center text-sm font-medium ${
+              activeTab === 'login'
+                ? 'text-primary-600 dark:text-primary-400 border-b-2 border-primary-600 dark:border-primary-400'
+                : 'text-text-tertiary dark:text-text-tertiary'
+            }`}
+            onClick={() => setActiveTab('login')}
           >
-            {t('register')}
+            {t('tabLogin') || t('login')}
+          </button>
+          <button
+            type="button"
+            className={`flex-1 py-2 text-center text-sm font-medium ${
+              activeTab === 'create'
+                ? 'text-primary-600 dark:text-primary-400 border-b-2 border-primary-600 dark:border-primary-400'
+                : 'text-text-tertiary dark:text-text-tertiary'
+            }`}
+            onClick={() => setActiveTab('create')}
+          >
+            {t('tabCreateAccount') || t('register')}
           </button>
         </div>
-      </div>
 
-      {/* Modal for account creation */}
-      <CreateAccountModal
-        show={modalOpen}
-        onClose={wrappedModalOnClose}
-        onSubmit={handleCreateAccount}
-        errorMessage={createErrorMessage}
-        t={t}
-      />
+        {activeTab === 'login' && (
+          <>
+            <h2 className="text-2xl font-semibold text-center mb-6 text-text-primary dark:text-text-primary">
+              {t('login')}
+            </h2>
+
+            <EmailPasswordLogin 
+              onSubmit={handleEmailLogin}
+              errorMessage={loginErrorMessage}
+              t={t}
+            />
+
+            {/* Lost password */}
+            <div className="mt-4 text-right">
+              <button
+                type="button"
+                onClick={() => setShowResetPassword((prev) => !prev)}
+                className="text-sm text-semantic-info-600 dark:text-semantic-info-400 hover:underline"
+              >
+                {t('lostPassword')}
+              </button>
+            </div>
+
+            {showResetPassword && (
+              <div className="mt-4 p-4 rounded-md border border-border-light dark:border-border-dark bg-background-page dark:bg-background-page">
+                <p className="text-sm text-text-secondary dark:text-text-secondary mb-2">
+                  {t('resetPasswordDescription')}
+                </p>
+                <div className="flex flex-col gap-2">
+                  <input
+                    type="email"
+                    value={resetEmail}
+                    onChange={(e) => setResetEmail(e.target.value)}
+                    className="w-full rounded-md border border-border-light dark:border-border-dark bg-background-card dark:bg-background-card px-3 py-2 text-sm text-text-primary dark:text-text-primary"
+                    placeholder="name@wannagonna.org"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handlePasswordReset(resetEmail)}
+                    disabled={resetLoading}
+                    className="w-full py-2 px-4 rounded-md bg-primary-500 hover:bg-primary-600 dark:bg-primary-600 dark:hover:bg-primary-700 text-white text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {resetLoading ? t('resetPasswordLoading') : t('resetPassword')}
+                  </button>
+                </div>
+                {resetError && (
+                  <p className="mt-2 text-xs text-semantic-error-600 dark:text-semantic-error-400">
+                    {resetError}
+                  </p>
+                )}
+                {resetMessage && (
+                  <p className="mt-2 text-xs text-semantic-success-600 dark:text-semantic-success-400">
+                    {resetMessage}
+                  </p>
+                )}
+              </div>
+            )}
+
+            <button
+              onClick={handleGoogleSignInClick}
+              disabled={googleIsLoading}
+              className="w-full max-w-xs mx-auto mt-4 py-3 px-6 bg-background-card dark:bg-background-card border border-border-light dark:border-border-dark rounded-lg flex items-center justify-center gap-3 hover:bg-background-hover dark:hover:bg-background-hover transition-colors duration-200 text-text-primary dark:text-text-primary text-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <FcGoogle className="text-2xl" />
+              <span>{googleIsLoading ? 'Signing in...' : t('google')}</span>
+            </button>
+            {googleError && (
+              <p className="mt-2 text-xs text-semantic-error-600 dark:text-semantic-error-400 text-center">
+                {googleError}
+              </p>
+            )}
+
+            {/* Registration prompt */}
+            <div className="text-center mt-6">
+              <span className="text-text-tertiary dark:text-text-tertiary">{t('noaccount')} </span>
+              <button 
+                type="button"
+                onClick={() => setActiveTab('create')}
+                className="text-semantic-info-600 dark:text-semantic-info-400 hover:text-semantic-info-700 dark:hover:text-semantic-info-300 hover:underline"
+              >
+                {t('register')}
+              </button>
+            </div>
+          </>
+        )}
+
+        {activeTab === 'create' && (
+          <>
+            <h2 className="text-2xl font-semibold text-center mb-6 text-text-primary dark:text-text-primary">
+              {t('createtitle')}
+            </h2>
+
+            <form
+              className="flex flex-col gap-4 w-full max-w-sm mx-auto"
+              onSubmit={(event) => {
+                event.preventDefault();
+                setHasInteracted(true);
+                handleCreateAccount({
+                  email: createEmail,
+                  password: createPassword,
+                  confirmPassword: createConfirmPassword,
+                  referralCode: createReferralCode,
+                });
+              }}
+            >
+              <div className="pb-4 mb-4 border-b border-border-light dark:border-border-dark">
+                <Label htmlFor="createReferralCode" className="text-text-primary dark:text-text-primary text-sm font-medium">
+                  {t('referralCode')}
+                </Label>
+                <TextInput
+                  id="createReferralCode"
+                  type="text"
+                  required
+                  placeholder={t('referralCodePlaceholder')}
+                  value={createReferralCode}
+                  onChange={(e) => setCreateReferralCode(e.target.value.toUpperCase())}
+                  maxLength={5}
+                  className="mt-1 uppercase bg-background-card dark:bg-background-card !text-text-primary dark:!text-text-primary border-border-light dark:border-border-dark placeholder:text-text-tertiary dark:placeholder:text-text-tertiary"
+                />
+                <p className="text-xs text-text-tertiary dark:text-text-tertiary mt-1">
+                  {t('referralCodeHelper')} {t('referralCodeMandatoryNote')}
+                </p>
+              </div>
+              <div>
+                <Label htmlFor="createEmail" className="text-text-primary dark:text-text-primary text-sm font-medium">
+                  {t('email')}
+                </Label>
+                <TextInput
+                  id="createEmail"
+                  type="email"
+                  required
+                  value={createEmail}
+                  onChange={(e) => setCreateEmail(e.target.value)}
+                  className="mt-1 bg-background-card dark:bg-background-card !text-text-primary dark:!text-text-primary border-border-light dark:border-border-dark placeholder:text-text-tertiary dark:placeholder:text-text-tertiary"
+                />
+              </div>
+              <div>
+                <Label htmlFor="createPassword" className="text-text-primary dark:text-text-primary text-sm font-medium">
+                  {t('password')}
+                </Label>
+                <TextInput
+                  id="createPassword"
+                  type="password"
+                  required
+                  value={createPassword}
+                  onChange={(e) => setCreatePassword(e.target.value)}
+                  autoComplete="new-password"
+                  className="mt-1 bg-background-card dark:bg-background-card !text-text-primary dark:!text-text-primary border-border-light dark:border-border-dark"
+                />
+              </div>
+              <div>
+                <Label htmlFor="createConfirmPassword" className="text-text-primary dark:text-text-primary text-sm font-medium">
+                  {t('confirmpassword')}
+                </Label>
+                <TextInput
+                  id="createConfirmPassword"
+                  type="password"
+                  required
+                  value={createConfirmPassword}
+                  onChange={(e) => setCreateConfirmPassword(e.target.value)}
+                  autoComplete="new-password"
+                  className="mt-1 bg-background-card dark:bg-background-card !text-text-primary dark:!text-text-primary border-border-light dark:border-border-dark"
+                />
+              </div>
+              {/* Display creation error message if exists */}
+              {createErrorMessage && (
+                <div className="text-semantic-error-600 dark:text-semantic-error-400 text-center mb-2 text-sm">
+                  {createErrorMessage}
+                </div>
+              )}
+              <button
+                type="submit"
+                className="mt-2 bg-primary-500 hover:bg-primary-600 dark:bg-primary-600 dark:hover:bg-primary-700 text-white py-2 px-4 rounded-md text-sm font-medium"
+              >
+                {t('create')}
+              </button>
+            </form>
+
+            {/* Separator with "or" */}
+            <div className="text-center my-4">
+              <span className="text-text-tertiary dark:text-text-tertiary">{t('or')}</span>
+            </div>
+
+            {/* Google sign-up with mandatory referral code */}
+            <button
+              onClick={() => {
+                setHasInteracted(true);
+                signInWithGoogle(createReferralCode);
+              }}
+              disabled={googleIsLoading || !createReferralCode.trim()}
+              className="w-full max-w-xs mx-auto py-3 px-6 bg-background-card dark:bg-background-card border border-border-light dark:border-border-dark rounded-lg flex items-center justify-center gap-3 hover:bg-background-hover dark:hover:bg-background-hover transition-colors duration-200 text-text-primary dark:text-text-primary text-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <FcGoogle className="text-2xl" />
+              <span>{googleIsLoading ? 'Signing in...' : t('google')}</span>
+            </button>
+            {googleError && (
+              <p className="mt-2 text-xs text-semantic-error-600 dark:text-semantic-error-400 text-center">
+                {googleError}
+              </p>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }

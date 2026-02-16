@@ -72,7 +72,17 @@
         "referralCodeHelper": "Necesita un código de referencia de un miembro existente para crear una cuenta",
         "referralCodeRequired": "Se requiere un código de referencia para crear una cuenta",
         "invalidReferralCode": "Código de referencia inválido. Por favor verifique e intente nuevamente.",
-        "errorValidatingCode": "Error al validar el código de referencia. Por favor intente nuevamente."
+        "errorValidatingCode": "Error al validar el código de referencia. Por favor intente nuevamente.",
+        "tabLogin": "Iniciar sesión",
+        "tabCreateAccount": "Crear cuenta",
+        "lostPassword": "¿Has olvidado tu contraseña?",
+        "resetPassword": "Restablecer contraseña",
+        "resetPasswordLoading": "Enviando enlace de restablecimiento...",
+        "resetPasswordDescription": "Introduce tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.",
+        "resetPasswordEmailRequired": "Introduce tu correo electrónico para restablecer la contraseña.",
+        "resetPasswordSuccess": "Si existe una cuenta con este correo, se ha enviado un enlace para restablecer la contraseña.",
+        "resetPasswordError": "No pudimos enviar el correo de restablecimiento. Por favor, inténtalo de nuevo más tarde.",
+        "referralCodeMandatoryNote": "(Obligatorio para crear una cuenta nueva)"
     },
     "Sidebar": {
         "dashboard": "Panel de control",
