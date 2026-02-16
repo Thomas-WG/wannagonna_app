@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from 'react';
 import L from 'leaflet';
-import { useTheme } from '@/utils/theme/ThemeContext';
 
 /**
  * AddressMapPreview Component
@@ -12,21 +11,16 @@ export default function AddressMapPreview({ coordinates, address }) {
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const markerRef = useRef(null);
-  const { isDark } = useTheme();
 
   useEffect(() => {
     if (!mapRef.current || !coordinates) return;
 
     // Initialize map
     if (!mapInstanceRef.current) {
-      // Use dark tiles if dark mode
-      const tileUrl = isDark
-        ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-        : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-
-      const attribution = isDark
-        ? '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-        : '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+      // Always use light tiles, regardless of app theme
+      const tileUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+      const attribution =
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 
       mapInstanceRef.current = L.map(mapRef.current, {
         center: [coordinates.latitude, coordinates.longitude],
@@ -80,7 +74,7 @@ export default function AddressMapPreview({ coordinates, address }) {
         markerRef.current = null;
       }
     };
-  }, [coordinates, isDark]);
+  }, [coordinates]);
 
   return (
     <div
