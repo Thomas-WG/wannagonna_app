@@ -72,7 +72,17 @@
         "referralCodeHelper": "You need a referral code from an existing member to create an account",
         "referralCodeRequired": "Referral code is required to create an account",
         "invalidReferralCode": "Invalid referral code. Please check and try again.",
-        "errorValidatingCode": "Error validating referral code. Please try again."
+        "errorValidatingCode": "Error validating referral code. Please try again.",
+        "tabLogin": "Log in",
+        "tabCreateAccount": "Create account",
+        "lostPassword": "Lost password?",
+        "resetPassword": "Reset password",
+        "resetPasswordLoading": "Sending reset link...",
+        "resetPasswordDescription": "Enter your email address and we'll send you a link to reset your password.",
+        "resetPasswordEmailRequired": "Please enter your email to reset your password.",
+        "resetPasswordSuccess": "If an account exists for this email, a password reset link has been sent.",
+        "resetPasswordError": "We couldn't send the reset email. Please try again later.",
+        "referralCodeMandatoryNote": "(Mandatory for new accounts)"
     },
     "Sidebar": {
         "dashboard": "Dashboard",
