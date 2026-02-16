@@ -72,7 +72,17 @@
         "referralCodeHelper": "Vous avez besoin d'un code de parrainage d'un membre existant pour créer un compte",
         "referralCodeRequired": "Le code de parrainage est requis pour créer un compte",
         "invalidReferralCode": "Code de parrainage invalide. Veuillez vérifier et réessayer.",
-        "errorValidatingCode": "Erreur lors de la validation du code de parrainage. Veuillez réessayer."
+        "errorValidatingCode": "Erreur lors de la validation du code de parrainage. Veuillez réessayer.",
+        "tabLogin": "Connexion",
+        "tabCreateAccount": "Créer un compte",
+        "lostPassword": "Mot de passe oublié ?",
+        "resetPassword": "Réinitialiser le mot de passe",
+        "resetPasswordLoading": "Envoi du lien de réinitialisation...",
+        "resetPasswordDescription": "Saisissez votre adresse e-mail et nous vous enverrons un lien pour réinitialiser votre mot de passe.",
+        "resetPasswordEmailRequired": "Veuillez saisir votre adresse e-mail pour réinitialiser votre mot de passe.",
+        "resetPasswordSuccess": "Si un compte existe avec cet e-mail, un lien de réinitialisation a été envoyé.",
+        "resetPasswordError": "Nous n'avons pas pu envoyer l'e-mail de réinitialisation. Veuillez réessayer plus tard.",
+        "referralCodeMandatoryNote": "(Obligatoire pour les nouveaux comptes)"
     },
     "Sidebar": {
         "dashboard": "Tableau de bord",
