@@ -3,7 +3,6 @@
 import { useEffect, useRef, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
-import { useTheme } from '@/utils/theme/ThemeContext';
 
 // Fix for default marker icons in Next.js
 delete L.Icon.Default.prototype._getIconUrl;
@@ -60,7 +59,6 @@ export default function ActivitiesMapView({
   zoom = 10,
   userLocation = null
 }) {
-  const { isDark } = useTheme();
 
   // Filter activities with coordinates and exclude online activities
   const activitiesWithCoordinates = useMemo(() => {
@@ -91,14 +89,10 @@ export default function ActivitiesMapView({
     return [48.8566, 2.3522];
   }, [center, userLocation, activitiesWithCoordinates]);
 
-  // Tile URL based on dark mode
-  const tileUrl = isDark
-    ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-    : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-
-  const attribution = isDark
-    ? '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-    : '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+  // Always use light tiles, regardless of app theme
+  const tileUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+  const attribution =
+    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 
   if (activitiesWithCoordinates.length === 0 && !userLocation) {
     return (
