@@ -100,9 +100,9 @@ export async function reportHours(activityId, userId, hours) {
       status: 'registered',
       hours: {
         reported: num,
-        validated: num,
+        validated: 0,
         reportedAt: now,
-        validatedAt: now
+        validatedAt: null
       },
       checkedInAt: null,
       checkedOutAt: null,
@@ -115,15 +115,15 @@ export async function reportHours(activityId, userId, hours) {
   const hoursData = {
     ...(current.hours || {}),
     reported: num,
-    reportedAt: now,
-    validated: current.hours?.validated ?? num,
-    validatedAt: current.hours?.validatedAt ?? now
+    reportedAt: now
   };
   await updateDoc(ref, { hours: hoursData });
 }
 
 /**
  * NPO validates/adjusts hours for a participation.
+ * Creates the participation document if it does not exist (e.g. pre-existing activities
+ * where participations were not created during application acceptance).
  * @param {string} activityId
  * @param {string} userId
  * @param {number} validatedHours
@@ -132,13 +132,28 @@ export async function validateHours(activityId, userId, validatedHours) {
   const ref = doc(db, 'activities', activityId, 'participations', userId);
   const now = Timestamp.now();
   const snap = await getDoc(ref);
+  const num = Number(validatedHours) || 0;
   if (!snap.exists()) {
-    throw new Error('Participation not found');
+    await setDoc(ref, {
+      memberId: userId,
+      status: 'validated',
+      hours: {
+        reported: num,
+        validated: num,
+        reportedAt: null,
+        validatedAt: now
+      },
+      checkedInAt: null,
+      checkedOutAt: null,
+      xpAwarded: 0,
+      joinedAt: now
+    });
+    return;
   }
   const current = snap.data();
   const hoursData = {
     ...(current.hours || {}),
-    validated: Number(validatedHours),
+    validated: num,
     validatedAt: now
   };
   await updateDoc(ref, { hours: hoursData });

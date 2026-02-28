@@ -79,7 +79,9 @@ export async function getAllParametersForNpo(orgId) {
   ]);
   const byId = new Map();
   global.forEach((p) => byId.set(p.id, { ...p, scope: 'global' }));
-  custom.forEach((p) => byId.set(p.id, { ...p, scope: 'npo' }));
+  custom
+    .filter((p) => p.isActive !== false)
+    .forEach((p) => byId.set(p.id, { ...p, scope: 'npo' }));
   return Array.from(byId.values());
 }
 

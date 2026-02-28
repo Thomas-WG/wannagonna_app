@@ -347,14 +347,14 @@ export default function CreateUpdateActivityPage() {
         // Handle single activity
     if (isEditMode) {
           await updateActivity(activityId, baseDataToSave);
-          if (hasImpactStep && selectedImpactParameters?.length > 0) {
-            await setActivityImpactParameters(activityId, selectedImpactParameters);
+          if (hasImpactStep) {
+            await setActivityImpactParameters(activityId, selectedImpactParameters ?? []);
           }
           router.back();
     } else {
           const newActivityId = await createActivity(baseDataToSave);
-          if (hasImpactStep && selectedImpactParameters?.length > 0) {
-            await setActivityImpactParameters(newActivityId, selectedImpactParameters);
+          if (hasImpactStep) {
+            await setActivityImpactParameters(newActivityId, selectedImpactParameters ?? []);
           }
           setSavedActivityId(newActivityId);
           setShowStatusModal(true);

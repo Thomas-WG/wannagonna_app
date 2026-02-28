@@ -16,6 +16,7 @@ import ActivityDetailsModal from "@/components/activities/ActivityDetailsModal";
 import StatusUpdateModal from "@/components/activities/StatusUpdateModal";
 import QRCodeModal from "@/components/activities/QRCodeModal";
 import ActivityValidationModal from "@/components/activities/ActivityValidationModal";
+import CloseActivityModal from "@/components/activities/CloseActivityModal";
 import ParticipantListModal from "@/components/activities/ParticipantListModal";
 import ActivityFilters from "@/components/activities/ActivityFilters";
 import categories from "@/constant/categories";
@@ -38,6 +39,7 @@ export default function AdminActivitiesPage() {
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [showQRModal, setShowQRModal] = useState(false);
   const [showValidationModal, setShowValidationModal] = useState(false);
+  const [showCloseActivityModal, setShowCloseActivityModal] = useState(false);
   const [showParticipantModal, setShowParticipantModal] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [showToast, setShowToast] = useState(false);
@@ -341,20 +343,19 @@ export default function AdminActivitiesPage() {
     }
   };
 
-  const handleValidationModalClose = async (shouldCloseActivity) => {
+  const handleValidationModalClose = (shouldCloseActivity, activityFromModal) => {
     setShowValidationModal(false);
-    
-    // If all applicants are processed, close the activity
-    if (shouldCloseActivity && selectedActivity) {
-      try {
-        await updateActivityStatus(selectedActivity.id, 'Closed');
-        handleStatusChange(selectedActivity.id, 'Closed');
-      } catch (error) {
-        console.error('Error closing activity:', error);
-        setToastMessage({ type: 'error', message: t('errorClosingActivity') || 'Failed to close activity' });
-        setShowToast(true);
-      }
+    // If all applicants are processed, open CloseActivityModal for hours/impact entry (same flow as NPO dashboard)
+    if (shouldCloseActivity && (selectedActivity || activityFromModal)) {
+      setShowCloseActivityModal(true);
     }
+  };
+
+  const handleCloseActivitySuccess = (activityId) => {
+    setShowCloseActivityModal(false);
+    handleStatusChange(activityId, 'Closed');
+    setToastMessage({ type: 'success', message: t('activityClosed') || 'Activity closed successfully' });
+    setShowToast(true);
   };
 
   return (
@@ -743,6 +744,16 @@ export default function AdminActivitiesPage() {
             status: selectedActivity.status
           }}
           onStatusChange={handleStatusChange}
+        />
+      )}
+
+      {/* Close Activity Modal (hours & impact entry before closing) */}
+      {selectedActivity && (
+        <CloseActivityModal
+          isOpen={showCloseActivityModal}
+          onClose={() => setShowCloseActivityModal(false)}
+          activity={selectedActivity}
+          onSuccess={handleCloseActivitySuccess}
         />
       )}
 
