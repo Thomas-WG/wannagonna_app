@@ -11,6 +11,7 @@ import {
   createGlobalParameter,
   getNpoCustomParameters,
   updateCustomParameter,
+  groupImpactParametersByCategory,
 } from '@/utils/impactParameterService';
 import { fetchOrganizations } from '@/utils/crudOrganizations';
 
@@ -154,16 +155,6 @@ export default function AdminImpactParametersPage() {
     }
   };
 
-  const byCategory = (list) => {
-    const map = {};
-    list.forEach((p) => {
-      const c = p.category || 'other';
-      if (!map[c]) map[c] = [];
-      map[c].push(p);
-    });
-    return map;
-  };
-
   return (
     <div className="min-h-screen bg-background-primary dark:bg-background-primary">
       <div className="max-w-5xl mx-auto px-4 py-6 sm:py-8 space-y-6 sm:space-y-8">
@@ -285,7 +276,7 @@ export default function AdminImpactParametersPage() {
                     </p>
                   ) : (
                     <div className="space-y-3">
-                      {Object.entries(byCategory(globalParams)).map(([category, list]) => (
+                      {Object.entries(groupImpactParametersByCategory(globalParams)).map(([category, list]) => (
                         <Card key={category} className="p-3 sm:p-4">
                           <div className="text-xs font-medium text-text-tertiary dark:text-text-tertiary uppercase mb-2">
                             {category}

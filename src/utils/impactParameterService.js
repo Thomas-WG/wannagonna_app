@@ -20,6 +20,21 @@ import { db } from 'firebaseConfig';
  */
 
 /**
+ * Group impact parameters by category. Items without a category go under 'other'.
+ * @param {Array<{ category?: string }>} list - Array of impact parameters
+ * @returns {Record<string, Array>} Object mapping category names to arrays of parameters
+ */
+export function groupImpactParametersByCategory(list) {
+  const map = {};
+  (list || []).forEach((p) => {
+    const c = p.category || 'other';
+    if (!map[c]) map[c] = [];
+    map[c].push(p);
+  });
+  return map;
+}
+
+/**
  * Fetch all active global impact parameters.
  * @returns {Promise<ImpactParameter[]>}
  */

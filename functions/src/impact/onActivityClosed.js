@@ -87,16 +87,22 @@ async function processActivityClosed(
     return;
   }
 
-  const participationsSnap = await db
-      .collection("activities")
-      .doc(activityId)
-      .collection("participations")
-      .get();
+  const [participationsSnap, validationsSnap] = await Promise.all([
+    db.collection("activities").doc(activityId).collection("participations").get(),
+    db.collection("activities").doc(activityId).collection("validations").get(),
+  ]);
 
-  const participations = participationsSnap.docs.map((d) => ({
-    id: d.id,
-    ...d.data(),
-  }));
+  const rejectedUserIds = new Set(
+    validationsSnap.docs
+      .map((d) => d.data())
+      .filter((v) => v.status === "rejected")
+      .map((v) => v.userId)
+      .filter(Boolean),
+  );
+
+  const participations = participationsSnap.docs
+    .map((d) => ({id: d.id, ...d.data()}))
+    .filter((p) => !rejectedUserIds.has(p.id));
 
   // Build parameter meta map from the activity's configured impact parameters
   // so we can persist human-readable labels/units alongside summaries.
@@ -169,86 +175,49 @@ async function processActivityClosed(
   await batch1.commit();
 
   const orgRef = db.collection("organizations").doc(organizationId);
-  const orgSnap = await orgRef.get();
-  const orgData = orgSnap.exists ? orgSnap.data() : {};
-  const orgSummary = orgData.impactSummary || {
-    totalHours: 0,
-    totalActivities: 0,
-    parameters: {},
-    parameterMeta: {},
+  const orgUpdates = {
+    "impactSummary.totalHours": FieldValue.increment(totalHours),
+    "impactSummary.totalActivities": FieldValue.increment(1),
   };
-  const newOrgParams = {...orgSummary.parameters};
-  const newOrgParamMeta = {...(orgSummary.parameterMeta || {})};
   for (const [paramId, value] of Object.entries(parameters)) {
     const num = Number(value) || 0;
-    newOrgParams[paramId] = (newOrgParams[paramId] || 0) + num;
-    if (!newOrgParamMeta[paramId]) {
-      newOrgParamMeta[paramId] =
-        activityParamMeta[paramId] || {
-          label: paramId,
-        };
-    }
+    orgUpdates["impactSummary.parameters." + paramId] = FieldValue.increment(num);
+    orgUpdates["impactSummary.parameterMeta." + paramId] =
+      activityParamMeta[paramId] || {label: paramId};
   }
   const batch2 = db.batch();
-  batch2.update(orgRef, {
-    impactSummary: {
-      totalHours: (orgSummary.totalHours || 0) + totalHours,
-      totalActivities: (orgSummary.totalActivities || 0) + 1,
-      parameters: newOrgParams,
-      parameterMeta: newOrgParamMeta,
-    },
-  });
+  batch2.update(orgRef, orgUpdates);
   await batch2.commit();
 
   const activityXP = Number(activity.xp_reward) || 0;
   const activityTitle = activity.title || "Unknown Activity";
 
-  const memberRefs = participations.map((p) =>
-    db.collection("members").doc(p.id),
-  );
-  const memberSnaps = await db.getAll(...memberRefs);
-
+  // Skip member updates when no participations (getAll requires ≥1 ref)
   let processed = 0;
-  for (let i = 0; i < participations.length; i += BATCH_SIZE) {
+  if (participations.length > 0) {
+    for (let i = 0; i < participations.length; i += BATCH_SIZE) {
     const chunk = participations.slice(i, i + BATCH_SIZE);
-    const memberChunk = memberSnaps.slice(i, i + BATCH_SIZE);
     const batch = db.batch();
 
     for (let j = 0; j < chunk.length; j++) {
       const p = chunk[j];
       const userId = p.id;
       const validatedHours = Number(hoursByUser[userId]) || 0;
-      const memberSnap = memberChunk[j];
-      const memberData = memberSnap?.exists ? memberSnap.data() : {};
-      const memberSummary = memberData.impactSummary || {
-        totalHours: 0,
-        totalActivities: 0,
-        parameters: {},
-        parameterMeta: {},
-      };
-      const newMemberParams = {...memberSummary.parameters};
-      const newMemberParamMeta = {...(memberSummary.parameterMeta || {})};
-      for (const [paramId, value] of Object.entries(parameters)) {
-        const num = Number(value) || 0;
-        newMemberParams[paramId] = (newMemberParams[paramId] || 0) + num;
-        if (!newMemberParamMeta[paramId]) {
-          newMemberParamMeta[paramId] =
-            activityParamMeta[paramId] || {
-              label: paramId,
-            };
-        }
-      }
 
       const userRef = db.collection("members").doc(userId);
-      batch.update(userRef, {
-        impactSummary: {
-          totalHours: (memberSummary.totalHours || 0) + validatedHours,
-          totalActivities: (memberSummary.totalActivities || 0) + 1,
-          parameters: newMemberParams,
-          parameterMeta: newMemberParamMeta,
-        },
+      const memberUpdates = {
+        "impactSummary.totalHours": FieldValue.increment(validatedHours),
+        "impactSummary.totalActivities": FieldValue.increment(1),
         xp: FieldValue.increment(activityXP),
-      });
+      };
+      for (const [paramId, value] of Object.entries(parameters)) {
+        const num = Number(value) || 0;
+        memberUpdates["impactSummary.parameters." + paramId] =
+          FieldValue.increment(num);
+        memberUpdates["impactSummary.parameterMeta." + paramId] =
+          activityParamMeta[paramId] || {label: paramId};
+      }
+      batch.update(userRef, memberUpdates);
 
       const participationRef = db.collection("activities").doc(activityId)
           .collection("participations").doc(userId);
@@ -286,6 +255,7 @@ async function processActivityClosed(
 
     await batch.commit();
     processed += chunk.length;
+    }
   }
 
   const msg = `[onActivityClosed] ${activityId}: totalHours=${totalHours}, ` +

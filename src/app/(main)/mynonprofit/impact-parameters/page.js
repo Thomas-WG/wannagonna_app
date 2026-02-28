@@ -8,6 +8,7 @@ import {
   getNpoCustomParameters,
   createCustomParameter,
   toggleCustomParameter,
+  groupImpactParametersByCategory,
 } from '@/utils/impactParameterService';
 import { Card, Button, Modal, Spinner, Toast, Label, TextInput, Select } from 'flowbite-react';
 import { HiPlus, HiCheck, HiX } from 'react-icons/hi';
@@ -108,16 +109,6 @@ export default function ImpactParametersPage() {
     }
   };
 
-  const byCategory = (list) => {
-    const map = {};
-    list.forEach((p) => {
-      const c = p.category || 'other';
-      if (!map[c]) map[c] = [];
-      map[c].push(p);
-    });
-    return map;
-  };
-
   return (
     <div className="min-h-screen bg-background-primary dark:bg-background-primary">
       <div className="max-w-4xl mx-auto px-4 py-6 sm:py-8">
@@ -149,7 +140,7 @@ export default function ImpactParametersPage() {
                 </Card>
               ) : (
                 <div className="space-y-3">
-                  {Object.entries(byCategory(globalParams)).map(([category, params]) => (
+                  {Object.entries(groupImpactParametersByCategory(globalParams)).map(([category, params]) => (
                     <Card key={category} className="p-4">
                       <div className="text-xs font-medium text-text-tertiary dark:text-text-tertiary uppercase mb-2">
                         {category}

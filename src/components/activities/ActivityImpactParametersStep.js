@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getAllParametersForNpo } from '@/utils/impactParameterService';
+import { getAllParametersForNpo, groupImpactParametersByCategory } from '@/utils/impactParameterService';
 import { Card, Label, TextInput, Spinner, Checkbox } from 'flowbite-react';
 import { useTranslations } from 'next-intl';
 
@@ -37,16 +37,6 @@ export default function ActivityImpactParametersStep({ orgId, initialSelected = 
     }));
     onChange?.(arr);
   }, [selected, onChange]);
-
-  const byCategory = (list) => {
-    const map = {};
-    list.forEach((p) => {
-      const c = p.category || 'other';
-      if (!map[c]) map[c] = [];
-      map[c].push(p);
-    });
-    return map;
-  };
 
   const toggle = (p, checked) => {
     setSelected((prev) => {
@@ -85,7 +75,7 @@ export default function ActivityImpactParametersStep({ orgId, initialSelected = 
     );
   }
 
-  const grouped = byCategory(parameters);
+  const grouped = groupImpactParametersByCategory(parameters);
 
   return (
     <div className="space-y-6">
