@@ -127,23 +127,25 @@ export default function MyNonProfitDashboard() {
     [modalManager, handleStatusChange, showToastMessage, t]
   );
 
-  // Handle validation modal close
+  // Handle validation modal close: if shouldCloseActivity, open CloseActivityModal instead of closing directly
   const handleValidationModalClose = useCallback(
-    async (shouldCloseActivity) => {
+    (shouldCloseActivity, activityFromModal) => {
       modalManager.closeModal();
-    
-    // If all applicants are processed, close the activity
-      if (shouldCloseActivity && modalManager.selectedActivity) {
-      try {
-          await updateActivityStatus(modalManager.selectedActivity.id, 'Closed');
-          handleStatusChange(modalManager.selectedActivity.id, 'Closed');
-      } catch (error) {
-        console.error('Error closing activity:', error);
-          showToastMessage('error', t('errorClosingActivity') || 'Failed to close activity');
-        }
+      if (shouldCloseActivity && (modalManager.selectedActivity || activityFromModal)) {
+        const activity = modalManager.selectedActivity || activityFromModal;
+        modalManager.openModal('activity-close', { activity });
       }
     },
-    [modalManager, handleStatusChange, showToastMessage, t]
+    [modalManager]
+  );
+
+  const handleCloseActivitySuccess = useCallback(
+    (activityId) => {
+      handleStatusChange(activityId, 'Closed');
+      modalManager.closeModal();
+      showToastMessage('success', t('activityClosed') || 'Activity closed successfully');
+    },
+    [handleStatusChange, modalManager, showToastMessage, t]
   );
 
   const loading = isLoadingData || isLoadingActivities;
@@ -255,6 +257,7 @@ export default function MyNonProfitDashboard() {
         onStatusUpdate={handleStatusUpdate}
         isUpdatingStatus={isUpdatingStatus}
         onValidationModalClose={handleValidationModalClose}
+        onCloseActivitySuccess={handleCloseActivitySuccess}
       />
 
       {/* Toast Notification */}

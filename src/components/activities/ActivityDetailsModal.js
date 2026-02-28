@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Modal, Badge, Button, Spinner } from 'flowbite-react';
 import Image from 'next/image';
 import { fetchActivityById, getAcceptedApplicationsCount } from '@/utils/crudActivities';
 import { fetchOrganizationById } from '@/utils/crudOrganizations';
+import { useAuth } from '@/utils/auth/AuthContext';
 import { formatDateOnly, convertTimestampToDate } from '@/utils/dateUtils';
 import { useTranslations, useLocale } from 'next-intl';
 import { getSkillsForSelect } from '@/utils/crudSkills';
@@ -41,7 +42,8 @@ export default function ActivityDetailsModal({ isOpen, onClose, activityId, onAp
   const locale = useLocale();
   const router = useRouter();
   const { isDark } = useTheme();
-  
+  const { user } = useAuth();
+
   const [activity, setActivity] = useState(null);
   const [organization, setOrganization] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -565,7 +567,7 @@ export default function ActivityDetailsModal({ isOpen, onClose, activityId, onAp
                 />
               )}
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               {hasApplied ? (
                 <>
                   <Button
@@ -574,12 +576,12 @@ export default function ActivityDetailsModal({ isOpen, onClose, activityId, onAp
                       wrappedOnClose();
                       router.push('/dashboard');
                     }}
-                    className="flex items-center gap-2 bg-semantic-success-600 hover:bg-semantic-success-700 dark:bg-semantic-success-500 dark:hover:bg-semantic-success-600"
+                    className="flex items-center gap-2 bg-semantic-success-600 hover:bg-semantic-success-700 dark:bg-semantic-success-500 dark:hover:bg-semantic-success-600 min-h-[44px] touch-manipulation"
                   >
                     <HiCheckCircle className="h-5 w-5" />
                     View Application Status
                   </Button>
-                  <Button color="gray" onClick={wrappedOnClose} className="bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-300 dark:hover:bg-neutral-600">
+                  <Button color="gray" onClick={wrappedOnClose} className="bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-300 dark:hover:bg-neutral-600 min-h-[44px] touch-manipulation">
                     Close
                   </Button>
                 </>
@@ -611,6 +613,7 @@ export default function ActivityDetailsModal({ isOpen, onClose, activityId, onAp
           organization={organization}
         />
       )}
+
     </>
   );
 }

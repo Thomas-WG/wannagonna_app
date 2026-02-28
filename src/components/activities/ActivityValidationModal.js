@@ -14,7 +14,6 @@ import {
   rejectAllApplicants
 } from '@/utils/crudActivityValidation';
 import { useAuth } from '@/utils/auth/AuthContext';
-import { updateActivityStatus } from '@/utils/crudActivities';
 import ProfilePicture from '@/components/common/ProfilePicture';
 
 export default function ActivityValidationModal({ 
@@ -198,32 +197,17 @@ export default function ActivityValidationModal({
     }
   };
 
-  // Handle close - check if all are processed, if so, close activity
-  const handleClose = useCallback(async () => {
-    // Check if all applicants are processed
+  // Handle close - if all processed, tell parent to open CloseActivityModal (parent will not call updateActivityStatus here)
+  const handleClose = useCallback(() => {
     const allProcessed = applications.length === 0 || applications.every(app => {
       const status = validations.find(v => v.userId === app.userId)?.status;
       return status === 'validated' || status === 'rejected';
     });
-    
     const shouldCloseActivity = allProcessed && activity?.status !== 'Closed';
-    if (shouldCloseActivity) {
-      // All applicants processed, close the activity
-      try {
-        await updateActivityStatus(activity.id, 'Closed');
-        if (onStatusChange) {
-          onStatusChange(activity.id, 'Closed');
-        }
-      } catch (error) {
-        console.error('Error closing activity:', error);
-        alert('Failed to close activity');
-      }
-    }
-    // Pass whether activity should be closed to parent
     if (onClose) {
-      onClose(shouldCloseActivity);
+      onClose(shouldCloseActivity, activity);
     }
-  }, [activity, onClose, onStatusChange, applications, validations]);
+  }, [activity, onClose, applications, validations]);
   
   // Use wrapped onClose for modal registration
   const wrappedOnClose = useModal(isOpen, handleClose, 'activity-validation-modal');
@@ -420,7 +404,7 @@ export default function ActivityValidationModal({
             className="w-full sm:w-auto min-h-[44px] sm:min-h-0"
             size="sm"
           >
-            {t('close') || 'Close'}
+            {allApplicantsProcessed() ? (t('next') || 'Next') : (t('close') || 'Close')}
           </Button>
         </div>
       </Modal.Footer>

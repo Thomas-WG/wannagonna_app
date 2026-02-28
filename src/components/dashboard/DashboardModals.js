@@ -1,6 +1,6 @@
 'use client';
 
-import { memo } from 'react';
+import { memo, useState, useCallback } from 'react';
 import { Modal, Button, Textarea } from 'flowbite-react';
 import { useTranslations } from 'next-intl';
 import ActivityDetailsModal from '@/components/activities/ActivityDetailsModal';
@@ -92,6 +92,7 @@ const DashboardModals = memo(function DashboardModals({
         badges={validationResult?.badges || []}
         activityTitle={validationResult?.activityTitle || ''}
         xpBreakdown={validationResult?.xpBreakdown || null}
+        activityId={validationResult?.activityId || ''}
       />
 
       {/* Public Profile Modal */}

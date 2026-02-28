@@ -25,6 +25,9 @@ const ActivityValidationModal = dynamic(() => import('@/components/activities/Ac
 const ParticipantListModal = dynamic(() => import('@/components/activities/ParticipantListModal'), {
   ssr: false,
 });
+const CloseActivityModal = dynamic(() => import('@/components/activities/CloseActivityModal'), {
+  ssr: false,
+});
 
 /**
  * NPOModalManager Component
@@ -43,6 +46,7 @@ const NPOModalManager = memo(function NPOModalManager({
   onStatusUpdate,
   isUpdatingStatus,
   onValidationModalClose,
+  onCloseActivitySuccess,
 }) {
   if (!modalType) return null;
 
@@ -122,6 +126,18 @@ const NPOModalManager = memo(function NPOModalManager({
             status: validationActivity.status,
           }}
           onStatusChange={onStatusChange}
+        />
+      );
+
+    case 'activity-close':
+      const closeActivity = modalProps?.activity || selectedActivity;
+      if (!closeActivity) return null;
+      return (
+        <CloseActivityModal
+          isOpen={true}
+          onClose={handleClose}
+          activity={closeActivity}
+          onSuccess={(id) => onCloseActivitySuccess(id)}
         />
       );
 

@@ -160,6 +160,13 @@ service cloud.firestore {
         // Delete: Only admins can delete validations
         allow delete: if isAdmin();
       }
+
+      // Participations subcollection (impact: hours, status, check-in/out)
+      match /participations/{userId} {
+        allow read: if isAuthenticated();
+        allow create, update: if isAuthenticated();
+        allow delete: if isAdmin();
+      }
     }
     
     // ============================================
@@ -208,6 +215,14 @@ service cloud.firestore {
         allow delete: if isAuthenticated() && (
           isAdmin() || 
           (isNpoStaff() && request.auth.token.npoId == organizationId)
+        );
+      }
+
+      // Custom impact parameters (NPO-defined)
+      match /customParameters/{parameterId} {
+        allow read: if isAuthenticated();
+        allow create, update, delete: if isAuthenticated() && (
+          isAdmin() || (isNpoStaff() && request.auth.token.npoId == organizationId)
         );
       }
 
@@ -322,6 +337,14 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
     
+    // ============================================
+    // IMPACT PARAMETERS (global, admin-managed)
+    // ============================================
+    match /impactParameters/{parameterId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isAdmin();
+    }
+
     // ============================================
     // REWARD ERRORS COLLECTION (Cloud Functions Only)
     // ============================================

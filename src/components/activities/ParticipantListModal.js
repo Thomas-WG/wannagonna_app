@@ -3,6 +3,7 @@
 import { Modal, Spinner, Button, Badge, Dropdown } from 'flowbite-react';
 import { useEffect, useState, useCallback } from 'react';
 import { fetchValidationsForActivity, validateApplicant, rejectApplicant } from '@/utils/crudActivityValidation';
+import { getActivityParticipations } from '@/utils/participationService';
 import { getDoc, doc } from 'firebase/firestore';
 import { db } from 'firebaseConfig';
 import { useTranslations } from 'next-intl';
@@ -19,57 +20,58 @@ export default function ParticipantListModal({ isOpen, onClose, activity, activi
   const [loading, setLoading] = useState(false);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState(null);
-  const [processing, setProcessing] = useState({}); // Track which user is being processed
+  const [processing, setProcessing] = useState({});
   const wrappedOnClose = useModal(isOpen, onClose, 'participant-list-modal');
-  
-  // Use activityId from activity prop if available, otherwise use activityId prop (backward compatibility)
+
   const effectiveActivityId = activity?.id || activityId;
 
   const fetchParticipants = useCallback(async () => {
     if (!effectiveActivityId) return;
-    
+
     setLoading(true);
     try {
-      // Fetch all validations for the activity (pending, validated, rejected)
-      const validations = await fetchValidationsForActivity(effectiveActivityId);
-      
-      // Fetch user profile data for all validations
+      const [validations, participations] = await Promise.all([
+        fetchValidationsForActivity(effectiveActivityId),
+        getActivityParticipations(effectiveActivityId),
+      ]);
+      const participationByUser = {};
+      participations.forEach((p) => {
+        participationByUser[p.id] = p;
+      });
+
       const participantsData = await Promise.all(
         validations.map(async (validation) => {
+          const part = participationByUser[validation.userId];
+          const reported = part?.hours?.reported != null ? Number(part.hours.reported) : null;
+          const validated = part?.hours?.validated != null ? Number(part.hours.validated) : null;
+          const base = {
+            userId: validation.userId,
+            displayName: 'Unknown User',
+            profilePicture: null,
+            email: null,
+            status: validation.status || 'validated',
+            validatedAt: validation.validatedAt,
+            rejectedAt: validation.rejectedAt,
+            reportedHours: reported,
+            validatedHours: validated,
+          };
           try {
             const userRef = doc(db, 'members', validation.userId);
             const userDoc = await getDoc(userRef);
-            
             if (userDoc.exists()) {
               const userData = userDoc.data();
-              return {
-                userId: validation.userId,
-                displayName: userData.displayName || userData.name || 'Unknown User',
-                profilePicture: userData.profilePicture || userData.photoURL || null,
-                email: userData.email || null, // Add email for contact functionality
-                status: validation.status || 'validated', // Default to 'validated' for backward compatibility
-                validatedAt: validation.validatedAt,
-                rejectedAt: validation.rejectedAt
-              };
+              base.displayName = userData.displayName || userData.name || 'Unknown User';
+              base.profilePicture = userData.profilePicture || userData.photoURL || null;
+              base.email = userData.email || null;
             }
-            return null;
           } catch (error) {
             console.error(`Error fetching user ${validation.userId}:`, error);
-            return {
-              userId: validation.userId,
-              displayName: 'Unknown User',
-              profilePicture: null,
-              email: null,
-              status: validation.status || 'validated',
-              validatedAt: validation.validatedAt,
-              rejectedAt: validation.rejectedAt
-            };
           }
+          return base;
         })
       );
-      
-      // Filter out null values
-      setParticipants(participantsData.filter(p => p !== null));
+      const cleaned = participantsData.filter((p) => p != null);
+      setParticipants(cleaned);
     } catch (error) {
       console.error('Error fetching participants:', error);
       setParticipants([]);
@@ -151,25 +153,20 @@ export default function ParticipantListModal({ isOpen, onClose, activity, activi
 
   const handleReject = async (userId) => {
     if (!user?.uid || !effectiveActivityId) return;
-    
+
     setProcessing(prev => ({ ...prev, [userId]: true }));
     try {
       const result = await rejectApplicant(effectiveActivityId, userId, user.uid);
-      if (result.success) {
-        // Refresh participants list
-        await fetchParticipants();
-      } else {
-        console.error('Rejection error:', result.message);
-        alert(result.message || t('errorRejecting') || 'Failed to reject participant');
-      }
+      if (result.success) await fetchParticipants();
+      else alert(result.message || t('errorRejecting') || 'Failed to reject participant');
     } catch (error) {
       console.error('Error rejecting participant:', error);
       alert(t('errorRejecting') || 'An error occurred while rejecting the participant');
     } finally {
       setProcessing(prev => {
-        const newProcessing = { ...prev };
-        delete newProcessing[userId];
-        return newProcessing;
+        const next = { ...prev };
+        delete next[userId];
+        return next;
       });
     }
   };
@@ -230,7 +227,7 @@ export default function ParticipantListModal({ isOpen, onClose, activity, activi
               </span>
               )}
             </div>
-            
+
             {/* Contact Participants Button */}
             {participants.length > 0 && (
               <div className="relative">
@@ -285,7 +282,7 @@ export default function ParticipantListModal({ isOpen, onClose, activity, activi
                   </p>
                 </div>
               )}
-              
+
               {participants.map((participant) => {
                 const isProcessing = processing[participant.userId] || false;
                 const isPending = participant.status === 'pending';
@@ -335,11 +332,20 @@ export default function ParticipantListModal({ isOpen, onClose, activity, activi
                                 : participant.rejectedAt 
                                   ? `${t('rejectedAt') || 'Rejected at'}: ${formatDate(participant.rejectedAt)}`
                                   : ''}
-                      </p>
-                    )}
+                            </p>
+                          )}
                         </div>
-                  </div>
-                  
+                      </div>
+
+                      {/* Hours display (NPO edits via Close/Edit modal) */}
+                      {(participant.validatedHours != null || participant.reportedHours != null) && (
+                        <div className="pt-2 sm:pt-0 sm:pl-4 sm:ml-4 sm:border-l border-gray-100 dark:border-gray-700">
+                          <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                            {t('validatedHours') || 'Hours'}: {participant.validatedHours != null ? participant.validatedHours : participant.reportedHours ?? '—'}
+                          </span>
+                        </div>
+                      )}
+
                       {/* Action Buttons - Only show for pending status */}
                       {showButtons && (
                         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-200 dark:border-gray-700 sm:border-l sm:pl-4 sm:ml-4 min-w-[180px] sm:min-w-[200px]">
