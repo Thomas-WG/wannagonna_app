@@ -84,7 +84,10 @@ async function processActivityClosed(
   }
 
   // Idempotency: skip if already processed (prevents double-count)
-  if (activity.impactResults?.lastAggregation) {
+  // Re-read from Firestore; event snapshot is stale on retry (same event data replayed)
+  const activityDoc = await db.collection("activities").doc(activityId).get();
+  const currentActivity = activityDoc?.data();
+  if (currentActivity?.impactResults?.lastAggregation) {
     console.log("[onActivityClosed] Already processed, skipping:", activityId);
     return;
   }
