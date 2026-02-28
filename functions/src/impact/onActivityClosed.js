@@ -67,7 +67,9 @@ function getActivityDurationHours(activity) {
  * When an activity's status changes to Closed:
  * - Sum participations hours.validated -> impactResults.totalHours
  * - Update org impactSummary (totalHours, totalActivities, parameters)
- * - For each participation: update member impactSummary, award XP
+ * - For each participation: update member impactSummary. Skip XP/xpHistory for
+ *   participants already rewarded by processActivityValidationRewards (on
+ *   validation); award XP only to those not yet validated.
  * @param {string} activityId - Activity document ID.
  * @param {Object} activityBefore - Snapshot before update.
  * @param {Object} activityAfter - Snapshot after update.
@@ -96,6 +98,15 @@ async function processActivityClosed(
     validationsSnap.docs
       .map((d) => d.data())
       .filter((v) => v.status === "rejected")
+      .map((v) => v.userId)
+      .filter(Boolean),
+  );
+
+  // Users already rewarded via processActivityValidationRewards (on validation)
+  const alreadyRewardedUserIds = new Set(
+    validationsSnap.docs
+      .map((d) => d.data())
+      .filter((v) => v.status === "validated")
       .map((v) => v.userId)
       .filter(Boolean),
   );
@@ -194,6 +205,7 @@ async function processActivityClosed(
 
   // Skip member updates when no participations (getAll requires ≥1 ref)
   let processed = 0;
+  let xpAwardedCount = 0;
   if (participations.length > 0) {
     for (let i = 0; i < participations.length; i += BATCH_SIZE) {
     const chunk = participations.slice(i, i + BATCH_SIZE);
@@ -208,8 +220,12 @@ async function processActivityClosed(
       const memberUpdates = {
         "impactSummary.totalHours": FieldValue.increment(validatedHours),
         "impactSummary.totalActivities": FieldValue.increment(1),
-        xp: FieldValue.increment(activityXP),
       };
+      // Skip XP for users already rewarded by processActivityValidationRewards
+      if (!alreadyRewardedUserIds.has(userId)) {
+        memberUpdates.xp = FieldValue.increment(activityXP);
+        xpAwardedCount++;
+      }
       for (const [paramId, value] of Object.entries(parameters)) {
         const num = Number(value) || 0;
         memberUpdates["impactSummary.parameters." + paramId] =
@@ -243,14 +259,17 @@ async function processActivityClosed(
         batch.set(participantRecordRef, prUpdates, {merge: true});
       }
 
-      const xpHistoryRef = userRef.collection("xpHistory");
-      batch.set(xpHistoryRef.doc(), {
-        title: `Activity: ${activityTitle}`,
-        points: activityXP,
-        type: "activity",
-        activityId,
-        timestamp: FieldValue.serverTimestamp(),
-      });
+      // Skip xpHistory for users already rewarded by processActivityValidationRewards
+      if (!alreadyRewardedUserIds.has(userId) && activityXP > 0) {
+        const xpHistoryRef = userRef.collection("xpHistory");
+        batch.set(xpHistoryRef.doc(), {
+          title: `Activity: ${activityTitle}`,
+          points: activityXP,
+          type: "activity",
+          activityId,
+          timestamp: FieldValue.serverTimestamp(),
+        });
+      }
     }
 
     await batch.commit();
@@ -259,7 +278,7 @@ async function processActivityClosed(
   }
 
   const msg = `[onActivityClosed] ${activityId}: totalHours=${totalHours}, ` +
-      `participations=${participations.length}, XP to ${processed} members`;
+      `participations=${processed}, XP awarded to ${xpAwardedCount} members`;
   console.log(msg);
 }
 
