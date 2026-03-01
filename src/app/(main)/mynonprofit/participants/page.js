@@ -184,7 +184,7 @@ export default function ParticipantsPage() {
   }
 
   return (
-    <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 bg-background-page dark:bg-background-page min-h-dvh">
+    <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 min-h-dvh">
       <div className="mb-4 flex items-center gap-3">
         <BackButton />
         <h1 className="text-xl sm:text-2xl font-semibold text-text-primary dark:text-text-primary">

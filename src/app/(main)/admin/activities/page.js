@@ -363,19 +363,19 @@ export default function AdminActivitiesPage() {
   };
 
   return (
-    <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 bg-background-page dark:bg-background-page min-h-dvh">
+    <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 min-h-dvh">
       {/* Back Button */}
       <BackButton fallbackPath="/admin" />
 
       {/* Header */}
       <div className="mb-4 sm:mb-6 md:mb-8">
-        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2 text-text-primary dark:text-text-primary">{t('activitiesManagement') || 'Activities Management'}</h1>
+        <h1 className="page-title text-xl sm:text-2xl md:text-3xl font-bold mb-2 text-text-primary dark:text-text-primary">{t('activitiesManagement') || 'Activities Management'}</h1>
         <p className="text-xs sm:text-sm md:text-base text-text-secondary dark:text-text-secondary">{t('allActivitiesDescription') || 'Manage all activities from all organizations'}</p>
       </div>
 
       {/* Metrics Section */}
       <div className="mb-4 sm:mb-6 md:mb-8">
-        <h2 className="text-base sm:text-lg md:text-xl font-semibold mb-2 sm:mb-3 md:mb-4 px-1 text-text-primary dark:text-text-primary">{t('metrics') || 'Metrics'}</h2>
+        <h2 className="section-title text-base sm:text-lg md:text-xl font-semibold mb-2 sm:mb-3 md:mb-4 px-1 text-text-primary dark:text-text-primary">{t('metrics') || 'Metrics'}</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2 sm:gap-3 md:gap-4">
           {/* All Activities Card */}
           <div className="bg-background-card dark:bg-background-card rounded-lg shadow-md border border-border-light dark:border-border-dark">
@@ -458,7 +458,7 @@ export default function AdminActivitiesPage() {
 
       {/* Activities List */}
       <div className="mt-4 sm:mt-6 md:mt-10">
-        <h2 className="text-lg sm:text-xl md:text-2xl font-semibold mb-3 sm:mb-4 px-1 text-text-primary dark:text-text-primary">{t('allActivities') || 'All Activities'}</h2>
+        <h2 className="section-title text-lg sm:text-xl md:text-2xl font-semibold mb-3 sm:mb-4 px-1 text-text-primary dark:text-text-primary">{t('allActivities') || 'All Activities'}</h2>
         
         {/* Filters */}
         <ActivityFilters

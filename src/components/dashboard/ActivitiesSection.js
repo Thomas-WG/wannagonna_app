@@ -124,7 +124,7 @@ const ActivitiesSection = memo(function ActivitiesSection({
 
   return (
     <div className="mb-6 sm:mb-10">
-      <h2 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 px-1 text-text-primary dark:text-text-primary">
+      <h2 className="section-title text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 px-1 text-text-primary dark:text-text-primary">
         {showApplications
           ? t('yourApplications') || 'Your Applications'
           : t('yourActivities') || 'Your Activities'}

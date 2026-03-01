@@ -9,7 +9,15 @@ const Layout = ({ children, isNavbarExpanded }) => {
     return (
         <ProtectedRoute>
             {/* min-h-dvh so layout fills viewport; no overflow-hidden so body scrolls (native pull-to-refresh) */}
-            <div className="min-h-dvh pt-safe-top">
+            <div className="min-h-dvh pt-safe-top relative">
+                {/* Background treatment (blobs + dot grid) - landing-aligned */}
+                <div aria-hidden>
+                    <div className="app-bg-blob" />
+                    <div className="app-bg-blob" />
+                    <div className="app-bg-blob" />
+                    <div className="app-bg-blob" />
+                </div>
+                <div className="app-dot-grid" aria-hidden />
                 <div className="fixed left-0 top-0 h-full z-50 pt-safe-top">
                     <Navbar />
                 </div>

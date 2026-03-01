@@ -228,7 +228,7 @@ export default function DashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 bg-background-page dark:bg-background-page min-h-dvh">
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 min-h-dvh">
         <div className="flex justify-center items-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500 dark:border-primary-400"></div>
         </div>
@@ -237,7 +237,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 bg-background-page dark:bg-background-page min-h-dvh">
+    <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 min-h-dvh">
       {/* Profile Section with Gamification */}
       <DashboardErrorBoundary>
         <ProfileSection
@@ -257,7 +257,7 @@ export default function DashboardPage() {
       {/* Impact summary for member (total hours + activities + parameters) */}
       {impactSummary && (
         <div className="mb-6 sm:mb-8">
-          <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 px-1 text-text-primary dark:text-text-primary">
+          <h2 className="section-title text-lg sm:text-xl font-semibold mb-3 sm:mb-4 px-1 text-text-primary dark:text-text-primary">
             {tProfile('impact') || 'Impact'}
           </h2>
           <Card className="p-4 sm:p-5 bg-background-card dark:bg-background-card border-border-light dark:border-border-dark">
@@ -339,7 +339,7 @@ export default function DashboardPage() {
       {/* Badges Section */}
       <DashboardErrorBoundary>
         <div className="mb-6 sm:mb-10">
-          <h2 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 px-1">
+          <h2 className="section-title text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 px-1">
             {t('yourBadges') || 'Your Badges'}
           </h2>
           <BadgeList userId={user?.uid} />

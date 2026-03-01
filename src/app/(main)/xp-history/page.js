@@ -106,7 +106,7 @@ export default function XpHistoryPage() {
             {t('back') || 'Back'}
           </Button>
         </div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+        <h1 className="page-title text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
           {t('title') || 'XP History'}
         </h1>
         <p className="text-gray-600 dark:text-gray-400">

@@ -152,10 +152,10 @@ export default function OrganizationsPage() {
   if (!user && !authLoading) return null;
 
   return (
-    <div className="min-h-screen bg-background-page dark:bg-background-page">
+    <div className="min-h-screen">
       <div className="container mx-auto px-4 py-6 max-w-7xl">
         <div className="mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-text-primary dark:text-text-primary mb-2">
+          <h1 className="page-title text-2xl sm:text-3xl font-bold text-text-primary dark:text-text-primary mb-2">
             {t('title')}
           </h1>
           <p className="text-text-secondary dark:text-text-secondary">

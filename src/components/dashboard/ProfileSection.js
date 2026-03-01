@@ -70,7 +70,7 @@ const ProfileSection = memo(function ProfileSection({
           {/* Profile Info and Gamification */}
           <div className="flex-1 w-full sm:w-auto text-center sm:text-left">
             <h1
-              className="text-2xl sm:text-3xl font-bold text-text-primary dark:text-text-primary mb-2 cursor-pointer hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+              className="page-title text-2xl sm:text-3xl font-bold text-text-primary dark:text-text-primary mb-2 cursor-pointer hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
               onClick={handleProfileClick}
             >
               {displayName}

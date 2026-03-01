@@ -16,7 +16,7 @@ const KPISection = memo(function KPISection({ orgData, closedActivitiesCount, to
 
   return (
     <div className="mb-6 sm:mb-8">
-      <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 px-1 text-text-primary dark:text-text-primary">
+      <h2 className="section-title text-lg sm:text-xl font-semibold mb-3 sm:mb-4 px-1 text-text-primary dark:text-text-primary">
         {t('metricsAndFilters')}
       </h2>
       <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-2 sm:gap-3 md:gap-4">

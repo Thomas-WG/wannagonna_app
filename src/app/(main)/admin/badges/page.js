@@ -294,7 +294,7 @@ export default function AdminBadgesPage() {
 
       {/* Categories Section */}
       <Card className="mb-4 sm:mb-6">
-        <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">{t('categories') || 'Categories'}</h2>
+        <h2 className="section-title text-lg sm:text-xl font-semibold mb-3 sm:mb-4">{t('categories') || 'Categories'}</h2>
         {categories.length === 0 ? (
           <p className="text-sm sm:text-base text-gray-500">{t('noCategories') || 'No categories found'}</p>
         ) : (
@@ -334,7 +334,7 @@ export default function AdminBadgesPage() {
 
       {/* Badges Table */}
       <Card>
-        <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">{t('allBadges') || 'All Badges'}</h2>
+        <h2 className="section-title text-lg sm:text-xl font-semibold mb-3 sm:mb-4">{t('allBadges') || 'All Badges'}</h2>
         {badges.length === 0 ? (
           <p className="text-sm sm:text-base text-gray-500">{t('noBadges') || 'No badges found'}</p>
         ) : (

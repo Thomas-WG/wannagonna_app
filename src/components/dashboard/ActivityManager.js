@@ -356,7 +356,7 @@ const ActivityManager = memo(function ActivityManager({
 
   return (
     <div className="mt-6 sm:mt-10">
-      <h2 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 px-1 text-text-primary dark:text-text-primary">
+      <h2 className="section-title text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 px-1 text-text-primary dark:text-text-primary">
         {t('yourActivities')}
       </h2>
 
