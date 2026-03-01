@@ -767,6 +767,7 @@
         "closeActivity": "Cerrar actividad",
         "closeActivityConfirmTitle": "Confirmar cierre",
         "closeActivityConfirmMessage": "¿Estás seguro? No podrás editar las horas y el impacto después de cerrar. Contacta a un administrador si necesitas hacer cambios más adelante.",
+        "closeActivityConfirmEventMessage": "¿Estás seguro? No podrás editar después de cerrar.",
         "closeActivityConfirmButton": "Confirmar y cerrar",
         "editHoursAndImpact": "Editar horas e impacto",
         "hours": "Horas",

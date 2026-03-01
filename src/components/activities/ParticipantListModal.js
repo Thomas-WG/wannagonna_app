@@ -4,6 +4,7 @@ import { Modal, Spinner, Button, Badge, Dropdown } from 'flowbite-react';
 import { useEffect, useState, useCallback } from 'react';
 import { fetchValidationsForActivity, validateApplicant, rejectApplicant } from '@/utils/crudActivityValidation';
 import { getActivityParticipations } from '@/utils/participationService';
+import { fetchActivityById } from '@/utils/crudActivities';
 import { getDoc, doc } from 'firebase/firestore';
 import { db } from 'firebaseConfig';
 import { useTranslations } from 'next-intl';
@@ -17,6 +18,7 @@ export default function ParticipantListModal({ isOpen, onClose, activity, activi
   const t = useTranslations('MyNonProfit');
   const { user } = useAuth();
   const [participants, setParticipants] = useState([]);
+  const [fullActivity, setFullActivity] = useState(null);
   const [loading, setLoading] = useState(false);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState(null);
@@ -30,10 +32,12 @@ export default function ParticipantListModal({ isOpen, onClose, activity, activi
 
     setLoading(true);
     try {
-      const [validations, participations] = await Promise.all([
+      const [activityData, validations, participations] = await Promise.all([
+        fetchActivityById(effectiveActivityId),
         fetchValidationsForActivity(effectiveActivityId),
         getActivityParticipations(effectiveActivityId),
       ]);
+      setFullActivity(activityData || activity);
       const participationByUser = {};
       participations.forEach((p) => {
         participationByUser[p.id] = p;
@@ -86,6 +90,7 @@ export default function ParticipantListModal({ isOpen, onClose, activity, activi
     } else if (!isOpen) {
       // Reset state when modal closes
       setParticipants([]);
+      setFullActivity(null);
       setProfileModalOpen(false);
       setSelectedUserId(null);
       setProcessing({});
@@ -274,6 +279,45 @@ export default function ParticipantListModal({ isOpen, onClose, activity, activi
             </div>
           ) : (
             <div className="space-y-3 sm:space-y-4">
+              {/* Global impact summary (for activities with impact parameters, exclude Events) */}
+              {fullActivity?.type !== 'event' &&
+                (fullActivity?.impactParameters?.length > 0 ||
+                  (fullActivity?.impactResults && Object.keys(fullActivity.impactResults.parameters || {}).length > 0)) && (
+                <div className="mb-4 p-4 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
+                  <p className="text-sm font-medium text-green-800 dark:text-green-200 mb-2">
+                    {t('impactResults') || 'Impact results'}
+                  </p>
+                  <div className="flex flex-wrap gap-4">
+                    <span className="text-sm text-green-700 dark:text-green-300">
+                      {t('totalHours') || 'Total hours'}: {(fullActivity?.impactResults?.totalHours ?? 0).toFixed(1)}
+                    </span>
+                    {(() => {
+                      const params = fullActivity?.impactParameters || [];
+                      const results = fullActivity?.impactResults?.parameters || {};
+                      const allParamIds = new Set([
+                        ...params.map((p) => p?.parameterId).filter(Boolean),
+                        ...Object.keys(results),
+                      ]);
+                      const paramById = params.reduce((acc, p) => {
+                        if (p?.parameterId) acc[p.parameterId] = p;
+                        return acc;
+                      }, {});
+                      return [...allParamIds].map((paramId) => {
+                        const meta = paramById[paramId];
+                        const label = meta?.label || paramId;
+                        const unit = meta?.unit ? ` (${meta.unit})` : '';
+                        const value = results[paramId];
+                        return (
+                          <span key={paramId} className="text-sm text-green-700 dark:text-green-300">
+                            {label}{unit}: {value != null ? String(value) : '—'}
+                          </span>
+                        );
+                      });
+                    })()}
+                  </div>
+                </div>
+              )}
+
               {/* Info message for validation */}
               {participants.some(p => p.status === 'pending') && (
                 <div className="mb-3 sm:mb-4 p-3 sm:p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">

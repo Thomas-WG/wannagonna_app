@@ -746,6 +746,7 @@
         "closeActivity": "Close activity",
         "closeActivityConfirmTitle": "Confirm closing",
         "closeActivityConfirmMessage": "Are you sure? You will not be able to edit hours and impact after closing. Contact an admin if you need to make changes later.",
+        "closeActivityConfirmEventMessage": "Are you sure? You will not be able to edit after closing.",
         "closeActivityConfirmButton": "Confirm and close",
         "totalParticipations": "Participants",
         "totalHours": "Total hours",

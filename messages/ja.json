@@ -767,6 +767,7 @@
         "closeActivity": "活動を閉じる",
         "closeActivityConfirmTitle": "閉鎖の確認",
         "closeActivityConfirmMessage": "よろしいですか？閉じた後は時間とインパクトを編集できません。後で変更が必要な場合は管理者に連絡してください。",
+        "closeActivityConfirmEventMessage": "よろしいですか？閉じた後は編集できません。",
         "closeActivityConfirmButton": "確認して閉じる",
         "editHoursAndImpact": "時間とインパクトを編集",
         "hours": "時間",

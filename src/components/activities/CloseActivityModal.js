@@ -56,13 +56,14 @@ export default function CloseActivityModal({ isOpen, onClose, activity, onSucces
   const [parameterValues, setParameterValues] = useState({});
   const [hoursPerParticipant, setHoursPerParticipant] = useState({});
 
+  const isEvent = fullActivity?.type === 'event';
   const isLocalOrEvent = fullActivity?.type === 'local' || fullActivity?.type === 'event';
   const impactParameters = fullActivity?.impactParameters || [];
   const durationHours = getActivityDurationHours(fullActivity);
   const hasAutoCalc = isLocalOrEvent && durationHours != null && durationHours > 0;
 
   const fetchData = useCallback(async () => {
-    if (!isOpen || !activity?.id) return;
+    if (!isOpen || !activity?.id || activity?.type === 'event') return;
     setLoading(true);
     try {
       const [a, validations, participations] = await Promise.all([
@@ -144,35 +145,43 @@ export default function CloseActivityModal({ isOpen, onClose, activity, onSucces
   const handleCloseActivity = async () => {
     if (!activity?.id || !user?.uid) return;
 
-    if (!showConfirm) {
+    // Events: single-step close; others: two-step (enter hours/impact, then confirm)
+    if (!isEvent && !showConfirm) {
       setShowConfirm(true);
       return;
     }
 
     setSubmitting(true);
     try {
-      const participantHours = {};
-      for (const p of validatedParticipations) {
-        const raw = hoursPerParticipant[p.userId];
-        const num = raw === '' || raw == null ? 0 : Number(raw);
-        participantHours[p.userId] = Number.isFinite(num) && num >= 0 ? num : 0;
-      }
-
+      let totalHoursToReport = 0;
       const parameters = {};
-      if (isLocalOrEvent) {
-        impactParameters.forEach((p) => {
-          const v = parameterValues[p.parameterId];
-          const num = v === '' || v == null ? 0 : Number(v);
-          parameters[p.parameterId] = Number.isFinite(num) ? num : 0;
-        });
+
+      if (!isEvent) {
+        const participantHours = {};
+        for (const p of validatedParticipations) {
+          const raw = hoursPerParticipant[p.userId];
+          const num = raw === '' || raw == null ? 0 : Number(raw);
+          participantHours[p.userId] = Number.isFinite(num) && num >= 0 ? num : 0;
+        }
+
+        totalHoursToReport = Object.values(participantHours).reduce((s, h) => s + h, 0);
+
+        if (isLocalOrEvent) {
+          impactParameters.forEach((p) => {
+            const v = parameterValues[p.parameterId];
+            const num = v === '' || v == null ? 0 : Number(v);
+            parameters[p.parameterId] = Number.isFinite(num) ? num : 0;
+          });
+        }
+
+        for (const [userId, hours] of Object.entries(participantHours)) {
+          await validateHours(activity.id, userId, hours);
+        }
       }
 
-      for (const [userId, hours] of Object.entries(participantHours)) {
-        await validateHours(activity.id, userId, hours);
-      }
       await closeActivityWithResults(
         fullActivity?.id || activity.id,
-        { totalHours, parameters },
+        { totalHours: totalHoursToReport, parameters },
         user.uid
       );
       onSuccess?.(fullActivity?.id || activity.id);
@@ -216,9 +225,15 @@ export default function CloseActivityModal({ isOpen, onClose, activity, onSucces
               {t('closeActivityConfirmTitle') || 'Confirm closing'}
             </p>
             <p className="text-sm text-amber-700 dark:text-amber-300">
-              {t('closeActivityConfirmMessage') || 'Are you sure? You will not be able to edit hours and impact after closing. Contact an admin if you need to make changes later.'}
+              {isEvent
+                ? (t('closeActivityConfirmEventMessage') || 'Are you sure? You will not be able to edit after closing.')
+                : (t('closeActivityConfirmMessage') || 'Are you sure? You will not be able to edit hours and impact after closing. Contact an admin if you need to make changes later.')}
             </p>
           </div>
+        ) : isEvent ? (
+          <p className="text-sm text-text-secondary dark:text-text-secondary">
+            {t('closeActivityConfirmEventMessage') || 'Are you sure? You will not be able to edit after closing.'}
+          </p>
         ) : (
           <>
             {/* Hours & impact section – same color as Close button (green/success) */}

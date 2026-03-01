@@ -288,7 +288,8 @@ export default function CreateUpdateActivityPage() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const hasImpactStep = formData.type === 'local' || formData.type === 'event';
+  // Impact parameters only for Local (volunteering); Events are gamification, not impact-tracked
+  const hasImpactStep = formData.type === 'local';
   const maxStep = hasImpactStep ? 4 : 3;
 
   // Navigation between steps

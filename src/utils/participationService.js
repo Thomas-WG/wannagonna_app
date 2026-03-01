@@ -134,20 +134,32 @@ export async function validateHours(activityId, userId, validatedHours) {
   const snap = await getDoc(ref);
   const num = Number(validatedHours) || 0;
   if (!snap.exists()) {
+    // Create with validated==0 (Firestore rules enforce this on create).
+    // Then update to set validated hours (NPO staff/admin permitted via update rule).
     await setDoc(ref, {
       memberId: userId,
       status: 'validated',
       hours: {
         reported: num,
-        validated: num,
+        validated: 0,
         reportedAt: null,
-        validatedAt: now
+        validatedAt: null
       },
       checkedInAt: null,
       checkedOutAt: null,
       xpAwarded: 0,
       joinedAt: now
     });
+    if (num > 0) {
+      await updateDoc(ref, {
+        hours: {
+          reported: num,
+          validated: num,
+          reportedAt: null,
+          validatedAt: now
+        }
+      });
+    }
     return;
   }
   const current = snap.data();

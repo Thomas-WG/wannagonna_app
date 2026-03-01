@@ -83,6 +83,23 @@ async function processActivityClosed(
     return;
   }
 
+  // Events are gamification (attendance), not volunteering — skip impact/hours
+  if (activity.type === "event") {
+    const activityRef = db.collection("activities").doc(activityId);
+    const activityDoc = await activityRef.get();
+    const current = activityDoc?.data();
+    if (current?.impactResults?.lastAggregation) {
+      console.log("[onActivityClosed] Event already processed, skipping:", activityId);
+      return;
+    }
+    await activityRef.update({
+      "impactResults.totalHours": 0,
+      "impactResults.lastAggregation": { event: true },
+    });
+    console.log("[onActivityClosed] Event closed (no impact):", activityId);
+    return;
+  }
+
   // Idempotency: skip if already processed (prevents double-count)
   // Re-read from Firestore; event snapshot is stale on retry (same event data replayed)
   const activityDoc = await db.collection("activities").doc(activityId).get();
@@ -181,13 +198,8 @@ async function processActivityClosed(
     memberDeltas: memberDeltasForAgg,
   };
 
-  const batch1 = db.batch();
-  batch1.update(activityRef, {
-    "impactResults.totalHours": totalHours,
-    "impactResults.lastAggregation": lastAggregation,
-  });
-  await batch1.commit();
-
+  // Perform org and member updates first. Write lastAggregation (idempotency
+  // guard) only after all succeed, so retries can recover from partial failures.
   const orgRef = db.collection("organizations").doc(organizationId);
   const orgUpdates = {
     "impactSummary.totalHours": FieldValue.increment(totalHours),
@@ -279,6 +291,15 @@ async function processActivityClosed(
     processed += chunk.length;
     }
   }
+
+  // Write activity impactResults and idempotency guard last, so retries recover
+  // from any earlier batch failure (org/member updates).
+  const finalBatch = db.batch();
+  finalBatch.update(activityRef, {
+    "impactResults.totalHours": totalHours,
+    "impactResults.lastAggregation": lastAggregation,
+  });
+  await finalBatch.commit();
 
   const msg = `[onActivityClosed] ${activityId}: totalHours=${totalHours}, ` +
       `participations=${processed}, XP awarded to ${xpAwardedCount} members`;

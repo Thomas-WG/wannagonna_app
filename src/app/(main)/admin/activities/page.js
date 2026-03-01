@@ -321,10 +321,14 @@ export default function AdminActivitiesPage() {
   const handleStatusUpdate = async (newStatus) => {
     if (!selectedActivity) return;
 
-    // If trying to close the activity, open validation modal instead
+    // If trying to close: Events go directly to close modal; others go through validation
     if (newStatus === 'Closed') {
       setShowStatusModal(false);
-      setShowValidationModal(true);
+      if (selectedActivity.type === 'event') {
+        setShowCloseActivityModal(true);
+      } else {
+        setShowValidationModal(true);
+      }
       return;
     }
 

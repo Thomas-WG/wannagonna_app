@@ -102,12 +102,14 @@ export default function MyNonProfitDashboard() {
       const activity = modalManager.selectedActivity;
       if (!activity) return;
 
-    // If trying to close the activity, open validation modal instead
+    // If trying to close the activity: Events go directly to close; others go through validation
     if (newStatus === 'Closed') {
         modalManager.closeModal();
-        modalManager.openModal('activity-validation', {
-          activity,
-        });
+        if (activity.type === 'event') {
+          modalManager.openModal('activity-close', { activity });
+        } else {
+          modalManager.openModal('activity-validation', { activity });
+        }
       return;
     }
 

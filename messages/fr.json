@@ -767,6 +767,7 @@
         "closeActivity": "Fermer l'activité",
         "closeActivityConfirmTitle": "Confirmer la fermeture",
         "closeActivityConfirmMessage": "Êtes-vous sûr ? Vous ne pourrez plus modifier les heures et l'impact après la fermeture. Contactez un administrateur si vous devez effectuer des modifications ultérieurement.",
+        "closeActivityConfirmEventMessage": "Êtes-vous sûr ? Vous ne pourrez plus modifier après la fermeture.",
         "closeActivityConfirmButton": "Confirmer et fermer",
         "editHoursAndImpact": "Modifier les heures et l'impact",
         "hours": "Heures",
