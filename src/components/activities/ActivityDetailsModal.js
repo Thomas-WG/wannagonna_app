@@ -1,11 +1,10 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { Modal, Badge, Button, Spinner } from 'flowbite-react';
 import Image from 'next/image';
 import { fetchActivityById, getAcceptedApplicationsCount } from '@/utils/crudActivities';
 import { fetchOrganizationById } from '@/utils/crudOrganizations';
-import { useAuth } from '@/utils/auth/AuthContext';
 import { formatDateOnly, convertTimestampToDate } from '@/utils/dateUtils';
 import { useTranslations, useLocale } from 'next-intl';
 import { getSkillsForSelect } from '@/utils/crudSkills';
@@ -42,7 +41,6 @@ export default function ActivityDetailsModal({ isOpen, onClose, activityId, onAp
   const locale = useLocale();
   const router = useRouter();
   const { isDark } = useTheme();
-  const { user } = useAuth();
 
   const [activity, setActivity] = useState(null);
   const [organization, setOrganization] = useState(null);

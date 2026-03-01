@@ -122,8 +122,9 @@ async function processActivityClosed(
       .filter(Boolean),
   );
 
-  // Users already rewarded via processActivityValidationRewards (on validation)
-  const alreadyRewardedUserIds = new Set(
+  // Users with validated status — only these earn impact (participations are
+  // created on acceptance; pending/rejected users must not get impact or XP).
+  const validatedUserIds = new Set(
     validationsSnap.docs
       .map((d) => d.data())
       .filter((v) => v.status === "validated")
@@ -131,9 +132,14 @@ async function processActivityClosed(
       .filter(Boolean),
   );
 
+  // Users already rewarded via processActivityValidationRewards (on validation)
+  const alreadyRewardedUserIds = validatedUserIds;
+
   const participations = participationsSnap.docs
     .map((d) => ({id: d.id, ...d.data()}))
-    .filter((p) => !rejectedUserIds.has(p.id));
+    .filter((p) =>
+      !rejectedUserIds.has(p.id) && validatedUserIds.has(p.id),
+    );
 
   // Build parameter meta map from the activity's configured impact parameters
   // so we can persist human-readable labels/units alongside summaries.
