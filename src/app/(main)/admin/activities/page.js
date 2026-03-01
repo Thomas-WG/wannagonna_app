@@ -1,6 +1,7 @@
 'use client';
 
-import { Card, Toast, Select } from "flowbite-react";
+import { Card, Toast } from "flowbite-react";
+import SortBySelect from '@/components/common/SortBySelect';
 import { HiUsers, HiOfficeBuilding, HiCalendar, HiDocumentText, HiPencil, HiTrash, HiEye, HiUserGroup, HiViewGrid, HiLockClosed, HiQrcode, HiDuplicate } from "react-icons/hi";
 import { MdOutlineSocialDistance } from "react-icons/md";
 import { useEffect, useState, useMemo } from "react";
@@ -501,22 +502,20 @@ export default function AdminActivitiesPage() {
             {tActivities('showing') || 'Showing'} <span className="font-semibold text-text-primary dark:text-text-primary">{sortedActivities.length}</span> {tActivities('of') || 'of'}{' '}
             <span className="font-semibold text-text-primary dark:text-text-primary">{allActivities.length}</span> {tActivities('activities') || 'activities'}
           </div>
-          <div className="flex flex-col xs:flex-row items-start xs:items-center gap-2">
-            <label className="text-xs sm:text-sm font-medium text-text-primary dark:text-text-primary whitespace-nowrap">{tActivities('sortBy') || 'Sort by'}</label>
-            <Select 
-              value={sortBy} 
-              onChange={(e) => setSortBy(e.target.value)} 
-              className="w-full xs:w-auto text-sm sm:text-base bg-background-card dark:bg-background-card border-border-light dark:border-border-dark text-text-primary dark:text-text-primary"
-            >
-              <option value="newest">{tActivities('sortNewest') || 'Newest'}</option>
-              <option value="oldest">{tActivities('sortOldest') || 'Oldest'}</option>
-              <option value="xp_high">{tActivities('sortXpHigh') || 'XP: High to Low'}</option>
-              <option value="xp_low">{tActivities('sortXpLow') || 'XP: Low to High'}</option>
-              <option value="applicants_high">{tActivities('sortApplicantsHigh') || 'Applicants: High to Low'}</option>
-              <option value="applicants_low">{tActivities('sortApplicantsLow') || 'Applicants: Low to High'}</option>
-              <option value="alphabetical">{tActivities('sortAlphabetical') || 'Alphabetical'}</option>
-            </Select>
-          </div>
+          <SortBySelect
+            label={tActivities('sortBy') || 'Sort by'}
+            value={sortBy}
+            onChange={setSortBy}
+            options={[
+              { value: 'newest', label: tActivities('sortNewest') || 'Newest' },
+              { value: 'oldest', label: tActivities('sortOldest') || 'Oldest' },
+              { value: 'xp_high', label: tActivities('sortXpHigh') || 'XP: High to Low' },
+              { value: 'xp_low', label: tActivities('sortXpLow') || 'XP: Low to High' },
+              { value: 'applicants_high', label: tActivities('sortApplicantsHigh') || 'Applicants: High to Low' },
+              { value: 'applicants_low', label: tActivities('sortApplicantsLow') || 'Applicants: Low to High' },
+              { value: 'alphabetical', label: tActivities('sortAlphabetical') || 'Alphabetical' },
+            ]}
+          />
         </div>
 
         {loadingActivities ? (

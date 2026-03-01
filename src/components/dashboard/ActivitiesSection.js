@@ -1,7 +1,8 @@
 'use client';
 
 import { memo, useCallback, useMemo } from 'react';
-import { Select, Badge } from 'flowbite-react';
+import { Badge } from 'flowbite-react';
+import SortBySelect from '@/components/common/SortBySelect';
 import { HiCheck, HiX, HiClock, HiEye, HiDocumentText } from 'react-icons/hi';
 import { useTranslations } from 'next-intl';
 import ActivityCard from '@/components/activities/ActivityCard';
@@ -146,24 +147,20 @@ const ActivitiesSection = memo(function ActivitiesSection({
           {tActivities('of')}{' '}
           <span className="font-semibold">{activities.length}</span> {tActivities('activities')}
         </div>
-        <div className="flex items-center gap-2">
-          <label className="text-sm font-medium text-text-primary dark:text-text-primary">
-            {tActivities('sortBy')}
-          </label>
-          <Select
-            value={sortBy}
-            onChange={(e) => onSortChange(e.target.value)}
-            className="w-full sm:w-auto bg-background-card dark:bg-background-card text-text-primary dark:text-text-primary border-border-light dark:border-border-dark"
-          >
-            <option value="newest">{tActivities('sortNewest')}</option>
-            <option value="oldest">{tActivities('sortOldest')}</option>
-            <option value="xp_high">{tActivities('sortXpHigh')}</option>
-            <option value="xp_low">{tActivities('sortXpLow')}</option>
-            <option value="applicants_high">{tActivities('sortApplicantsHigh')}</option>
-            <option value="applicants_low">{tActivities('sortApplicantsLow')}</option>
-            <option value="alphabetical">{tActivities('sortAlphabetical')}</option>
-          </Select>
-        </div>
+        <SortBySelect
+          label={tActivities('sortBy')}
+          value={sortBy}
+          onChange={onSortChange}
+          options={[
+            { value: 'newest', label: tActivities('sortNewest') },
+            { value: 'oldest', label: tActivities('sortOldest') },
+            { value: 'xp_high', label: tActivities('sortXpHigh') },
+            { value: 'xp_low', label: tActivities('sortXpLow') },
+            { value: 'applicants_high', label: tActivities('sortApplicantsHigh') },
+            { value: 'applicants_low', label: tActivities('sortApplicantsLow') },
+            { value: 'alphabetical', label: tActivities('sortAlphabetical') },
+          ]}
+        />
       </div>
 
       {sortedActivities.length === 0 ? (
