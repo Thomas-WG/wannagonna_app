@@ -961,7 +961,7 @@ export default function ActivitiesPage() {
         {/* Activities Grid (list view only) */}
         {viewMode === 'list' && !activitiesLoading && paginatedActivities.length > 0 && (
           <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 items-stretch">
               {paginatedActivities.map((activity) => (
               <div key={activity.id} className="relative">
                 <ActivityCard

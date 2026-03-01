@@ -356,187 +356,162 @@ export default function ActivityCard({
     <>
       <div
         onClick={onClick}
-        className={`cursor-pointer w-full p-3 sm:p-4 bg-background-card dark:bg-background-card border-l-4 ${typeColorClass} border border-border-light dark:border-border-dark rounded-xl shadow-md hover:shadow-lg hover:bg-background-hover dark:hover:bg-background-hover hover:-translate-y-1 transition-all duration-300 transform`}
+        className={`cursor-pointer w-full p-3 sm:p-4 bg-background-card dark:bg-background-card border-l-4 ${typeColorClass} border border-border-light dark:border-border-dark rounded-xl shadow-md hover:shadow-lg hover:bg-background-hover dark:hover:bg-background-hover hover:-translate-y-1 transition-all duration-300 transform flex flex-col h-full min-h-[280px]`}
         role="button"
         aria-label={title}
       >
-        {/* Header Section (Top) */}
-        <div className='flex items-start justify-between gap-2'>
-          <div className='flex items-center space-x-2 min-w-0 flex-1'>
-            <Image
-              src={organization_logo}
-              alt={`${organization_name} logo`}
-              width={40}
-              height={40}
-              className='rounded-full flex-shrink-0'
-            />
-            <span className='text-xs text-text-secondary dark:text-text-secondary truncate' aria-label={organization_name}>{organization_name}</span>
-          </div>
-          <div className='flex items-center space-x-1.5 sm:space-x-2 flex-shrink-0'>
-            {/* Status Badge */}
-            {localStatus && (() => {
-              const statusConfig = getStatusConfig(localStatus);
-              const StatusIcon = statusConfig.icon;
-              const tooltipContent = canEditStatus 
-                ? `${statusConfig.label} - Click to change` 
-                : statusConfig.label;
-              const badgeClasses = canEditStatus
-                ? `inline-flex items-center px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs font-medium ${statusConfig.color} ${statusConfig.borderColor} border cursor-pointer hover:opacity-80 transition-opacity`
-                : `inline-flex items-center px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs font-medium ${statusConfig.color} ${statusConfig.borderColor} border`;
+        {/* TOP SECTION — fixed, does not grow */}
+        <div className='flex flex-col gap-1'>
+          <div className='flex items-start justify-between gap-2'>
+            <div className='flex items-center gap-2 min-w-0 flex-1'>
+              <Image
+                src={organization_logo}
+                alt={`${organization_name} logo`}
+                width={36}
+                height={36}
+                className='w-9 h-9 rounded-full flex-shrink-0 object-cover'
+              />
+              <span className='text-xs text-[#9ca3af] dark:text-text-tertiary font-normal truncate' aria-label={organization_name}>{organization_name}</span>
+            </div>
+            <div className='flex items-center gap-1.5 flex-shrink-0'>
+              {/* Status Badge */}
+              {localStatus && (() => {
+                const statusConfig = getStatusConfig(localStatus);
+                const StatusIcon = statusConfig.icon;
+                const tooltipContent = canEditStatus 
+                  ? `${statusConfig.label} - Click to change` 
+                  : statusConfig.label;
+                const badgeClasses = canEditStatus
+                  ? `inline-flex items-center px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs font-medium ${statusConfig.color} ${statusConfig.borderColor} border cursor-pointer hover:opacity-80 transition-opacity`
+                  : `inline-flex items-center px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs font-medium ${statusConfig.color} ${statusConfig.borderColor} border`;
+                
+                return (
+                  <Tooltip content={tooltipContent} placement="top">
+                    <div 
+                      className={badgeClasses}
+                      onClick={canEditStatus ? handleStatusClick : undefined}
+                    >
+                      <StatusIcon className='w-3 h-3 mr-0.5 sm:mr-1' />
+                      <span className='hidden sm:inline'>{statusConfig.label}</span>
+                      <span className='sm:hidden'>{statusConfig.label.split(' ')[0]}</span>
+                    </div>
+                  </Tooltip>
+                );
+              })()}
               
-              return (
-                <Tooltip content={tooltipContent} placement="top">
-                  <div 
-                    className={badgeClasses}
-                    onClick={canEditStatus ? handleStatusClick : undefined}
+              {/* Category Icon — subtle container */}
+              {(() => {
+                const Icon = categoryIcons[category] || HiQuestionMarkCircle;
+                const label = (() => {
+                  try { return tManage(category); } catch { return category; }
+                })();
+                return (
+                  <Tooltip content={label} placement="top">
+                    <span title={label} aria-label={label} role="img" tabIndex={0} className='inline-flex w-8 h-8 items-center justify-center rounded-lg bg-[#f5f5f5] dark:bg-neutral-700 text-[#6b7280] dark:text-text-tertiary'>
+                      <Icon aria-hidden className='w-5 h-5' />
+                    </span>
+                  </Tooltip>
+                );
+              })()}
+              <span className='sr-only'>{category}</span>
+              
+              {/* QR Code Button — subtle container */}
+              {showQRButton && (type === 'local' || type === 'event') && qrCodeToken && (
+                <Tooltip content="Show QR Code" placement="top">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowQRModal(true);
+                    }}
+                    className='w-8 h-8 flex items-center justify-center rounded-lg bg-[#f5f5f5] dark:bg-neutral-700 text-[#6b7280] dark:text-text-tertiary hover:opacity-80 transition-opacity'
                   >
-                    <StatusIcon className='w-3 h-3 mr-0.5 sm:mr-1' />
-                    <span className='hidden sm:inline'>{statusConfig.label}</span>
-                    <span className='sm:hidden'>{statusConfig.label.split(' ')[0]}</span>
-                  </div>
+                    <HiQrcode className="h-4 w-4 sm:h-5 sm:w-5" />
+                  </button>
                 </Tooltip>
-              );
-            })()}
-            
-            {/* Category Icon */}
-            {(() => {
-              const Icon = categoryIcons[category] || HiQuestionMarkCircle;
-              const label = (() => {
-                try { return tManage(category); } catch { return category; }
-              })();
-              return (
-                <Tooltip content={label} placement="top">
-                  <span aria-label={label} role="img" tabIndex={0} className='inline-flex'>
-                    <Icon aria-hidden className='text-grey-400 w-6 h-6 sm:w-7 sm:h-7' />
-                  </span>
-                </Tooltip>
-              );
-            })()}
-            <span className='sr-only'>{category}</span>
-            
-            {/* QR Code Button - Only for Local and Event activities, and only when showQRButton is true */}
-            {showQRButton && (type === 'local' || type === 'event') && qrCodeToken && (
-              <Tooltip content="Show QR Code" placement="top">
-                <Button
-                  size="sm"
-                  color="gray"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowQRModal(true);
-                  }}
-                  className="p-1.5"
-                >
-                  <HiQrcode className="h-4 w-4 sm:h-5 sm:w-5" />
-                </Button>
-              </Tooltip>
-            )}
+              )}
+            </div>
           </div>
+
+          {/* Title — 2-line max */}
+          <h3 className='text-lg font-bold text-[#1A1A1A] dark:text-text-primary leading-snug line-clamp-2 mt-2'>{title}</h3>
         </div>
 
-        {/* Title */}
-        <div className='mt-3 sm:mt-4 flex items-start gap-2'>
-          <div className='flex-1 min-w-0'>
-            <h2 className='text-xl sm:text-2xl font-bold text-text-primary dark:text-text-primary leading-tight break-words'>{title}</h2>
-            {/* Description Preview */}
+        {/* MIDDLE SECTION — grows to fill available space */}
+        <div className='flex-1 flex flex-col justify-between mt-2 min-h-0'>
+          <div>
+            {/* Description — clamp to 3 lines */}
             {descriptionPreview && (
-              <p className='mt-2 text-sm sm:text-base text-text-secondary dark:text-text-secondary line-clamp-2 leading-relaxed'>
+              <p className='text-sm text-[#6b7280] dark:text-text-secondary font-light leading-relaxed line-clamp-3 mb-2'>
                 {descriptionPreview}
               </p>
             )}
-          </div>
-        </div>
 
-        {/* Key Information Section (Middle) - Grid Layout */}
-        <div className='mt-4 sm:mt-5 space-y-3'>
-          {/* Metrics Grid */}
-          <div className={`grid ${
-            type === 'event' && participantTarget !== null && participantTarget !== undefined
-              ? 'grid-cols-2'
-              : type === 'event'
-              ? 'grid-cols-2'
-              : ((type === 'local' && acceptApplicationsWG !== false) || type === 'online') && validatedCount !== null
-              ? 'grid-cols-2'
-              : 'grid-cols-2'
-          } gap-1.5`}>
-            {/* XP Reward */}
-            <div className='flex flex-col items-center justify-center px-1.5 py-1.5 bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-800 dark:to-primary-700 rounded-lg border border-primary-300 dark:border-primary-600'>
-              <HiStar className='h-3.5 w-3.5 text-primary-600 dark:text-primary-400 mb-0.5' />
-              <span className='text-sm sm:text-base font-bold text-primary-700 dark:text-primary-200'>{xp_reward}</span>
-              <span className='text-[10px] sm:text-xs text-primary-600 dark:text-primary-300 leading-tight'>{t('points')}</span>
-            </div>
-            {/* Participant Counter - Show for local (when accepting WG) and online */}
+            {/* Skills chips */}
+            {skills?.length > 0 && (
+              <div className='flex flex-wrap items-center gap-1.5 mt-1' aria-label={t('skills')}>
+                {visibleSkills.map((skill, index) => {
+                  const skillId = typeof skill === 'object' && skill !== null 
+                    ? (skill.value || skill.id || skill) 
+                    : skill;
+                  const skillLabel = skillLabelsMap[skillId] || skillId;
+                  return (
+                    <span key={index} className='text-xs font-medium px-2.5 py-1 rounded-full border border-[#e5e7eb] dark:border-border-light bg-[#f9fafb] dark:bg-neutral-800 text-[#3F3F3F] dark:text-text-primary'>
+                      {skillLabel}
+                    </span>
+                  );
+                })}
+                {remainingSkillsCount > 0 && (
+                  <span className='text-xs font-medium px-2.5 py-1 rounded-full border border-[#e5e7eb] dark:border-border-light bg-[#f9fafb] dark:bg-neutral-700 text-[#6b7280] dark:text-text-tertiary'>
+                    +{remainingSkillsCount} more
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Stats row — pinned to bottom of middle section */}
+          <div className='flex items-center gap-4 pt-3 mt-3 flex-wrap'>
+            <span className='flex items-center gap-1.5 text-sm font-semibold text-[#009AA2] dark:text-primary-500'>
+              <HiStar className='w-4 h-4 flex-shrink-0' />
+              {xp_reward} <span className='text-xs font-normal text-[#6b7280] dark:text-text-tertiary'>pts</span>
+            </span>
             {((type === 'local' && acceptApplicationsWG !== false) || type === 'online') && validatedCount !== null && (
-              <div className='flex flex-col items-center justify-center px-1.5 py-1.5 bg-semantic-info-50 dark:bg-semantic-info-900 rounded-lg border border-semantic-info-200 dark:border-semantic-info-700'>
-                <HiUserGroup className='h-3.5 w-3.5 text-semantic-info-600 dark:text-semantic-info-400 mb-0.5' />
-                <span className='text-sm sm:text-base font-bold text-semantic-info-700 dark:text-semantic-info-200'>
-                  {participantTarget ? `${validatedCount}/${participantTarget}` : validatedCount}
-                </span>
-                <span className='text-[10px] sm:text-xs text-semantic-info-600 dark:text-semantic-info-300 leading-tight'>
-                  {participantTarget ? t('participants') : t('validated')}
-                </span>
-              </div>
-            )}
-            {/* People Max - Show for events when participantTarget is set */}
-            {type === 'event' && participantTarget !== null && participantTarget !== undefined && (
-              <div className='flex flex-col items-center justify-center px-1.5 py-1.5 bg-semantic-info-50 dark:bg-semantic-info-900 rounded-lg border border-semantic-info-200 dark:border-semantic-info-700'>
-                <HiUserGroup className='h-3.5 w-3.5 text-semantic-info-600 dark:text-semantic-info-400 mb-0.5' />
-                <span className='text-sm sm:text-base font-bold text-semantic-info-700 dark:text-semantic-info-200'>
-                  {participantTarget}
-                </span>
-                <span className='text-[10px] sm:text-xs text-semantic-info-600 dark:text-semantic-info-300 leading-tight'>
-                  {t('peopleMax')}
-                </span>
-              </div>
-            )}
-            {/* Time Commitment - Show for events if no participant target, or for local/online when no participant counter */}
-            {((type === 'event' && (participantTarget === null || participantTarget === undefined)) || 
-              ((type === 'local' && acceptApplicationsWG === false) || 
-               (type === 'online' && validatedCount === null))) && (
-              timeCommitment ? (
-                <div className='flex flex-col items-center justify-center px-1.5 py-1.5 bg-neutral-50 dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700'>
-                  <HiClock className='h-3.5 w-3.5 text-neutral-600 dark:text-neutral-400 mb-0.5' />
-                  <span className='text-[10px] sm:text-xs font-semibold text-neutral-700 dark:text-neutral-300 text-center leading-tight'>
-                    {timeCommitment}
+              <>
+                <span className='w-px h-4 bg-[#e5e7eb] dark:bg-border-light flex-shrink-0' />
+                <span className='flex items-center gap-1.5 text-sm font-semibold text-[#3F3F3F] dark:text-text-primary'>
+                  <HiUserGroup className='w-4 h-4 flex-shrink-0' />
+                  {participantTarget ? `${validatedCount}/${participantTarget}` : validatedCount}{' '}
+                  <span className='text-xs font-normal text-[#6b7280] dark:text-text-tertiary'>
+                    {participantTarget ? t('participants') : t('validated')}
                   </span>
-                </div>
-              ) : (
-                <div className='flex flex-col items-center justify-center px-1.5 py-1.5 bg-neutral-50 dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700 opacity-50'>
-                  <HiClock className='h-3.5 w-3.5 text-neutral-400 dark:text-neutral-500 mb-0.5' />
-                  <span className='text-[10px] text-neutral-400 dark:text-neutral-500'>N/A</span>
-                </div>
-              )
+                </span>
+              </>
+            )}
+            {type === 'event' && participantTarget !== null && participantTarget !== undefined && (
+              <>
+                <span className='w-px h-4 bg-[#e5e7eb] dark:bg-border-light flex-shrink-0' />
+                <span className='flex items-center gap-1.5 text-sm font-semibold text-[#3F3F3F] dark:text-text-primary'>
+                  <HiUserGroup className='w-4 h-4 flex-shrink-0' />
+                  {participantTarget} <span className='text-xs font-normal text-[#6b7280] dark:text-text-tertiary'>{t('peopleMax')}</span>
+                </span>
+              </>
+            )}
+            {((type === 'event' && (participantTarget === null || participantTarget === undefined)) ||
+              ((type === 'local' && acceptApplicationsWG === false) || (type === 'online' && validatedCount === null))) && (
+              <>
+                <span className='w-px h-4 bg-[#e5e7eb] dark:bg-border-light flex-shrink-0' />
+                <span className='flex items-center gap-1.5 text-sm font-semibold text-[#3F3F3F] dark:text-text-primary'>
+                  <HiClock className='w-4 h-4 flex-shrink-0' />
+                  {timeCommitment || 'N/A'}
+                </span>
+              </>
             )}
           </div>
-
-          {/* Skills with overflow indicator */}
-          {skills?.length > 0 && (
-            <div className='flex flex-wrap items-center gap-1.5' aria-label={t('skills')}>
-              {visibleSkills.map((skill, index) => {
-                // Get skill ID
-                const skillId = typeof skill === 'object' && skill !== null 
-                  ? (skill.value || skill.id || skill) 
-                  : skill;
-                
-                // Get translated label from map, fallback to ID if not found
-                const skillLabel = skillLabelsMap[skillId] || skillId;
-                
-                return (
-                  <span key={index} className='px-2 sm:px-2.5 py-1 text-xs rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 font-medium border border-neutral-200 dark:border-neutral-700'>
-                    {skillLabel}
-                  </span>
-                );
-              })}
-              {remainingSkillsCount > 0 && (
-                <span className='px-2 sm:px-2.5 py-1 text-xs rounded-full bg-neutral-200 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300 font-medium border border-neutral-300 dark:border-neutral-600'>
-                  +{remainingSkillsCount} more
-                </span>
-              )}
-            </div>
-          )}
         </div>
 
-        {/* Footer Section (Bottom) */}
-        <div className='mt-4 sm:mt-5 pt-3 sm:pt-4 border-t border-border-light dark:border-border-dark'>
+        {/* FOOTER SECTION — fixed, does not grow */}
+        <div className='mt-3 pt-3 border-t border-[#f0f0f0] dark:border-border-light'>
           <div className='flex flex-col space-y-2'>
             <div className='flex items-center justify-between gap-2'>
               {/* SDG Icon on the left */}

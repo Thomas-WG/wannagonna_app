@@ -174,7 +174,7 @@ const ActivitiesSection = memo(function ActivitiesSection({
               'No activities found. Start applying to activities to see them here!'}
         </p>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 items-stretch">
           {sortedActivities.map((activity) => {
             const applicationData = showApplications
               ? applicationsWithActivities.find((app) => app.id === activity.applicationId)
