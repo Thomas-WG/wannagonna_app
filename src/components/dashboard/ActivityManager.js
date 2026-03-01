@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback, memo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Select } from 'flowbite-react';
+import SortBySelect from '@/components/common/SortBySelect';
 import { useTranslations } from 'next-intl';
 import dynamic from 'next/dynamic';
 import {
@@ -356,7 +356,7 @@ const ActivityManager = memo(function ActivityManager({
 
   return (
     <div className="mt-6 sm:mt-10">
-      <h2 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 px-1 text-text-primary dark:text-text-primary">
+      <h2 className="section-title text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 px-1 text-text-primary dark:text-text-primary">
         {t('yourActivities')}
       </h2>
 
@@ -376,24 +376,20 @@ const ActivityManager = memo(function ActivityManager({
           {tActivities('of')} <span className="font-semibold">{activities.length}</span>{' '}
           {tActivities('activities')}
         </div>
-        <div className="flex items-center gap-2">
-          <label className="text-sm font-medium text-text-primary dark:text-text-primary">
-            {tActivities('sortBy')}
-          </label>
-          <Select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            className="w-full sm:w-auto bg-background-card dark:bg-background-card text-text-primary dark:text-text-primary border-border-light dark:border-border-dark"
-          >
-            <option value="newest">{tActivities('sortNewest')}</option>
-            <option value="oldest">{tActivities('sortOldest')}</option>
-            <option value="xp_high">{tActivities('sortXpHigh')}</option>
-            <option value="xp_low">{tActivities('sortXpLow')}</option>
-            <option value="applicants_high">{tActivities('sortApplicantsHigh')}</option>
-            <option value="applicants_low">{tActivities('sortApplicantsLow')}</option>
-            <option value="alphabetical">{tActivities('sortAlphabetical')}</option>
-          </Select>
-        </div>
+        <SortBySelect
+          label={tActivities('sortBy')}
+          value={sortBy}
+          onChange={setSortBy}
+          options={[
+            { value: 'newest', label: tActivities('sortNewest') },
+            { value: 'oldest', label: tActivities('sortOldest') },
+            { value: 'xp_high', label: tActivities('sortXpHigh') },
+            { value: 'xp_low', label: tActivities('sortXpLow') },
+            { value: 'applicants_high', label: tActivities('sortApplicantsHigh') },
+            { value: 'applicants_low', label: tActivities('sortApplicantsLow') },
+            { value: 'alphabetical', label: tActivities('sortAlphabetical') },
+          ]}
+        />
       </div>
 
       {/* Activity List */}

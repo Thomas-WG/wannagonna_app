@@ -439,7 +439,7 @@ export default function CreateUpdateActivityPage() {
       <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8'>
         {/* Header Section */}
         <div className='mb-6 sm:mb-8'>
-          <h1 className='text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white text-center mb-2'>
+          <h1 className='page-title text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white text-center mb-2'>
             {isEditMode ? t('update-activity') : t('create-activity')}
           </h1>
           <p className='text-sm sm:text-base text-gray-600 dark:text-gray-400 text-center'>

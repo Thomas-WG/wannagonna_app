@@ -321,7 +321,7 @@ export default function LoginPage() {
 
   // Render the login UI
   return (
-    <div className="min-h-dvh flex flex-col items-center justify-center bg-background-page dark:bg-background-page">
+    <div className="min-h-dvh flex flex-col items-center justify-center">
       <LanguageSelector 
         options={languageOptions} 
         onChangeLocale={handleLanguageChange}
@@ -373,7 +373,7 @@ export default function LoginPage() {
 
         {activeTab === 'login' && (
           <>
-            <h2 className="text-2xl font-semibold text-center mb-6 text-text-primary dark:text-text-primary">
+            <h2 className="page-title text-2xl font-semibold text-center mb-6 text-text-primary dark:text-text-primary">
               {t('login')}
             </h2>
 
@@ -459,7 +459,7 @@ export default function LoginPage() {
 
         {activeTab === 'create' && (
           <>
-            <h2 className="text-2xl font-semibold text-center mb-6 text-text-primary dark:text-text-primary">
+            <h2 className="page-title text-2xl font-semibold text-center mb-6 text-text-primary dark:text-text-primary">
               {t('createtitle')}
             </h2>
 

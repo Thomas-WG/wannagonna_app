@@ -201,7 +201,7 @@ export default function AdminImpactParametersPage() {
       <div className="max-w-5xl mx-auto px-4 py-6 sm:py-8 space-y-6 sm:space-y-8">
         <BackButton href="/admin" />
         <div className="mt-4">
-          <h1 className="text-xl sm:text-2xl font-bold text-text-primary dark:text-text-primary mb-2">
+          <h1 className="page-title text-xl sm:text-2xl font-bold text-text-primary dark:text-text-primary mb-2">
             {t('impactParameters') || 'Impact Parameters'}
           </h1>
           <p className="text-sm text-text-secondary dark:text-text-secondary">

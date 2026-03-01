@@ -73,7 +73,7 @@ export default function BadgesPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8 bg-background-page dark:bg-background-page min-h-dvh">
+      <div className="container mx-auto px-4 py-8 min-h-dvh">
         <div className="flex justify-center items-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500 dark:border-primary-400"></div>
         </div>
@@ -88,12 +88,12 @@ export default function BadgesPage() {
   const totalBadges = Object.values(badgesByCategory).reduce((sum, badges) => sum + badges.length, 0);
 
   return (
-    <div className="container mx-auto px-4 py-6 sm:py-8 bg-background-page dark:bg-background-page min-h-dvh">
+    <div className="container mx-auto px-4 py-6 sm:py-8 min-h-dvh">
       {/* Header Section */}
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-4">
           <HiBadgeCheck className="w-8 h-8 sm:w-10 sm:h-10 text-primary-500 dark:text-primary-400" />
-          <h1 className="text-3xl sm:text-4xl font-bold text-text-primary dark:text-text-primary">Badges</h1>
+          <h1 className="page-title text-3xl sm:text-4xl font-bold text-text-primary dark:text-text-primary">Badges</h1>
         </div>
         
         {/* Introduction */}

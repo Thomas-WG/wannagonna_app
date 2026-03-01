@@ -97,7 +97,7 @@ export default function NPOImpactPage() {
     <div className="min-h-screen bg-background-primary dark:bg-background-primary">
       <div className="max-w-4xl mx-auto px-4 py-6 sm:py-8">
         <BackButton href="/mynonprofit" />
-        <h1 className="text-xl sm:text-2xl font-bold text-text-primary dark:text-text-primary mt-4 mb-2">
+        <h1 className="page-title text-xl sm:text-2xl font-bold text-text-primary dark:text-text-primary mt-4 mb-2">
           {t('impactDashboard') || 'Impact'}
         </h1>
         <p className="text-sm text-text-secondary dark:text-text-secondary mb-6">

@@ -55,7 +55,7 @@ const ApplicationsSection = memo(function ApplicationsSection({
 
   return (
     <div className="mb-6 sm:mb-10">
-      <h2 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 px-1">
+      <h2 className="section-title text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 px-1">
         {t('myApplications') || 'My Applications'}
       </h2>
       <p className="text-sm text-gray-600 mb-4 px-1">
