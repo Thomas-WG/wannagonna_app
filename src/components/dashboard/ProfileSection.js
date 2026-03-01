@@ -55,7 +55,7 @@ const ProfileSection = memo(function ProfileSection({
 
   return (
     <div className="mb-6 sm:mb-8">
-      <Card className="bg-background-card dark:bg-background-card border-2 border-primary-200 dark:border-primary-700 shadow-lg">
+      <Card className="bg-background-card dark:bg-background-card border border-border-light dark:border-border-dark shadow-lg">
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
           {/* Profile Picture */}
           <ProfilePicture
