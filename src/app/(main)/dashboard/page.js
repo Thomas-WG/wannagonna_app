@@ -11,6 +11,8 @@ import { updateApplicationStatus } from '@/utils/crudApplications';
 import { useDashboardStore } from '@/stores/dashboardStore';
 import { useDashboardData } from '@/hooks/dashboard/useDashboardData';
 import { useValidationResult } from '@/hooks/dashboard/useValidationResult';
+import { usePublicProfileBadges } from '@/hooks/profile/usePublicProfileBadges';
+import { useBadgeImageUrls } from '@/hooks/badges/useBadgeImageUrls';
 import ProfileSection from '@/components/dashboard/ProfileSection';
 import StatsSection from '@/components/dashboard/StatsSection';
 import ActivitiesSection from '@/components/dashboard/ActivitiesSection';
@@ -79,6 +81,18 @@ export default function DashboardPage() {
   } = useDashboardData(user?.uid);
 
   const impactSummary = profileData?.impactSummary;
+
+  // Fetch badges once for both ProfileSection and BadgeList
+  const { data: userBadges = [], isLoading: badgesLoading } = usePublicProfileBadges(user?.uid);
+  const { badgeImageUrls } = useBadgeImageUrls(userBadges);
+  const enrichedBadges = useMemo(
+    () =>
+      userBadges.map((b) => ({
+        ...b,
+        imageUrl: badgeImageUrls[b.id] ?? null,
+      })),
+    [userBadges, badgeImageUrls]
+  );
 
   const { data: globalParams = [] } = useQuery({
     queryKey: ['impactGlobalParametersForDashboard'],
@@ -244,6 +258,7 @@ export default function DashboardPage() {
           profileData={profileData}
           gamificationData={gamificationData}
           user={user}
+          badges={enrichedBadges}
           onCopyCodeSuccess={handleCopyCodeSuccess}
           onCopyCodeError={handleCopyCodeError}
         />
@@ -338,11 +353,11 @@ export default function DashboardPage() {
 
       {/* Badges Section */}
       <DashboardErrorBoundary>
-        <div className="mb-6 sm:mb-10">
+        <div id="badges" className="mb-6 sm:mb-10">
           <h2 className="section-title text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 px-1">
             {t('yourBadges') || 'Your Badges'}
           </h2>
-          <BadgeList userId={user?.uid} />
+          <BadgeList userId={user?.uid} badges={enrichedBadges} badgesLoading={badgesLoading} />
         </div>
       </DashboardErrorBoundary>
 
