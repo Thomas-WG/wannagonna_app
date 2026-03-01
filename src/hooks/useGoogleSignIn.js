@@ -79,6 +79,12 @@ export function useGoogleSignIn() {
           code: userCode, // Add generated code
           referredBy: referralCode.toUpperCase().trim(), // Store who referred them
           xp: 0, // Initialize XP to 0
+          impactSummary: {
+            totalHours: 0,
+            totalActivities: 0,
+            parameters: {},
+            parameterMeta: {},
+          },
           timeCommitment: {
             daily: false,
             weekly: false,

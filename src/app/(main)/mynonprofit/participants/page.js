@@ -368,6 +368,7 @@ export default function ParticipantsPage() {
                 </Table.HeadCell>
                 <Table.HeadCell>{t('participant') ?? 'Participant'}</Table.HeadCell>
                 <Table.HeadCell>{t('activityTypes') ?? 'Activity types'}</Table.HeadCell>
+                <Table.HeadCell>{t('hours') ?? 'Hours'}</Table.HeadCell>
                 <Table.HeadCell>{t('firstParticipation') ?? 'First participation'}</Table.HeadCell>
                 <Table.HeadCell>{t('lastParticipation') ?? 'Last participation'}</Table.HeadCell>
                 <Table.HeadCell className="w-32">{t('actions') ?? 'Actions'}</Table.HeadCell>
@@ -425,6 +426,9 @@ export default function ParticipantsPage() {
                           </Badge>
                         )}
                       </div>
+                    </Table.Cell>
+                    <Table.Cell className="text-text-secondary dark:text-text-secondary text-sm whitespace-nowrap">
+                      {(p.totalHours ?? 0).toFixed(1)} h
                     </Table.Cell>
                     <Table.Cell className="text-text-secondary dark:text-text-secondary text-sm whitespace-nowrap">
                       {formatDate(p.createdAt)}
@@ -502,7 +506,7 @@ export default function ParticipantsPage() {
                     )}
                   </div>
                   <p className="text-xs text-text-tertiary dark:text-text-tertiary mt-1">
-                    {t('firstParticipation')}: {formatDate(p.createdAt)} · {t('lastParticipation')}: {formatDate(p.lastValidatedAt)}
+                    {(t('hours') ?? 'Hours')}: {(p.totalHours ?? 0).toFixed(1)} h · {t('firstParticipation')}: {formatDate(p.createdAt)} · {t('lastParticipation')}: {formatDate(p.lastValidatedAt)}
                   </p>
                 </div>
                 <Button

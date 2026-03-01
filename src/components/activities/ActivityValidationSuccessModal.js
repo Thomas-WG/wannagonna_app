@@ -17,6 +17,7 @@ import { fetchBadgeDetailsByIds, findBadgeById, getBadgeImageUrl } from '@/utils
  * @param {number} props.xpBreakdown.totalXP - Total XP earned
  * @param {number} props.xpBreakdown.activityXP - XP from activity itself
  * @param {Object} props.xpBreakdown.badgeXPMap - Map of badge ID to XP value
+ * @param {string} [props.activityId] - Activity ID
  */
 export default function ActivityValidationSuccessModal({ 
   show, 
@@ -25,7 +26,8 @@ export default function ActivityValidationSuccessModal({
   badges = [],
   badgeIds = [],
   activityTitle = '',
-  xpBreakdown = null
+  xpBreakdown = null,
+  activityId = '',
 }) {
   const [isAnimating, setIsAnimating] = useState(false);
   const [badgeDetails, setBadgeDetails] = useState([]);
@@ -339,7 +341,7 @@ export default function ActivityValidationSuccessModal({
           {/* Continue button */}
           <button
             onClick={handleClose}
-            className="mt-4 px-6 py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg font-semibold hover:from-green-600 hover:to-emerald-600 transition-all transform hover:scale-105 shadow-lg"
+            className="mt-4 px-6 py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg font-semibold hover:from-green-600 hover:to-emerald-600 transition-all transform hover:scale-105 shadow-lg min-h-[44px] touch-manipulation"
           >
             Awesome!
           </button>

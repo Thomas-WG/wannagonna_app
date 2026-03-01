@@ -6,7 +6,7 @@ import { Toast } from 'flowbite-react';
 import { HiQrcode } from 'react-icons/hi';
 import { useAuth } from '@/utils/auth/AuthContext';
 import { useTranslations } from 'next-intl';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { updateApplicationStatus } from '@/utils/crudApplications';
 import { useDashboardStore } from '@/stores/dashboardStore';
 import { useDashboardData } from '@/hooks/dashboard/useDashboardData';
@@ -18,9 +18,12 @@ import ApplicationsSection from '@/components/dashboard/ApplicationsSection';
 import DashboardModals from '@/components/dashboard/DashboardModals';
 import DashboardErrorBoundary from '@/components/dashboard/DashboardErrorBoundary';
 import BadgeList from '@/components/badges/BadgeList';
+import { Card } from 'flowbite-react';
+import { getGlobalParameters } from '@/utils/impactParameterService';
 
 export default function DashboardPage() {
   const t = useTranslations('Dashboard');
+  const tProfile = useTranslations('PublicProfile');
   const router = useRouter();
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -74,6 +77,24 @@ export default function DashboardPage() {
     isLoading,
     refetchAll,
   } = useDashboardData(user?.uid);
+
+  const impactSummary = profileData?.impactSummary;
+
+  const { data: globalParams = [] } = useQuery({
+    queryKey: ['impactGlobalParametersForDashboard'],
+    queryFn: getGlobalParameters,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const globalParamMeta = useMemo(() => {
+    const map = {};
+    globalParams.forEach((p) => {
+      if (p?.id) {
+        map[p.id] = p;
+      }
+    });
+    return map;
+  }, [globalParams]);
 
   // Available categories for filters
   const availableCategories = useMemo(() => {
@@ -232,6 +253,54 @@ export default function DashboardPage() {
       <DashboardErrorBoundary>
         <StatsSection stats={stats} />
       </DashboardErrorBoundary>
+
+      {/* Impact summary for member (total hours + activities + parameters) */}
+      {impactSummary && (
+        <div className="mb-6 sm:mb-8">
+          <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 px-1 text-text-primary dark:text-text-primary">
+            {tProfile('impact') || 'Impact'}
+          </h2>
+          <Card className="p-4 sm:p-5 bg-background-card dark:bg-background-card border-border-light dark:border-border-dark">
+            <div className="grid grid-cols-2 gap-4 mb-3">
+              <div>
+                <p className="text-xs text-text-tertiary dark:text-text-tertiary">
+                  {tProfile('totalHours') || 'Hours contributed'}
+                </p>
+                <p className="text-xl font-bold text-text-primary dark:text-text-primary">
+                  {(impactSummary.totalHours ?? 0).toFixed(1)}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-text-tertiary dark:text-text-tertiary">
+                  {tProfile('activitiesCompleted') || 'Activities completed'}
+                </p>
+                <p className="text-xl font-bold text-text-primary dark:text-text-primary">
+                  {impactSummary.totalActivities ?? 0}
+                </p>
+              </div>
+            </div>
+            {impactSummary.parameters && Object.keys(impactSummary.parameters).length > 0 && (
+              <ul className="space-y-1 text-sm border-t border-gray-200 dark:border-gray-700 pt-3">
+                {Object.entries(impactSummary.parameters).map(([paramId, value]) => {
+                  const metaFromSummary = impactSummary.parameterMeta?.[paramId] || {};
+                  const meta = { ...globalParamMeta[paramId], ...metaFromSummary };
+                  const label = meta.label || paramId;
+                  const unit = meta.unit ? ` ${meta.unit}` : '';
+                  return (
+                    <li key={paramId} className="flex justify-between">
+                      <span className="text-text-primary dark:text-text-primary">{label}</span>
+                      <span className="text-text-secondary dark:text-text-secondary">
+                        {Number(value).toLocaleString()}
+                        {unit}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </Card>
+        </div>
+      )}
 
       {/* Activities Section */}
       <DashboardErrorBoundary>

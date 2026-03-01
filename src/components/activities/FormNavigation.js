@@ -2,8 +2,9 @@ import { Button } from 'flowbite-react';
 import { HiOutlineArrowLeft, HiOutlineArrowRight } from "react-icons/hi";
 import { useTranslations } from 'use-intl';
 
-export default function FormNavigation({ currentStep, prevStep, nextStep, formData, isEditMode, handleSubmit }) {
+export default function FormNavigation({ currentStep, prevStep, nextStep, formData, isEditMode, handleSubmit, maxStep: maxStepProp }) {
   const t = useTranslations('ManageActivities');
+  const maxStep = maxStepProp != null ? maxStepProp : 3;
 
   // Check if external link is required but missing
   const externalLink = formData.externalPlatformLink || formData.activity_url || '';
@@ -37,7 +38,8 @@ export default function FormNavigation({ currentStep, prevStep, nextStep, formDa
   const canProceed =
     (currentStep === 1 && formData.category) ||
     (currentStep === 2 && step2Base && step2DateTime) ||
-    (currentStep === 3 && formData.sdg);
+    (currentStep === 3 && formData.sdg) ||
+    (currentStep === 4 && true);
 
 
 
@@ -67,7 +69,7 @@ export default function FormNavigation({ currentStep, prevStep, nextStep, formDa
         
         {/* Right side - Next/Submit Button */}
         <div className="flex items-center">
-          {currentStep < 3 ? (
+          {currentStep < maxStep ? (
             <Button 
               type='button' 
               onClick={nextStep} 

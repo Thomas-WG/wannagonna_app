@@ -160,6 +160,34 @@ service cloud.firestore {
         // Delete: Only admins can delete validations
         allow delete: if isAdmin();
       }
+
+      // Participations subcollection (impact: hours, status, check-in/out)
+      // hours.validated is authoritative for impact/XP — only NPO staff/admin may set it
+      match /participations/{userId} {
+        allow read: if isAuthenticated();
+
+        // Create: owner (self-report), NPO staff/ambassador for activity's org, or admin
+        // Enforce validated==0 on create to prevent pre-inflated hours
+        allow create: if isAuthenticated() && (
+          isOwner(userId) ||
+          isAdmin() ||
+          ((isNpoStaff() || isAmbassador()) && get(/databases/$(database)/documents/activities/$(activityId)).data.organizationId == request.auth.token.npoId)
+        ) && (
+          !('hours' in request.resource.data) ||
+          !('validated' in request.resource.data.hours) ||
+          request.resource.data.hours.validated == 0
+        );
+
+        // Update: owner may only change hours.reported (not validated); NPO staff/ambassador/admin may set validated
+        allow update: if isAuthenticated() && (
+          (isOwner(userId) &&
+            request.resource.data.get('hours', {}).get('validated', 0) == resource.data.get('hours', {}).get('validated', 0)) ||
+          isAdmin() ||
+          ((isNpoStaff() || isAmbassador()) && get(/databases/$(database)/documents/activities/$(activityId)).data.organizationId == request.auth.token.npoId)
+        );
+
+        allow delete: if isAdmin();
+      }
     }
     
     // ============================================
@@ -208,6 +236,14 @@ service cloud.firestore {
         allow delete: if isAuthenticated() && (
           isAdmin() || 
           (isNpoStaff() && request.auth.token.npoId == organizationId)
+        );
+      }
+
+      // Custom impact parameters (NPO-defined)
+      match /customParameters/{parameterId} {
+        allow read: if isAuthenticated();
+        allow create, update, delete: if isAuthenticated() && (
+          isAdmin() || (isNpoStaff() && request.auth.token.npoId == organizationId)
         );
       }
 
@@ -322,6 +358,14 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
     
+    // ============================================
+    // IMPACT PARAMETERS (global, admin-managed)
+    // ============================================
+    match /impactParameters/{parameterId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isAdmin();
+    }
+
     // ============================================
     // REWARD ERRORS COLLECTION (Cloud Functions Only)
     // ============================================

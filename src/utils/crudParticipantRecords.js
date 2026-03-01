@@ -63,6 +63,7 @@ export async function fetchParticipantRecords(organizationId, options = {}) {
         event: !!data.event,
         createdAt: data.createdAt ?? null,
         lastValidatedAt: data.lastValidatedAt ?? null,
+        totalHours: data.totalHours ?? 0,
       };
     });
     const lastDoc = records.length > 0 ? docs[records.length - 1] : null;
