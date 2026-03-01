@@ -367,9 +367,9 @@ export default function ActivityCard({
               <Image
                 src={organization_logo}
                 alt={`${organization_name} logo`}
-                width={36}
-                height={36}
-                className='w-9 h-9 rounded-full flex-shrink-0 object-cover'
+                width={44}
+                height={44}
+                className='w-11 h-11 rounded-full flex-shrink-0 object-cover'
               />
               <span className='text-xs text-[#9ca3af] dark:text-text-tertiary font-normal truncate' aria-label={organization_name}>{organization_name}</span>
             </div>
@@ -437,41 +437,40 @@ export default function ActivityCard({
           <h3 className='text-lg font-bold text-[#1A1A1A] dark:text-text-primary leading-snug line-clamp-2 mt-2'>{title}</h3>
         </div>
 
-        {/* MIDDLE SECTION — grows to fill available space */}
-        <div className='flex-1 flex flex-col justify-between mt-2 min-h-0'>
-          <div>
-            {/* Description — clamp to 3 lines */}
-            {descriptionPreview && (
-              <p className='text-sm text-[#6b7280] dark:text-text-secondary font-light leading-relaxed line-clamp-3 mb-2'>
-                {descriptionPreview}
-              </p>
-            )}
+        {/* DESCRIPTION — natural height, no flex-grow */}
+        {descriptionPreview && (
+          <p className='text-sm text-[#6b7280] dark:text-text-secondary font-light leading-relaxed line-clamp-3 mt-1.5 min-h-[2.5rem]'>
+            {descriptionPreview}
+          </p>
+        )}
 
-            {/* Skills chips */}
-            {skills?.length > 0 && (
-              <div className='flex flex-wrap items-center gap-1.5 mt-1' aria-label={t('skills')}>
-                {visibleSkills.map((skill, index) => {
-                  const skillId = typeof skill === 'object' && skill !== null 
-                    ? (skill.value || skill.id || skill) 
-                    : skill;
-                  const skillLabel = skillLabelsMap[skillId] || skillId;
-                  return (
-                    <span key={index} className='text-xs font-medium px-2.5 py-1 rounded-full border border-[#e5e7eb] dark:border-border-light bg-[#f9fafb] dark:bg-neutral-800 text-[#3F3F3F] dark:text-text-primary'>
-                      {skillLabel}
-                    </span>
-                  );
-                })}
-                {remainingSkillsCount > 0 && (
-                  <span className='text-xs font-medium px-2.5 py-1 rounded-full border border-[#e5e7eb] dark:border-border-light bg-[#f9fafb] dark:bg-neutral-700 text-[#6b7280] dark:text-text-tertiary'>
-                    +{remainingSkillsCount} more
-                  </span>
-                )}
-              </div>
+        {/* SKILLS — only if present, sits directly below description */}
+        {skills?.length > 0 && (
+          <div className='flex flex-wrap items-center gap-1.5 mt-2' aria-label={t('skills')}>
+            {visibleSkills.map((skill, index) => {
+              const skillId = typeof skill === 'object' && skill !== null 
+                ? (skill.value || skill.id || skill) 
+                : skill;
+              const skillLabel = skillLabelsMap[skillId] || skillId;
+              return (
+                <span key={index} className='text-xs font-medium px-2.5 py-1 rounded-full border border-[#e5e7eb] dark:border-border-light bg-[#f9fafb] dark:bg-neutral-800 text-[#3F3F3F] dark:text-text-primary'>
+                  {skillLabel}
+                </span>
+              );
+            })}
+            {remainingSkillsCount > 0 && (
+              <span className='text-xs font-medium px-2.5 py-1 rounded-full border border-[#e5e7eb] dark:border-border-light bg-[#f9fafb] dark:bg-neutral-700 text-[#6b7280] dark:text-text-tertiary'>
+                +{remainingSkillsCount} more
+              </span>
             )}
           </div>
+        )}
 
-          {/* Stats row — pinned to bottom of middle section */}
-          <div className='flex items-center gap-4 pt-3 mt-3 flex-wrap'>
+        {/* SPACER — the only growing element, absorbs empty space */}
+        <div className='flex-1 min-h-[1rem]' />
+
+        {/* STATS ROW — pinned just above footer */}
+        <div className='flex items-center gap-4 pb-3 flex-wrap'>
             <span className='flex items-center gap-1.5 text-sm font-semibold text-[#009AA2] dark:text-primary-500'>
               <HiStar className='w-4 h-4 flex-shrink-0' />
               {xp_reward} <span className='text-xs font-normal text-[#6b7280] dark:text-text-tertiary'>pts</span>
@@ -481,9 +480,11 @@ export default function ActivityCard({
                 <span className='w-px h-4 bg-[#e5e7eb] dark:bg-border-light flex-shrink-0' />
                 <span className='flex items-center gap-1.5 text-sm font-semibold text-[#3F3F3F] dark:text-text-primary'>
                   <HiUserGroup className='w-4 h-4 flex-shrink-0' />
-                  {participantTarget ? `${validatedCount}/${participantTarget}` : validatedCount}{' '}
+                  {participantTarget != null && participantTarget > 0
+                    ? `${validatedCount}/${participantTarget}`
+                    : validatedCount}{' '}
                   <span className='text-xs font-normal text-[#6b7280] dark:text-text-tertiary'>
-                    {participantTarget ? t('participants') : t('validated')}
+                    {participantTarget != null && participantTarget > 0 ? t('participants') : t('validated')}
                   </span>
                 </span>
               </>
@@ -508,10 +509,9 @@ export default function ActivityCard({
               </>
             )}
           </div>
-        </div>
 
-        {/* FOOTER SECTION — fixed, does not grow */}
-        <div className='mt-3 pt-3 border-t border-[#f0f0f0] dark:border-border-light'>
+        {/* FOOTER — always at bottom */}
+        <div className='border-t border-[#f0f0f0] dark:border-border-light pt-3'>
           <div className='flex flex-col space-y-2'>
             <div className='flex items-center justify-between gap-2'>
               {/* SDG Icon on the left */}
