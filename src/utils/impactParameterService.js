@@ -3,8 +3,12 @@
  * @module impactParameterService
  */
 
-import { collection, doc, getDocs, getDoc, addDoc, updateDoc, query, where, Timestamp } from 'firebase/firestore';
+import { collection, doc, getDocs, addDoc, updateDoc, query, where, Timestamp } from 'firebase/firestore';
 import { db } from 'firebaseConfig';
+
+/**
+ * @typedef {'output'|'reach'|'duration'|'environmental_output'|'organizational_capacity'} MeasurementTypeId
+ */
 
 /**
  * @typedef {Object} ImpactParameter
@@ -12,6 +16,7 @@ import { db } from 'firebaseConfig';
  * @property {string} label
  * @property {string} unit
  * @property {string} category
+ * @property {MeasurementTypeId} [measurementType]
  * @property {number[]} [sdg]
  * @property {boolean} isActive
  * @property {boolean} [isEstimated]
@@ -88,19 +93,22 @@ export async function getAllParametersForNpo(orgId) {
 /**
  * Create a custom parameter for an organization.
  * @param {string} orgId
- * @param {{ label: string, unit: string, category: string }} data
+ * @param {{ label: string, unit: string, category: string, measurementType?: MeasurementTypeId, sdg?: number[] }} data
  * @returns {Promise<string>} New parameter document id
  */
 export async function createCustomParameter(orgId, data) {
   const col = collection(db, 'organizations', orgId, 'customParameters');
-  const docRef = await addDoc(col, {
+  const docData = {
     label: data.label,
     unit: data.unit,
     category: data.category,
     isActive: true,
     scope: 'npo',
     createdAt: Timestamp.now()
-  });
+  };
+  if (data.measurementType) docData.measurementType = data.measurementType;
+  if (Array.isArray(data.sdg)) docData.sdg = data.sdg;
+  const docRef = await addDoc(col, docData);
   return docRef.id;
 }
 
@@ -118,7 +126,7 @@ export async function toggleCustomParameter(orgId, parameterId, isActive) {
 /**
  * Update a global parameter (admin only). Used by admin UI.
  * @param {string} parameterId
- * @param {Partial<Pick<ImpactParameter, 'label'|'unit'|'category'|'isActive'|'isEstimated'|'sdg'>>} data
+ * @param {Partial<Pick<ImpactParameter, 'label'|'unit'|'category'|'measurementType'|'isActive'|'isEstimated'|'sdg'>>} data
  */
 export async function updateGlobalParameter(parameterId, data) {
   const ref = doc(db, 'impactParameters', parameterId);
@@ -127,12 +135,12 @@ export async function updateGlobalParameter(parameterId, data) {
 
 /**
  * Create a global parameter (admin only).
- * @param {{ label: string, unit: string, category: string, isActive?: boolean, isEstimated?: boolean, sdg?: number[] }} data
+ * @param {{ label: string, unit: string, category: string, measurementType?: MeasurementTypeId, isActive?: boolean, isEstimated?: boolean, sdg?: number[] }} data
  * @returns {Promise<string>}
  */
 export async function createGlobalParameter(data) {
   const col = collection(db, 'impactParameters');
-  const docRef = await addDoc(col, {
+  const docData = {
     label: data.label,
     unit: data.unit,
     category: data.category,
@@ -141,7 +149,9 @@ export async function createGlobalParameter(data) {
     isEstimated: data.isEstimated === true,
     scope: 'global',
     createdAt: Timestamp.now()
-  });
+  };
+  if (data.measurementType) docData.measurementType = data.measurementType;
+  const docRef = await addDoc(col, docData);
   return docRef.id;
 }
 
@@ -149,9 +159,64 @@ export async function createGlobalParameter(data) {
  * Update a custom parameter (NPO or admin).
  * @param {string} orgId
  * @param {string} parameterId
- * @param {{ label?: string, unit?: string, category?: string, isActive?: boolean }} data
+ * @param {{ label?: string, unit?: string, category?: string, measurementType?: MeasurementTypeId, isActive?: boolean, sdg?: number[] }} data
  */
 export async function updateCustomParameter(orgId, parameterId, data) {
   const ref = doc(db, 'organizations', orgId, 'customParameters', parameterId);
   await updateDoc(ref, data);
+}
+
+/**
+ * Seed or update global parameters from predefined seed data.
+ * Idempotent: uses seedKey to find existing params and update; creates if not found.
+ * Admin only.
+ * @returns {Promise<{ created: number, updated: number }>}
+ */
+export async function seedGlobalParameters() {
+  const { GLOBAL_PARAMETERS_SEED } = await import('@/constant/globalParametersSeed');
+  const existing = await getAllGlobalParameters();
+  const bySeedKey = new Map();
+  const byLabel = new Map();
+  existing.forEach((p) => {
+    if (p.seedKey) bySeedKey.set(p.seedKey, p);
+    if (p.label) byLabel.set(p.label.trim().toLowerCase(), p);
+  });
+
+  let created = 0;
+  let updated = 0;
+  const col = collection(db, 'impactParameters');
+
+  for (const item of GLOBAL_PARAMETERS_SEED) {
+    const data = {
+      label: item.label,
+      unit: item.unit,
+      category: item.category,
+      measurementType: item.measurementType,
+      sdg: item.sdg || [],
+      seedKey: item.seedKey,
+      isActive: true,
+      scope: 'global',
+    };
+
+    let existingParam = bySeedKey.get(item.seedKey) || byLabel.get(item.label.trim().toLowerCase());
+    if (existingParam) {
+      await updateDoc(doc(db, 'impactParameters', existingParam.id), {
+        label: data.label,
+        unit: data.unit,
+        category: data.category,
+        measurementType: data.measurementType,
+        sdg: data.sdg,
+        seedKey: item.seedKey,
+      });
+      updated++;
+    } else {
+      await addDoc(col, {
+        ...data,
+        createdAt: Timestamp.now(),
+      });
+      created++;
+    }
+  }
+
+  return { created, updated };
 }
