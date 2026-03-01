@@ -25,10 +25,10 @@ export async function addContactSubmission({ name, email, message }) {
 
 /**
  * Add an email to the waitlist (landing page - unauthenticated).
- * @param {{ email: string }} data
+ * @param {{ email: string, audienceType?: 'volunteer' | 'npo' }} data
  * @returns {Promise<string>} New document ID
  */
-export async function addWaitlistEntry({ email }) {
+export async function addWaitlistEntry({ email, audienceType }) {
   if (!email || !email.trim()) throw new Error('Email is required');
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email.trim())) throw new Error('Invalid email address');
@@ -36,6 +36,7 @@ export async function addWaitlistEntry({ email }) {
   const col = collection(db, 'waitlist');
   const docRef = await addDoc(col, {
     email: email.trim().toLowerCase(),
+    audienceType: audienceType || 'volunteer',
     createdAt: Timestamp.now(),
   });
   return docRef.id;

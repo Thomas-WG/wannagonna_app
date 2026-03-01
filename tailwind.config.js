@@ -52,6 +52,8 @@ module.exports = {
       },
       fontFamily: {
         sans: designTokens.typography.fontFamily.primary,
+        'montserrat-alt': ['var(--font-montserrat-alt)', 'sans-serif'],
+        'dm-sans': ['var(--font-dm-sans)', 'sans-serif'],
       },
       fontSize: designTokens.typography.fontSize,
       fontWeight: designTokens.typography.fontWeight,
