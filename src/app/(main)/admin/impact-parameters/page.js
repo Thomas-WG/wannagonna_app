@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { Card, Button, Spinner, Label, TextInput, Select, Toast } from 'flowbite-react';
-import { HiCheck, HiX } from 'react-icons/hi';
+import { Card, Button, Spinner, Label, TextInput, Select, Toast, Tooltip } from 'flowbite-react';
+import { HiCheck, HiX, HiInformationCircle } from 'react-icons/hi';
 import BackButton from '@/components/layout/BackButton';
 import {
   getAllGlobalParameters,
@@ -12,8 +12,10 @@ import {
   getNpoCustomParameters,
   updateCustomParameter,
   groupImpactParametersByCategory,
+  seedGlobalParameters,
 } from '@/utils/impactParameterService';
 import { fetchOrganizations } from '@/utils/crudOrganizations';
+import { MEASUREMENT_TYPES } from '@/constant/measurementTypes';
 
 const CATEGORIES = [
   'people',
@@ -26,12 +28,18 @@ const CATEGORIES = [
   'housing',
   'livelihoods',
   'culture',
+  'digital',
+  'communication',
+  'consulting',
 ];
 
-const UNITS = ['kg', 'count', 'hours', 'm²', 'liters', 'meters'];
+const UNITS = ['kg', 'count', 'hours', 'm²', 'liters', 'meters', 'm2'];
+
+const SDG_NUMBERS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17];
 
 export default function AdminImpactParametersPage() {
   const t = useTranslations('MyNonProfit');
+  const tExport = useTranslations('impact_export');
   const [globalParams, setGlobalParams] = useState([]);
   const [organizations, setOrganizations] = useState([]);
   const [selectedOrgId, setSelectedOrgId] = useState('');
@@ -39,8 +47,9 @@ export default function AdminImpactParametersPage() {
   const [loading, setLoading] = useState(true);
   const [loadingOrgParams, setLoadingOrgParams] = useState(false);
   const [editingGlobal, setEditingGlobal] = useState(null);
-  const [globalForm, setGlobalForm] = useState({ label: '', unit: 'count', category: 'people', isActive: true });
+  const [globalForm, setGlobalForm] = useState({ label: '', unit: 'count', category: 'people', measurementType: 'output', sdg: [], isActive: true });
   const [creatingGlobal, setCreatingGlobal] = useState(false);
+  const [seeding, setSeeding] = useState(false);
   const [toast, setToast] = useState({ show: false, type: 'success', message: '' });
 
   const showToast = useCallback((type, message) => {
@@ -100,13 +109,26 @@ export default function AdminImpactParametersPage() {
       label: param.label || '',
       unit: param.unit || 'count',
       category: param.category || 'people',
+      measurementType: param.measurementType || 'output',
+      sdg: Array.isArray(param.sdg) ? [...param.sdg] : [],
       isActive: param.isActive !== false,
     });
   };
 
   const resetGlobalForm = () => {
     setEditingGlobal(null);
-    setGlobalForm({ label: '', unit: 'count', category: 'people', isActive: true });
+    setGlobalForm({ label: '', unit: 'count', category: 'people', measurementType: 'output', sdg: [], isActive: true });
+  };
+
+  const toggleSdg = (num) => {
+    setGlobalForm((prev) => {
+      const next = [...(prev.sdg || [])];
+      const idx = next.indexOf(num);
+      if (idx >= 0) next.splice(idx, 1);
+      else next.push(num);
+      next.sort((a, b) => a - b);
+      return { ...prev, sdg: next };
+    });
   };
 
   const handleSaveGlobal = async (e) => {
@@ -119,6 +141,8 @@ export default function AdminImpactParametersPage() {
           label: globalForm.label.trim(),
           unit: globalForm.unit,
           category: globalForm.category,
+          measurementType: globalForm.measurementType,
+          sdg: globalForm.sdg,
           isActive: globalForm.isActive,
         });
         showToast('success', t('impactParameterActivated') || 'Parameter updated');
@@ -127,6 +151,8 @@ export default function AdminImpactParametersPage() {
           label: globalForm.label.trim(),
           unit: globalForm.unit,
           category: globalForm.category,
+          measurementType: globalForm.measurementType,
+          sdg: globalForm.sdg,
           isActive: globalForm.isActive,
         });
         showToast('success', t('impactParameterCreated') || 'Parameter created');
@@ -139,6 +165,21 @@ export default function AdminImpactParametersPage() {
       showToast('error', t('impactParameterError') || 'Failed to save global parameter');
     } finally {
       setCreatingGlobal(false);
+    }
+  };
+
+  const handleSeedGlobalParams = async () => {
+    try {
+      setSeeding(true);
+      const { created, updated } = await seedGlobalParameters();
+      const updatedList = await getAllGlobalParameters();
+      setGlobalParams(updatedList || []);
+      showToast('success', `Seeded: ${created} created, ${updated} updated`);
+    } catch (err) {
+      console.error('Error seeding global parameters:', err);
+      showToast('error', 'Failed to seed global parameters');
+    } finally {
+      setSeeding(false);
     }
   };
 
@@ -176,9 +217,19 @@ export default function AdminImpactParametersPage() {
           <>
             {/* Global parameters management */}
             <section className="space-y-4">
-              <h2 className="text-lg sm:text-xl font-semibold text-text-primary dark:text-text-primary">
-                Global parameters
-              </h2>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <h2 className="text-lg sm:text-xl font-semibold text-text-primary dark:text-text-primary">
+                  Global parameters
+                </h2>
+                <Button
+                  color="gray"
+                  onClick={handleSeedGlobalParams}
+                  disabled={seeding}
+                  className="min-h-[44px] w-full sm:w-auto"
+                >
+                  {seeding ? <Spinner size="sm" /> : 'Seed global parameters'}
+                </Button>
+              </div>
               <Card className="p-4 sm:p-5">
                 <form onSubmit={handleSaveGlobal} className="space-y-3 sm:space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 sm:gap-4">
@@ -224,6 +275,49 @@ export default function AdminImpactParametersPage() {
                           </option>
                         ))}
                       </Select>
+                    </div>
+                    <div className="space-y-1 sm:col-span-2">
+                      <div className="flex items-center gap-2">
+                        <Label htmlFor="global-measurementType">{tExport('measurementType.label')}</Label>
+                        <Tooltip content={tExport('measurementType.tooltip')}>
+                          <HiInformationCircle className="h-4 w-4 text-text-tertiary cursor-help" />
+                        </Tooltip>
+                      </div>
+                      <Select
+                        id="global-measurementType"
+                        value={globalForm.measurementType}
+                        onChange={(e) =>
+                          setGlobalForm((prev) => ({ ...prev, measurementType: e.target.value }))
+                        }
+                      >
+                        {MEASUREMENT_TYPES.map((mt) => (
+                          <option key={mt.id} value={mt.id}>
+                            {tExport(mt.labelKey)}
+                          </option>
+                        ))}
+                      </Select>
+                    </div>
+                    <div className="space-y-1 sm:col-span-2">
+                      <Label>SDGs</Label>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {SDG_NUMBERS.map((num) => {
+                          const checked = (globalForm.sdg || []).includes(num);
+                          return (
+                            <label
+                              key={num}
+                              className="inline-flex items-center gap-1.5 cursor-pointer text-sm"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                onChange={() => toggleSdg(num)}
+                                className="rounded border-gray-300"
+                              />
+                              <span>SDG {num}</span>
+                            </label>
+                          );
+                        })}
+                      </div>
                     </div>
                     <div className="space-y-1">
                       <Label htmlFor="global-active">{t('active') || 'Active'}</Label>
@@ -292,7 +386,9 @@ export default function AdminImpactParametersPage() {
                                     {p.label}
                                   </span>
                                   <span className="text-text-tertiary dark:text-text-tertiary ml-2">
-                                    {p.unit} · {p.isActive ? (t('active') || 'Active') : (t('inactive') || 'Inactive')}
+                                    {p.unit}
+                                    {p.measurementType && ` · ${tExport(`measurementType.${p.measurementType}`)}`}
+                                    {' · '}{p.isActive ? (t('active') || 'Active') : (t('inactive') || 'Inactive')}
                                   </span>
                                 </div>
                                 <Button
@@ -359,6 +455,7 @@ export default function AdminImpactParametersPage() {
                           </div>
                           <div className="text-text-tertiary dark:text-text-tertiary">
                             {p.unit} · {p.category}
+                            {p.measurementType && ` · ${tExport(`measurementType.${p.measurementType}`)}`}
                           </div>
                           <div className="text-xs">
                             <span

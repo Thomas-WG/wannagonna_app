@@ -10,11 +10,11 @@ import {
   toggleCustomParameter,
   groupImpactParametersByCategory,
 } from '@/utils/impactParameterService';
-import { Card, Button, Modal, Spinner, Toast, Label, TextInput, Select } from 'flowbite-react';
-import { HiPlus, HiCheck, HiX } from 'react-icons/hi';
+import { Card, Button, Modal, Spinner, Toast, Label, TextInput, Select, Tooltip } from 'flowbite-react';
+import { HiPlus, HiCheck, HiX, HiInformationCircle } from 'react-icons/hi';
 import { useTranslations } from 'next-intl';
 import BackButton from '@/components/layout/BackButton';
-
+import { MEASUREMENT_TYPES, suggestMeasurementTypeFromUnit } from '@/constant/measurementTypes';
 const IMPACT_CATEGORIES = [
   'people',
   'food',
@@ -26,12 +26,16 @@ const IMPACT_CATEGORIES = [
   'housing',
   'livelihoods',
   'culture',
+  'digital',
+  'communication',
+  'consulting',
 ];
 
-const UNITS = ['kg', 'count', 'hours', 'm²', 'liters', 'meters'];
+const UNITS = ['kg', 'count', 'hours', 'm²', 'liters', 'meters', 'm2'];
 
 export default function ImpactParametersPage() {
   const t = useTranslations('MyNonProfit');
+  const tExport = useTranslations('impact_export');
   const { claims } = useAuth();
   const queryClient = useQueryClient();
   const orgId = claims?.npoId;
@@ -40,7 +44,7 @@ export default function ImpactParametersPage() {
   const [customParams, setCustomParams] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [addForm, setAddForm] = useState({ label: '', unit: 'count', category: 'people' });
+  const [addForm, setAddForm] = useState({ label: '', unit: 'count', category: 'people', measurementType: 'output' });
   const [submitting, setSubmitting] = useState(false);
   const [toast, setToast] = useState({ show: false, type: '', message: '' });
 
@@ -84,10 +88,11 @@ export default function ImpactParametersPage() {
         label: addForm.label.trim(),
         unit: addForm.unit,
         category: addForm.category,
+        measurementType: addForm.measurementType,
       });
       queryClient.invalidateQueries({ queryKey: ['impactCustomParameters', orgId] });
       setShowAddModal(false);
-      setAddForm({ label: '', unit: 'count', category: 'people' });
+      setAddForm({ label: '', unit: 'count', category: 'people', measurementType: 'output' });
       showToast('success', t('impactParameterCreated') || 'Parameter created');
     } catch (err) {
       console.error(err);
@@ -193,6 +198,9 @@ export default function ImpactParametersPage() {
                         </span>
                         <span className="text-text-tertiary dark:text-text-tertiary text-sm ml-2">
                           {p.unit} · {p.category}
+                          {p.measurementType && (
+                            <span className="ml-1 text-xs"> · {tExport(`measurementType.${p.measurementType}`)}</span>
+                          )}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
@@ -248,7 +256,14 @@ export default function ImpactParametersPage() {
               <Select
                 id="impact-unit"
                 value={addForm.unit}
-                onChange={(e) => setAddForm((prev) => ({ ...prev, unit: e.target.value }))}
+                onChange={(e) => {
+                  const unit = e.target.value;
+                  setAddForm((prev) => ({
+                    ...prev,
+                    unit,
+                    measurementType: suggestMeasurementTypeFromUnit(unit),
+                  }));
+                }}
               >
                 {UNITS.map((u) => (
                   <option key={u} value={u}>{u}</option>
@@ -264,6 +279,25 @@ export default function ImpactParametersPage() {
               >
                 {IMPACT_CATEGORIES.map((c) => (
                   <option key={c} value={c}>{c}</option>
+                ))}
+              </Select>
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="impact-measurementType">{tExport('measurementType.label')}</Label>
+                <Tooltip content={tExport('measurementType.tooltip')}>
+                  <HiInformationCircle className="h-4 w-4 text-text-tertiary cursor-help" />
+                </Tooltip>
+              </div>
+              <Select
+                id="impact-measurementType"
+                value={addForm.measurementType}
+                onChange={(e) => setAddForm((prev) => ({ ...prev, measurementType: e.target.value }))}
+              >
+                {MEASUREMENT_TYPES.map((mt) => (
+                  <option key={mt.id} value={mt.id}>
+                    {tExport(mt.labelKey)}
+                  </option>
                 ))}
               </Select>
             </div>

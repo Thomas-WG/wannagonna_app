@@ -5,12 +5,13 @@ import { useQuery } from '@tanstack/react-query';
 import { getAllParametersForNpo, groupImpactParametersByCategory } from '@/utils/impactParameterService';
 import { Card, Label, TextInput, Spinner, Checkbox } from 'flowbite-react';
 import { useTranslations } from 'next-intl';
+import { suggestMeasurementTypeFromUnit } from '@/constant/measurementTypes';
 
 /**
  * Returns selected impact parameters with optional target values.
  * @param {string} orgId
- * @param {Array<{ parameterId: string, scope: string, label: string, unit: string, category?: string, targetValue?: number|null }>} initialSelected
- * @param {(params: Array<{ parameterId: string, scope: string, label: string, unit: string, category: string, targetValue?: number|null }>) => void} onChange
+ * @param {Array<{ parameterId: string, scope: string, label: string, unit: string, category?: string, measurementType?: string, targetValue?: number|null }>} initialSelected
+ * @param {(params: Array<{ parameterId: string, scope: string, label: string, unit: string, category: string, measurementType?: string, targetValue?: number|null }>) => void} onChange
  */
 export default function ActivityImpactParametersStep({ orgId, initialSelected = [], onChange }) {
   const t = useTranslations('ManageActivities');
@@ -34,6 +35,7 @@ export default function ActivityImpactParametersStep({ orgId, initialSelected = 
       label: p.label,
       unit: p.unit,
       category: p.category ?? '',
+      measurementType: p.measurementType || null,
       targetValue: p.targetValue ?? null,
     }));
     onChange?.(arr);
@@ -43,6 +45,7 @@ export default function ActivityImpactParametersStep({ orgId, initialSelected = 
     setSelected((prev) => {
       const next = new Map(prev);
       if (checked) {
+        const measurementType = p.measurementType || suggestMeasurementTypeFromUnit(p.unit);
         next.set(p.id, {
           id: p.id,
           parameterId: p.id,
@@ -50,6 +53,7 @@ export default function ActivityImpactParametersStep({ orgId, initialSelected = 
           label: p.label,
           unit: p.unit,
           category: p.category ?? '',
+          measurementType: measurementType || null,
           targetValue: null,
         });
       } else {
