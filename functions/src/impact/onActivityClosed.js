@@ -157,14 +157,12 @@ async function processActivityClosed(
   const hoursByUser = {};
   let totalHours = 0;
   for (const p of participations) {
-    const validatedRaw = Number(p.hours?.validated);
-    const reportedRaw = Number(p.hours?.reported);
+    const hours = p.hours || {};
+    const validatedExplicitlySet = "validated" in hours;
     let effective = 0;
 
-    if (validatedRaw > 0) {
-      effective = validatedRaw;
-    } else if (reportedRaw > 0) {
-      effective = reportedRaw;
+    if (validatedExplicitlySet) {
+      effective = Number(hours.validated) || 0;
     } else if (durationHours && p.status === "validated") {
       effective = durationHours;
     }

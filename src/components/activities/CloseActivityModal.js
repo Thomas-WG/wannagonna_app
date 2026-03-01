@@ -56,6 +56,24 @@ export default function CloseActivityModal({ isOpen, onClose, activity, onSucces
   const [parameterValues, setParameterValues] = useState({});
   const [hoursPerParticipant, setHoursPerParticipant] = useState({});
 
+  // Sync fullActivity when activity prop changes (e.g. switching activities without unmounting).
+  // For events, fetchData returns early so fullActivity would otherwise stay stale.
+  useEffect(() => {
+    if (activity) {
+      setFullActivity(activity);
+    }
+  }, [activity?.id, activity?.type]);
+
+  // Reset modal state when switching to a different activity
+  useEffect(() => {
+    if (activity?.id) {
+      setValidatedParticipations([]);
+      setParameterValues({});
+      setHoursPerParticipant({});
+      setShowConfirm(false);
+    }
+  }, [activity?.id]);
+
   const isEvent = fullActivity?.type === 'event';
   const isLocalOrEvent = fullActivity?.type === 'local' || fullActivity?.type === 'event';
   const impactParameters = fullActivity?.impactParameters || [];

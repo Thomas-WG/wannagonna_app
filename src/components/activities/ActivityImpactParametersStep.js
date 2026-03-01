@@ -9,8 +9,8 @@ import { useTranslations } from 'next-intl';
 /**
  * Returns selected impact parameters with optional target values.
  * @param {string} orgId
- * @param {Array<{ parameterId: string, scope: string, label: string, unit: string, targetValue?: number|null }>} initialSelected
- * @param {(params: Array<{ parameterId: string, scope: string, label: string, unit: string, targetValue?: number|null }>) => void} onChange
+ * @param {Array<{ parameterId: string, scope: string, label: string, unit: string, category?: string, targetValue?: number|null }>} initialSelected
+ * @param {(params: Array<{ parameterId: string, scope: string, label: string, unit: string, category: string, targetValue?: number|null }>) => void} onChange
  */
 export default function ActivityImpactParametersStep({ orgId, initialSelected = [], onChange }) {
   const t = useTranslations('ManageActivities');
@@ -33,6 +33,7 @@ export default function ActivityImpactParametersStep({ orgId, initialSelected = 
       scope: p.scope,
       label: p.label,
       unit: p.unit,
+      category: p.category ?? '',
       targetValue: p.targetValue ?? null,
     }));
     onChange?.(arr);
@@ -48,6 +49,7 @@ export default function ActivityImpactParametersStep({ orgId, initialSelected = 
           scope: p.scope,
           label: p.label,
           unit: p.unit,
+          category: p.category ?? '',
           targetValue: null,
         });
       } else {
