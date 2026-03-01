@@ -1,16 +1,20 @@
 'use client';
 
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/utils/auth/AuthContext';
 import { fetchOrganizationById } from '@/utils/crudOrganizations';
-import { Card, Spinner } from 'flowbite-react';
-import { useTranslations } from 'next-intl';
+import { Card, Spinner, Button, Label, TextInput } from 'flowbite-react';
+import { useTranslations, useLocale } from 'next-intl';
 import BackButton from '@/components/layout/BackButton';
-import { HiChartBar, HiClock, HiCollection } from 'react-icons/hi';
+import { HiChartBar, HiClock, HiCollection, HiDownload } from 'react-icons/hi';
 import { getAllParametersForNpo } from '@/utils/impactParameterService';
+import { exportImpactReport } from '@/utils/impactExportService';
 
 export default function NPOImpactPage() {
   const t = useTranslations('MyNonProfit');
+  const tExport = useTranslations('impact_export');
+  const locale = useLocale();
   const { claims } = useAuth();
   const orgId = claims?.npoId;
 
@@ -40,6 +44,54 @@ export default function NPOImpactPage() {
     }
     return acc;
   }, {});
+
+  const [exportStartDate, setExportStartDate] = useState('');
+  const [exportEndDate, setExportEndDate] = useState('');
+  const [exportState, setExportState] = useState('idle'); // idle | loading | success | error | zero
+  const [downloadUrl, setDownloadUrl] = useState('');
+  const [downloadFilename, setDownloadFilename] = useState('');
+
+  const handleExport = async () => {
+    if (!exportStartDate || !exportEndDate) return;
+    setExportState('loading');
+    setDownloadUrl('');
+    try {
+      const result = await exportImpactReport({
+        startDate: exportStartDate,
+        endDate: exportEndDate,
+        locale,
+      });
+      if (result.success && result.base64 && result.filename) {
+        const blob = new Blob(
+          [Uint8Array.from(atob(result.base64), (c) => c.charCodeAt(0))],
+          { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
+        );
+        const url = URL.createObjectURL(blob);
+        setDownloadUrl(url);
+        setDownloadFilename(result.filename);
+        setExportState('success');
+      } else if (result.error === 'zeroActivities') {
+        setExportState('zero');
+      } else {
+        setExportState('error');
+      }
+    } catch {
+      setExportState('error');
+    }
+  };
+
+  const handleDownload = () => {
+    if (!downloadUrl || !downloadFilename) return;
+    const a = document.createElement('a');
+    a.href = downloadUrl;
+    a.download = downloadFilename;
+    a.click();
+    URL.revokeObjectURL(downloadUrl);
+    setDownloadUrl('');
+    setExportState('idle');
+  };
+
+  const canExport = exportStartDate && exportEndDate && exportState !== 'loading';
 
   return (
     <div className="min-h-screen bg-background-primary dark:bg-background-primary">
@@ -124,6 +176,71 @@ export default function NPOImpactPage() {
                 {t('noImpactDataYet') || 'No impact data yet. Close activities to see metrics here.'}
               </Card>
             )}
+
+            {/* Export Impact Report */}
+            <Card className="p-4 sm:p-5">
+              <h2 className="text-lg font-semibold text-text-primary dark:text-text-primary mb-3 flex items-center gap-2">
+                <HiDownload className="h-5 w-5" />
+                {tExport('exportButton')}
+              </h2>
+              <p className="text-sm text-text-secondary dark:text-text-secondary mb-4">
+                {tExport('dateRangeTooltip')}
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 sm:items-end">
+                <div className="flex-1 min-w-0">
+                  <Label htmlFor="export-start" className="text-xs">{tExport('reportingPeriod')}</Label>
+                  <div className="flex gap-2 mt-1">
+                    <TextInput
+                      id="export-start"
+                      type="date"
+                      value={exportStartDate}
+                      onChange={(e) => setExportStartDate(e.target.value)}
+                      className="flex-1 min-w-0"
+                    />
+                    <span className="self-center text-text-tertiary">–</span>
+                    <TextInput
+                      id="export-end"
+                      type="date"
+                      value={exportEndDate}
+                      onChange={(e) => setExportEndDate(e.target.value)}
+                      className="flex-1 min-w-0"
+                    />
+                  </div>
+                </div>
+                <Button
+                  onClick={handleExport}
+                  disabled={!canExport}
+                  className="w-full sm:w-auto min-h-[44px] min-w-[160px]"
+                >
+                  {exportState === 'loading' ? (
+                    <>
+                      <Spinner size="sm" className="mr-2" />
+                      {tExport('generating')}
+                    </>
+                  ) : (
+                    tExport('exportButton')
+                  )}
+                </Button>
+              </div>
+              {exportState === 'success' && (
+                <div className="mt-4 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                  <Button color="success" size="sm" onClick={handleDownload} className="min-h-[44px]">
+                    <HiDownload className="mr-2 h-4 w-4" />
+                    {tExport('downloadExcel')}
+                  </Button>
+                </div>
+              )}
+              {exportState === 'error' && (
+                <p className="mt-4 text-sm text-red-600 dark:text-red-400">
+                  {tExport('errorGeneric')}
+                </p>
+              )}
+              {exportState === 'zero' && (
+                <p className="mt-4 text-sm text-amber-600 dark:text-amber-400">
+                  {tExport('zeroActivities')}
+                </p>
+              )}
+            </Card>
           </div>
         )}
       </div>

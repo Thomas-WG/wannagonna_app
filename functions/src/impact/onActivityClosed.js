@@ -89,19 +89,20 @@ async function processActivityClosed(
     const activityDoc = await activityRef.get();
     const current = activityDoc?.data();
     if (current?.impactResults?.lastAggregation) {
-      console.log("[onActivityClosed] Event already processed, skipping:", activityId);
+      console.log("[onActivityClosed] Event already processed, skipping:",
+          activityId);
       return;
     }
     await activityRef.update({
       "impactResults.totalHours": 0,
-      "impactResults.lastAggregation": { event: true },
+      "impactResults.lastAggregation": {event: true},
     });
     console.log("[onActivityClosed] Event closed (no impact):", activityId);
     return;
   }
 
   // Idempotency: skip if already processed (prevents double-count)
-  // Re-read from Firestore; event snapshot is stale on retry (same event data replayed)
+  // Re-read from Firestore; event snapshot is stale on retry.
   const activityDoc = await db.collection("activities").doc(activityId).get();
   const currentActivity = activityDoc?.data();
   if (currentActivity?.impactResults?.lastAggregation) {
@@ -109,38 +110,39 @@ async function processActivityClosed(
     return;
   }
 
+  const actsRef = db.collection("activities").doc(activityId);
   const [participationsSnap, validationsSnap] = await Promise.all([
-    db.collection("activities").doc(activityId).collection("participations").get(),
-    db.collection("activities").doc(activityId).collection("validations").get(),
+    actsRef.collection("participations").get(),
+    actsRef.collection("validations").get(),
   ]);
 
   const rejectedUserIds = new Set(
-    validationsSnap.docs
-      .map((d) => d.data())
-      .filter((v) => v.status === "rejected")
-      .map((v) => v.userId)
-      .filter(Boolean),
+      validationsSnap.docs
+          .map((d) => d.data())
+          .filter((v) => v.status === "rejected")
+          .map((v) => v.userId)
+          .filter(Boolean),
   );
 
   // Users with validated status — only these earn impact (participations are
   // created on acceptance; pending/rejected users must not get impact or XP).
   const validatedUserIds = new Set(
-    validationsSnap.docs
-      .map((d) => d.data())
-      .filter((v) => v.status === "validated")
-      .map((v) => v.userId)
-      .filter(Boolean),
+      validationsSnap.docs
+          .map((d) => d.data())
+          .filter((v) => v.status === "validated")
+          .map((v) => v.userId)
+          .filter(Boolean),
   );
 
   // Users already rewarded via processActivityValidationRewards (on validation)
   const alreadyRewardedUserIds = validatedUserIds;
 
-  // Participations from Firestore (may be empty for QR-only users before our client-side fix)
+  // Participations from Firestore (may be empty for QR-only users)
   const participationDocs = participationsSnap.docs
-    .map((d) => ({id: d.id, ...d.data()}))
-    .filter((p) =>
-      !rejectedUserIds.has(p.id) && validatedUserIds.has(p.id),
-    );
+      .map((d) => ({id: d.id, ...d.data()}))
+      .filter((p) =>
+        !rejectedUserIds.has(p.id) && validatedUserIds.has(p.id),
+      );
 
   // Include validated users who have no participation doc (QR-only, walk-ins).
   // Use durationHours for local/event, otherwise 0.
@@ -154,9 +156,10 @@ async function processActivityClosed(
     if (p) {
       participations.push(p);
     } else {
-      // No participation doc — QR-only user. Use duration or 0.
-      const effective = (activity.type === "local" || activity.type === "event") &&
-        durationHours ? durationHours : 0;
+      // No participation doc — QR-only user. Use duration or 0 for local/event.
+      const isLocalOrEvent =
+          activity.type === "local" || activity.type === "event";
+      const effective = isLocalOrEvent && durationHours ? durationHours : 0;
       participations.push({
         id: uid,
         status: "validated",
@@ -225,7 +228,7 @@ async function processActivityClosed(
   };
 
   // Perform org and member updates first. Write lastAggregation (idempotency
-  // guard) only after all succeed, so retries can recover from partial failures.
+  // guard) only after all succeed so retries can recover from partial failures.
   const orgRef = db.collection("organizations").doc(organizationId);
   const orgUpdates = {
     "impactSummary.totalHours": FieldValue.increment(totalHours),
@@ -233,9 +236,10 @@ async function processActivityClosed(
   };
   for (const [paramId, value] of Object.entries(parameters)) {
     const num = Number(value) || 0;
-    orgUpdates["impactSummary.parameters." + paramId] = FieldValue.increment(num);
+    orgUpdates["impactSummary.parameters." + paramId] =
+        FieldValue.increment(num);
     orgUpdates["impactSummary.parameterMeta." + paramId] =
-      activityParamMeta[paramId] || {label: paramId};
+        activityParamMeta[paramId] || {label: paramId};
   }
   const batch2 = db.batch();
   batch2.update(orgRef, orgUpdates);
@@ -249,72 +253,72 @@ async function processActivityClosed(
   let xpAwardedCount = 0;
   if (participations.length > 0) {
     for (let i = 0; i < participations.length; i += BATCH_SIZE) {
-    const chunk = participations.slice(i, i + BATCH_SIZE);
-    const batch = db.batch();
+      const chunk = participations.slice(i, i + BATCH_SIZE);
+      const batch = db.batch();
 
-    for (let j = 0; j < chunk.length; j++) {
-      const p = chunk[j];
-      const userId = p.id;
-      const validatedHours = Number(hoursByUser[userId]) || 0;
+      for (let j = 0; j < chunk.length; j++) {
+        const p = chunk[j];
+        const userId = p.id;
+        const validatedHours = Number(hoursByUser[userId]) || 0;
 
-      const userRef = db.collection("members").doc(userId);
-      const memberUpdates = {
-        "impactSummary.totalHours": FieldValue.increment(validatedHours),
-        "impactSummary.totalActivities": FieldValue.increment(1),
-      };
-      // Skip XP for users already rewarded by processActivityValidationRewards
-      if (!alreadyRewardedUserIds.has(userId)) {
-        memberUpdates.xp = FieldValue.increment(activityXP);
-        xpAwardedCount++;
-      }
-      for (const [paramId, value] of Object.entries(parameters)) {
-        const num = Number(value) || 0;
-        memberUpdates["impactSummary.parameters." + paramId] =
-          FieldValue.increment(num);
-        memberUpdates["impactSummary.parameterMeta." + paramId] =
-          activityParamMeta[paramId] || {label: paramId};
-      }
-      batch.update(userRef, memberUpdates);
-
-      const participationRef = db.collection("activities").doc(activityId)
-          .collection("participations").doc(userId);
-      batch.update(participationRef, {xpAwarded: activityXP});
-
-      // Accumulate in participant_record
-      if (validatedHours > 0) {
-        const participantRecordRef = db
-            .collection("organizations")
-            .doc(organizationId)
-            .collection("participant_records")
-            .doc(userId);
-        const prUpdates = {
-          userId,
-          totalHours: FieldValue.increment(validatedHours),
-          totalActivities: FieldValue.increment(1),
-          lastValidatedAt: closedAt,
+        const userRef = db.collection("members").doc(userId);
+        const memberUpdates = {
+          "impactSummary.totalHours": FieldValue.increment(validatedHours),
+          "impactSummary.totalActivities": FieldValue.increment(1),
         };
-        for (const [paramId, value] of Object.entries(parameters)) {
-          const key = "parameters." + paramId;
-          prUpdates[key] = FieldValue.increment(Number(value) || 0);
+        // Skip XP for users already rewarded on validation
+        if (!alreadyRewardedUserIds.has(userId)) {
+          memberUpdates.xp = FieldValue.increment(activityXP);
+          xpAwardedCount++;
         }
-        batch.set(participantRecordRef, prUpdates, {merge: true});
+        for (const [paramId, value] of Object.entries(parameters)) {
+          const num = Number(value) || 0;
+          memberUpdates["impactSummary.parameters." + paramId] =
+              FieldValue.increment(num);
+          memberUpdates["impactSummary.parameterMeta." + paramId] =
+          activityParamMeta[paramId] || {label: paramId};
+        }
+        batch.update(userRef, memberUpdates);
+
+        const participationRef = db.collection("activities").doc(activityId)
+            .collection("participations").doc(userId);
+        batch.update(participationRef, {xpAwarded: activityXP});
+
+        // Accumulate in participant_record
+        if (validatedHours > 0) {
+          const participantRecordRef = db
+              .collection("organizations")
+              .doc(organizationId)
+              .collection("participant_records")
+              .doc(userId);
+          const prUpdates = {
+            userId,
+            totalHours: FieldValue.increment(validatedHours),
+            totalActivities: FieldValue.increment(1),
+            lastValidatedAt: closedAt,
+          };
+          for (const [paramId, value] of Object.entries(parameters)) {
+            const key = "parameters." + paramId;
+            prUpdates[key] = FieldValue.increment(Number(value) || 0);
+          }
+          batch.set(participantRecordRef, prUpdates, {merge: true});
+        }
+
+        // Skip xpHistory for users already rewarded on validation
+        if (!alreadyRewardedUserIds.has(userId) && activityXP > 0) {
+          const xpHistoryRef = userRef.collection("xpHistory");
+          batch.set(xpHistoryRef.doc(), {
+            title: `Activity: ${activityTitle}`,
+            points: activityXP,
+            type: "activity",
+            activityId,
+            timestamp: FieldValue.serverTimestamp(),
+          });
+        }
       }
 
-      // Skip xpHistory for users already rewarded by processActivityValidationRewards
-      if (!alreadyRewardedUserIds.has(userId) && activityXP > 0) {
-        const xpHistoryRef = userRef.collection("xpHistory");
-        batch.set(xpHistoryRef.doc(), {
-          title: `Activity: ${activityTitle}`,
-          points: activityXP,
-          type: "activity",
-          activityId,
-          timestamp: FieldValue.serverTimestamp(),
-        });
-      }
-    }
-
-    await batch.commit();
-    processed += chunk.length;
+      await batch.commit();
+      processed += chunk.length;
     }
   }
 
