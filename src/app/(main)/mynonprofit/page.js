@@ -129,13 +129,15 @@ export default function MyNonProfitDashboard() {
     [modalManager, handleStatusChange, showToastMessage, t]
   );
 
-  // Handle validation modal close: if shouldCloseActivity, open CloseActivityModal instead of closing directly
+  // Handle validation modal close: if shouldCloseActivity, open CloseActivityModal instead of closing
+  // Do NOT call closeModal first — it clears selectedActivity and can prevent the close modal from showing
   const handleValidationModalClose = useCallback(
     (shouldCloseActivity, activityFromModal) => {
-      modalManager.closeModal();
       if (shouldCloseActivity && (modalManager.selectedActivity || activityFromModal)) {
         const activity = modalManager.selectedActivity || activityFromModal;
         modalManager.openModal('activity-close', { activity });
+      } else {
+        modalManager.closeModal();
       }
     },
     [modalManager]

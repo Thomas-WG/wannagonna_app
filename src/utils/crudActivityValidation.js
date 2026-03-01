@@ -2,6 +2,7 @@ import { collection, getDocs, addDoc, getDoc, doc, query, where, Timestamp, upda
 import { db } from 'firebaseConfig';
 import { fetchActivityById } from './crudActivities';
 import { createOrUpdateApplicationAsAccepted, updateApplicationStatus } from './crudApplications';
+import { createOrUpdateParticipation } from './participationService';
 
 /**
  * Check if user has already validated this activity
@@ -200,6 +201,18 @@ export async function validateActivityByQR(userId, activityId, token) {
     // Record validation immediately - Cloud Function trigger will process rewards in background
     // This is the critical operation that must complete before showing success
     await recordValidation(userId, activityId, token);
+
+    // Ensure participation exists for QR-validated users (needed for close flow & onActivityClosed).
+    // If they had a pending application, updateApplicationStatus below will create/update it.
+    // If they have no application (walk-in), we create it here.
+    try {
+      await createOrUpdateParticipation(activityId, userId, {
+        status: 'validated',
+        hours: { reported: 0, validated: 0, reportedAt: null, validatedAt: null },
+      });
+    } catch (partErr) {
+      console.warn('Error ensuring participation for QR validation (non-blocking):', partErr);
+    }
 
     // If the user already has a pending application for this activity, automatically
     // accept it and add an automatic NPO response. This is the ONLY place we add
