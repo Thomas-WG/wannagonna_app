@@ -135,11 +135,35 @@ async function processActivityClosed(
   // Users already rewarded via processActivityValidationRewards (on validation)
   const alreadyRewardedUserIds = validatedUserIds;
 
-  const participations = participationsSnap.docs
+  // Participations from Firestore (may be empty for QR-only users before our client-side fix)
+  const participationDocs = participationsSnap.docs
     .map((d) => ({id: d.id, ...d.data()}))
     .filter((p) =>
       !rejectedUserIds.has(p.id) && validatedUserIds.has(p.id),
     );
+
+  // Include validated users who have no participation doc (QR-only, walk-ins).
+  // Use durationHours for local/event, otherwise 0.
+  const partByUser = new Map();
+  participationDocs.forEach((p) => partByUser.set(p.id, p));
+  const durationHours = getActivityDurationHours(activity);
+  const participations = [];
+  for (const uid of validatedUserIds) {
+    if (rejectedUserIds.has(uid)) continue;
+    const p = partByUser.get(uid);
+    if (p) {
+      participations.push(p);
+    } else {
+      // No participation doc — QR-only user. Use duration or 0.
+      const effective = (activity.type === "local" || activity.type === "event") &&
+        durationHours ? durationHours : 0;
+      participations.push({
+        id: uid,
+        status: "validated",
+        hours: {validated: effective, reported: 0},
+      });
+    }
+  }
 
   // Build parameter meta map from the activity's configured impact parameters
   // so we can persist human-readable labels/units alongside summaries.
@@ -157,8 +181,6 @@ async function processActivityClosed(
       };
     }
   }
-
-  const durationHours = getActivityDurationHours(activity);
 
   const hoursByUser = {};
   let totalHours = 0;
