@@ -1,12 +1,16 @@
 'use client';
 
-import { Modal } from 'flowbite-react';
+import { useMemo } from 'react';
+import { Modal, Card } from 'flowbite-react';
 import { HiX, HiUser } from 'react-icons/hi';
 import { useTranslations } from 'next-intl';
 import { useModal } from '@/utils/modal/useModal';
 import { usePublicProfile } from '@/hooks/profile/usePublicProfile';
 import { usePublicProfileBadges } from '@/hooks/profile/usePublicProfileBadges';
 import { usePublicProfileActivities } from '@/hooks/profile/usePublicProfileActivities';
+import { useBadgeImageUrls } from '@/hooks/badges/useBadgeImageUrls';
+import { useQuery } from '@tanstack/react-query';
+import { getGlobalParameters } from '@/utils/impactParameterService';
 import PublicProfileSkeleton from './PublicProfileSkeleton';
 import ProfileHeaderSection from './ProfileHeaderSection';
 import AboutSection from './AboutSection';
@@ -32,6 +36,16 @@ export default function PublicProfileModal({ isOpen, onClose, userId, isOwnProfi
     isLoading: isLoadingBadges 
   } = usePublicProfileBadges(userId);
 
+  const { badgeImageUrls } = useBadgeImageUrls(badges);
+  const enrichedBadges = useMemo(
+    () =>
+      badges.map((b) => ({
+        ...b,
+        imageUrl: badgeImageUrls[b.id] ?? null,
+      })),
+    [badges, badgeImageUrls]
+  );
+
   const { 
     data: completedActivities = [], 
     isLoading: isLoadingActivities 
@@ -44,6 +58,19 @@ export default function PublicProfileModal({ isOpen, onClose, userId, isOwnProfi
   // Extract profile and translated skills from profileData
   const profile = profileData?.profile || null;
   const translatedSkills = profileData?.translatedSkills || [];
+
+  const { data: globalParams = [] } = useQuery({
+    queryKey: ['impactGlobalParametersForPublicProfile'],
+    queryFn: getGlobalParameters,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const globalParamMeta = globalParams.reduce((acc, p) => {
+    if (p?.id) {
+      acc[p.id] = p;
+    }
+    return acc;
+  }, {});
 
   return (
     <Modal show={isOpen} onClose={onClose} size="5xl" className="z-50">
@@ -68,7 +95,11 @@ export default function PublicProfileModal({ isOpen, onClose, userId, isOwnProfi
         ) : (
           <div className="space-y-4 md:space-y-6 w-full max-w-full overflow-x-hidden">
             {/* Header Section */}
-            <ProfileHeaderSection profileData={profile} />
+            <ProfileHeaderSection
+              profileData={profile}
+              badges={enrichedBadges}
+              activitiesCount={completedActivities?.length}
+            />
 
             {/* Content Layout - Mobile: About/Availability first, then Badges/Connect. Desktop: Sidebar + Main Content */}
             <div className="flex flex-col lg:flex-row gap-6 w-full">
@@ -80,7 +111,9 @@ export default function PublicProfileModal({ isOpen, onClose, userId, isOwnProfi
 
               {/* Left Sidebar - Stats, Badges, Connect (narrower, fixed width on desktop) */}
               <div className="lg:w-80 lg:flex-shrink-0 space-y-6 order-2 lg:order-1">
-                <BadgesSection badges={badges} />
+                <div id="badges">
+                  <BadgesSection badges={enrichedBadges} />
+                </div>
                 <ConnectSection profileData={profile} />
               </div>
 
@@ -90,6 +123,50 @@ export default function PublicProfileModal({ isOpen, onClose, userId, isOwnProfi
                 <SkillsAvailabilitySection profileData={profile} translatedSkills={translatedSkills} isMobile={false} />
               </div>
             </div>
+
+            {/* Impact Summary Section - when member has impactSummary */}
+            {profile?.impactSummary && (profile.impactSummary.totalHours > 0 || profile.impactSummary.totalActivities > 0 || (profile.impactSummary.parameters && Object.keys(profile.impactSummary.parameters).length > 0)) && (
+              <div className="w-full space-y-3">
+                <h2 className="text-lg font-semibold text-text-primary dark:text-text-primary">
+                  {tProfile('impact') || 'Impact'}
+                </h2>
+                <Card className="p-4">
+                  <div className="grid grid-cols-2 gap-4 mb-3">
+                    <div>
+                      <p className="text-xs text-text-tertiary dark:text-text-tertiary">{tProfile('totalHours') || 'Hours contributed'}</p>
+                      <p className="text-xl font-bold text-text-primary dark:text-text-primary">
+                        {(profile.impactSummary.totalHours ?? 0).toFixed(1)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-text-tertiary dark:text-text-tertiary">{tProfile('activitiesCompleted') || 'Activities completed'}</p>
+                      <p className="text-xl font-bold text-text-primary dark:text-text-primary">
+                        {profile.impactSummary.totalActivities ?? 0}
+                      </p>
+                    </div>
+                  </div>
+                  {profile.impactSummary.parameters && Object.keys(profile.impactSummary.parameters).length > 0 && (
+                    <ul className="space-y-1 text-sm border-t border-gray-200 dark:border-gray-700 pt-3">
+                      {Object.entries(profile.impactSummary.parameters).map(([paramId, value]) => {
+                        const metaFromSummary = profile.impactSummary.parameterMeta?.[paramId] || {};
+                        const meta = { ...globalParamMeta[paramId], ...metaFromSummary };
+                        const label = meta.label || paramId;
+                        const unit = meta.unit ? ` ${meta.unit}` : '';
+                        return (
+                          <li key={paramId} className="flex justify-between">
+                            <span className="text-text-primary dark:text-text-primary">{label}</span>
+                            <span className="text-text-secondary dark:text-text-secondary">
+                              {Number(value).toLocaleString()}
+                              {unit}
+                            </span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </Card>
+              </div>
+            )}
 
             {/* Completed Activities Section - Full Width, Centered */}
             <ActivitiesSection completedActivities={completedActivities} />

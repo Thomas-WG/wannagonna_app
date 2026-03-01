@@ -31,11 +31,25 @@ import ActivityDetailsModal from '@/components/activities/ActivityDetailsModal';
 import ActivityFilters from '@/components/activities/ActivityFilters';
 import ApplyActivityModal from '@/components/activities/ApplyActivityModal';
 import ActivitiesCalendar from '@/components/activities/ActivitiesCalendar';
-import { Toast, Select, Spinner, Badge, Button } from 'flowbite-react';
+import { getUserLocation, filterActivitiesByRadius } from '@/utils/geolocation';
+import dynamic from 'next/dynamic';
+
+// Lazy load map component to avoid SSR issues
+const ActivitiesMapView = dynamic(() => import('@/components/activities/ActivitiesMapView'), {
+  ssr: false,
+  loading: () => (
+    <div className="h-[500px] sm:h-[600px] lg:h-[700px] flex items-center justify-center bg-gray-100 dark:bg-gray-800 rounded-lg">
+      <Spinner size="xl" />
+    </div>
+  )
+});
+import { Toast, Spinner, Badge, Button } from 'flowbite-react';
+import SortBySelect from '@/components/common/SortBySelect';
 import { createApplication } from '@/utils/crudApplications';
 import { useAuth } from '@/utils/auth/AuthContext';
 import BadgeAnimation from '@/components/badges/BadgeAnimation';
-import { HiSearch, HiX, HiCheckCircle, HiChevronLeft, HiChevronRight, HiViewGrid, HiCalendar } from 'react-icons/hi';
+import { HiSearch, HiX, HiCheckCircle, HiChevronLeft, HiChevronRight, HiViewGrid, HiCalendar, HiLocationMarker } from 'react-icons/hi';
+import { FaMapMarkedAlt } from 'react-icons/fa';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useTranslations, useLocale } from 'next-intl';
 import { countries } from 'countries-list';
@@ -83,8 +97,14 @@ export default function ActivitiesPage() {
     closeApplyModal,
   } = useActivitiesStore();
 
-  // View mode: list or calendar (calendar shows only activities with start_date)
+  // View mode: list, calendar, or map
   const [viewMode, setViewMode] = useState('list');
+  
+  // Geolocation state
+  const [userLocation, setUserLocation] = useState(null);
+  const [isGettingLocation, setIsGettingLocation] = useState(false);
+  const [locationError, setLocationError] = useState(null);
+  const [aroundMeActive, setAroundMeActive] = useState(false);
 
   // Local state for toast and badge animation
   const [showToast, setShowToast] = useState(false);
@@ -347,8 +367,60 @@ export default function ActivitiesPage() {
       );
     }
 
+    // Apply "Around Me" filter if active
+    if (aroundMeActive && userLocation && userLocation.latitude && userLocation.longitude) {
+      filtered = filterActivitiesByRadius(filtered, userLocation.latitude, userLocation.longitude, 50);
+    }
+
     return filtered;
-  }, [allActivities, filters, debouncedSearchQuery]);
+  }, [allActivities, filters, debouncedSearchQuery, aroundMeActive, userLocation]);
+
+  // Handle "Around Me" button click
+  const handleAroundMe = async () => {
+    if (aroundMeActive) {
+      // Deactivate
+      setAroundMeActive(false);
+      setUserLocation(null);
+      setLocationError(null);
+      return;
+    }
+
+    setIsGettingLocation(true);
+    setLocationError(null);
+
+    try {
+      const location = await getUserLocation();
+      setUserLocation(location);
+      setAroundMeActive(true);
+      
+      // Cache location in sessionStorage
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('userLocation', JSON.stringify(location));
+      }
+    } catch (error) {
+      console.error('Error getting user location:', error);
+      setLocationError(error.message);
+      setAroundMeActive(false);
+    } finally {
+      setIsGettingLocation(false);
+    }
+  };
+
+  // Load cached location on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const cachedLocation = sessionStorage.getItem('userLocation');
+      if (cachedLocation) {
+        try {
+          const location = JSON.parse(cachedLocation);
+          setUserLocation(location);
+          setAroundMeActive(true);
+        } catch (e) {
+          // Invalid cache, ignore
+        }
+      }
+    }
+  }, []);
 
   // Sort activities
   const sortedActivities = useMemo(() => {
@@ -500,11 +572,11 @@ export default function ActivitiesPage() {
   if (!user && !authLoading) return null;
 
   return (
-    <div className="min-h-dvh bg-background-page dark:bg-background-page">
+    <div className="min-h-dvh">
       <div className="container mx-auto px-4 py-6 max-w-7xl">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-text-primary dark:text-text-primary mb-2">
+          <h1 className="page-title text-2xl sm:text-3xl font-bold text-text-primary dark:text-text-primary mb-2">
             {t('title')}
           </h1>
           <p className="text-text-secondary dark:text-text-secondary">
@@ -577,7 +649,7 @@ export default function ActivitiesPage() {
                 aria-pressed={viewMode === 'list'}
               >
                 <HiViewGrid className="h-5 w-5" />
-                {t('viewList')}
+                <span className="hidden sm:inline">{t('viewList')}</span>
               </button>
               <button
                 type="button"
@@ -590,9 +662,55 @@ export default function ActivitiesPage() {
                 aria-pressed={viewMode === 'calendar'}
               >
                 <HiCalendar className="h-5 w-5" />
-                {t('viewCalendar')}
+                <span className="hidden sm:inline">{t('viewCalendar')}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('map')}
+                className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium min-h-[44px] touch-manipulation ${
+                  viewMode === 'map'
+                    ? 'bg-primary-500 text-white dark:bg-primary-500 dark:text-white'
+                    : 'text-text-secondary dark:text-text-secondary hover:bg-gray-100 dark:hover:bg-gray-700'
+                }`}
+                aria-pressed={viewMode === 'map'}
+              >
+                <FaMapMarkedAlt className="h-5 w-5" />
+                <span className="hidden sm:inline">{t('viewMap') || 'Map'}</span>
               </button>
             </div>
+            {/* Around Me Button */}
+            <button
+              type="button"
+              onClick={handleAroundMe}
+              disabled={isGettingLocation}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium min-h-[44px] touch-manipulation transition-all ${
+                aroundMeActive
+                  ? 'bg-primary-500 text-white dark:bg-primary-500 dark:text-white shadow-md'
+                  : 'bg-background-card dark:bg-background-card text-text-primary dark:text-text-primary border border-border-light dark:border-border-dark hover:bg-gray-100 dark:hover:bg-gray-700'
+              } ${isGettingLocation ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              {isGettingLocation ? (
+                <>
+                  <Spinner size="sm" />
+                  <span className="hidden sm:inline">{t('gettingLocation') || 'Getting location...'}</span>
+                </>
+              ) : aroundMeActive ? (
+                <>
+                  <HiLocationMarker className={`h-5 w-5 ${aroundMeActive ? 'animate-pulse' : ''}`} />
+                  <span className="hidden sm:inline">
+                    {t('within') || 'Within'} 50 {t('km') || 'km'}
+                    {filteredActivities.length > 0 && (
+                      <span className="ml-1">({filteredActivities.length})</span>
+                    )}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <HiLocationMarker className="h-5 w-5" />
+                  <span className="hidden sm:inline">{t('aroundMe') || 'Around Me'}</span>
+                </>
+              )}
+            </button>
             <div className="text-sm text-text-secondary dark:text-text-secondary">
               {viewMode === 'list' ? (
                 <>
@@ -600,6 +718,20 @@ export default function ActivitiesPage() {
                   <span className="font-semibold">{sortedActivities.length}</span> {t('activities')}
                   {allActivities.length !== sortedActivities.length && (
                     <span> ({t('filtered')} {allActivities.length} {t('total')})</span>
+                  )}
+                  {aroundMeActive && (
+                    <span className="ml-2 text-primary-600 dark:text-primary-400">
+                      • {t('within') || 'Within'} 50 {t('km') || 'km'}
+                    </span>
+                  )}
+                </>
+              ) : viewMode === 'map' ? (
+                <>
+                  <span className="font-semibold">{filteredActivities.length}</span> {t('activities')} {t('onMap') || 'on map'}
+                  {aroundMeActive && (
+                    <span className="ml-2 text-primary-600 dark:text-primary-400">
+                      • {t('within') || 'Within'} 50 {t('km') || 'km'}
+                    </span>
                   )}
                 </>
               ) : (
@@ -610,18 +742,20 @@ export default function ActivitiesPage() {
             </div>
           </div>
           {viewMode === 'list' && (
-          <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-text-primary dark:text-text-primary">{t('sortBy')}</label>
-            <Select value={sortBy} onChange={(e) => setStoreSortBy(e.target.value)} className="w-full sm:w-auto bg-background-card dark:bg-background-card text-text-primary dark:text-text-primary border-border-light dark:border-border-dark">
-              <option value="newest">{t('sortNewest')}</option>
-              <option value="oldest">{t('sortOldest')}</option>
-              <option value="xp_high">{t('sortXpHigh')}</option>
-              <option value="xp_low">{t('sortXpLow')}</option>
-              <option value="applicants_high">{t('sortApplicantsHigh')}</option>
-              <option value="applicants_low">{t('sortApplicantsLow')}</option>
-              <option value="alphabetical">{t('sortAlphabetical')}</option>
-            </Select>
-          </div>
+          <SortBySelect
+            label={t('sortBy')}
+            value={sortBy}
+            onChange={setStoreSortBy}
+            options={[
+              { value: 'newest', label: t('sortNewest') },
+              { value: 'oldest', label: t('sortOldest') },
+              { value: 'xp_high', label: t('sortXpHigh') },
+              { value: 'xp_low', label: t('sortXpLow') },
+              { value: 'applicants_high', label: t('sortApplicantsHigh') },
+              { value: 'applicants_low', label: t('sortApplicantsLow') },
+              { value: 'alphabetical', label: t('sortAlphabetical') },
+            ]}
+          />
           )}
         </div>
 
@@ -720,6 +854,32 @@ export default function ActivitiesPage() {
         )}
 
         {/* Calendar view: only activities with start_date */}
+        {/* Map View */}
+        {viewMode === 'map' && !activitiesLoading && (
+          <div className="mb-6">
+            {locationError && (
+              <div className="mb-4 p-4 bg-semantic-error-50 dark:bg-semantic-error-900 border border-semantic-error-200 dark:border-semantic-error-700 rounded-lg">
+                <p className="text-sm text-semantic-error-600 dark:text-semantic-error-400">
+                  {locationError}
+                </p>
+                <button
+                  onClick={handleAroundMe}
+                  className="mt-2 text-sm text-semantic-error-600 dark:text-semantic-error-400 hover:underline"
+                >
+                  {t('tryAgain') || 'Try again'}
+                </button>
+              </div>
+            )}
+            <ActivitiesMapView
+              activities={filteredActivities}
+              onActivityClick={(activity) => openDetailsModal(activity.id)}
+              center={userLocation ? { lat: userLocation.latitude, lng: userLocation.longitude } : null}
+              zoom={aroundMeActive ? 11 : 10}
+              userLocation={userLocation}
+            />
+          </div>
+        )}
+
         {viewMode === 'calendar' && !activitiesLoading && (
           <>
             {calendarActivities.length === 0 ? (
@@ -804,7 +964,7 @@ export default function ActivitiesPage() {
         {/* Activities Grid (list view only) */}
         {viewMode === 'list' && !activitiesLoading && paginatedActivities.length > 0 && (
           <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 items-stretch">
               {paginatedActivities.map((activity) => (
               <div key={activity.id} className="relative">
                 <ActivityCard
@@ -832,6 +992,7 @@ export default function ActivitiesPage() {
                   participantTarget={activity.participantTarget}
                   acceptApplicationsWG={activity.acceptApplicationsWG}
                   onClick={() => handleCardClick(activity)}
+                  distance={activity.distance}
                 />
                 {/* Applied Badge - Ribbon Style */}
                 {applicationStatuses[activity.id] && (

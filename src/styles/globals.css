@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@import 'leaflet/dist/leaflet.css';
 
 @tailwind base;
 @tailwind components;
@@ -7,38 +8,39 @@
 
 :root {
   /* Legacy support */
-  --background: rgb(248 250 252);
-  --foreground: #0f172a;
+  --background: #fafaf9;
+  --foreground: #1A1A1A;
 
-  /* Design Token CSS Variables - Light Mode */
-  /* Primary Colors */
-  --color-primary-50: #fff7ed;
-  --color-primary-100: #ffedd5;
-  --color-primary-200: #fed7aa;
-  --color-primary-300: #fdba74;
-  --color-primary-400: #fb923c;
-  --color-primary-500: #f97316;
-  --color-primary-600: #ea580c;
-  --color-primary-700: #c2410c;
-  --color-primary-800: #9a3412;
-  --color-primary-900: #7c2d12;
+  /* Design Token CSS Variables - Light Mode (landing-aligned) */
+  /* Primary Colors - Teal */
+  --color-primary-50: #e6f7f8;
+  --color-primary-100: #b3ebef;
+  --color-primary-200: #80dfe5;
+  --color-primary-300: #4dd3dc;
+  --color-primary-400: #26b8c4;
+  --color-primary-500: #009AA2;
+  --color-primary-600: #007a81;
+  --color-primary-700: #005f65;
+  --color-primary-800: #004448;
+  --color-primary-900: #002a2d;
 
   /* Background Colors */
-  --bg-page: #f8fafc;
+  --bg-page: #fafaf9;
   --bg-card: #ffffff;
   --bg-modal: #ffffff;
-  --bg-sidebar: #fff7ed;
-  --bg-hover: #f1f5f9;
+  --bg-sidebar: #f5fafb;
+  --bg-hover: #f1f5f5;
 
   /* Text Colors */
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-tertiary: #64748b;
-  --text-disabled: #94a3b8;
+  --text-primary: #1A1A1A;
+  --text-secondary: #6b7280;
+  --text-tertiary: #9ca3af;
+  --text-disabled: #9ca3af;
 
   /* Border Colors */
-  --border-light: #e2e8f0;
-  --border-focus: #f97316;
+  --border-light: #e5e7eb;
+  --border-dark: #e5e7eb;
+  --border-focus: #009AA2;
 
   /* Transitions */
   --transition-fast: 150ms;
@@ -55,36 +57,43 @@ html {
 }
 
 .dark {
-  /* Design Token CSS Variables - Dark Mode */
-  --background: #0f172a;
-  --foreground: #f8fafc;
+  /* Design Token CSS Variables - Dark Mode (teal-tinted) */
+  --background: #0d1a1d;
+  --foreground: #f0f7f8;
 
   /* Background Colors */
-  --bg-page: #0f172a;
-  --bg-card: #1e293b;
-  --bg-modal: #1e293b;
-  --bg-sidebar: #1e293b;
-  --bg-hover: #334155;
+  --bg-page: #0d1a1d;
+  --bg-card: #152a30;
+  --bg-modal: #152a30;
+  --bg-sidebar: #152a30;
+  --bg-hover: #1e3a42;
 
   /* Text Colors */
-  --text-primary: #f8fafc;
-  --text-secondary: #cbd5e1;
-  --text-tertiary: #94a3b8;
-  --text-disabled: #475569;
+  --text-primary: #f0f7f8;
+  --text-secondary: #a8bcc4;
+  --text-tertiary: #7a8f99;
+  --text-disabled: #4a5e68;
 
   /* Border Colors */
-  --border-light: #334155;
-  --border-focus: #fb923c;
+  --border-light: #2a4a54;
+  --border-dark: #2a4a54;
+  --border-focus: #26b8c4;
 }
 
 body {
   color: var(--foreground);
   background: var(--bg-page);
-  font-family: Roboto, Helvetica, sans-serif;
+  font-family: var(--font-roboto), Roboto, Helvetica, sans-serif;
   transition: background-color var(--transition-normal) var(--easing-default),
               color var(--transition-normal) var(--easing-default);
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
+}
+
+/* Page/section titles (outside cards) use Montserrat; card titles inherit Roboto from body */
+.page-title,
+.section-title {
+  font-family: var(--font-montserrat-alt), 'Montserrat Alternates', sans-serif;
 }
 
 /* Safe area insets for notched devices / home indicator */
@@ -99,6 +108,126 @@ body {
 }
 .pr-safe-right {
   padding-right: env(safe-area-inset-right, 0);
+}
+
+/* App background treatment (blobs + dot grid) - landing-aligned */
+.app-bg-blob {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(90px);
+  pointer-events: none;
+  animation: appBlobDrift 20s ease-in-out infinite alternate;
+  z-index: 0;
+}
+.app-bg-blob:nth-child(1) { width: 700px; height: 700px; background: rgba(0,154,162,0.09);  top: -200px; left: -200px; animation-delay: 0s; }
+.app-bg-blob:nth-child(2) { width: 600px; height: 600px; background: rgba(240,134,2,0.07);  bottom: -100px; right: -150px; animation-delay: -7s; }
+.app-bg-blob:nth-child(3) { width: 500px; height: 500px; background: rgba(81,172,49,0.06);  top: 50%; left: 55%; animation-delay: -14s; }
+.app-bg-blob:nth-child(4) { width: 350px; height: 350px; background: rgba(205,20,54,0.05);  top: 20%; right: 5%; animation-delay: -4s; }
+.dark .app-bg-blob:nth-child(1) { background: rgba(0,154,162,0.12); }
+.dark .app-bg-blob:nth-child(2) { background: rgba(240,134,2,0.08); }
+.dark .app-bg-blob:nth-child(3) { background: rgba(81,172,49,0.07); }
+.dark .app-bg-blob:nth-child(4) { background: rgba(205,20,54,0.05); }
+@keyframes appBlobDrift {
+  0%   { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(50px, 70px) scale(1.08); }
+}
+.app-dot-grid {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: radial-gradient(circle, rgba(0,0,0,0.055) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+.dark .app-dot-grid {
+  background-image: radial-gradient(circle, rgba(0,154,162,0.06) 1px, transparent 1px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-bg-blob { animation: none; }
+}
+
+/* Leaflet Map Dark Mode Styles */
+.dark .leaflet-container {
+  background-color: #0d1a1d;
+}
+
+.dark .leaflet-control {
+  background-color: #152a30;
+  color: #f0f7f8;
+}
+
+.dark .leaflet-popup-content-wrapper {
+  background-color: #152a30;
+  color: #f0f7f8;
+}
+
+.dark .leaflet-popup-tip {
+  background-color: #152a30;
+}
+
+.dark .leaflet-control-zoom a {
+  background-color: #152a30;
+  color: #f0f7f8;
+  border-color: #2a4a54;
+}
+
+.dark .leaflet-control-zoom a:hover {
+  background-color: #1e3a42;
+}
+
+.dark .leaflet-bar {
+  border-color: #2a4a54;
+}
+
+/* Google Places PlaceAutocompleteElement Styles */
+gmp-place-autocomplete-element {
+  width: 100%;
+  display: block;
+}
+
+.dark gmp-place-autocomplete-element {
+  --gmpx-color-surface: #152a30;
+  --gmpx-color-on-surface: #f0f7f8;
+  --gmpx-color-on-surface-variant: #a8bcc4;
+  --gmpx-color-primary: #009AA2;
+  --gmpx-color-outline: #2a4a54;
+}
+
+gmp-place-autocomplete-element input {
+  width: 100% !important;
+  padding: 0.75rem 0.875rem !important;
+  font-size: 1rem !important;
+  line-height: 1.5rem !important;
+  border: 1px solid rgb(226 232 240) !important;
+  border-radius: 0.5rem !important;
+  background-color: rgb(255 255 255) !important;
+  color: rgb(15 23 42) !important;
+  min-height: 44px !important;
+}
+
+.dark gmp-place-autocomplete-element input {
+  border-color: rgb(42 74 84) !important;
+  background-color: rgb(21 42 48) !important;
+  color: rgb(240 247 248) !important;
+}
+
+gmp-place-autocomplete-element input:focus {
+  outline: 2px solid #009AA2 !important;
+  outline-offset: 2px !important;
+  border-color: #009AA2 !important;
+}
+
+/* Hide PlaceAutocompleteElement's built-in clear button to avoid double X
+   The element uses shadow DOM, so we need to target it differently */
+gmp-place-autocomplete-element {
+  --gmpx-icon-button-size: 0; /* Hide the clear button */
+}
+
+/* Alternative: Hide via CSS if the part is exposed */
+gmp-place-autocomplete-element::part(clear-button),
+gmp-place-autocomplete-element button[aria-label*="Clear"],
+gmp-place-autocomplete-element button[type="button"] {
+  display: none !important;
 }
 .min-touch-target {
   min-height: 44px;
@@ -316,8 +445,8 @@ select option,
 
 /* Full-page subtle dot texture (use on landing root wrapper) */
 .landing-page-bg {
-  background-color: #f8fafc;
-  background-image: radial-gradient(circle at 1px 1px, rgba(249, 115, 22, 0.05) 1px, transparent 0);
+  background-color: #fafaf9;
+  background-image: radial-gradient(circle at 1px 1px, rgba(0, 154, 162, 0.05) 1px, transparent 0);
   background-size: 24px 24px;
 }
 
@@ -325,8 +454,8 @@ select option,
 .landing-page-bg input[type="text"],
 .landing-page-bg input[type="email"],
 .landing-page-bg textarea {
-  color: #0f172a !important;
-  background-color: #f8fafc !important;
+  color: #1A1A1A !important;
+  background-color: #fafaf9 !important;
 }
 
 .landing-page-bg input[type="text"]::placeholder,
@@ -348,7 +477,7 @@ select option,
 
 /* Landing page only: force label text dark (overrides .dark so labels stay readable) */
 .landing-page-bg label {
-  color: #0f172a !important;
+  color: #1A1A1A !important;
 }
 
 /* Hero: dots + gradient; slightly stronger dots so they read clearly */
@@ -424,7 +553,7 @@ select option,
   --fc-button-hover-bg-color: var(--text-tertiary);
   --fc-button-hover-border-color: var(--border-light);
   --fc-button-active-bg-color: var(--text-secondary);
-  --fc-today-bg-color: rgba(248, 250, 252, 0.08);
+  --fc-today-bg-color: rgba(0, 154, 162, 0.12);
   --fc-page-bg-color: var(--bg-card);
   --fc-neutral-bg-color: var(--bg-card);
   --fc-list-event-hover-bg-color: var(--bg-hover);
@@ -599,4 +728,100 @@ select option,
   .activities-calendar .fc-list-event-title {
     padding: 0.5rem 0.75rem;
   }
+}
+
+/* ── LANDING PAGE ── */
+
+/* Background blobs */
+.landing-bg-blob {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(90px);
+  pointer-events: none;
+  animation: landingDrift 20s ease-in-out infinite alternate;
+  z-index: 0;
+}
+.landing-bg-blob:nth-child(1) { width: 700px; height: 700px; background: rgba(0,154,162,0.09);  top: -200px; left: -200px; animation-delay: 0s; }
+.landing-bg-blob:nth-child(2) { width: 600px; height: 600px; background: rgba(240,134,2,0.07);  bottom: -100px; right: -150px; animation-delay: -7s; }
+.landing-bg-blob:nth-child(3) { width: 500px; height: 500px; background: rgba(81,172,49,0.06);  top: 50%; left: 55%; animation-delay: -14s; }
+.landing-bg-blob:nth-child(4) { width: 350px; height: 350px; background: rgba(205,20,54,0.05);  top: 20%; right: 5%; animation-delay: -4s; }
+
+@keyframes landingDrift {
+  0%   { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(50px, 70px) scale(1.08); }
+}
+
+/* Dot grid texture */
+.landing-dot-grid {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: radial-gradient(circle, rgba(0,0,0,0.055) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+/* Scroll reveal — start visible, animate up into place when scrolled into view */
+.landing-animate-in {
+  opacity: 1;
+  transform: translateY(24px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.landing-animate-in.is-visible {
+  transform: translateY(0);
+}
+
+/* Pulse dot for nav badge */
+.landing-pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #009AA2;
+  animation: landingPulse 2s infinite;
+  display: inline-block;
+}
+@keyframes landingPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.35; transform: scale(0.65); }
+}
+
+/* SDG logo hover */
+.sdg-logo-item {
+  width: 56px;
+  height: 56px;
+  border-radius: 10px;
+  object-fit: cover;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: default;
+}
+.sdg-logo-item:hover {
+  transform: translateY(-3px) scale(1.1);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.18);
+  position: relative;
+  z-index: 2;
+}
+
+/* Feature card */
+.landing-feature-card {
+  background: white;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 20px;
+  padding: 26px 26px 22px;
+  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+.landing-feature-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(0,154,162,0.3);
+  box-shadow: 0 8px 28px rgba(0,0,0,0.07);
+}
+
+/* Mission strip */
+.landing-mission-strip {
+  background: linear-gradient(135deg, rgba(0,154,162,0.07) 0%, rgba(255,255,255,0.9) 50%, rgba(81,172,49,0.06) 100%);
+  border: 1.5px solid rgba(0,154,162,0.18);
+  border-radius: 28px;
+  padding: 52px 60px;
+}
+@media (max-width: 640px) {
+  .landing-mission-strip { padding: 36px 28px; }
 }

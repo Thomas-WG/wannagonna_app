@@ -25,9 +25,9 @@ const ActivityList = memo(function ActivityList({
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 items-stretch">
       {activities.map((activity) => (
-        <div key={activity.id} className="relative">
+        <div key={activity.id} className="relative h-full">
           <ActivityCard
             id={activity.id}
             organization_name={activity.organization_name}

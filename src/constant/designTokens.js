@@ -3,32 +3,34 @@
  * 
  * Centralized design system tokens for consistent UI/UX across the application.
  * All colors, typography, spacing, and other design elements are defined here.
+ * Aligned with landing page: Teal primary, warm backgrounds, Montserrat Alt headings.
  * 
  * Design Philosophy: Dynamic, Joyful, Warm & Professional
  */
 
 export const designTokens = {
-  // Color Palette - Warm, Vibrant, Professional
+  // Color Palette - Teal primary (landing-aligned), warm accents
   colors: {
-    // Primary Brand Colors - Warm Orange
+    // Primary Brand Colors - Teal (landing #009AA2)
     primary: {
-      50: '#fff7ed',
-      100: '#ffedd5',
-      200: '#fed7aa',
-      300: '#fdba74',
-      400: '#fb923c', // Primary Light - joyful accents
-      500: '#f97316', // Primary - vibrant and energetic
-      600: '#ea580c', // Primary Dark - professional depth
-      700: '#c2410c',
-      800: '#9a3412',
-      900: '#7c2d12',
+      50: '#e6f7f8',
+      100: '#b3ebef',
+      200: '#80dfe5',
+      300: '#4dd3dc',
+      400: '#26b8c4',
+      500: '#009AA2', // Primary - teal (landing)
+      600: '#007a81', // Primary Dark - hover state
+      700: '#005f65',
+      800: '#004448',
+      900: '#002a2d',
     },
 
-    // Accent Colors - for dynamic, joyful feel
+    // Accent Colors - Orange (landing #F08602), yellow, pink
     accent: {
-      yellow: '#fbbf24', // Warm Yellow - highlights and celebrations
-      pink: '#fb7185',   // Warm Pink - special elements
-      teal: '#2dd4bf',   // Warm Teal - freshness and growth
+      orange: '#F08602',  // Landing orange accent
+      yellow: '#fbbf24',  // Warm Yellow - highlights
+      pink: '#fb7185',    // Warm Pink - special elements
+      teal: '#009AA2',    // Alias to primary
     },
 
     // Semantic Colors - with warm undertones
@@ -165,57 +167,57 @@ export const designTokens = {
       900: '#0f172a',
     },
 
-    // Background Colors
+    // Background Colors (landing-aligned: #fafaf9 light, teal-tinted dark)
     background: {
       page: {
-        light: '#f8fafc', // Warm light background
-        dark: '#0f172a', // Warm dark background (not pure black)
+        light: '#fafaf9', // Warm off-white (landing)
+        dark: '#0d1a1d', // Dark teal-tinted slate
       },
       card: {
         light: '#ffffff',
-        dark: '#1e293b',
+        dark: '#152a30', // Slightly lighter than page for hierarchy
       },
       modal: {
         light: '#ffffff',
-        dark: '#1e293b',
+        dark: '#152a30',
       },
       sidebar: {
-        light: '#fff7ed', // Warm orange tint
-        dark: '#1e293b',
+        light: '#f5fafb', // Subtle teal tint (landing-aligned)
+        dark: '#152a30',
       },
       hover: {
-        light: '#f1f5f9',
-        dark: '#334155',
+        light: '#f1f5f5',
+        dark: '#1e3a42',
       },
     },
 
-    // Text Colors
+    // Text Colors (landing: #1A1A1A primary, #6b7280 secondary)
     text: {
       primary: {
-        light: '#0f172a',
-        dark: '#f8fafc',
+        light: '#1A1A1A',
+        dark: '#f0f7f8',
       },
       secondary: {
-        light: '#475569',
-        dark: '#cbd5e1',
+        light: '#6b7280',
+        dark: '#a8bcc4',
       },
       tertiary: {
-        light: '#64748b',
-        dark: '#94a3b8',
+        light: '#9ca3af',
+        dark: '#7a8f99',
       },
       disabled: {
-        light: '#94a3b8',
-        dark: '#475569',
+        light: '#9ca3af',
+        dark: '#4a5e68',
       },
     },
 
-    // Border Colors
+    // Border Colors (landing: #e5e7eb, teal focus)
     border: {
-      light: '#e2e8f0',
-      dark: '#334155',
+      light: '#e5e7eb',
+      dark: '#2a4a54',
       focus: {
-        light: '#f97316',
-        dark: '#fb923c',
+        light: '#009AA2',
+        dark: '#26b8c4',
       },
     },
 
@@ -240,10 +242,11 @@ export const designTokens = {
     },
   },
 
-  // Typography
+  // Typography (Montserrat Alt for headings, Roboto for body - landing-aligned)
   typography: {
     fontFamily: {
-      primary: ['Roboto', 'Arial', 'sans-serif'],
+      primary: ['var(--font-roboto)', 'Roboto', 'Arial', 'sans-serif'],
+      heading: ['var(--font-montserrat-alt)', 'Montserrat Alternates', 'sans-serif'],
       fallback: ['system-ui', '-apple-system', 'sans-serif'],
     },
     fontSize: {
@@ -301,11 +304,11 @@ export const designTokens = {
     lg: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
     xl: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
     '2xl': '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-    // Warm shadow variants
+    // Teal shadow variants (landing-aligned)
     warm: {
-      sm: '0 1px 3px 0 rgba(249, 115, 22, 0.1)',
-      md: '0 4px 6px -1px rgba(249, 115, 22, 0.1), 0 2px 4px -1px rgba(249, 115, 22, 0.06)',
-      lg: '0 10px 15px -3px rgba(249, 115, 22, 0.1), 0 4px 6px -2px rgba(249, 115, 22, 0.05)',
+      sm: '0 1px 3px 0 rgba(0, 154, 162, 0.1)',
+      md: '0 4px 6px -1px rgba(0, 154, 162, 0.1), 0 2px 4px -1px rgba(0, 154, 162, 0.06)',
+      lg: '0 10px 15px -3px rgba(0, 154, 162, 0.1), 0 4px 6px -2px rgba(0, 154, 162, 0.05)',
     },
   },
 

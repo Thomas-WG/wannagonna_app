@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { Card, Avatar, Select, Badge } from 'flowbite-react';
+import SortBySelect from '@/components/common/SortBySelect';
 import { useAuth } from '@/utils/auth/AuthContext';
 import { HiSearch, HiX, HiFilter, HiChevronDown, HiChevronUp, HiLocationMarker, HiGlobeAlt } from 'react-icons/hi';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -152,10 +153,10 @@ export default function OrganizationsPage() {
   if (!user && !authLoading) return null;
 
   return (
-    <div className="min-h-screen bg-background-page dark:bg-background-page">
+    <div className="min-h-screen">
       <div className="container mx-auto px-4 py-6 max-w-7xl">
         <div className="mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-text-primary dark:text-text-primary mb-2">
+          <h1 className="page-title text-2xl sm:text-3xl font-bold text-text-primary dark:text-text-primary mb-2">
             {t('title')}
           </h1>
           <p className="text-text-secondary dark:text-text-secondary">
@@ -419,19 +420,15 @@ export default function OrganizationsPage() {
               </>
             )}
           </div>
-          <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-text-primary dark:text-text-primary">
-              {t('sortBy')}
-            </label>
-            <Select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="w-full sm:w-auto bg-background-card dark:bg-background-card text-text-primary dark:text-text-primary border-border-light dark:border-border-dark"
-            >
-              <option value="name_az">{t('sortNameAZ')}</option>
-              <option value="name_za">{t('sortNameZA')}</option>
-            </Select>
-          </div>
+          <SortBySelect
+            label={t('sortBy')}
+            value={sortBy}
+            onChange={setSortBy}
+            options={[
+              { value: 'name_az', label: t('sortNameAZ') },
+              { value: 'name_za', label: t('sortNameZA') },
+            ]}
+          />
         </div>
 
         {!isLoading && totalPages > 1 && searchedOrganizations.length > 0 && (

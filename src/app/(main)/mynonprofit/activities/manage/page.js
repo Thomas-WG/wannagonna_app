@@ -12,6 +12,7 @@ import {
   updateActivityStatus,
   deleteActivity,
 } from '@/utils/crudActivities';
+import { setActivityImpactParameters } from '@/utils/activityImpactService';
 import { calculateActivityXP } from '@/utils/calculateActivityXP';
 import {fetchOrganizationById} from '@/utils/crudOrganizations';
 import ProgressStepper from '@/components/layout/ProgressStepper';
@@ -25,6 +26,7 @@ import { convertTimestampToDate } from '@/utils/dateUtils';
 import CategorySelector from '@/components/activities/CategorySelector';
 import ActivityDetailsForm from '@/components/activities/ActivityDetailsForm';
 import SDGSelector from '@/components/activities/SDGSelector';
+import ActivityImpactParametersStep from '@/components/activities/ActivityImpactParametersStep';
 import FormNavigation from '@/components/activities/FormNavigation';
 import PublishDraftModal from '@/components/activities/PublishDraftModal';
 
@@ -88,6 +90,8 @@ export default function CreateUpdateActivityPage() {
     country: '', // Default country
     city: '', // Default city
     location: '', // Specific location/venue for local and event activities
+    addressId: null, // Reference to saved address
+    coordinates: null, // { latitude, longitude } for map display
     xp_reward: 20, // Default XP points (will be auto-calculated)
     timeCommitment: 50, // Time commitment slider value (0-100, default: 50 for standard)
     complexity: 50, // Complexity slider value (0-100, default: 50 for moderate)
@@ -117,6 +121,7 @@ export default function CreateUpdateActivityPage() {
   const [showStatusModal, setShowStatusModal] = useState(false); // Status update modal
   const [savedActivityId, setSavedActivityId] = useState(null); // Store the saved activity ID
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false); // Status update loading
+  const [selectedImpactParameters, setSelectedImpactParameters] = useState([]);
 
   // Render categories based on selected type
   const availableCategories = formData.type ? categories[formData.type] : [];
@@ -185,6 +190,8 @@ export default function CreateUpdateActivityPage() {
               acceptApplicationsWG: data.acceptApplicationsWG !== undefined ? data.acceptApplicationsWG : (data.type === 'local' ? true : undefined),
               autoAcceptApplications: data.autoAcceptApplications || false,
               location: data.location || '',
+              addressId: data.addressId || null,
+              coordinates: data.coordinates || null,
               // Ensure frequency is 'once' for events
               frequency: data.type === 'event' ? 'once' : (data.frequency || ''),
               // Backward compatibility: default to 50 if fields are missing
@@ -198,6 +205,7 @@ export default function CreateUpdateActivityPage() {
             };
             console.log('Processed form data:', processedData);
             setFormData(processedData);
+            setSelectedImpactParameters(Array.isArray(data.impactParameters) ? data.impactParameters : []);
           }
         } catch (error) {
           console.error('Error in fetchData:', error);
@@ -280,8 +288,12 @@ export default function CreateUpdateActivityPage() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Impact parameters only for Local (volunteering); Events are gamification, not impact-tracked
+  const hasImpactStep = formData.type === 'local';
+  const maxStep = hasImpactStep ? 4 : 3;
+
   // Navigation between steps
-  const nextStep = () => setCurrentStep((prev) => Math.min(prev + 1, 3));
+  const nextStep = () => setCurrentStep((prev) => Math.min(prev + 1, maxStep));
   const prevStep = () => setCurrentStep((prev) => Math.max(prev - 1, 1));
 
   // Handle form submission
@@ -335,14 +347,17 @@ export default function CreateUpdateActivityPage() {
     try {
         // Handle single activity
     if (isEditMode) {
-          // For updates, just save and navigate back (no status modal)
           await updateActivity(activityId, baseDataToSave);
+          if (hasImpactStep) {
+            await setActivityImpactParameters(activityId, selectedImpactParameters ?? []);
+          }
           router.back();
     } else {
-          // For new activities, create first, then show status modal
           const newActivityId = await createActivity(baseDataToSave);
+          if (hasImpactStep) {
+            await setActivityImpactParameters(newActivityId, selectedImpactParameters ?? []);
+          }
           setSavedActivityId(newActivityId);
-          // Show status update modal
           setShowStatusModal(true);
         }
     } catch (error) {
@@ -424,13 +439,14 @@ export default function CreateUpdateActivityPage() {
       <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8'>
         {/* Header Section */}
         <div className='mb-6 sm:mb-8'>
-          <h1 className='text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white text-center mb-2'>
+          <h1 className='page-title text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white text-center mb-2'>
             {isEditMode ? t('update-activity') : t('create-activity')}
           </h1>
           <p className='text-sm sm:text-base text-gray-600 dark:text-gray-400 text-center'>
             {currentStep === 1 && 'Select the category that best describes your activity'}
             {currentStep === 2 && 'Provide details about your activity'}
             {currentStep === 3 && 'Choose a Sustainable Development Goal'}
+            {currentStep === 4 && 'Select impact parameters to track for this activity'}
           </p>
         </div>
 
@@ -449,7 +465,15 @@ export default function CreateUpdateActivityPage() {
         {/* Progress Stepper */}
         {!loading && (
           <div className='mb-6 sm:mb-8'>
-            <ProgressStepper currentStep={currentStep} />
+            <ProgressStepper
+              currentStep={currentStep}
+              steps={hasImpactStep ? [
+                { number: 1, label: 'Category' },
+                { number: 2, label: 'Details' },
+                { number: 3, label: 'SDG' },
+                { number: 4, label: 'Impact' }
+              ] : undefined}
+            />
           </div>
         )}
 
@@ -491,6 +515,17 @@ export default function CreateUpdateActivityPage() {
               </div>
             )}
 
+            {/* Step 4 - Impact parameters (local/event only) */}
+            {hasImpactStep && currentStep === 4 && (
+              <div className='animate-fadeIn'>
+                <ActivityImpactParametersStep
+                  orgId={claims?.npoId}
+                  initialSelected={selectedImpactParameters}
+                  onChange={setSelectedImpactParameters}
+                />
+              </div>
+            )}
+
             {/* Navigation Buttons */}
             <div className='sticky bottom-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-4 sm:py-5 shadow-lg sm:shadow-xl'>
               <FormNavigation 
@@ -500,6 +535,7 @@ export default function CreateUpdateActivityPage() {
                 formData={formData}
                 isEditMode={isEditMode}
                 handleSubmit={handleSubmit}
+                maxStep={maxStep}
               />
             </div>
           </form>

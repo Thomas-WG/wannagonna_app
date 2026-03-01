@@ -57,8 +57,8 @@ export default function AdminDashboard() {
   }, []);
 
   return (
-    <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 bg-background-page dark:bg-background-page min-h-dvh">
-      <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-4 sm:mb-6 md:mb-8 text-text-primary dark:text-text-primary">Admin Dashboard</h1>
+    <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 min-h-dvh">
+      <h1 className="page-title text-xl sm:text-2xl md:text-3xl font-bold mb-4 sm:mb-6 md:mb-8 text-text-primary dark:text-text-primary">Admin Dashboard</h1>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 md:gap-6">
         {/* Members Card */}
@@ -159,6 +159,21 @@ export default function AdminDashboard() {
               ) : (
                 <p className="text-2xl sm:text-3xl font-bold text-purple-600 dark:text-purple-400">{stats.faqs}</p>
               )}
+            </div>
+          </Card>
+        </Link>
+
+        {/* Impact Parameters Card */}
+        <Link href="/admin/impact-parameters">
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full bg-background-card dark:bg-background-card border-border-light dark:border-border-dark">
+            <div className="flex flex-col items-center p-4 sm:p-6">
+              <div className="bg-green-100 dark:bg-green-900 p-3 rounded-full mb-4">
+                <HiBadgeCheck className="h-6 w-6 sm:h-8 sm:w-8 text-green-600 dark:text-green-400" />
+              </div>
+              <h2 className="text-lg sm:text-xl font-semibold mb-2 text-text-primary dark:text-text-primary">Impact Parameters</h2>
+              <p className="text-xs sm:text-sm text-text-secondary dark:text-text-secondary text-center">
+                View and manage global and NPO impact parameters.
+              </p>
             </div>
           </Card>
         </Link>

@@ -28,6 +28,8 @@ import {
   onValidationCreated,
   onValidationUpdated,
 } from "./src/rewards/onValidationCreated.js";
+import {onActivityClosed} from "./src/impact/onActivityClosed.js";
+import {exportImpactReport} from "./src/impact/exportImpactReport.js";
 
 export const onActivityCreatedUpdateActivityCount = onDocumentCreated(
     "activities/{activityId}",
@@ -973,3 +975,9 @@ export const grantBadgeToUser = onCall(
 
 // Export validation reward triggers
 export {onValidationCreated, onValidationUpdated};
+
+// Impact: run when activity status changes to Closed
+export {onActivityClosed};
+
+// Impact: export impact report as Excel
+export {exportImpactReport};

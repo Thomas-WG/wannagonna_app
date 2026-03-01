@@ -21,11 +21,14 @@ import {
   HiQuestionMarkCircle
 } from 'react-icons/hi';
 import { HiClock } from "react-icons/hi2";
+import AddressSelector from '@/components/addresses/AddressSelector';
+import { useAuth } from '@/utils/auth/AuthContext';
 
 export default function ActivityDetailsForm({ formData, handleChange, setFormData }) {
   const t = useTranslations('ManageActivities');
   const locale = useLocale();
   const { isDark } = useTheme();
+  const { claims } = useAuth();
   const handleInputFocus = useInputFocusScroll();
   
   const [skillOptions, setSkillOptions] = useState([]);
@@ -226,16 +229,39 @@ export default function ActivityDetailsForm({ formData, handleChange, setFormDat
           {/* Location - For local and event activities */}
           {(formData.type === 'local' || formData.type === 'event') && (
             <div className="lg:col-span-2 space-y-2">
-              <FloatingLabel
-                variant='filled'
-                label={t('location-label')}
-                helperText={t('location-helper')}
-                name='location'
-                value={formData.location || ''}
-                onChange={handleChange}
-                onFocus={handleInputFocus}
-                className="text-base sm:text-lg"
+              <label className="block text-sm font-medium text-text-primary dark:text-text-primary mb-2">
+                {t('location-label') || 'Location'}
+              </label>
+              <AddressSelector
+                organizationId={claims?.npoId}
+                value={formData.addressId}
+                onChange={(addressId, addressData) => {
+                  if (addressData) {
+                    setFormData(prev => ({
+                      ...prev,
+                      addressId: addressId,
+                      location: addressData.formattedAddress,
+                      coordinates: addressData.coordinates,
+                      city: addressData.addressComponents?.city || prev.city,
+                      country: addressData.addressComponents?.country || prev.country
+                    }));
+                  } else {
+                    setFormData(prev => ({
+                      ...prev,
+                      addressId: null,
+                      location: '',
+                      coordinates: null
+                    }));
+                  }
+                }}
+                allowAddNew={true}
+                placeholder={t('selectAddress') || 'Select an address'}
               />
+              {formData.location && (
+                <p className="text-xs text-text-tertiary dark:text-text-tertiary mt-1">
+                  {formData.location}
+                </p>
+              )}
             </div>
           )}
 

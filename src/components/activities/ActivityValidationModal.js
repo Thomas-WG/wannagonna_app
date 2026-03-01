@@ -6,16 +6,17 @@ import { HiCheck, HiX } from 'react-icons/hi';
 import { useTranslations } from 'next-intl';
 import { useModal } from '@/utils/modal/useModal';
 import { fetchApplicationsForActivity } from '@/utils/crudApplications';
-import { 
-  fetchValidationsForActivity, 
-  validateApplicant, 
+import {
+  fetchValidationsForActivity,
+  validateApplicant,
   rejectApplicant,
   validateAllApplicants,
   rejectAllApplicants
 } from '@/utils/crudActivityValidation';
 import { useAuth } from '@/utils/auth/AuthContext';
-import { updateActivityStatus } from '@/utils/crudActivities';
 import ProfilePicture from '@/components/common/ProfilePicture';
+import { getDoc, doc } from 'firebase/firestore';
+import { db } from 'firebaseConfig';
 
 export default function ActivityValidationModal({ 
   isOpen, 
@@ -27,6 +28,7 @@ export default function ActivityValidationModal({
   const t = useTranslations('ActivityValidationModal');
   const [applications, setApplications] = useState([]);
   const [validations, setValidations] = useState([]);
+  const [qrValidatedParticipants, setQrValidatedParticipants] = useState([]);
   const [loading, setLoading] = useState(false);
   const [processing, setProcessing] = useState({}); // Track which user is being processed
   const [isProcessingAll, setIsProcessingAll] = useState(false);
@@ -46,6 +48,30 @@ export default function ActivityValidationModal({
       // Fetch validations
       const validationsData = await fetchValidationsForActivity(activity.id);
       setValidations(validationsData);
+
+      // When no applications but we have validated users (QR-only flow), fetch their display names
+      const validated = validationsData.filter(v => v.status === 'validated');
+      const validatedNotInApps = validated.filter(v =>
+        !acceptedApps.some(a => a.userId === v.userId)
+      );
+      if (validatedNotInApps.length > 0) {
+        const withNames = await Promise.all(
+          validatedNotInApps.map(async (v) => {
+            let displayName = 'Participant';
+            try {
+              const userDoc = await getDoc(doc(db, 'members', v.userId));
+              if (userDoc.exists()) {
+                const d = userDoc.data();
+                displayName = d.displayName || d.name || d.email || displayName;
+              }
+            } catch (_) {}
+            return { userId: v.userId, displayName, status: 'validated' };
+          })
+        );
+        setQrValidatedParticipants(withNames);
+      } else {
+        setQrValidatedParticipants([]);
+      }
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -60,6 +86,7 @@ export default function ActivityValidationModal({
       // Reset state when modal closes
       setApplications([]);
       setValidations([]);
+      setQrValidatedParticipants([]);
       setProcessing({});
       setIsProcessingAll(false);
     }
@@ -198,32 +225,17 @@ export default function ActivityValidationModal({
     }
   };
 
-  // Handle close - check if all are processed, if so, close activity
-  const handleClose = useCallback(async () => {
-    // Check if all applicants are processed
+  // Handle close - if all processed, tell parent to open CloseActivityModal (parent will not call updateActivityStatus here)
+  const handleClose = useCallback(() => {
     const allProcessed = applications.length === 0 || applications.every(app => {
       const status = validations.find(v => v.userId === app.userId)?.status;
       return status === 'validated' || status === 'rejected';
     });
-    
     const shouldCloseActivity = allProcessed && activity?.status !== 'Closed';
-    if (shouldCloseActivity) {
-      // All applicants processed, close the activity
-      try {
-        await updateActivityStatus(activity.id, 'Closed');
-        if (onStatusChange) {
-          onStatusChange(activity.id, 'Closed');
-        }
-      } catch (error) {
-        console.error('Error closing activity:', error);
-        alert('Failed to close activity');
-      }
-    }
-    // Pass whether activity should be closed to parent
     if (onClose) {
-      onClose(shouldCloseActivity);
+      onClose(shouldCloseActivity, activity);
     }
-  }, [activity, onClose, onStatusChange, applications, validations]);
+  }, [activity, onClose, applications, validations]);
   
   // Use wrapped onClose for modal registration
   const wrappedOnClose = useModal(isOpen, handleClose, 'activity-validation-modal');
@@ -257,15 +269,47 @@ export default function ActivityValidationModal({
             <Spinner size="xl" />
           </div>
         ) : applications.length === 0 ? (
-          <div className="text-center py-8">
+          <div className="text-center py-6">
             <p className="text-sm sm:text-base text-gray-500 px-2 mb-4">
               {t('noAcceptedApplicants') || 'No accepted applicants found for this activity.'}
             </p>
-            <div className="mt-4 p-3 sm:p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-xs sm:text-sm text-blue-800 text-center">
-                {t('noApplicantsCanClose') || 'You can close this activity since there are no applicants.'}
-              </p>
-            </div>
+            {qrValidatedParticipants.length > 0 ? (
+              <>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                  {t('qrParticipantsList') || 'The following participants validated via QR code:'}
+                </p>
+                <div className="space-y-2 max-h-48 overflow-y-auto mb-4 text-left">
+                  {qrValidatedParticipants.map((p) => (
+                    <div
+                      key={p.userId}
+                      className="flex items-center gap-3 border border-gray-200 dark:border-gray-600 rounded-lg p-3 bg-gray-50 dark:bg-gray-800/50"
+                    >
+                      <ProfilePicture
+                        src={null}
+                        alt={p.displayName}
+                        size={36}
+                        showInitials={true}
+                        name={p.displayName}
+                        className="flex-shrink-0"
+                      />
+                      <span className="text-sm font-medium truncate">{p.displayName}</span>
+                      <Badge color="success" className="ml-auto flex-shrink-0 text-xs">
+                        {t('validated') || 'Validated'}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs sm:text-sm text-blue-800 dark:text-blue-300 text-center">
+                  {t('qrParticipantsNextStep') || 'Click Next to enter hours and impact, then close the activity.'}
+                </p>
+              </>
+            ) : (
+              <div className="mt-4 p-3 sm:p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                <p className="text-xs sm:text-sm text-blue-800 dark:text-blue-300 text-center">
+                  {t('noApplicantsCanClose') || 'You can close this activity since there are no applicants.'}
+                </p>
+              </div>
+            )}
           </div>
         ) : (
           <div className="space-y-3 sm:space-y-4">
@@ -400,6 +444,36 @@ export default function ActivityValidationModal({
               })}
             </div>
 
+            {/* QR-only participants (validated via QR, no application) */}
+            {qrValidatedParticipants.length > 0 && (
+              <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                  {t('qrParticipantsAlso') || 'Also validated via QR code:'}
+                </p>
+                <div className="space-y-2 max-h-32 overflow-y-auto">
+                  {qrValidatedParticipants.map((p) => (
+                    <div
+                      key={p.userId}
+                      className="flex items-center gap-3 border border-gray-200 dark:border-gray-600 rounded-lg p-2 bg-gray-50 dark:bg-gray-800/50"
+                    >
+                      <ProfilePicture
+                        src={null}
+                        alt={p.displayName}
+                        size={32}
+                        showInitials={true}
+                        name={p.displayName}
+                        className="flex-shrink-0"
+                      />
+                      <span className="text-sm truncate">{p.displayName}</span>
+                      <Badge color="success" className="ml-auto flex-shrink-0 text-xs">
+                        {t('validated') || 'Validated'}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Completion Message */}
             {allApplicantsProcessed() && (
               <div className="mt-3 sm:mt-4 p-3 sm:p-4 bg-green-50 border border-green-200 rounded-lg">
@@ -420,7 +494,7 @@ export default function ActivityValidationModal({
             className="w-full sm:w-auto min-h-[44px] sm:min-h-0"
             size="sm"
           >
-            {t('close') || 'Close'}
+            {allApplicantsProcessed() ? (t('next') || 'Next') : (t('close') || 'Close')}
           </Button>
         </div>
       </Modal.Footer>

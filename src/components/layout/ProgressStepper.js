@@ -1,11 +1,12 @@
 import React from 'react';
 
-export default function ProgressStepper({ currentStep }) {
-  const steps = [
+export default function ProgressStepper({ currentStep, steps: stepsProp }) {
+  const defaultSteps = [
     { number: 1, label: 'Category' },
     { number: 2, label: 'Details' },
     { number: 3, label: 'SDG' }
   ];
+  const steps = Array.isArray(stepsProp) && stepsProp.length > 0 ? stepsProp : defaultSteps;
 
   return (
     <div className="w-full mb-6 sm:mb-8">
