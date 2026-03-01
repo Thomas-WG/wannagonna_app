@@ -685,3 +685,104 @@ select option,
     padding: 0.5rem 0.75rem;
   }
 }
+
+/* ── LANDING PAGE ── */
+
+body {
+  font-family: var(--font-dm-sans), 'DM Sans', sans-serif;
+  font-weight: 300;
+}
+
+/* Background blobs */
+.landing-bg-blob {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(90px);
+  pointer-events: none;
+  animation: landingDrift 20s ease-in-out infinite alternate;
+  z-index: 0;
+}
+.landing-bg-blob:nth-child(1) { width: 700px; height: 700px; background: rgba(0,154,162,0.09);  top: -200px; left: -200px; animation-delay: 0s; }
+.landing-bg-blob:nth-child(2) { width: 600px; height: 600px; background: rgba(240,134,2,0.07);  bottom: -100px; right: -150px; animation-delay: -7s; }
+.landing-bg-blob:nth-child(3) { width: 500px; height: 500px; background: rgba(81,172,49,0.06);  top: 50%; left: 55%; animation-delay: -14s; }
+.landing-bg-blob:nth-child(4) { width: 350px; height: 350px; background: rgba(205,20,54,0.05);  top: 20%; right: 5%; animation-delay: -4s; }
+
+@keyframes landingDrift {
+  0%   { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(50px, 70px) scale(1.08); }
+}
+
+/* Dot grid texture */
+.landing-dot-grid {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: radial-gradient(circle, rgba(0,0,0,0.055) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+/* Scroll reveal — start visible, animate up into place when scrolled into view */
+.landing-animate-in {
+  opacity: 1;
+  transform: translateY(24px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.landing-animate-in.is-visible {
+  transform: translateY(0);
+}
+
+/* Pulse dot for nav badge */
+.landing-pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #009AA2;
+  animation: landingPulse 2s infinite;
+  display: inline-block;
+}
+@keyframes landingPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.35; transform: scale(0.65); }
+}
+
+/* SDG logo hover */
+.sdg-logo-item {
+  width: 56px;
+  height: 56px;
+  border-radius: 10px;
+  object-fit: cover;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: default;
+}
+.sdg-logo-item:hover {
+  transform: translateY(-3px) scale(1.1);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.18);
+  position: relative;
+  z-index: 2;
+}
+
+/* Feature card */
+.landing-feature-card {
+  background: white;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 20px;
+  padding: 26px 26px 22px;
+  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+.landing-feature-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(0,154,162,0.3);
+  box-shadow: 0 8px 28px rgba(0,0,0,0.07);
+}
+
+/* Mission strip */
+.landing-mission-strip {
+  background: linear-gradient(135deg, rgba(0,154,162,0.07) 0%, rgba(255,255,255,0.9) 50%, rgba(81,172,49,0.06) 100%);
+  border: 1.5px solid rgba(0,154,162,0.18);
+  border-radius: 28px;
+  padding: 52px 60px;
+}
+@media (max-width: 640px) {
+  .landing-mission-strip { padding: 36px 28px; }
+}

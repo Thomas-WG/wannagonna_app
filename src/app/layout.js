@@ -25,7 +25,7 @@
 import '@/styles/globals.css'; // Global styles for the entire application
 import Providers from '@/components/providers/Providers'; // Consolidated providers with error boundaries
 import ErrorBoundary from '@/components/ErrorBoundary'; // Error boundary for error handling
-import { Roboto } from 'next/font/google'; // Roboto font from Google Fonts
+import { Roboto, Montserrat_Alternates, DM_Sans } from 'next/font/google';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
 import { metadata as siteMetadata } from '@/constant/config';
@@ -37,10 +37,22 @@ export const viewport = {
   viewportFit: 'cover',
 };
 
-// Configure Roboto font settings for the app
 const roboto = Roboto({
-  weight: ['400', '500', '700'], // Font weights used in the app
-  subsets: ['latin'], // Character subset to include
+  weight: ['300', '400', '500', '700'],
+  subsets: ['latin'],
+  variable: '--font-roboto',
+});
+
+const montserratAlt = Montserrat_Alternates({
+  subsets: ['latin'],
+  weight: ['400', '600', '700', '800', '900'],
+  variable: '--font-montserrat-alt',
+});
+
+const dmSans = DM_Sans({
+  subsets: ['latin'],
+  weight: ['300', '400', '500'],
+  variable: '--font-dm-sans',
 });
 
 /**
@@ -52,7 +64,7 @@ export default async function RootLayout({ children }) {
   const messages = await getMessages();
 
   return (
-    <html lang={locale} className={roboto.className} suppressHydrationWarning>
+    <html lang={locale} className={`${roboto.variable} ${montserratAlt.variable} ${dmSans.variable} ${roboto.className}`} suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{
