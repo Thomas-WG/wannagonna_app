@@ -162,6 +162,21 @@ export default function AdminDashboard() {
             </div>
           </Card>
         </Link>
+
+        {/* Impact Parameters Card */}
+        <Link href="/admin/impact-parameters">
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full bg-background-card dark:bg-background-card border-border-light dark:border-border-dark">
+            <div className="flex flex-col items-center p-4 sm:p-6">
+              <div className="bg-green-100 dark:bg-green-900 p-3 rounded-full mb-4">
+                <HiBadgeCheck className="h-6 w-6 sm:h-8 sm:w-8 text-green-600 dark:text-green-400" />
+              </div>
+              <h2 className="text-lg sm:text-xl font-semibold mb-2 text-text-primary dark:text-text-primary">Impact Parameters</h2>
+              <p className="text-xs sm:text-sm text-text-secondary dark:text-text-secondary text-center">
+                View and manage global and NPO impact parameters.
+              </p>
+            </div>
+          </Card>
+        </Link>
       </div>
     </div>
   );

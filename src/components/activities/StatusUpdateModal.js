@@ -7,7 +7,6 @@ import { useModal } from '@/utils/modal/useModal';
 import {
   HiDocument, HiCheckCircle, HiGlobeAlt
 } from 'react-icons/hi';
-import { FaRegCircle } from 'react-icons/fa';
 
 export default function StatusUpdateModal({
   isOpen,
@@ -86,21 +85,15 @@ export default function StatusUpdateModal({
         </div>
       );
     } else if (status === 'Closed') {
-      // Closed: Show Reopen button
+      // Closed: No reopen - show informational message
       return (
-        <div className="grid grid-cols-1 gap-4">
-          <Button
-            color="green"
-            onClick={() => handleStatusChange('Open')}
-            disabled={isUpdating}
-            className="h-auto py-6 px-4 bg-semantic-success-600 hover:bg-semantic-success-700 dark:bg-semantic-success-500 dark:hover:bg-semantic-success-600 text-white"
-          >
-            <div className="flex flex-col items-center justify-center w-full">
-              <FaRegCircle className="h-6 w-6 mb-3 text-white" />
-              <span className="font-medium text-base mb-2 text-white">{t('reopen', { default: 'Reopen' })}</span>
-              <span className="text-sm text-white/90 text-center">{t('reopenDescription', { default: 'Make activity available again' })}</span>
-            </div>
-          </Button>
+        <div className="rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 p-4">
+          <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+            {t('closedCannotReopenTitle', { default: 'Activity is closed' })}
+          </p>
+          <p className="text-sm text-amber-700 dark:text-amber-300 mt-2">
+            {t('closedCannotReopenMessage', { default: 'Closed activities cannot be reopened. Contact an admin if you need to make changes.' })}
+          </p>
         </div>
       );
     }

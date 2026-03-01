@@ -16,6 +16,7 @@ import ActivityDetailsModal from "@/components/activities/ActivityDetailsModal";
 import StatusUpdateModal from "@/components/activities/StatusUpdateModal";
 import QRCodeModal from "@/components/activities/QRCodeModal";
 import ActivityValidationModal from "@/components/activities/ActivityValidationModal";
+import CloseActivityModal from "@/components/activities/CloseActivityModal";
 import ParticipantListModal from "@/components/activities/ParticipantListModal";
 import ActivityFilters from "@/components/activities/ActivityFilters";
 import categories from "@/constant/categories";
@@ -38,6 +39,7 @@ export default function AdminActivitiesPage() {
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [showQRModal, setShowQRModal] = useState(false);
   const [showValidationModal, setShowValidationModal] = useState(false);
+  const [showCloseActivityModal, setShowCloseActivityModal] = useState(false);
   const [showParticipantModal, setShowParticipantModal] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [showToast, setShowToast] = useState(false);
@@ -319,10 +321,14 @@ export default function AdminActivitiesPage() {
   const handleStatusUpdate = async (newStatus) => {
     if (!selectedActivity) return;
 
-    // If trying to close the activity, open validation modal instead
+    // If trying to close: Events go directly to close modal; others go through validation
     if (newStatus === 'Closed') {
       setShowStatusModal(false);
-      setShowValidationModal(true);
+      if (selectedActivity.type === 'event') {
+        setShowCloseActivityModal(true);
+      } else {
+        setShowValidationModal(true);
+      }
       return;
     }
 
@@ -341,20 +347,19 @@ export default function AdminActivitiesPage() {
     }
   };
 
-  const handleValidationModalClose = async (shouldCloseActivity) => {
+  const handleValidationModalClose = (shouldCloseActivity, activityFromModal) => {
     setShowValidationModal(false);
-    
-    // If all applicants are processed, close the activity
-    if (shouldCloseActivity && selectedActivity) {
-      try {
-        await updateActivityStatus(selectedActivity.id, 'Closed');
-        handleStatusChange(selectedActivity.id, 'Closed');
-      } catch (error) {
-        console.error('Error closing activity:', error);
-        setToastMessage({ type: 'error', message: t('errorClosingActivity') || 'Failed to close activity' });
-        setShowToast(true);
-      }
+    // If all applicants are processed, open CloseActivityModal for hours/impact entry (same flow as NPO dashboard)
+    if (shouldCloseActivity && (selectedActivity || activityFromModal)) {
+      setShowCloseActivityModal(true);
     }
+  };
+
+  const handleCloseActivitySuccess = (activityId) => {
+    setShowCloseActivityModal(false);
+    handleStatusChange(activityId, 'Closed');
+    setToastMessage({ type: 'success', message: t('activityClosed') || 'Activity closed successfully' });
+    setShowToast(true);
   };
 
   return (
@@ -576,17 +581,19 @@ export default function AdminActivitiesPage() {
                             <span className="mt-1.5 text-xs sm:text-[11px] md:text-xs text-white font-medium text-center leading-tight px-0.5">{t('changeStatus') || 'Status'}</span>
                           </div>
 
-                          {/* Edit Button */}
-                          <div className="flex flex-col items-center">
-                            <button
-                              onClick={handleEditActivity}
-                              className="w-16 h-16 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-blue-500 text-white flex items-center justify-center shadow-lg hover:bg-blue-600 active:bg-blue-700 transition-colors touch-manipulation"
-                              aria-label="Edit Activity"
-                            >
-                              <HiPencil className="h-7 w-7 sm:h-6 sm:w-6 md:h-7 md:w-7" />
-                            </button>
-                            <span className="mt-1.5 text-xs sm:text-[11px] md:text-xs text-white font-medium text-center leading-tight px-0.5">{t('edit') || 'Edit'}</span>
-                          </div>
+                          {/* Edit Button - hidden for closed activities (view only) */}
+                          {activity.status !== 'Closed' && (
+                            <div className="flex flex-col items-center">
+                              <button
+                                onClick={handleEditActivity}
+                                className="w-16 h-16 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-blue-500 text-white flex items-center justify-center shadow-lg hover:bg-blue-600 active:bg-blue-700 transition-colors touch-manipulation"
+                                aria-label="Edit Activity"
+                              >
+                                <HiPencil className="h-7 w-7 sm:h-6 sm:w-6 md:h-7 md:w-7" />
+                              </button>
+                              <span className="mt-1.5 text-xs sm:text-[11px] md:text-xs text-white font-medium text-center leading-tight px-0.5">{t('edit') || 'Edit'}</span>
+                            </div>
+                          )}
 
                           {/* Duplicate Button */}
                           <div className="flex flex-col items-center">
@@ -741,6 +748,16 @@ export default function AdminActivitiesPage() {
             status: selectedActivity.status
           }}
           onStatusChange={handleStatusChange}
+        />
+      )}
+
+      {/* Close Activity Modal (hours & impact entry before closing) */}
+      {selectedActivity && (
+        <CloseActivityModal
+          isOpen={showCloseActivityModal}
+          onClose={() => setShowCloseActivityModal(false)}
+          activity={selectedActivity}
+          onSuccess={handleCloseActivitySuccess}
         />
       )}
 

@@ -3,6 +3,7 @@ import { db } from 'firebaseConfig';
 import { fetchActivityById } from './crudActivities';
 import { grantBadgeToUser } from './crudBadges';
 import { initializeValidationDocument } from './crudActivityValidation';
+import { createOrUpdateParticipation } from './participationService';
 
 export const checkExistingApplication = async (activityId, userId) => {
   try {
@@ -214,7 +215,7 @@ export const updateApplicationStatus = async (
     // Update in activity's applications collection
     await updateDoc(applicationRef, updateData);
     
-    // If status is being changed to "accepted", initialize validation document
+    // If status is being changed to "accepted", initialize validation document and participation
     if (status === 'accepted' && applicationData.userId) {
       try {
         await initializeValidationDocument(activityId, applicationData.userId);
@@ -222,6 +223,16 @@ export const updateApplicationStatus = async (
       } catch (validationError) {
         // Log error but don't fail the application status update
         console.error('Error initializing validation document:', validationError);
+      }
+      try {
+        await createOrUpdateParticipation(activityId, applicationData.userId, {
+          status: 'registered',
+          joinedAt: Timestamp.now(),
+          hours: { reported: 0, validated: 0, reportedAt: null, validatedAt: null }
+        });
+        console.log(`Participation created for user ${applicationData.userId} on activity ${activityId}`);
+      } catch (participationError) {
+        console.error('Error creating participation:', participationError);
       }
     }
     
