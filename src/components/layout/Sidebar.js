@@ -28,7 +28,7 @@ import { BiDonateHeart, BiBuildings } from 'react-icons/bi';
 import { FaPeopleCarryBox } from 'react-icons/fa6';
 import { IoSettingsOutline } from 'react-icons/io5';
 import { LuFileBadge2 } from 'react-icons/lu';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { GoOrganization } from "react-icons/go";
 import { IoLogOut } from "react-icons/io5";
 import { FaUserShield } from "react-icons/fa";
@@ -42,6 +42,26 @@ export default function Navbar() {
   const { user, claims, logout } = useAuth(); // Destructures user, claims, and logout function from useAuth hook
 
   const t = useTranslations('Sidebar');
+  const pathname = usePathname();
+
+  const isActive = (path) => {
+    if (path === '/dashboard') return pathname === '/dashboard';
+    return pathname === path || pathname.startsWith(path + '/');
+  };
+
+  const navItemClass = (path, isLogout = false) => {
+    const base = 'cursor-pointer min-h-[44px] flex items-center transition-all duration-200 rounded-lg px-3 -mx-1 border-l-4';
+    if (isLogout) {
+      return `${base} border-transparent text-text-primary dark:text-text-primary hover:text-semantic-error-600 dark:hover:text-semantic-error-400 hover:bg-background-hover dark:hover:bg-background-hover`;
+    }
+    const active = isActive(path);
+    return `${base} ${
+      active
+        ? 'border-primary-500 dark:border-primary-400 text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30'
+        : 'border-transparent text-text-primary dark:text-text-primary hover:text-primary-600 dark:hover:text-primary-400 hover:bg-background-hover dark:hover:bg-background-hover'
+    }`;
+  };
+
   // Memoize the isAdmin check to prevent unnecessary re-renders
   const isAdmin = useMemo(() => {
     return claims && claims.role === 'admin';
@@ -265,47 +285,49 @@ export default function Navbar() {
           </div>
           <Sidebar.Items >
             <Sidebar.ItemGroup>
-              <Sidebar.Item 
-                onClick={() => handleLinkClick('/dashboard')} 
+              <Sidebar.Item
+                onClick={() => handleLinkClick('/dashboard')}
                 icon={HiChartPie}
-                className='cursor-pointer min-h-[44px] flex items-center text-text-primary dark:text-text-primary hover:text-primary-600 dark:hover:text-primary-400 hover:bg-background-hover dark:hover:bg-background-hover transition-all duration-200 rounded-lg'>
+                className={navItemClass('/dashboard')}
+              >
                 {t('dashboard')}
               </Sidebar.Item>
               <Sidebar.Item
                 onClick={() => handleLinkClick('/activities')}
                 icon={MdOutlineExplore}
-                className='cursor-pointer min-h-[44px] flex items-center text-text-primary dark:text-text-primary hover:text-primary-600 dark:hover:text-primary-400 hover:bg-background-hover dark:hover:bg-background-hover transition-all duration-200 rounded-lg'
+                className={navItemClass('/activities')}
               >
                 {t('explore')}
               </Sidebar.Item>
               <Sidebar.Item
                 onClick={() => handleLinkClick('/organizations')}
                 icon={BiBuildings}
-                className='cursor-pointer text-text-primary dark:text-text-primary hover:text-primary-600 dark:hover:text-primary-400 hover:bg-background-hover dark:hover:bg-background-hover transition-all duration-200 rounded-lg'
+                className={navItemClass('/organizations')}
               >
                 {t('organizations')}
               </Sidebar.Item>
               <Sidebar.Item
                 onClick={() => handleLinkClick('/badges')}
                 icon={LuFileBadge2}
-                className='cursor-pointer min-h-[44px] flex items-center text-text-primary dark:text-text-primary hover:text-primary-600 dark:hover:text-primary-400 hover:bg-background-hover dark:hover:bg-background-hover transition-all duration-200 rounded-lg'
+                className={navItemClass('/badges')}
               >
                 {t('badges')}
               </Sidebar.Item>
-              {isAdmin && (<Sidebar.Item
-                onClick={() => handleLinkClick('/leaderboard')}
-                icon={MdOutlineLeaderboard }
-                className='cursor-pointer min-h-[44px] flex items-center text-text-primary dark:text-text-primary hover:text-primary-600 dark:hover:text-primary-400 hover:bg-background-hover dark:hover:bg-background-hover transition-all duration-200 rounded-lg'
-              >
-                {t('leaderboard')}
-              </Sidebar.Item>
+              {isAdmin && (
+                <Sidebar.Item
+                  onClick={() => handleLinkClick('/leaderboard')}
+                  icon={MdOutlineLeaderboard}
+                  className={navItemClass('/leaderboard')}
+                >
+                  {t('leaderboard')}
+                </Sidebar.Item>
               )}
               {isAdmin && (
                 <Sidebar.Item
                   onClick={() => handleLinkClick('/myteam')}
                   icon={FaPeopleCarryBox}
-                  className='cursor-pointer min-h-[44px] flex items-center text-text-primary dark:text-text-primary hover:text-primary-600 dark:hover:text-primary-400 hover:bg-background-hover dark:hover:bg-background-hover transition-all duration-200 rounded-lg'
-              >
+                  className={navItemClass('/myteam')}
+                >
                   {t('myteam')}
                 </Sidebar.Item>
               )}
@@ -313,15 +335,15 @@ export default function Navbar() {
                 <Sidebar.Item
                   onClick={() => handleLinkClick('/mynonprofit')}
                   icon={GoOrganization}
-                  className='cursor-pointer min-h-[44px] flex items-center text-text-primary dark:text-text-primary hover:text-primary-600 dark:hover:text-primary-400 hover:bg-background-hover dark:hover:bg-background-hover transition-all duration-200 rounded-lg'
-              >
-                {t('mynonprofit')}
-              </Sidebar.Item>
+                  className={navItemClass('/mynonprofit')}
+                >
+                  {t('mynonprofit')}
+                </Sidebar.Item>
               )}
               <Sidebar.Item
                 onClick={() => handleLinkClick('/members')}
                 icon={RiTeamLine}
-                className='cursor-pointer min-h-[44px] flex items-center text-text-primary dark:text-text-primary hover:text-primary-600 dark:hover:text-primary-400 hover:bg-background-hover dark:hover:bg-background-hover transition-all duration-200 rounded-lg'
+                className={navItemClass('/members')}
               >
                 {t('members')}
               </Sidebar.Item>
@@ -331,39 +353,37 @@ export default function Navbar() {
                 <Sidebar.Item
                   onClick={() => handleLinkClick('/donate')}
                   icon={BiDonateHeart}
-                  className='cursor-pointer min-h-[44px] flex items-center text-text-primary dark:text-text-primary hover:text-primary-600 dark:hover:text-primary-400 hover:bg-background-hover dark:hover:bg-background-hover transition-all duration-200 rounded-lg'
-              >
-                {t('donate')}
-              </Sidebar.Item>
+                  className={navItemClass('/donate')}
+                >
+                  {t('donate')}
+                </Sidebar.Item>
               )}
-
               <Sidebar.Item
                 onClick={() => handleLinkClick('/settings')}
                 icon={IoSettingsOutline}
-                className='cursor-pointer min-h-[44px] flex items-center text-text-primary dark:text-text-primary hover:text-primary-600 dark:hover:text-primary-400 hover:bg-background-hover dark:hover:bg-background-hover transition-all duration-200 rounded-lg'
+                className={navItemClass('/settings')}
               >
                 {t('settings')}
               </Sidebar.Item>
               <Sidebar.Item
                 onClick={() => handleLinkClick('/faq')}
                 icon={HiQuestionMarkCircle}
-                className='cursor-pointer min-h-[44px] flex items-center text-text-primary dark:text-text-primary hover:text-primary-600 dark:hover:text-primary-400 hover:bg-background-hover dark:hover:bg-background-hover transition-all duration-200 rounded-lg'
+                className={navItemClass('/faq')}
               >
                 {t('faq')}
               </Sidebar.Item>
               <Sidebar.Item
                 onClick={() => handleLinkClick('/feedback')}
                 icon={HiLightBulb}
-                className='cursor-pointer min-h-[44px] flex items-center text-text-primary dark:text-text-primary hover:text-primary-600 dark:hover:text-primary-400 hover:bg-background-hover dark:hover:bg-background-hover transition-all duration-200 rounded-lg'
+                className={navItemClass('/feedback')}
               >
                 {t('feedback')}
               </Sidebar.Item>
-              {/* Only show Administration item if user has admin role */}
               {isAdmin && (
                 <Sidebar.Item
                   onClick={() => handleLinkClick('/admin')}
                   icon={FaUserShield}
-                  className='cursor-pointer min-h-[44px] flex items-center text-text-primary dark:text-text-primary hover:text-primary-600 dark:hover:text-primary-400 hover:bg-background-hover dark:hover:bg-background-hover transition-all duration-200 rounded-lg'
+                  className={navItemClass('/admin')}
                 >
                   Administration
                 </Sidebar.Item>
@@ -372,11 +392,11 @@ export default function Navbar() {
             <Sidebar.ItemGroup>
             <Sidebar.Item
                 onClick={() => {
-                  handleNavigation('/login'); // Navigate to the login page
-                  handleLogout(); // Call logout function
+                  handleNavigation('/login');
+                  handleLogout();
                 }}
                 icon={IoLogOut}
-                className='cursor-pointer min-h-[44px] flex items-center text-text-primary dark:text-text-primary hover:text-semantic-error-600 dark:hover:text-semantic-error-400 hover:bg-background-hover dark:hover:bg-background-hover transition-all duration-200 rounded-lg'
+                className={navItemClass(null, true)}
               >
                 {t('logout')}
               </Sidebar.Item>

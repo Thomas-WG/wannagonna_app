@@ -16,7 +16,7 @@ const QuickActions = memo(function QuickActions({ orgData }) {
 
   return (
     <div className="mb-6 sm:mb-8">
-      <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 px-1 text-text-primary dark:text-text-primary">
+      <h2 className="section-title text-lg sm:text-xl font-semibold mb-3 sm:mb-4 px-1 text-text-primary dark:text-text-primary">
         {t('quickActions')}
       </h2>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-3 sm:gap-4">

@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { Modal, Card } from 'flowbite-react';
 import { HiX, HiUser } from 'react-icons/hi';
 import { useTranslations } from 'next-intl';
@@ -7,6 +8,7 @@ import { useModal } from '@/utils/modal/useModal';
 import { usePublicProfile } from '@/hooks/profile/usePublicProfile';
 import { usePublicProfileBadges } from '@/hooks/profile/usePublicProfileBadges';
 import { usePublicProfileActivities } from '@/hooks/profile/usePublicProfileActivities';
+import { useBadgeImageUrls } from '@/hooks/badges/useBadgeImageUrls';
 import { useQuery } from '@tanstack/react-query';
 import { getGlobalParameters } from '@/utils/impactParameterService';
 import PublicProfileSkeleton from './PublicProfileSkeleton';
@@ -33,6 +35,16 @@ export default function PublicProfileModal({ isOpen, onClose, userId, isOwnProfi
     data: badges = [], 
     isLoading: isLoadingBadges 
   } = usePublicProfileBadges(userId);
+
+  const { badgeImageUrls } = useBadgeImageUrls(badges);
+  const enrichedBadges = useMemo(
+    () =>
+      badges.map((b) => ({
+        ...b,
+        imageUrl: badgeImageUrls[b.id] ?? null,
+      })),
+    [badges, badgeImageUrls]
+  );
 
   const { 
     data: completedActivities = [], 
@@ -83,7 +95,11 @@ export default function PublicProfileModal({ isOpen, onClose, userId, isOwnProfi
         ) : (
           <div className="space-y-4 md:space-y-6 w-full max-w-full overflow-x-hidden">
             {/* Header Section */}
-            <ProfileHeaderSection profileData={profile} />
+            <ProfileHeaderSection
+              profileData={profile}
+              badges={enrichedBadges}
+              activitiesCount={completedActivities?.length}
+            />
 
             {/* Content Layout - Mobile: About/Availability first, then Badges/Connect. Desktop: Sidebar + Main Content */}
             <div className="flex flex-col lg:flex-row gap-6 w-full">
@@ -95,7 +111,9 @@ export default function PublicProfileModal({ isOpen, onClose, userId, isOwnProfi
 
               {/* Left Sidebar - Stats, Badges, Connect (narrower, fixed width on desktop) */}
               <div className="lg:w-80 lg:flex-shrink-0 space-y-6 order-2 lg:order-1">
-                <BadgesSection badges={badges} />
+                <div id="badges">
+                  <BadgesSection badges={enrichedBadges} />
+                </div>
                 <ConnectSection profileData={profile} />
               </div>
 

@@ -1,7 +1,8 @@
 'use client';
 
 import { memo, useCallback, useMemo } from 'react';
-import { Select, Badge } from 'flowbite-react';
+import { Badge } from 'flowbite-react';
+import SortBySelect from '@/components/common/SortBySelect';
 import { HiCheck, HiX, HiClock, HiEye, HiDocumentText } from 'react-icons/hi';
 import { useTranslations } from 'next-intl';
 import ActivityCard from '@/components/activities/ActivityCard';
@@ -124,7 +125,7 @@ const ActivitiesSection = memo(function ActivitiesSection({
 
   return (
     <div className="mb-6 sm:mb-10">
-      <h2 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 px-1 text-text-primary dark:text-text-primary">
+      <h2 className="section-title text-xl sm:text-2xl font-semibold mb-3 sm:mb-4 px-1 text-text-primary dark:text-text-primary">
         {showApplications
           ? t('yourApplications') || 'Your Applications'
           : t('yourActivities') || 'Your Activities'}
@@ -146,24 +147,20 @@ const ActivitiesSection = memo(function ActivitiesSection({
           {tActivities('of')}{' '}
           <span className="font-semibold">{activities.length}</span> {tActivities('activities')}
         </div>
-        <div className="flex items-center gap-2">
-          <label className="text-sm font-medium text-text-primary dark:text-text-primary">
-            {tActivities('sortBy')}
-          </label>
-          <Select
-            value={sortBy}
-            onChange={(e) => onSortChange(e.target.value)}
-            className="w-full sm:w-auto bg-background-card dark:bg-background-card text-text-primary dark:text-text-primary border-border-light dark:border-border-dark"
-          >
-            <option value="newest">{tActivities('sortNewest')}</option>
-            <option value="oldest">{tActivities('sortOldest')}</option>
-            <option value="xp_high">{tActivities('sortXpHigh')}</option>
-            <option value="xp_low">{tActivities('sortXpLow')}</option>
-            <option value="applicants_high">{tActivities('sortApplicantsHigh')}</option>
-            <option value="applicants_low">{tActivities('sortApplicantsLow')}</option>
-            <option value="alphabetical">{tActivities('sortAlphabetical')}</option>
-          </Select>
-        </div>
+        <SortBySelect
+          label={tActivities('sortBy')}
+          value={sortBy}
+          onChange={onSortChange}
+          options={[
+            { value: 'newest', label: tActivities('sortNewest') },
+            { value: 'oldest', label: tActivities('sortOldest') },
+            { value: 'xp_high', label: tActivities('sortXpHigh') },
+            { value: 'xp_low', label: tActivities('sortXpLow') },
+            { value: 'applicants_high', label: tActivities('sortApplicantsHigh') },
+            { value: 'applicants_low', label: tActivities('sortApplicantsLow') },
+            { value: 'alphabetical', label: tActivities('sortAlphabetical') },
+          ]}
+        />
       </div>
 
       {sortedActivities.length === 0 ? (
@@ -174,7 +171,7 @@ const ActivitiesSection = memo(function ActivitiesSection({
               'No activities found. Start applying to activities to see them here!'}
         </p>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 items-stretch">
           {sortedActivities.map((activity) => {
             const applicationData = showApplications
               ? applicationsWithActivities.find((app) => app.id === activity.applicationId)

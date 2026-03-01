@@ -8,23 +8,29 @@ import { Card } from 'flowbite-react';
 
 /**
  * BadgeList component displays all badges earned by a user
- * @param {string} userId - The user's ID
+ * @param {string} userId - The user's ID (used when badges not provided)
+ * @param {Array} badges - Optional pre-fetched badges with imageUrl (e.g. from parent)
+ * @param {boolean} badgesLoading - When badges from parent, true while parent is loading
  */
-export default function BadgeList({ userId }) {
-  const [badges, setBadges] = useState([]);
-  const [loading, setLoading] = useState(true);
+export default function BadgeList({ userId, badges: badgesProp, badgesLoading }) {
+  const [badges, setBadges] = useState(badgesProp ?? []);
+  const [loading, setLoading] = useState(badgesProp === undefined);
 
   useEffect(() => {
-    const loadBadges = async () => {
-      if (!userId) {
-        setLoading(false);
-        return;
-      }
+    if (badgesProp !== undefined) {
+      setBadges(badgesProp);
+      setLoading(badgesLoading ?? false);
+      return;
+    }
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
 
+    const loadBadges = async () => {
       try {
         setLoading(true);
         const userBadges = await fetchUserBadges(userId);
-        console.log('Fetched user badges:', userBadges);
         setBadges(userBadges);
       } catch (error) {
         console.error('Error loading user badges:', error);
@@ -34,7 +40,7 @@ export default function BadgeList({ userId }) {
     };
 
     loadBadges();
-  }, [userId]);
+  }, [userId, badgesProp, badgesLoading]);
 
   if (loading) {
     return (

@@ -43,7 +43,8 @@ const ActivitiesMapView = dynamic(() => import('@/components/activities/Activiti
     </div>
   )
 });
-import { Toast, Select, Spinner, Badge, Button } from 'flowbite-react';
+import { Toast, Spinner, Badge, Button } from 'flowbite-react';
+import SortBySelect from '@/components/common/SortBySelect';
 import { createApplication } from '@/utils/crudApplications';
 import { useAuth } from '@/utils/auth/AuthContext';
 import BadgeAnimation from '@/components/badges/BadgeAnimation';
@@ -571,11 +572,11 @@ export default function ActivitiesPage() {
   if (!user && !authLoading) return null;
 
   return (
-    <div className="min-h-dvh bg-background-page dark:bg-background-page">
+    <div className="min-h-dvh">
       <div className="container mx-auto px-4 py-6 max-w-7xl">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-text-primary dark:text-text-primary mb-2">
+          <h1 className="page-title text-2xl sm:text-3xl font-bold text-text-primary dark:text-text-primary mb-2">
             {t('title')}
           </h1>
           <p className="text-text-secondary dark:text-text-secondary">
@@ -741,18 +742,20 @@ export default function ActivitiesPage() {
             </div>
           </div>
           {viewMode === 'list' && (
-          <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-text-primary dark:text-text-primary">{t('sortBy')}</label>
-            <Select value={sortBy} onChange={(e) => setStoreSortBy(e.target.value)} className="w-full sm:w-auto bg-background-card dark:bg-background-card text-text-primary dark:text-text-primary border-border-light dark:border-border-dark">
-              <option value="newest">{t('sortNewest')}</option>
-              <option value="oldest">{t('sortOldest')}</option>
-              <option value="xp_high">{t('sortXpHigh')}</option>
-              <option value="xp_low">{t('sortXpLow')}</option>
-              <option value="applicants_high">{t('sortApplicantsHigh')}</option>
-              <option value="applicants_low">{t('sortApplicantsLow')}</option>
-              <option value="alphabetical">{t('sortAlphabetical')}</option>
-            </Select>
-          </div>
+          <SortBySelect
+            label={t('sortBy')}
+            value={sortBy}
+            onChange={setStoreSortBy}
+            options={[
+              { value: 'newest', label: t('sortNewest') },
+              { value: 'oldest', label: t('sortOldest') },
+              { value: 'xp_high', label: t('sortXpHigh') },
+              { value: 'xp_low', label: t('sortXpLow') },
+              { value: 'applicants_high', label: t('sortApplicantsHigh') },
+              { value: 'applicants_low', label: t('sortApplicantsLow') },
+              { value: 'alphabetical', label: t('sortAlphabetical') },
+            ]}
+          />
           )}
         </div>
 
@@ -961,7 +964,7 @@ export default function ActivitiesPage() {
         {/* Activities Grid (list view only) */}
         {viewMode === 'list' && !activitiesLoading && paginatedActivities.length > 0 && (
           <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 items-stretch">
               {paginatedActivities.map((activity) => (
               <div key={activity.id} className="relative">
                 <ActivityCard

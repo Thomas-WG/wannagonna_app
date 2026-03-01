@@ -62,7 +62,7 @@ export default function FAQPage() {
     <div className="w-full max-w-full overflow-x-hidden px-3 sm:px-4 md:container md:mx-auto py-3 sm:py-4 space-y-4 sm:space-y-6">
       {/* Page Header */}
       <div className="text-center mb-6 sm:mb-8">
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-text-primary dark:text-text-primary mb-2">
+        <h1 className="page-title text-2xl sm:text-3xl md:text-4xl font-bold text-text-primary dark:text-text-primary mb-2">
           {t('title')}
         </h1>
         <p className="text-sm sm:text-base text-text-secondary dark:text-text-secondary">

@@ -155,7 +155,7 @@ export default function AddressesPage() {
   }
 
   return (
-    <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 bg-background-page dark:bg-background-page min-h-dvh">
+    <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 min-h-dvh">
       {/* Header */}
       <div className="mb-6 sm:mb-8">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
