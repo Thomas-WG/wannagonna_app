@@ -19,7 +19,7 @@ export default function ConnectSection({ profileData }) {
   if (!hasLinks) return null;
 
   return (
-    <div className="bg-background-hover dark:bg-background-hover rounded-lg p-4 border border-border-light dark:border-border-dark">
+    <div className="rounded-xl p-4 border border-gray-100 dark:border-gray-700 shadow-sm">
       <h3 className="text-lg font-semibold text-text-primary dark:text-text-primary mb-3">{tProfile('connectWithMe') || 'Connect'}</h3>
       <div className="space-y-2">
         {profileData.website && (

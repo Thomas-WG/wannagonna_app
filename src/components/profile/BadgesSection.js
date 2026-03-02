@@ -12,7 +12,7 @@ export default function BadgesSection({ badges }) {
   const tProfile = useTranslations('PublicProfile');
 
   return (
-    <div className="bg-background-hover dark:bg-background-hover rounded-lg p-4 border border-border-light dark:border-border-dark">
+    <div className="rounded-xl p-4 border border-gray-100 dark:border-gray-700 shadow-sm">
       <h3 className="text-lg font-semibold text-text-primary dark:text-text-primary mb-3 flex items-center gap-2">
         <HiBadgeCheck className="w-5 h-5 text-activityType-event-500 dark:text-activityType-event-400" />
         {tProfile('badges')}
@@ -24,13 +24,23 @@ export default function BadgesSection({ badges }) {
           <p className="text-sm text-text-secondary dark:text-text-secondary">{tProfile('noBadges')}</p>
         </div>
       ) : (
-        <div className="grid grid-cols-3 gap-2 justify-items-center">
-          {badges.map((badge) => (
-            <div key={badge.id} className="w-full max-w-[70px]">
-              <BadgeDisplay badge={badge} size="small" />
+        <>
+          <div
+            className="max-h-[420px] overflow-y-auto pr-1"
+            style={{ scrollbarWidth: 'thin', scrollbarColor: '#e5e7eb transparent' }}
+          >
+            <div className="grid grid-cols-3 gap-2 justify-items-center">
+              {badges.map((badge) => (
+                <div key={badge.id} className="w-full max-w-[70px]">
+                  <BadgeDisplay badge={badge} size="small" />
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          </div>
+          <p className="text-xs text-[#9ca3af] dark:text-text-tertiary text-center mt-2">
+            {badges.length} badges earned
+          </p>
+        </>
       )}
     </div>
   );
