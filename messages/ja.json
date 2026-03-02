@@ -180,6 +180,25 @@
         "confirm": "確認",
         "cancel": "キャンセル"
     },
+    "Leaderboard": {
+        "title": "リーダーボード",
+        "subtitle": "過去30日間のランキング。チャンピオンの称号は毎日変わる — 保持するためにアクティブでいましょう。",
+        "global": "グローバル",
+        "bySdg": "SDGs別",
+        "byRegion": "地域別",
+        "activityScore": "アクティビティスコア",
+        "activityScoreTooltip": "過去30日間のアクティビティに基づいています。あなたの合計XPには影響しません。",
+        "you": "あなた",
+        "youAreChampion": "あなたがチャンピオンです！",
+        "championKeepGoing": "続けましょう — 誰かが追いついてくるかもしれません。",
+        "behindRank": "#{rank}位まで",
+        "thresholdGateTitle": "{label}のリーダーボードはまもなく解放",
+        "thresholdGateDesc": "解放には5人のアクティブなボランティアが必要です。",
+        "volunteersAlready": "人のボランティアがすでに貢献しています。",
+        "volunteers": "人",
+        "goal": "目標",
+        "footer": "毎晩更新 · ランキングはあなたの合計XPに影響しません"
+    },
     "ActivityCard": {
         "points": "点",
         "present": "現在",

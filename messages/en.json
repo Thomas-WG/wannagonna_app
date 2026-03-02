@@ -179,6 +179,25 @@
         "confirm": "Confirm",
         "cancel": "Cancel"
     },
+    "Leaderboard": {
+        "title": "Leaderboard",
+        "subtitle": "Rolling 30-day rankings. The Champion title changes hands every day — stay active to hold it.",
+        "global": "Global",
+        "bySdg": "By SDG",
+        "byRegion": "By Region",
+        "activityScore": "Activity Score",
+        "activityScoreTooltip": "Based on your activity over the last 30 days. Your total XP is never affected.",
+        "you": "you",
+        "youAreChampion": "You are the Champion!",
+        "championKeepGoing": "Keep going — someone might be catching up.",
+        "behindRank": "behind #{rank}",
+        "thresholdGateTitle": "{label} leaderboard unlocks soon",
+        "thresholdGateDesc": "Needs 5 active volunteers to open.",
+        "volunteersAlready": "volunteer(s) already contributing here.",
+        "volunteers": "volunteers",
+        "goal": "Goal",
+        "footer": "Updated nightly · Your total XP is never affected by rankings"
+    },
     "ActivityCard": {
         "points": "points",
         "present": "present",

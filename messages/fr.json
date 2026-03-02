@@ -180,6 +180,25 @@
         "confirm": "Confirmer",
         "cancel": "Annuler"
     },
+    "Leaderboard": {
+        "title": "Classement",
+        "subtitle": "Classements sur 30 jours glissants. Le titre de Champion change chaque jour — restez actif pour le garder.",
+        "global": "Mondial",
+        "bySdg": "Par ODD",
+        "byRegion": "Par région",
+        "activityScore": "Score d'activité",
+        "activityScoreTooltip": "Basé sur votre activité des 30 derniers jours. Votre XP total n'est jamais affecté.",
+        "you": "vous",
+        "youAreChampion": "Vous êtes le Champion !",
+        "championKeepGoing": "Continuez — quelqu'un pourrait vous rattraper.",
+        "behindRank": "derrière #{rank}",
+        "thresholdGateTitle": "Le classement {label} débloquera bientôt",
+        "thresholdGateDesc": "5 bénévoles actifs nécessaires pour ouvrir.",
+        "volunteersAlready": "bénévole(s) contribuent déjà ici.",
+        "volunteers": "bénévoles",
+        "goal": "Objectif",
+        "footer": "Mis à jour chaque nuit · Votre XP total n'est jamais affecté par les classements"
+    },
     "ActivityCard": {
         "points": "points",
         "present": "présent",

@@ -313,15 +313,13 @@ export default function Navbar() {
               >
                 {t('badges')}
               </Sidebar.Item>
-              {isAdmin && (
-                <Sidebar.Item
-                  onClick={() => handleLinkClick('/leaderboard')}
-                  icon={MdOutlineLeaderboard}
-                  className={navItemClass('/leaderboard')}
-                >
-                  {t('leaderboard')}
-                </Sidebar.Item>
-              )}
+              <Sidebar.Item
+                onClick={() => handleLinkClick('/leaderboard')}
+                icon={MdOutlineLeaderboard}
+                className={navItemClass('/leaderboard')}
+              >
+                {t('leaderboard')}
+              </Sidebar.Item>
               {isAdmin && (
                 <Sidebar.Item
                   onClick={() => handleLinkClick('/myteam')}

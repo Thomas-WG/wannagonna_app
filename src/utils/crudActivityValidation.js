@@ -208,7 +208,7 @@ export async function validateActivityByQR(userId, activityId, token) {
     try {
       await createOrUpdateParticipation(activityId, userId, {
         status: 'validated',
-        hours: { reported: 0, validated: 0, reportedAt: null, validatedAt: null },
+        hours: { reported: 0, validated: 0, reportedAt: null, validatedAt: Timestamp.now() },
       });
     } catch (partErr) {
       console.warn('Error ensuring participation for QR validation (non-blocking):', partErr);

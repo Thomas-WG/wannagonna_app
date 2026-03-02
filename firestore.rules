@@ -390,5 +390,13 @@ service cloud.firestore {
       allow create: if true;
       allow read, update, delete: if false;
     }
+
+    // ============================================
+    // LEADERBOARD SCORES (Cloud Functions write only)
+    // ============================================
+    match /leaderboard_scores/{docId} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+    }
   }
 }
