@@ -5,7 +5,7 @@
     "Landing": {
         "heroTitle": "今日から違いを作ろう",
         "heroEyebrow": "近日公開",
-        "heroSubtitle": "WannaGonnaはスキルを持つボランティアと必要とするNPOをつなぎます — オンライン、地域、イベントで。無料。測定可能。人を本当に動かすために設計。",
+        "heroSubtitle": "WannaGonnaはボランティアと必要とするNPOをスキルに基づいてつなぎます — オンライン、地域、イベントで。無料。測定可能。人を本当に動かすために設計。",
         "heroCtaVolunteer": "ボランティア向け",
         "heroCtaNpo": "NPO向け — ずっと無料",
         "whatsComingLabel": "近日登場",
@@ -14,7 +14,7 @@
         "featureLocalTitle": "地域・イベント活動",
         "featureLocalDesc": "お近くの対面ミッションやNPOイベントに参加。到着時にQRコードをスキャン — 時間とポイントが即記録。",
         "featureGamifiedTitle": "ゲーム化されたインパクト",
-        "featureGamifiedDesc": "XPを獲得、レベルアップ、バッジとトロフィーを収集。クレジットを現実のインパクトに — 例えば植林。",
+        "featureGamifiedDesc": "XPを獲得、レベルアップ、バッジとトロフィーを収集。リーダーボードで競い合い、ランキングを確認。",
         "featureDashboardTitle": "NPOダッシュボード",
         "featureDashboardDesc": "完全な管理ハブ — ボランティア時間、KPI、活動、インパクトレポートを一元管理。",
         "featureVolMgmtTitle": "ボランティア管理",
@@ -67,6 +67,7 @@
         "contactMessageRequired": "メッセージを入力してください",
         "footerLogin": "ログイン",
         "footerTagline": "一緒にインパクトを。",
+        "footerCopyright": "© {year} WannaGonna",
         "selectLanguage": "言語",
         "select": "言語"
     },

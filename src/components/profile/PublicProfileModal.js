@@ -118,7 +118,7 @@ export default function PublicProfileModal({ isOpen, onClose, userId, isOwnProfi
               </div>
 
               {/* Main Content Area - About, Skills, Availability (flexible width) - Desktop Only */}
-              <div className="hidden lg:flex flex-1 space-y-6 min-w-0 order-2">
+              <div className="hidden lg:flex lg:flex-col flex-1 gap-6 min-w-0 order-2">
                 <AboutSection profileData={profile} translatedSkills={translatedSkills} isMobile={false} />
                 <SkillsAvailabilitySection profileData={profile} translatedSkills={translatedSkills} isMobile={false} />
               </div>
