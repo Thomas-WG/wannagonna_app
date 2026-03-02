@@ -177,13 +177,6 @@ export default function ProfileHeaderSection({ profileData, badges: badgesProp, 
                     </span>
                   </div>
                 )}
-
-                <a
-                  href="#badges"
-                  className="ml-1 text-xs text-[#009AA2] hover:underline font-medium dark:text-teal-400"
-                >
-                  View all
-                </a>
               </div>
             )}
           </div>

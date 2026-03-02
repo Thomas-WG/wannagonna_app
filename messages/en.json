@@ -5,7 +5,7 @@
     "Landing": {
         "heroTitle": "Make a difference today",
         "heroEyebrow": "Launching soon",
-        "heroSubtitle": "WannaGonna connects skilled volunteers with NPOs who need them — online, locally, at events. Free. Measurable. Built to actually motivate people.",
+        "heroSubtitle": "WannaGonna connects volunteers with NPOs who need them based on skills — online, locally, at events. Free. Measurable. Built to actually motivate people.",
         "heroCtaVolunteer": "For Volunteers",
         "heroCtaNpo": "For NPOs — always free",
         "whatsComingLabel": "What's coming",
@@ -14,7 +14,7 @@
         "featureLocalTitle": "Local & Event Activities",
         "featureLocalDesc": "Join in-person missions and NPO events near you. Scan a QR code on arrival — your hours and points are logged instantly.",
         "featureGamifiedTitle": "Gamified Impact",
-        "featureGamifiedDesc": "Earn XP, level up, collect badges and trophies. Convert your credits into real-world impact — like planting trees.",
+        "featureGamifiedDesc": "Earn XP, level up, collect badges and trophies. Climb the leaderboards and see how you rank.",
         "featureDashboardTitle": "NPO Dashboard",
         "featureDashboardDesc": "A complete management hub — track volunteer hours, measure KPIs, manage activities, and report impact. All in one place.",
         "featureVolMgmtTitle": "Volunteer Management",
@@ -66,6 +66,7 @@
         "contactNameRequired": "Name is required",
         "contactMessageRequired": "Message is required",
         "footerTagline": "Making an impact together.",
+        "footerCopyright": "© {year} WannaGonna",
         "selectLanguage": "Language",
         "select": "Language"
     },

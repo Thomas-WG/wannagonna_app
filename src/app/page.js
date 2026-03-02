@@ -502,6 +502,9 @@ export default function Home() {
                 </a>
               </div>
             </div>
+            <p className="max-w-5xl mx-auto mt-6 pt-4 border-t border-[#e5e7eb] text-xs text-[#9ca3af] text-center">
+              {t('footerCopyright', { year: new Date().getFullYear() })}
+            </p>
           </footer>
         </main>
       </div>

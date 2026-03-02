@@ -5,7 +5,7 @@
     "Landing": {
         "heroTitle": "Faites la différence aujourd'hui",
         "heroEyebrow": "Bientôt disponible",
-        "heroSubtitle": "WannaGonna met en relation les bénévoles qualifiés et les associations qui en ont besoin — en ligne, localement, lors d'événements. Gratuit. Mesurable. Conçu pour vraiment motiver.",
+        "heroSubtitle": "WannaGonna met en relation les bénévoles et les associations qui en ont besoin selon les compétences — en ligne, localement, lors d'événements. Gratuit. Mesurable. Conçu pour vraiment motiver.",
         "heroCtaVolunteer": "Pour les bénévoles",
         "heroCtaNpo": "Pour les associations — toujours gratuit",
         "whatsComingLabel": "À venir",
@@ -14,7 +14,7 @@
         "featureLocalTitle": "Activités locales et événements",
         "featureLocalDesc": "Rejoignez des missions sur place et des événements associatifs près de chez vous. Scannez un QR code à l'arrivée — vos heures et points sont enregistrés instantanément.",
         "featureGamifiedTitle": "Impact gamifié",
-        "featureGamifiedDesc": "Gagnez des XP, montez de niveau, collectez badges et trophées. Convertissez vos crédits en impact concret — comme planter des arbres.",
+        "featureGamifiedDesc": "Gagnez des XP, montez de niveau, collectez badges et trophées. Grimpez les classements et voyez votre rang.",
         "featureDashboardTitle": "Tableau de bord NPO",
         "featureDashboardDesc": "Un hub de gestion complet — suivez les heures des bénévoles, mesurez les KPI, gérez les activités et rapportez l'impact. Tout au même endroit.",
         "featureVolMgmtTitle": "Gestion des bénévoles",
@@ -67,6 +67,7 @@
         "contactMessageRequired": "Le message est requis",
         "footerLogin": "Connexion",
         "footerTagline": "Faire une différence ensemble.",
+        "footerCopyright": "© {year} WannaGonna",
         "selectLanguage": "Langue",
         "select": "Langue"
     },
