@@ -30,6 +30,10 @@ import {
 } from "./src/rewards/onValidationCreated.js";
 import {onActivityClosed} from "./src/impact/onActivityClosed.js";
 import {exportImpactReport} from "./src/impact/exportImpactReport.js";
+import {
+  computeLeaderboard,
+  runComputeLeaderboard,
+} from "./src/leaderboard/computeLeaderboard.js";
 
 export const onActivityCreatedUpdateActivityCount = onDocumentCreated(
     "activities/{activityId}",
@@ -981,3 +985,25 @@ export {onActivityClosed};
 
 // Impact: export impact report as Excel
 export {exportImpactReport};
+
+// Leaderboard: nightly scheduled job + admin manual trigger
+export {computeLeaderboard};
+
+/**
+ * Callable to manually trigger leaderboard computation.
+ * Admin only. For testing and on-demand refresh.
+ */
+export const triggerComputeLeaderboard = onCall(
+    {invoker: "public"},
+    async (request) => {
+      if (!request.auth) {
+        throw new Error("Unauthorized");
+      }
+      const userRole = request.auth.token?.role;
+      if (userRole !== "admin") {
+        throw new Error("Forbidden: Only admins can trigger leaderboard " +
+          "computation");
+      }
+      const result = await runComputeLeaderboard();
+      return {success: true, ...result};
+    });

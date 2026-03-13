@@ -7,6 +7,38 @@
         { "fieldPath": "userId", "order": "ASCENDING" },
         { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "validations",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "rewardsProcessed", "order": "ASCENDING" },
+        { "fieldPath": "validatedAt", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "leaderboard_scores",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "dimension", "order": "ASCENDING" },
+        { "fieldPath": "activityScore", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "leaderboard_scores",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "userId", "order": "ASCENDING" },
+        { "fieldPath": "activityScore", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "members",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "xp", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

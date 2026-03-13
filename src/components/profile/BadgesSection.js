@@ -2,14 +2,22 @@
 
 import { HiBadgeCheck } from 'react-icons/hi';
 import BadgeDisplay from '@/components/badges/BadgeDisplay';
+import ChampionBadge from '@/components/leaderboard/ChampionBadge';
 import { useTranslations } from 'next-intl';
 
 /**
  * Badges section component
  * Displays user badges in a grid
+ * @param {Object[]} badges - Array of badge objects
+ * @param {Object[]} [championDimensions] - Leaderboard rank docs where user is champion (for ChampionBadge overlay)
  */
-export default function BadgesSection({ badges }) {
+export default function BadgesSection({ badges, championDimensions = [] }) {
   const tProfile = useTranslations('PublicProfile');
+
+  const getChampionForBadge = (badgeId) => {
+    const sdgDimensionId = `sdg_${String(badgeId).replace(/^sdg_/i, '').replace(/^0+/, '')}`;
+    return championDimensions.find((r) => r.dimension === sdgDimensionId) || null;
+  };
 
   return (
     <div className="rounded-xl p-4 border border-gray-100 dark:border-gray-700 shadow-sm">
@@ -30,11 +38,27 @@ export default function BadgesSection({ badges }) {
             style={{ scrollbarWidth: 'thin', scrollbarColor: '#e5e7eb transparent' }}
           >
             <div className="grid grid-cols-3 gap-2 justify-items-center">
-              {badges.map((badge) => (
-                <div key={badge.id} className="w-full max-w-[70px]">
+              {badges.map((badge) => {
+                const champion = getChampionForBadge(badge.id);
+                const content = (
                   <BadgeDisplay badge={badge} size="small" />
-                </div>
-              ))}
+                );
+                return (
+                  <div key={badge.id} className="w-full max-w-[70px] flex justify-center">
+                    {champion ? (
+                      <ChampionBadge
+                        dimensionLabel={champion.dimensionLabel || `SDG ${badge.id}`}
+                        totalChampionships={champion.totalChampionships || 0}
+                        isCurrentChampion={champion.isCurrentChampion}
+                      >
+                        {content}
+                      </ChampionBadge>
+                    ) : (
+                      content
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
           <p className="text-xs text-[#9ca3af] dark:text-text-tertiary text-center mt-2">

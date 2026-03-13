@@ -9,6 +9,7 @@ import { usePublicProfile } from '@/hooks/profile/usePublicProfile';
 import { usePublicProfileBadges } from '@/hooks/profile/usePublicProfileBadges';
 import { usePublicProfileActivities } from '@/hooks/profile/usePublicProfileActivities';
 import { useBadgeImageUrls } from '@/hooks/badges/useBadgeImageUrls';
+import { useMyRanks } from '@/hooks/useMyRanks';
 import { useQuery } from '@tanstack/react-query';
 import { getGlobalParameters } from '@/utils/impactParameterService';
 import PublicProfileSkeleton from './PublicProfileSkeleton';
@@ -37,6 +38,7 @@ export default function PublicProfileModal({ isOpen, onClose, userId, isOwnProfi
   } = usePublicProfileBadges(userId);
 
   const { badgeImageUrls } = useBadgeImageUrls(badges);
+  const { championDimensions } = useMyRanks();
   const enrichedBadges = useMemo(
     () =>
       badges.map((b) => ({
@@ -112,7 +114,10 @@ export default function PublicProfileModal({ isOpen, onClose, userId, isOwnProfi
               {/* Left Sidebar - Stats, Badges, Connect (narrower, fixed width on desktop) */}
               <div className="lg:w-80 lg:flex-shrink-0 space-y-6 order-2 lg:order-1">
                 <div id="badges">
-                  <BadgesSection badges={enrichedBadges} />
+                  <BadgesSection
+                    badges={enrichedBadges}
+                    championDimensions={isOwnProfile ? championDimensions : []}
+                  />
                 </div>
                 <ConnectSection profileData={profile} />
               </div>
