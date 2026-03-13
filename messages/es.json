@@ -182,7 +182,11 @@
     },
     "Leaderboard": {
         "title": "Clasificación",
-        "subtitle": "Rankings de 30 días rodantes. El título de Campeón cambia cada día — mantente activo para conservarlo.",
+        "descriptionAllTime": "Basado en el XP total acumulado.",
+        "descriptionGlobal": "Basado en actividades completadas en los últimos 30 días en todo el mundo.",
+        "descriptionSdg": "Basado en actividades completadas en los últimos 30 días para este ODS.",
+        "descriptionRegion": "Basado en actividades completadas en los últimos 30 días en esta región.",
+        "allTime": "Total",
         "global": "Global",
         "bySdg": "Por ODS",
         "byRegion": "Por región",

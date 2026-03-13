@@ -4,16 +4,17 @@ import { useState, useRef, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useAuth } from '@/utils/auth/AuthContext';
 import { useLeaderboard } from '@/hooks/useLeaderboard';
+import { useLeaderboardDimensions } from '@/hooks/useLeaderboardDimensions';
 import LeaderboardPanel from './LeaderboardPanel';
 import TabButton from './TabButton';
 import DropItem from './DropItem';
 import ActivityScoreTooltip from './ActivityScoreTooltip';
-import { SDG_LIST, CONTINENTS, THRESHOLD, MOCK_DORMANT_ENTRIES } from './leaderboardConstants';
+import { SDG_LIST, CONTINENTS, THRESHOLD } from './leaderboardConstants';
 
 export default function LeaderboardPage() {
   const t = useTranslations('Leaderboard');
   const { user } = useAuth();
-  const [tab, setTab] = useState('global');
+  const [tab, setTab] = useState('alltime');
   const [sdg, setSdg] = useState('sdg_13');
   const [continent, setContinent] = useState('europe');
   const [sdgOpen, setSdgOpen] = useState(false);
@@ -21,25 +22,46 @@ export default function LeaderboardPage() {
   const sdgRef = useRef(null);
   const contRef = useRef(null);
 
+  const { sdg: activeSdgIds, continent: activeContinentIds } = useLeaderboardDimensions();
+
+  const filteredSdgs = activeSdgIds.length > 0
+    ? SDG_LIST.filter((s) => activeSdgIds.includes(s.id))
+    : SDG_LIST;
+  const filteredContinents = activeContinentIds.length > 0
+    ? CONTINENTS.filter((c) => activeContinentIds.includes(c.id))
+    : CONTINENTS;
+
   const dimensionId =
-    tab === 'global' ? 'global' : tab === 'sdg' ? sdg : continent;
+    tab === 'alltime' ? 'alltime' : tab === 'global' ? 'global' : tab === 'sdg' ? sdg : continent;
 
-  const { entries: fireEntries, loading } = useLeaderboard(dimensionId);
-
-  const isDormantDemo = dimensionId === 'sdg_4';
-  const entries = isDormantDemo ? MOCK_DORMANT_ENTRIES : fireEntries;
+  const { entries, loading } = useLeaderboard(dimensionId);
 
   const activeLabel =
-    tab === 'global'
+    tab === 'alltime'
+      ? t('allTime')
+      : tab === 'global'
       ? t('global')
       : tab === 'sdg'
-      ? SDG_LIST.find((s) => s.id === sdg)?.label
-      : CONTINENTS.find((c) => c.id === continent)?.label;
+      ? filteredSdgs.find((s) => s.id === sdg)?.label ?? SDG_LIST.find((s) => s.id === sdg)?.label
+      : filteredContinents.find((c) => c.id === continent)?.label ?? CONTINENTS.find((c) => c.id === continent)?.label;
 
   const closeAll = () => {
     setSdgOpen(false);
     setContOpen(false);
   };
+
+  // Reset sdg/continent when filtered lists change and current selection is no longer valid
+  useEffect(() => {
+    if (filteredSdgs.length > 0 && !filteredSdgs.some((s) => s.id === sdg)) {
+      setSdg(filteredSdgs[0].id);
+    }
+  }, [filteredSdgs, sdg]);
+
+  useEffect(() => {
+    if (filteredContinents.length > 0 && !filteredContinents.some((c) => c.id === continent)) {
+      setContinent(filteredContinents[0].id);
+    }
+  }, [filteredContinents, continent]);
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -84,15 +106,21 @@ export default function LeaderboardPage() {
               {t('title')}
             </h1>
           </div>
-          <p className="text-sm text-text-secondary dark:text-text-secondary leading-relaxed max-w-[400px]">
-            {t('subtitle')}
-          </p>
         </div>
 
         <div
           className="relative z-[100] flex flex-col md:flex-row gap-1.5 mb-4 [&>*]:w-full md:[&>*]:w-auto animate-[pageIn_0.45s_0.08s_ease_both]"
           onClick={(e) => e.stopPropagation()}
         >
+          <TabButton
+            active={tab === 'alltime'}
+            onClick={() => {
+              setTab('alltime');
+              closeAll();
+            }}
+          >
+            🏆 {t('allTime')}
+          </TabButton>
           <TabButton
             active={tab === 'global'}
             onClick={() => {
@@ -126,7 +154,7 @@ export default function LeaderboardPage() {
                 }}
                 role="listbox"
               >
-                {SDG_LIST.map((s) => (
+                {filteredSdgs.map((s) => (
                   <DropItem
                     key={s.id}
                     label={s.label}
@@ -167,14 +195,15 @@ export default function LeaderboardPage() {
                 }}
                 role="listbox"
               >
-                {CONTINENTS.map((c) => (
+                {filteredContinents.map((c) => (
                   <DropItem
                     key={c.id}
                     label={c.label}
                     color={c.color}
                     isSelected={continent === c.id}
                     locked={
-                      dimensionId === c.id && entries.length < THRESHOLD
+                      dimensionId === c.id &&
+                      entries.length < THRESHOLD
                     }
                     onClick={() => {
                       setContinent(c.id);
@@ -186,6 +215,16 @@ export default function LeaderboardPage() {
             )}
           </div>
         </div>
+
+        <p className="text-xs text-text-secondary dark:text-text-secondary mb-3 leading-relaxed animate-[pageIn_0.45s_0.12s_ease_both]">
+          {tab === 'alltime'
+            ? t('descriptionAllTime')
+            : tab === 'global'
+            ? t('descriptionGlobal')
+            : tab === 'sdg'
+            ? t('descriptionSdg')
+            : t('descriptionRegion')}
+        </p>
 
         <div className="flex items-center justify-between mb-3 animate-[pageIn_0.45s_0.14s_ease_both]">
           <div className="font-heading font-extrabold text-base text-text-primary dark:text-text-primary">
@@ -210,8 +249,7 @@ export default function LeaderboardPage() {
             label={activeLabel}
             entries={entries}
             currentUserId={user?.uid}
-            loading={isDormantDemo ? false : loading}
-            isDormant={isDormantDemo}
+            loading={loading}
           />
         </div>
 

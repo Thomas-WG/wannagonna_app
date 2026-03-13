@@ -182,7 +182,11 @@
     },
     "Leaderboard": {
         "title": "リーダーボード",
-        "subtitle": "過去30日間のランキング。チャンピオンの称号は毎日変わる — 保持するためにアクティブでいましょう。",
+        "descriptionAllTime": "累計XPに基づきます。",
+        "descriptionGlobal": "全世界で過去30日間に完了した活動に基づきます。",
+        "descriptionSdg": "過去30日間で完了した、このSDGの活動に基づきます。",
+        "descriptionRegion": "過去30日間で完了した、この地域の活動に基づきます。",
+        "allTime": "通算",
         "global": "グローバル",
         "bySdg": "SDGs別",
         "byRegion": "地域別",

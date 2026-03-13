@@ -392,9 +392,13 @@ service cloud.firestore {
     }
 
     // ============================================
-    // LEADERBOARD SCORES (Cloud Functions write only)
+    // LEADERBOARD (Cloud Functions write scores + meta)
     // ============================================
     match /leaderboard_scores/{docId} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+    }
+    match /leaderboard_meta/dimensions {
       allow read: if isAuthenticated();
       allow write: if false;
     }

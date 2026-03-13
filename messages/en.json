@@ -181,7 +181,11 @@
     },
     "Leaderboard": {
         "title": "Leaderboard",
-        "subtitle": "Rolling 30-day rankings. The Champion title changes hands every day — stay active to hold it.",
+        "descriptionAllTime": "Based on total XP accumulated.",
+        "descriptionGlobal": "Based on activities completed in the last 30 days worldwide.",
+        "descriptionSdg": "Based on activities completed in the last 30 days for this SDG.",
+        "descriptionRegion": "Based on activities completed in the last 30 days in this region.",
+        "allTime": "All Time",
         "global": "Global",
         "bySdg": "By SDG",
         "byRegion": "By Region",

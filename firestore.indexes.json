@@ -9,11 +9,12 @@
       ]
     },
     {
-      "collectionGroup": "participations",
+      "collectionGroup": "validations",
       "queryScope": "COLLECTION_GROUP",
       "fields": [
         { "fieldPath": "status", "order": "ASCENDING" },
-        { "fieldPath": "hours.validatedAt", "order": "ASCENDING" }
+        { "fieldPath": "rewardsProcessed", "order": "ASCENDING" },
+        { "fieldPath": "validatedAt", "order": "ASCENDING" }
       ]
     },
     {
@@ -30,6 +31,13 @@
       "fields": [
         { "fieldPath": "userId", "order": "ASCENDING" },
         { "fieldPath": "activityScore", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "members",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "xp", "order": "DESCENDING" }
       ]
     }
   ],

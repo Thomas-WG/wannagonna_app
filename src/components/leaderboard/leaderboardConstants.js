@@ -4,6 +4,7 @@
 
 import { sdgNames } from '@/constant/sdgs';
 
+// Must match functions/src/leaderboard/computeLeaderboard.js THRESHOLD
 export const THRESHOLD = 1;
 
 export const SDG_COLORS = {
@@ -36,17 +37,10 @@ export const SDG_LIST = Object.entries(sdgNames).map(([num, label]) => ({
 /** Olympic ring colors for continent badges. */
 export const CONTINENTS = [
   { id: 'africa', label: 'Africa', color: '#0081C8' },
-  { id: 'americas', label: 'Americas', color: '#FCB131' },
+  { id: 'america', label: 'Americas', color: '#FCB131' },
   { id: 'asia', label: 'Asia', color: '#000000' },
   { id: 'europe', label: 'Europe', color: '#00A651' },
   { id: 'oceania', label: 'Oceania', color: '#EE334E' },
-];
-
-/** Demo: mock entries for dormant state (sdg_4). Cloud Function will provide isDormant. */
-export const MOCK_DORMANT_ENTRIES = [
-  { userId: 'mock-u1', displayName: 'Alex Green', activityScore: 420, currentRank: 1, dimension: 'sdg_4' },
-  { userId: 'mock-u2', displayName: 'Jordan Lee', activityScore: 380, currentRank: 2, dimension: 'sdg_4' },
-  { userId: 'mock-u3', displayName: 'Taylor Moss', activityScore: 310, currentRank: 3, dimension: 'sdg_4' },
 ];
 
 export function getInitials(name) {

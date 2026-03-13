@@ -182,7 +182,11 @@
     },
     "Leaderboard": {
         "title": "Classement",
-        "subtitle": "Classements sur 30 jours glissants. Le titre de Champion change chaque jour — restez actif pour le garder.",
+        "descriptionAllTime": "Basé sur le XP total accumulé.",
+        "descriptionGlobal": "Basé sur les activités réalisées dans les 30 derniers jours à travers le monde.",
+        "descriptionSdg": "Basé sur les activités réalisées dans les 30 derniers jours pour cet ODD.",
+        "descriptionRegion": "Basé sur les activités réalisées dans les 30 derniers jours dans cette région.",
+        "allTime": "Tout temps",
         "global": "Mondial",
         "bySdg": "Par ODD",
         "byRegion": "Par région",
