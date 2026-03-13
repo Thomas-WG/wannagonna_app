@@ -154,6 +154,10 @@ const Header = () => {
         return 'bg-semantic-info-100 dark:bg-semantic-info-900 text-semantic-info-700 dark:text-semantic-info-300';
       case 'REFERRAL':
         return 'bg-status-closed-100 dark:bg-status-closed-900 text-status-closed-700 dark:text-status-closed-300';
+      case 'LEADERBOARD_CHAMPION_GAINED':
+        return 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300';
+      case 'LEADERBOARD_CHAMPION_LOST':
+        return 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300';
       default:
         return 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300';
     }
