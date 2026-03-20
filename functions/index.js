@@ -986,6 +986,9 @@ export {onActivityClosed};
 // Impact: export impact report as Excel
 export {exportImpactReport};
 
+// Members: sanitized list for public members page (no PII)
+export {getMembersList} from "./src/members/getMembersList.js";
+
 // Leaderboard: nightly scheduled job + admin manual trigger
 export {computeLeaderboard};
 
