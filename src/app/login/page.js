@@ -295,13 +295,13 @@ export default function LoginPage() {
       
       // Reward the referrer (non-blocking - account creation succeeds even if reward fails)
       try {
-        await handleReferralReward(referralCode);
+        await handleReferralReward(
+          referralCode.toUpperCase().trim(),
+        );
       } catch (rewardError) {
         console.error('Error rewarding referrer (non-blocking):', rewardError);
       }
-      
-      // Log the user in with the newly created credentials
-      await signInWithEmailAndPassword(auth, email, password);
+
       setHasInteracted(false);
       
       router.push('/complete-profile');

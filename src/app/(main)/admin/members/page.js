@@ -16,7 +16,7 @@ import { fetchOrganizations } from '@/utils/crudOrganizations';
 import { functions } from 'firebaseConfig';
 import { httpsCallable } from 'firebase/functions';
 import { useAuth } from '@/utils/auth/AuthContext';
-import { fetchUserBadges, grantBadgeToUser, removeBadgeFromUser, fetchAllBadges } from '@/utils/crudBadges';
+import { fetchUserBadges, grantBadgeToUser, adminRemoveBadgeFromUser, fetchAllBadges } from '@/utils/crudBadges';
 import BackButton from '@/components/layout/BackButton';
 import ProfilePicture from '@/components/common/ProfilePicture';
 import { useTheme } from '@/utils/theme/ThemeContext';
@@ -303,7 +303,7 @@ export default function MembersManagementPage() {
     
     try {
       setIsLoadingBadges(true);
-      const result = await removeBadgeFromUser(selectedMemberForBadges.id, badgeId);
+      const result = await adminRemoveBadgeFromUser(selectedMemberForBadges.id, badgeId);
       
       if (result) {
         // Refresh badges list

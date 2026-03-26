@@ -115,7 +115,9 @@ export function useGoogleSignIn() {
 
         // Reward the referrer (non-blocking - account creation succeeds even if reward fails)
         try {
-          await handleReferralReward(referralCode);
+          await handleReferralReward(
+            referralCode.toUpperCase().trim(),
+          );
         } catch (rewardError) {
           console.error('Error rewarding referrer (non-blocking):', rewardError);
         }

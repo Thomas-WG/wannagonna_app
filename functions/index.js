@@ -23,7 +23,7 @@ import {sendMailgunEmail} from "./src/notifications/emailService.js";
 import {generateApplicationApprovalEmail} from
   "./src/notifications/emailTemplates.js";
 import {db, auth} from "./src/init.js";
-import {FieldValue, Timestamp} from "firebase-admin/firestore";
+import {FieldValue} from "firebase-admin/firestore";
 import {
   onValidationCreated,
   onValidationUpdated,
@@ -34,6 +34,11 @@ import {
   computeLeaderboard,
   runComputeLeaderboard,
 } from "./src/leaderboard/computeLeaderboard.js";
+import {grantBadgeToMemberAdmin} from "./src/rewards/memberBadgeHelpers.js";
+import {runProcessReferralRewardOnSignup} from
+  "./src/rewards/processReferralRewardOnSignup.js";
+import {runAdminRemoveBadgeFromUser} from
+  "./src/rewards/adminRemoveBadgeFromUser.js";
 
 export const onActivityCreatedUpdateActivityCount = onDocumentCreated(
     "activities/{activityId}",
@@ -843,138 +848,59 @@ export const grantBadgeToUser = onCall(
       }
 
       try {
-        // Find badge by searching through all categories
-        const categoriesSnapshot = await db.collection("badges").get();
-        let badgeData = null;
-        let badgeCategoryId = null;
-
-        for (const categoryDoc of categoriesSnapshot.docs) {
-          const badgeDoc = await db.collection("badges")
-              .doc(categoryDoc.id)
-              .collection("badges")
-              .doc(badgeId)
-              .get();
-
-          if (badgeDoc.exists) {
-            badgeData = badgeDoc.data();
-            badgeCategoryId = categoryDoc.id;
-            break;
-          }
+        const result = await grantBadgeToMemberAdmin(db, userId, badgeId, {
+          sendRewardNotification: true,
+        });
+        if (!result.ok) {
+          return {success: false, error: result.error};
         }
-
-        if (!badgeData) {
-          console.error(`[grantBadgeToUser] Badge ${badgeId} not found`);
-          return {success: false, error: "Badge not found"};
-        }
-
-        const badgeXP = badgeData.xp || 0;
-        console.log(
-            `[grantBadgeToUser] Granting badge ${badgeId} to user ${userId} ` +
-            `with ${badgeXP} XP`,
-        );
-
-        // Check if user exists
-        const memberDoc = await db.collection("members").doc(userId).get();
-        if (!memberDoc.exists) {
-          console.error(`[grantBadgeToUser] User ${userId} not found`);
-          return {success: false, error: "User not found"};
-        }
-
-        // Check if user already has this badge
-        const memberData = memberDoc.data();
-        const existingBadges = memberData.badges || [];
-        const badgeExists = existingBadges.some((b) => b.id === badgeId);
-
-        if (badgeExists) {
-          console.log(
-              `[grantBadgeToUser] User ${userId} already has badge ${badgeId}`,
-          );
-          return {success: false, error: "User already has this badge"};
-        }
-
-        // Grant badge using Admin SDK (bypasses Firestore rules)
-        const updateData = {
-          badges: FieldValue.arrayUnion({
-            id: badgeId,
-            earnedDate: Timestamp.now(),
-          }),
-        };
-
-        if (badgeXP > 0) {
-          updateData.xp = FieldValue.increment(badgeXP);
-        }
-
-        await db.collection("members").doc(userId).update(updateData);
-        console.log(
-            `[grantBadgeToUser] Badge ${badgeId} granted to user ${userId}`,
-        );
-
-        // Log XP history (always log badge earning, even if XP is 0)
-        const historyTitle = `Badge Earned: ${badgeData.title}`;
-        await db.collection("members").doc(userId)
-            .collection("xp_history")
-            .add({
-              title: historyTitle,
-              points: badgeXP,
-              type: "badge",
-              badge_id: badgeId,
-              created_at: FieldValue.serverTimestamp(),
-            });
-
-        // Send notification (wrapped in try-catch so badge grant succeeds
-        // even if notification fails)
-        try {
-          console.log(
-              `[grantBadgeToUser] Attempting to send notification for ` +
-              `badge ${badgeId} to user ${userId}`,
-          );
-          await sendUserNotification({
-            userId,
-            type: "REWARD",
-            title: "Badge earned",
-            body: `You earned the "${badgeData.title}" badge` +
-              `${badgeXP > 0 ? ` and ${badgeXP} XP` : ""}!`,
-            link: "/badges",
-            metadata: {
-              badge_id: badgeId,
-              badge_xp: badgeXP,
-            },
-          });
-          console.log(
-              `[grantBadgeToUser] Notification sent successfully for ` +
-              `badge ${badgeId} to user ${userId}`,
-          );
-        } catch (notifError) {
-          // Log error but don't fail badge grant
-          console.error(
-              `[grantBadgeToUser] Failed to send notification for ` +
-              `badge ${badgeId} to user ${userId}:`,
-              notifError,
-          );
-          console.error(
-              `[grantBadgeToUser] Notification error details:`,
-              {
-                message: notifError.message,
-                stack: notifError.stack,
-                code: notifError.code,
-                userId,
-                badgeId,
-              },
-          );
-        }
-
-        return {
-          success: true,
-          badge: {
-            id: badgeId,
-            title: badgeData.title,
-            description: badgeData.description || "",
-            xp: badgeXP,
-            category_id: badgeCategoryId,
-          },
-        };
+        return {success: true, badge: result.badge};
       } catch (error) {
         console.error("[grantBadgeToUser] Error granting badge:", error);
+        return {success: false, error: error.message};
+      }
+    });
+
+/**
+ * Process referral reward from the new member doc (referred_by + idempotency).
+ * Caller must be the new member (auth uid).
+ */
+export const processReferralRewardOnSignup = onCall(
+    {invoker: "public"},
+    async (request) => {
+      if (!request.auth) {
+        throw new Error("Unauthorized");
+      }
+      const referralCode = request.data?.referral_code;
+      return runProcessReferralRewardOnSignup(
+          request.auth.uid,
+          referralCode,
+      );
+    });
+
+/**
+ * Admin only: remove a badge from a member (and subtract badge XP).
+ */
+export const adminRemoveBadgeFromUser = onCall(
+    {invoker: "public"},
+    async (request) => {
+      if (!request.auth) {
+        throw new Error("Unauthorized");
+      }
+      const userRole = request.auth.token?.role;
+      if (userRole !== "admin") {
+        throw new Error(
+            "Forbidden: Only admins can remove badges from members",
+        );
+      }
+      const {userId, badgeId} = request.data || {};
+      if (!userId || !badgeId) {
+        throw new Error("userId and badgeId are required");
+      }
+      try {
+        return await runAdminRemoveBadgeFromUser(userId, badgeId);
+      } catch (error) {
+        console.error("[adminRemoveBadgeFromUser] Error:", error);
         return {success: false, error: error.message};
       }
     });

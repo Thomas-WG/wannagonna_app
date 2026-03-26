@@ -107,9 +107,9 @@ service cloud.firestore {
           isAdmin()
         );
 
-        // Create: Owner can create their own XP history entries, system/admin can create any
-        // Note: Frontend calls logXpHistory which creates entries in user's own history
-        allow create: if isAuthenticated();
+        // Create: Owner can create their own XP history entries; admin can create any.
+        // Reward writes from Cloud Functions use Admin SDK (bypass rules).
+        allow create: if isOwner(userId) || isAdmin();
 
         // Update/Delete: Only admins
         allow update, delete: if isAdmin();

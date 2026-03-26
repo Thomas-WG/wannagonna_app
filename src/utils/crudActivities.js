@@ -1,7 +1,6 @@
 import { collection, getDocs, addDoc, getDoc, updateDoc, doc, onSnapshot, query, where, deleteDoc, writeBatch, increment } from 'firebase/firestore';
 import { db } from 'firebaseConfig';
 import { fetchApplicationsForActivity } from './crudApplications';
-import { grantActivityCompletionBadges, awardXpToUser } from './crudBadges';
 import { v4 as uuidv4 } from 'uuid';
 import { fetchValidationsForActivity } from './crudActivityValidation';
 

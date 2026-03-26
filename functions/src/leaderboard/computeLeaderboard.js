@@ -491,7 +491,8 @@ export async function runComputeLeaderboard() {
 
   totalDimensions += allDimensions.size;
 
-  // Match early-return semantics: include all-time users plus validation-only users
+  // Match early-return semantics: include all-time users plus
+  // validation-only users
   const alltimeUserIds = new Set(Object.keys(alltimeMemberCache));
   let reportedUsers = totalUsers;
   for (const uid of Object.keys(scores)) {
