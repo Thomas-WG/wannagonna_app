@@ -197,7 +197,7 @@
         "championKeepGoing": "Sigue así — alguien podría alcanzarte.",
         "behindRank": "detrás del #{rank}",
         "thresholdGateTitle": "La clasificación {label} se desbloqueará pronto",
-        "thresholdGateDesc": "Se necesitan 5 voluntarios activos para abrir.",
+        "thresholdGateDesc": "Se necesitan un voluntario activo para abrir.",
         "volunteersAlready": "voluntario(s) ya contribuyendo aquí.",
         "volunteers": "voluntarios",
         "goal": "Objetivo",

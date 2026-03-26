@@ -491,15 +491,22 @@ export async function runComputeLeaderboard() {
 
   totalDimensions += allDimensions.size;
 
+  // Match early-return semantics: include all-time users plus validation-only users
+  const alltimeUserIds = new Set(Object.keys(alltimeMemberCache));
+  let reportedUsers = totalUsers;
+  for (const uid of Object.keys(scores)) {
+    if (!alltimeUserIds.has(uid)) reportedUsers++;
+  }
+
   console.log(
       `✅ Leaderboard computed. Dimensions: ${totalDimensions}. ` +
-      `Users: ${Object.keys(scores).length}. ` +
+      `Users: ${reportedUsers}. ` +
       `Notifications: ${notifications.length}.`,
   );
 
   return {
     dimensions: totalDimensions,
-    users: Object.keys(scores).length,
+    users: reportedUsers,
     notifications: notifications.length,
   };
 }

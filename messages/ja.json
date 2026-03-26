@@ -197,7 +197,7 @@
         "championKeepGoing": "続けましょう — 誰かが追いついてくるかもしれません。",
         "behindRank": "#{rank}位まで",
         "thresholdGateTitle": "{label}のリーダーボードはまもなく解放",
-        "thresholdGateDesc": "解放には5人のアクティブなボランティアが必要です。",
+        "thresholdGateDesc": "解放には1人のアクティブなボランティアが必要です。",
         "volunteersAlready": "人のボランティアがすでに貢献しています。",
         "volunteers": "人",
         "goal": "目標",
