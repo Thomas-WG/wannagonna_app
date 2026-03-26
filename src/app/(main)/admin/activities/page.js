@@ -129,12 +129,12 @@ export default function AdminActivitiesPage() {
   const availableOrganizations = useMemo(() => {
     const orgMap = new Map();
     allActivities.forEach((activity) => {
-      if (activity.organizationId) {
+      if (activity.organization_id) {
         // Find organization name from fetched organizations or use activity's organization_name
-        const org = organizations.find(o => o.id === activity.organizationId);
-        const orgName = org?.name || activity.organization_name || activity.organizationId;
-        orgMap.set(activity.organizationId, {
-          id: activity.organizationId,
+        const org = organizations.find(o => o.id === activity.organization_id);
+        const orgName = org?.name || activity.organization_name || activity.organization_id;
+        orgMap.set(activity.organization_id, {
+          id: activity.organization_id,
           name: orgName
         });
       }
@@ -154,7 +154,7 @@ export default function AdminActivitiesPage() {
       if (filters.sdg !== 'all' && activity.sdg !== filters.sdg) return false;
       if (filters.status !== 'all' && activity.status !== filters.status) return false;
       if (filters.organization !== 'all') {
-        const orgMatch = activity.organizationId === filters.organization || 
+        const orgMatch = activity.organization_id === filters.organization || 
                         activity.organization_name === filters.organization;
         if (!orgMatch) return false;
       }
@@ -183,14 +183,14 @@ export default function AdminActivitiesPage() {
     switch (sortBy) {
       case 'newest':
         return sorted.sort((a, b) => {
-          const aDate = a.creation_date?.toDate?.() || a.creation_date || new Date(0);
-          const bDate = b.creation_date?.toDate?.() || b.creation_date || new Date(0);
+          const aDate = a.created_at?.toDate?.() || a.created_at || new Date(0);
+          const bDate = b.created_at?.toDate?.() || b.created_at || new Date(0);
           return bDate - aDate;
         });
       case 'oldest':
         return sorted.sort((a, b) => {
-          const aDate = a.creation_date?.toDate?.() || a.creation_date || new Date(0);
-          const bDate = b.creation_date?.toDate?.() || b.creation_date || new Date(0);
+          const aDate = a.created_at?.toDate?.() || a.created_at || new Date(0);
+          const bDate = b.created_at?.toDate?.() || b.created_at || new Date(0);
           return aDate - bDate;
         });
       case 'xp_high':
@@ -546,14 +546,14 @@ export default function AdminActivitiesPage() {
                   xp_reward={activity.xp_reward}
                   description={activity.description}
                   status={activity.status}
-                  last_updated={activity.last_updated}
+                  updated_at={activity.updated_at}
                   city={activity.city}
                   category={activity.category}
-                  qrCodeToken={activity.qrCodeToken}
+                  qr_code_token={activity.qr_code_token}
                   frequency={activity.frequency}
                   skills={activity.skills}
-                  participantTarget={activity.participantTarget}
-                  acceptApplicationsWG={activity.acceptApplicationsWG}
+                  participant_target={activity.participant_target}
+                  accept_applications_wg={activity.accept_applications_wg}
                   onClick={() => handleActivityCardClick(activity)}
                   canEditStatus={true}
                   onStatusChange={handleStatusChange}
@@ -564,7 +564,7 @@ export default function AdminActivitiesPage() {
                 {selectedActivity && selectedActivity.id === activity.id && showActionModal && (
                   <div className="absolute inset-0 bg-black bg-opacity-60 rounded-lg flex items-center justify-center z-10 p-3 sm:p-3">
                     {(() => {
-                      const hasQRCode = activity.qrCodeToken && (activity.type === 'local' || activity.type === 'event');
+                      const hasQRCode = activity.qr_code_token && (activity.type === 'local' || activity.type === 'event');
                       const isEvent = activity.type === 'event';
                       return (
                         <div className="grid grid-cols-3 gap-3 sm:gap-2.5 md:gap-3 w-full max-w-xs sm:max-w-sm">
@@ -729,7 +729,7 @@ export default function AdminActivitiesPage() {
           isOpen={showQRModal}
           onClose={() => setShowQRModal(false)}
           activityId={selectedActivity.id}
-          qrCodeToken={selectedActivity.qrCodeToken}
+          qr_code_token={selectedActivity.qr_code_token}
           title={selectedActivity.title}
           startDate={selectedActivity.start_date}
         />

@@ -2,15 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { HiCheckCircle, HiStar } from 'react-icons/hi';
-import { fetchBadgeDetailsByIds, findBadgeById, getBadgeImageUrl } from '@/utils/crudBadges';
+import { findBadgeById, getBadgeImageUrl } from '@/utils/crudBadges';
 
 /**
  * ActivityValidationSuccessModal component displays a celebratory animation when activity is validated
  * @param {Object} props
  * @param {boolean} props.show - Whether to show the modal
  * @param {Function} props.onClose - Callback when modal should close
- * @param {number} props.xpReward - Total XP points earned (for backward compatibility)
- * @param {Array} props.badges - Array of badges earned (for backward compatibility)
+ * @param {number} [props.xpReward] - Total XP when xpBreakdown is not yet available (e.g. URL redirect)
  * @param {string[]} props.badgeIds - Array of badge IDs to fetch and display
  * @param {string} props.activityTitle - Title of the validated activity
  * @param {Object} props.xpBreakdown - XP composition breakdown
@@ -23,7 +22,6 @@ export default function ActivityValidationSuccessModal({
   show, 
   onClose, 
   xpReward = 0,
-  badges = [],
   badgeIds = [],
   activityTitle = '',
   xpBreakdown = null,
@@ -34,13 +32,10 @@ export default function ActivityValidationSuccessModal({
   const [loadingBadges, setLoadingBadges] = useState(false);
   const [badgeAnimationIndex, setBadgeAnimationIndex] = useState(-1);
 
-  // Determine which badge IDs to use
-  const badgeIdsToFetch = badgeIds.length > 0 ? badgeIds : (badges.map(b => b.id).filter(Boolean));
-
-  // Determine XP values
-  const totalXP = xpBreakdown?.totalXP ?? xpReward;
-  const activityXP = xpBreakdown?.activityXP ?? 0;
-  const badgeXPMap = xpBreakdown?.badgeXPMap ?? {};
+  // Determine XP values (snake_case from validation result)
+  const totalXP = xpBreakdown?.total_xp ?? xpReward ?? 0;
+  const activityXP = xpBreakdown?.activity_xp ?? 0;
+  const badgeXPMap = xpBreakdown?.badge_xp_map ?? {};
 
   useEffect(() => {
     if (show) {
@@ -48,7 +43,7 @@ export default function ActivityValidationSuccessModal({
       setBadgeAnimationIndex(-1);
       
       // Fetch badge details if we have badge IDs
-      if (badgeIdsToFetch.length > 0) {
+      if (badgeIds.length > 0) {
         loadBadgeDetails();
       } else {
         setBadgeDetails([]);
@@ -57,15 +52,14 @@ export default function ActivityValidationSuccessModal({
       setBadgeDetails([]);
       setBadgeAnimationIndex(-1);
     }
-  }, [show, badgeIdsToFetch.join(',')]);
+  }, [show, badgeIds.join(',')]);
   
   // Start badge animations immediately when modal shows (don't wait for images)
   useEffect(() => {
-    if (show && badgeIdsToFetch.length > 0) {
+    if (show && badgeIds.length > 0) {
       // Start animations faster - only wait 0.5s for XP to show, then animate badges
       const badgeAnimationTimer = setTimeout(() => {
-        // Animate badges one by one (use badgeIdsToFetch length since we're not waiting for images)
-        const totalBadges = badgeIdsToFetch.length;
+        const totalBadges = badgeIds.length;
         for (let index = 0; index < totalBadges; index++) {
           setTimeout(() => {
             setBadgeAnimationIndex(index);
@@ -75,24 +69,24 @@ export default function ActivityValidationSuccessModal({
       
       return () => clearTimeout(badgeAnimationTimer);
     }
-  }, [show, badgeIdsToFetch.length]);
+  }, [show, badgeIds.length]);
   
   // Auto-close after all badges have been shown AND images have loaded (with extra time to read)
   useEffect(() => {
     if (!show) return;
     
     // Calculate when all badges will be shown (animation timing)
-    const totalBadges = badgeIdsToFetch.length;
+    const totalBadges = badgeIds.length;
     const timeToShowAllBadges = 500 + (totalBadges * 150); // 0.5s initial delay + 0.15s per badge
     
     // Check if images are still loading
-    const imagesStillLoading = loadingBadges || badgeDetails.length < badgeIdsToFetch.length || 
+    const imagesStillLoading = loadingBadges || badgeDetails.length < badgeIds.length || 
       (badgeDetails.length > 0 && badgeDetails.some(b => !b.imageUrl));
     
     // If images are still loading, wait longer (images can take up to 30+ seconds)
     // Otherwise, wait for animation + reading time
     let autoCloseDelay;
-    if (imagesStillLoading && badgeIdsToFetch.length > 0) {
+    if (imagesStillLoading && badgeIds.length > 0) {
       // Images are loading - wait up to 35 seconds for them, then 5s reading time
       // This gives Firebase Storage time to complete (it can be very slow)
       autoCloseDelay = 35000 + 5000; // 40 seconds total
@@ -109,23 +103,23 @@ export default function ActivityValidationSuccessModal({
     }, finalDelay);
     
     return () => clearTimeout(timer);
-  }, [show, badgeDetails.length, badgeIdsToFetch.length, loadingBadges]);
+  }, [show, badgeDetails.length, badgeIds.length, loadingBadges]);
 
   const loadBadgeDetails = async () => {
-    if (badgeIdsToFetch.length === 0) return;
+    if (badgeIds.length === 0) return;
     
     try {
       setLoadingBadges(true);
       
       // First, load badge metadata (fast) - don't wait for images
-      const badgeMetadataPromises = badgeIdsToFetch.map(async (badgeId) => {
+      const badgeMetadataPromises = badgeIds.map(async (badgeId) => {
         const badgeDetails = await findBadgeById(badgeId);
-        if (badgeDetails && badgeDetails.categoryId) {
+        if (badgeDetails && badgeDetails.category_id) {
           return {
             id: badgeId,
             title: badgeDetails.title || badgeId,
             description: badgeDetails.description || '',
-            categoryId: badgeDetails.categoryId,
+            category_id: badgeDetails.category_id,
             imageUrl: null, // Will be loaded separately
           };
         }
@@ -142,7 +136,7 @@ export default function ActivityValidationSuccessModal({
       // Now load images in background and update as they come in
       initialDetails.forEach(async (badge) => {
         try {
-          const imageUrl = await getBadgeImageUrl(badge.categoryId, badge.id);
+          const imageUrl = await getBadgeImageUrl(badge.category_id, badge.id);
           
           if (imageUrl) {
             // Update badgeDetails with the new image URL
@@ -258,10 +252,10 @@ export default function ActivityValidationSuccessModal({
           )}
 
           {/* Badges with XP breakdown - Show immediately, images load in background */}
-          {badgeIdsToFetch.length > 0 && (
+          {badgeIds.length > 0 && (
             <div className="mb-4 w-full">
               <div className="space-y-3 max-h-64 overflow-y-auto">
-                {badgeIdsToFetch.map((badgeId, idx) => {
+                {badgeIds.map((badgeId, idx) => {
                   const badgeXP = badgeXPMap[badgeId] || 0;
                   const isVisible = badgeAnimationIndex >= idx;
                   // Find badge details if available (may still be loading)
@@ -315,25 +309,6 @@ export default function ActivityValidationSuccessModal({
                     </div>
                   );
                 })}
-              </div>
-            </div>
-          )}
-
-          {/* Fallback: Show badges array if badgeIds not provided (backward compatibility) */}
-          {badgeIdsToFetch.length === 0 && badges.length > 0 && (
-            <div className="mb-4">
-              <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                Badges Earned:
-              </p>
-              <div className="flex flex-wrap justify-center gap-2">
-                {badges.map((badge, idx) => (
-                  <span 
-                    key={idx}
-                    className="px-3 py-1 bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 rounded-full text-sm font-medium"
-                  >
-                    {badge.title || badge.id}
-                  </span>
-                ))}
               </div>
             </div>
           )}

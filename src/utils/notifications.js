@@ -42,8 +42,8 @@ export function useNotificationsListener(userId, limitCount = DEFAULT_LIMIT) {
     const notificationsRef = collection(db, "notifications");
     const q = query(
         notificationsRef,
-        where("userId", "==", userId),
-        orderBy("createdAt", "desc"),
+        where("user_id", "==", userId),
+        orderBy("created_at", "desc"),
         fsLimit(limitCount || DEFAULT_LIMIT),
     );
 
@@ -74,7 +74,7 @@ export function useNotificationsListener(userId, limitCount = DEFAULT_LIMIT) {
   }, [userId, limitCount]);
 
   const unreadCount = useMemo(
-      () => notifications.filter((n) => !n.readAt).length,
+      () => notifications.filter((n) => !n.read_at).length,
       [notifications],
   );
 
@@ -118,7 +118,7 @@ export async function clearAllNotificationsClient() {
 /**
  * Ensure push notifications are enabled for the current user:
  * - Requests browser notification permission
- * - Obtains FCM token and saves it under members/{uid}.fcmTokens
+ * - Obtains FCM token and saves it under members/{uid}.fcm_tokens
  * Returns the token or null if not available.
  * @param {string} userId
  * @return {Promise<string|null>}
@@ -170,11 +170,11 @@ export async function enablePushForUser(userId) {
 
   if (!snap.exists()) {
     await setDoc(userRef, {
-      fcmTokens: [token],
+      fcm_tokens: [token],
     }, {merge: true});
   } else {
     await updateDoc(userRef, {
-      fcmTokens: arrayUnion(token),
+      fcm_tokens: arrayUnion(token),
     });
   }
 
@@ -194,6 +194,6 @@ export async function updateNotificationPreferences(userId, newPrefs) {
 
   const userRef = doc(db, "members", userId);
   await setDoc(userRef, {
-    notificationPreferences: newPrefs,
+    notification_preferences: newPrefs,
   }, {merge: true});
 }

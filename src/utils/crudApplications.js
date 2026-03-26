@@ -9,7 +9,7 @@ export const checkExistingApplication = async (activityId, userId) => {
   try {
     const activityRef = doc(db, 'activities', activityId);
     const applicationsRef = collection(activityRef, 'applications');
-    const q = query(applicationsRef, where('userId', '==', userId));
+    const q = query(applicationsRef, where('user_id', '==', userId));
     
     const querySnapshot = await getDocs(q);
     // Check if there's any application that is NOT cancelled
@@ -38,10 +38,10 @@ export const createApplication = async ({ activityId, userId, userEmail, message
     const activityRef = doc(db, 'activities', activityId);
     const activityDoc = await getDoc(activityRef);
     const activityData = activityDoc.data();
-    const organizationId = activityData.organizationId;
+    const organizationId = activityData.organization_id;
     
     // Check if auto-accept is enabled
-    const shouldAutoAccept = activityData.autoAcceptApplications === true;
+    const shouldAutoAccept = activityData.auto_accept_applications === true;
     const defaultStatus = shouldAutoAccept ? 'accepted' : 'pending';
     const defaultNpoResponse = shouldAutoAccept ? 'Your application has been automatically accepted.' : '';
 
@@ -54,13 +54,13 @@ export const createApplication = async ({ activityId, userId, userEmail, message
     console.log(`Checking first application for user ${userId}: ${isFirstApplication ? 'YES' : 'NO'} (found ${existingApplicationsSnapshot.size} existing applications)`);
 
     const applicationData = {
-      userId,
+      user_id: userId,
       message,
       status: defaultStatus,
-      createdAt: new Date(),
-      activityId,
-      organizationId: organizationId,
-      ...(shouldAutoAccept && { npoResponse: defaultNpoResponse })
+      created_at: new Date(),
+      activity_id: activityId,
+      organization_id: organizationId,
+      ...(shouldAutoAccept && { npo_response: defaultNpoResponse }),
     };
 
     // Use transaction to ensure all operations succeed or all fail
@@ -73,7 +73,7 @@ export const createApplication = async ({ activityId, userId, userEmail, message
       const userApplicationsRef = collection(userRef, 'applications');
       transaction.set(doc(userApplicationsRef), {
         ...applicationData,
-        applicationId: docRef.id,
+        application_id: docRef.id,
       });
 
       // Add application to organization's applications collection
@@ -81,7 +81,7 @@ export const createApplication = async ({ activityId, userId, userEmail, message
       const orgApplicationsRef = collection(orgRef, 'applications');
       transaction.set(doc(orgApplicationsRef), {
         ...applicationData,
-        applicationId: docRef.id,
+        application_id: docRef.id,
       });
 
       // If auto-accept is enabled, update organization's totalNewApplications count
@@ -142,9 +142,9 @@ export const fetchApplicationsForActivity = async (activityId) => {
       
       // Fetch user profile data
       let userProfile = null;
-      if (data.userId) {
+      if (data.user_id) {
         try {
-          const userRef = doc(db, 'members', data.userId);
+          const userRef = doc(db, 'members', data.user_id);
           const userDoc = await getDoc(userRef);
           if (userDoc.exists()) {
             userProfile = userDoc.data();
@@ -154,12 +154,17 @@ export const fetchApplicationsForActivity = async (activityId) => {
         }
       }
       
+      const application_id = data.application_id ?? docSnapshot.id;
       applications.push({
         id: docSnapshot.id,
         ...data,
-        createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : data.createdAt,
-        displayName: userProfile?.displayName || userProfile?.name || data.userEmail || 'Unknown User',
-        profilePicture: userProfile?.profilePicture || userProfile?.photoURL || null
+        application_id,
+        npo_response: data.npo_response,
+        last_status_updated_by: data.last_status_updated_by,
+        cancellation_message: data.cancellation_message,
+        created_at: data.created_at?.toDate ? data.created_at.toDate() : data.created_at,
+        display_name: userProfile?.display_name || userProfile?.name || data.userEmail || 'Unknown User',
+        profile_picture: userProfile?.profile_picture || userProfile?.photoURL || null
       });
     }
     
@@ -192,45 +197,45 @@ export const updateApplicationStatus = async (
     // Check if we need to update the organization's totalNewApplications count
     const shouldDecrementCount = applicationData.status === 'pending' && (status === 'accepted' || status === 'rejected' || status === 'cancelled');
 
-    // Prepare update data - include lastStatusUpdatedBy and optional cancellationMessage
+    // Prepare update data - snake_case for Firestore
     const updateData = {
       status,
-      npoResponse,
-      updatedAt: new Date()
+      npo_response: npoResponse,
+      updated_at: new Date(),
     };
-    
-    // Only add lastStatusUpdatedBy if updatedByUserId is provided (backward compatibility)
+
+    // Only add last_status_updated_by if updatedByUserId is provided (backward compatibility)
     if (updatedByUserId) {
-      updateData.lastStatusUpdatedBy = updatedByUserId;
-      console.log("Setting lastStatusUpdatedBy:", updatedByUserId, "for application:", applicationId);
+      updateData.last_status_updated_by = updatedByUserId;
+      console.log("Setting last_status_updated_by:", updatedByUserId, "for application:", applicationId);
     } else {
-      console.warn("updateApplicationStatus: updatedByUserId not provided, lastStatusUpdatedBy will not be set");
+      console.warn("updateApplicationStatus: updatedByUserId not provided, last_status_updated_by will not be set");
     }
 
-    // Only add cancellationMessage when cancelling, keep backward compatibility otherwise
+    // Only add cancellation_message when cancelling, keep backward compatibility otherwise
     if (status === 'cancelled') {
-      updateData.cancellationMessage = cancellationMessage || '';
+      updateData.cancellation_message = cancellationMessage || '';
     }
 
     // Update in activity's applications collection
     await updateDoc(applicationRef, updateData);
     
     // If status is being changed to "accepted", initialize validation document and participation
-    if (status === 'accepted' && applicationData.userId) {
+    if (status === 'accepted' && applicationData.user_id) {
       try {
-        await initializeValidationDocument(activityId, applicationData.userId);
-        console.log(`Validation document initialized for user ${applicationData.userId} on activity ${activityId}`);
+        await initializeValidationDocument(activityId, applicationData.user_id);
+        console.log(`Validation document initialized for user ${applicationData.user_id} on activity ${activityId}`);
       } catch (validationError) {
         // Log error but don't fail the application status update
         console.error('Error initializing validation document:', validationError);
       }
       try {
-        await createOrUpdateParticipation(activityId, applicationData.userId, {
+        await createOrUpdateParticipation(activityId, applicationData.user_id, {
           status: 'registered',
-          joinedAt: Timestamp.now(),
-          hours: { reported: 0, validated: 0, reportedAt: null, validatedAt: null }
+          joined_at: Timestamp.now(),
+          hours: { reported: 0, validated: 0, reported_at: null, validated_at: null }
         });
-        console.log(`Participation created for user ${applicationData.userId} on activity ${activityId}`);
+        console.log(`Participation created for user ${applicationData.user_id} on activity ${activityId}`);
       } catch (participationError) {
         console.error('Error creating participation:', participationError);
       }
@@ -238,9 +243,9 @@ export const updateApplicationStatus = async (
     
     if (applicationData) {
       // Update in user's applications collection
-      const userRef = doc(db, 'members', applicationData.userId);
+      const userRef = doc(db, 'members', applicationData.user_id);
       const userApplicationsRef = collection(userRef, 'applications');
-      const userQuery = query(userApplicationsRef, where('applicationId', '==', applicationId));
+        const userQuery = query(userApplicationsRef, where('application_id', '==', applicationId));
       const userQuerySnapshot = await getDocs(userQuery);
       
       userQuerySnapshot.forEach(async (userDoc) => {
@@ -248,10 +253,10 @@ export const updateApplicationStatus = async (
       });
 
       // Update in organization's applications collection
-      if (applicationData.organizationId) {
-        const orgRef = doc(db, 'organizations', applicationData.organizationId);
+      if (applicationData.organization_id) {
+        const orgRef = doc(db, 'organizations', applicationData.organization_id);
         const orgApplicationsRef = collection(orgRef, 'applications');
-        const orgQuery = query(orgApplicationsRef, where('applicationId', '==', applicationId));
+        const orgQuery = query(orgApplicationsRef, where('application_id', '==', applicationId));
         const orgQuerySnapshot = await getDocs(orgQuery);
         
         orgQuerySnapshot.forEach(async (orgDoc) => {
@@ -261,13 +266,22 @@ export const updateApplicationStatus = async (
         // Update organization's totalNewApplications count when status changes from pending
         if (shouldDecrementCount) {
           await updateDoc(orgRef, {
-            totalNewApplications: increment(-1)
+            total_new_applications: increment(-1)
           });
         }
       }
     }
 
-    return { success: true, application: { ...applicationData, status, npoResponse } };
+    const npo_response = applicationData.npo_response ?? npoResponse;
+    return {
+      success: true,
+      application: {
+        ...applicationData,
+        status,
+        npo_response,
+        application_id: applicationData.application_id ?? applicationId,
+      },
+    };
   } catch (error) {
     console.error('Error updating application status:', error);
     throw error;
@@ -287,22 +301,23 @@ export const fetchApplicationsByUserId = async (userId) => {
       const data = docSnapshot.data();
       
       // Convert Firestore timestamps to Date objects
-      const createdAt = data.createdAt?.toDate ? data.createdAt.toDate() : data.createdAt;
-      const updatedAt = data.updatedAt?.toDate ? data.updatedAt.toDate() : data.updatedAt;
+      const created_at = data.created_at?.toDate ? data.created_at.toDate() : data.created_at;
+      const updated_at = data.updated_at?.toDate ? data.updated_at.toDate() : data.updated_at;
 
       // Optionally enrich with staff member info who last updated the status
+      const last_status_updated_by = data.last_status_updated_by;
       let lastUpdatedByDisplayName = null;
       let lastUpdatedByProfilePicture = null;
-      if (data.lastStatusUpdatedBy) {
+      if (last_status_updated_by) {
         try {
-          const staffRef = doc(db, 'members', data.lastStatusUpdatedBy);
+          const staffRef = doc(db, 'members', last_status_updated_by);
           const staffDoc = await getDoc(staffRef);
           if (staffDoc.exists()) {
             const staffData = staffDoc.data();
             lastUpdatedByDisplayName =
-              staffData.displayName || staffData.name || null;
+              staffData.display_name || staffData.name || null;
             lastUpdatedByProfilePicture =
-              staffData.profilePicture || staffData.photoURL || null;
+              staffData.profile_picture || staffData.photoURL || null;
           }
         } catch (staffError) {
           console.warn(
@@ -312,13 +327,18 @@ export const fetchApplicationsByUserId = async (userId) => {
         }
       }
       
+      const application_id = data.application_id ?? docSnapshot.id;
       applications.push({
         id: docSnapshot.id,
         ...data,
-        createdAt,
-        updatedAt,
+        application_id,
+        npo_response: data.npo_response,
+        last_status_updated_by,
+        cancellation_message: data.cancellation_message,
+        created_at,
+        updated_at,
         lastUpdatedByDisplayName,
-        lastUpdatedByProfilePicture
+        lastUpdatedByProfilePicture,
       });
     }
     
@@ -342,18 +362,19 @@ export const fetchActivitiesForVolunteer = async (userId) => {
     const activities = await Promise.all(
       acceptedApplications.map(async (app) => {
         try {
-          const activity = await fetchActivityById(app.activityId);
+          const activity = await fetchActivityById(app.activity_id);
           if (activity) {
             return {
               ...activity,
+              activity_id: activity.id,
               applicationStatus: app.status,
-              applicationId: app.id,
-              appliedAt: app.createdAt
+              application_id: app.application_id,
+              appliedAt: app.created_at
             };
           }
           return null;
         } catch (error) {
-          console.error(`Error fetching activity ${app.activityId}:`, error);
+          console.error(`Error fetching activity ${app.activity_id}:`, error);
           return null;
         }
       })
@@ -378,13 +399,13 @@ export const createOrUpdateApplicationAsAccepted = async (activityId, userId) =>
     // Check if application already exists
     const activityRef = doc(db, 'activities', activityId);
     const applicationsRef = collection(activityRef, 'applications');
-    const q = query(applicationsRef, where('userId', '==', userId));
+    const q = query(applicationsRef, where('user_id', '==', userId));
     const querySnapshot = await getDocs(q);
     
     // Get activity data
     const activityDoc = await getDoc(activityRef);
     const activityData = activityDoc.data();
-    const organizationId = activityData.organizationId;
+    const organizationId = activityData.organization_id;
     
     if (!querySnapshot.empty) {
       // Application exists - update to accepted without overwriting any existing NPO response
@@ -392,7 +413,7 @@ export const createOrUpdateApplicationAsAccepted = async (activityId, userId) =>
       const applicationId = existingApp.id;
       const existingData = existingApp.data();
       
-      const existingNpoResponse = existingData.npoResponse || '';
+      const existingNpoResponse = existingData.npo_response ?? '';
       
       await updateApplicationStatus(
         activityId,
@@ -411,12 +432,12 @@ export const createOrUpdateApplicationAsAccepted = async (activityId, userId) =>
       const isFirstApplication = existingApplicationsSnapshot.empty;
       
       const applicationData = {
-        userId,
+        user_id: userId,
         message: '',
         status: 'accepted',
-        createdAt: Timestamp.now(),
-        activityId,
-        organizationId: organizationId
+        created_at: Timestamp.now(),
+        activity_id: activityId,
+        organization_id: organizationId
       };
       
       // Create application in activity's applications collection first
@@ -426,14 +447,14 @@ export const createOrUpdateApplicationAsAccepted = async (activityId, userId) =>
       // Then add to user's and organization's collections
       await addDoc(userApplicationsRef, {
         ...applicationData,
-        applicationId: applicationId,
+        application_id: applicationId,
       });
-      
+
       const orgRef = doc(db, 'organizations', organizationId);
       const orgApplicationsRef = collection(orgRef, 'applications');
       await addDoc(orgApplicationsRef, {
         ...applicationData,
-        applicationId: applicationId,
+        application_id: applicationId,
       });
       
       // Grant firstApplication badge if this is the first application

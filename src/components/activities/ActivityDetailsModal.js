@@ -52,8 +52,8 @@ export default function ActivityDetailsModal({ isOpen, onClose, activityId, onAp
 
   // Fetch accepted applications count for local/online activities (not for events)
   useEffect(() => {
-    const shouldFetchCount = 
-      (activity?.type === 'local' && activity?.acceptApplicationsWG !== false) ||
+    const shouldFetchCount =
+      (activity?.type === 'local' && activity?.accept_applications_wg !== false) ||
       activity?.type === 'online';
     
     if (activity?.id && shouldFetchCount) {
@@ -71,7 +71,7 @@ export default function ActivityDetailsModal({ isOpen, onClose, activityId, onAp
       // Reset count for local/online activities when not needed
       setValidatedCount(null);
     }
-  }, [activity?.id, activity?.type, activity?.acceptApplicationsWG]);
+  }, [activity?.id, activity?.type, activity?.accept_applications_wg]);
 
   // Fetch skill labels based on current locale
   useEffect(() => {
@@ -161,10 +161,10 @@ export default function ActivityDetailsModal({ isOpen, onClose, activityId, onAp
 
         setActivity(processedActivity);
 
-        // Fetch organization data if organizationId exists
-        if (activityData.organizationId) {
+        // Fetch organization data if organization_id exists
+        if (activityData.organization_id) {
           try {
-            const orgData = await fetchOrganizationById(activityData.organizationId);
+            const orgData = await fetchOrganizationById(activityData.organization_id);
             setOrganization(orgData);
           } catch (orgError) {
             console.error('Error fetching organization:', orgError);
@@ -293,11 +293,15 @@ export default function ActivityDetailsModal({ isOpen, onClose, activityId, onAp
 
               {/* Key Stats */}
               <div className={`grid ${
-                activity.type === 'event' && activity.participantTarget !== null && activity.participantTarget !== undefined
+                activity.type === 'event' &&
+                activity.participant_target !== null &&
+                activity.participant_target !== undefined
                   ? 'grid-cols-2 sm:grid-cols-3'
                   : activity.type === 'event'
                   ? 'grid-cols-2 sm:grid-cols-2'
-                  : ((activity.type === 'local' && activity.acceptApplicationsWG !== false) || activity.type === 'online') && validatedCount !== null
+                  : ((activity.type === 'local' &&
+                    activity.accept_applications_wg !== false) ||
+                    activity.type === 'online') && validatedCount !== null
                   ? 'grid-cols-2 sm:grid-cols-3'
                   : 'grid-cols-2 sm:grid-cols-2'
               } gap-3 sm:gap-4 pt-4 border-t-2 border-border-light dark:border-[#475569]`}>
@@ -309,26 +313,31 @@ export default function ActivityDetailsModal({ isOpen, onClose, activityId, onAp
                   </div>
                 </div>
                 {/* Participant Counter - Show for local (when accepting WG) and online */}
-                {((activity.type === 'local' && activity.acceptApplicationsWG !== false) || 
+                {((activity.type === 'local' &&
+                  activity.accept_applications_wg !== false) || 
                     activity.type === 'online') && validatedCount !== null && (
                   <div className="flex items-center gap-2">
                     <HiUsers className="h-5 w-5 text-semantic-info-500 dark:text-semantic-info-400 flex-shrink-0" />
                     <div className="min-w-0">
                       <p className="text-xs text-text-tertiary dark:text-text-tertiary">{t('participants')}</p>
                       <p className="text-base sm:text-lg font-semibold text-semantic-info-600 dark:text-semantic-info-400">
-                        {activity.participantTarget ? `${validatedCount}/${activity.participantTarget}` : validatedCount}
+                        {activity.participant_target
+                          ? `${validatedCount}/${activity.participant_target}`
+                          : validatedCount}
                       </p>
                     </div>
                   </div>
                 )}
                 {/* People Max - Show for events when participantTarget is set */}
-                {activity.type === 'event' && activity.participantTarget !== null && activity.participantTarget !== undefined && (
+                {activity.type === 'event' &&
+                activity.participant_target !== null &&
+                activity.participant_target !== undefined && (
                   <div className="flex items-center gap-2">
                     <HiUsers className="h-5 w-5 text-semantic-info-500 dark:text-semantic-info-400 flex-shrink-0" />
                     <div className="min-w-0">
                       <p className="text-xs text-text-tertiary dark:text-text-tertiary">{t('peopleMax')}</p>
                       <p className="text-base sm:text-lg font-semibold text-semantic-info-600 dark:text-semantic-info-400">
-                        {activity.participantTarget}
+                        {activity.participant_target}
                       </p>
                     </div>
                   </div>
@@ -366,7 +375,7 @@ export default function ActivityDetailsModal({ isOpen, onClose, activityId, onAp
               </div>
 
               {/* External Platform Link */}
-              {(activity.externalPlatformLink || activity.activity_url) && (
+              {activity.external_platform_link && (
                 <div className="flex items-center gap-4 p-4 bg-background-hover dark:bg-background-hover rounded-xl border-2 border-border-light dark:border-[#475569] hover:shadow-md transition-all">
                   <div className="bg-semantic-info-100 dark:bg-semantic-info-900 p-3 rounded-full">
                     <HiExternalLink className="h-6 w-6 text-semantic-info-600 dark:text-semantic-info-400 flex-shrink-0" />
@@ -374,14 +383,14 @@ export default function ActivityDetailsModal({ isOpen, onClose, activityId, onAp
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-medium text-text-tertiary dark:text-text-tertiary mb-1 uppercase tracking-wide">{t('externalPlatformLink')}</p>
                     <a
-                      href={(activity.externalPlatformLink || activity.activity_url).startsWith('http') 
-                        ? (activity.externalPlatformLink || activity.activity_url) 
-                        : `https://${activity.externalPlatformLink || activity.activity_url}`}
+                      href={activity.external_platform_link.startsWith('http')
+                        ? activity.external_platform_link
+                        : `https://${activity.external_platform_link}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-semantic-info-600 dark:text-semantic-info-400 hover:text-semantic-info-700 dark:hover:text-semantic-info-300 text-sm font-medium break-all hover:underline"
                     >
-                      {activity.externalPlatformLink || activity.activity_url}
+                      {activity.external_platform_link}
                     </a>
                   </div>
                 </div>
@@ -588,7 +597,8 @@ export default function ActivityDetailsModal({ isOpen, onClose, activityId, onAp
                   {/* Hide Apply button for events or local activities with external platform only */}
                   {onApply && 
                    activity?.type !== 'event' && 
-                   !(activity?.type === 'local' && activity?.acceptApplicationsWG === false) && (
+                   !(activity?.type === 'local' &&
+                     activity?.accept_applications_wg === false) && (
                     <Button onClick={onApply} className="bg-primary-500 hover:bg-primary-600 dark:bg-primary-600 dark:hover:bg-primary-700 text-white">
                       Apply Now
                     </Button>

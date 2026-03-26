@@ -393,7 +393,7 @@
         "cause": "Cause(s) I care about",
         "languages": "Languages I speak",
         "languagesHelper": "You can select from the list or type new languages",
-        "timeCommitment": "Your Time Commitment",
+        "time_commitment": "Your Time Commitment",
         "save": "Save Profile",
         "profilePictureHelper":"Click to change profile picture",
         "displayName": "My Display Name",

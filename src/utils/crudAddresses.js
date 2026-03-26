@@ -15,7 +15,7 @@ export async function fetchAddresses(organizationId) {
 
     const orgRef = doc(db, 'organizations', organizationId);
     const addressesCollection = collection(orgRef, 'addresses');
-    const q = query(addressesCollection, orderBy('createdAt', 'desc'));
+    const q = query(addressesCollection, orderBy('created_at', 'desc'));
     const snapshot = await getDocs(q);
     
     return snapshot.docs.map((doc) => ({
@@ -74,8 +74,8 @@ export async function createAddress(organizationId, addressData) {
     
     const addressWithTimestamps = {
       ...addressData,
-      createdAt: new Date(),
-      updatedAt: new Date()
+      created_at: new Date(),
+      updated_at: new Date()
     };
     
     const docRef = await addDoc(addressesCollection, addressWithTimestamps);
@@ -104,7 +104,7 @@ export async function updateAddress(organizationId, addressId, addressData) {
     
     const updateData = {
       ...addressData,
-      updatedAt: new Date()
+      updated_at: new Date()
     };
     
     await updateDoc(addressDoc, updateData);

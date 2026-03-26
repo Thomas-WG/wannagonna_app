@@ -15,7 +15,7 @@ export function getLocalizedText(textObj, locale, fallbackLocale = 'en') {
 
 /**
  * Fetch all FAQs from Firestore
- * Ordered by 'order' field if exists, otherwise by 'createdAt'
+ * Ordered by 'order' field if exists, otherwise by 'created_at'
  * @returns {Promise<Array>} Array of FAQ objects
  */
 export async function fetchFaqs() {
@@ -26,8 +26,8 @@ export async function fetchFaqs() {
     try {
       q = query(faqsCollection, orderBy('order'));
     } catch (error) {
-      // If 'order' field doesn't exist, order by 'createdAt'
-      q = query(faqsCollection, orderBy('createdAt', 'desc'));
+      // If 'order' field doesn't exist, order by 'created_at'
+      q = query(faqsCollection, orderBy('created_at', 'desc'));
     }
     
     const snapshot = await getDocs(q);
@@ -106,7 +106,7 @@ export async function addFaq(questionObj, answerObj, order = null) {
       question: questionObj,
       answer: answerObj,
       order: finalOrder,
-      createdAt: Timestamp.now()
+      created_at: Timestamp.now()
     });
     
     return docRef.id;

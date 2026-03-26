@@ -7,8 +7,9 @@ export default function FormNavigation({ currentStep, prevStep, nextStep, formDa
   const maxStep = maxStepProp != null ? maxStepProp : 3;
 
   // Check if external link is required but missing
-  const externalLink = formData.externalPlatformLink || formData.activity_url || '';
-  const isExternalLinkRequired = formData.type === 'local' && formData.acceptApplicationsWG === false;
+  const externalLink = formData.external_platform_link || '';
+  const isExternalLinkRequired =
+    formData.type === 'local' && formData.accept_applications_wg === false;
   const hasRequiredExternalLink = !isExternalLinkRequired || (isExternalLinkRequired && externalLink.trim() !== '');
 
   // Step 2 date/time: required for events and local once/regular; validate end >= start when set

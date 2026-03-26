@@ -89,7 +89,7 @@ export default function SettingsPage() {
         const snap = await getDoc(userRef);
         if (snap.exists()) {
           const data = snap.data();
-          const storedPrefs = data.notificationPreferences || {};
+          const storedPrefs = data.notification_preferences || {};
           setPrefs({
             GAMIFICATION: {
               inApp: storedPrefs.GAMIFICATION?.inApp !== false,

@@ -122,13 +122,13 @@ export function getComplexityMultiplier(sliderValue) {
  * @param {Object} activityData - Activity data object
  * @param {string} activityData.type - Activity type ('online', 'local', 'event')
  * @param {string} activityData.category - Category ID
- * @param {number} activityData.timeCommitment - Time commitment slider value (0-100)
+ * @param {number} activityData.time_commitment - Time commitment slider value (0-100)
  * @param {number} activityData.complexity - Complexity slider value (0-100)
  * @param {string} activityData.frequency - Frequency ('once', 'role', etc.)
  * @returns {number} Calculated XP points
  */
 export function calculateActivityXP(activityData) {
-  const { type, category, timeCommitment, complexity, frequency } = activityData;
+  const { type, category, time_commitment, complexity, frequency } = activityData;
 
   // Events always return 15 XP (fixed)
   if (type === 'event') {
@@ -138,8 +138,8 @@ export function calculateActivityXP(activityData) {
   // Get base XP from category
   const baseXP = getCategoryBaseXP(category || '');
 
-  // Get multipliers (with backward compatibility defaults)
-  const timeMultiplier = getTimeMultiplier(timeCommitment ?? 50);
+  // Defaults when sliders are omitted from the payload
+  const timeMultiplier = getTimeMultiplier(time_commitment ?? 50);
   const complexityMultiplier = getComplexityMultiplier(complexity ?? 50);
   const longTermMultiplier = frequency === 'role' ? 1.5 : 1.0;
 

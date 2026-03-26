@@ -92,10 +92,10 @@ export default function NPODetailsModal({ isOpen, onClose, organization }) {
                   </span>
                 </div>
               )}
-              {organization.createdAt && (
+              {organization.created_at && (
                 <div className="flex items-center justify-center sm:justify-start gap-2 text-text-tertiary dark:text-text-tertiary text-sm">
                   <HiCalendar className="h-4 w-4" />
-                  <span>Registered on {formatDate(organization.createdAt)}</span>
+                  <span>Registered on {formatDate(organization.created_at)}</span>
                 </div>
               )}
             </div>

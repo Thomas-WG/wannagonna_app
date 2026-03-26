@@ -496,7 +496,7 @@ export default function ActivitiesPage() {
       // Check if applications are allowed
       // Don't allow applications for events or local activities with external platform only
       const canApply = activity.type !== 'event' && 
-                      !(activity.type === 'local' && activity.acceptApplicationsWG === false);
+                      !(activity.type === 'local' && activity.accept_applications_wg === false);
       
       if (canApply) {
         openApplyModalWithActivity(activity);
@@ -982,15 +982,15 @@ export default function ActivitiesPage() {
                   applicants={activity.applicants}
                   xp_reward={activity.xp_reward}
                   description={activity.description}
-                  last_updated={activity.last_updated}
+                  updated_at={activity.updated_at}
                   city={activity.city}
                   category={activity.category}
                   status={activity.status}
-                  qrCodeToken={activity.qrCodeToken}
+                  qr_code_token={activity.qr_code_token}
                   frequency={activity.frequency}
                   skills={activity.skills}
-                  participantTarget={activity.participantTarget}
-                  acceptApplicationsWG={activity.acceptApplicationsWG}
+                  participant_target={activity.participant_target}
+                  accept_applications_wg={activity.accept_applications_wg}
                   onClick={() => handleCardClick(activity)}
                   distance={activity.distance}
                 />

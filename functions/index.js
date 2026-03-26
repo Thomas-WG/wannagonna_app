@@ -100,7 +100,7 @@ export const onApplicationStatusChangedNotifyUser = onDocumentUpdated(
         return;
       }
 
-      const userId = after.userId;
+      const userId = after.user_id;
       if (!userId) {
         console.error(
             "onApplicationStatusChangedNotifyUser: missing userId",
@@ -113,8 +113,8 @@ export const onApplicationStatusChangedNotifyUser = onDocumentUpdated(
 
       try {
         // Handle cancelled status separately - notify NPO members
-        if (afterStatus === "cancelled" && after.organizationId) {
-          const organizationId = after.organizationId;
+        if (afterStatus === "cancelled" && after.organization_id) {
+          const organizationId = after.organization_id;
 
           // Decrement applicants count if previous status was NOT cancelled
           if (beforeStatus !== "cancelled") {
@@ -146,7 +146,7 @@ export const onApplicationStatusChangedNotifyUser = onDocumentUpdated(
           }
 
           const membersSnap = await db.collection("members")
-              .where("npoId", "==", organizationId)
+              .where("npo_id", "==", organizationId)
               .get();
 
           console.log(
@@ -170,11 +170,11 @@ export const onApplicationStatusChangedNotifyUser = onDocumentUpdated(
                     "Review updates in your applications list.",
                   link: "/mynonprofit/activities/applications",
                   metadata: {
-                    activityId,
-                    applicationId,
-                    organizationId,
+                    activity_id: activityId,
+                    application_id: applicationId,
+                    organization_id: organizationId,
                     status: "cancelled",
-                    cancelledByUserId: userId,
+                    cancelled_by_user_id: userId,
                   },
                 });
                 console.log(
@@ -240,8 +240,8 @@ export const onApplicationStatusChangedNotifyUser = onDocumentUpdated(
             body,
             link: "/dashboard",
             metadata: {
-              activityId,
-              applicationId,
+              activity_id: activityId,
+              application_id: applicationId,
               status: afterStatus,
             },
           });
@@ -272,16 +272,17 @@ export const onApplicationStatusChangedNotifyUser = onDocumentUpdated(
         }
 
         // Send Mailgun emails for approved online activities
+        const lastStatusUpdatedBy = after.last_status_updated_by;
         console.log("Checking email conditions:", {
           afterStatus,
-          hasLastStatusUpdatedBy: !!after.lastStatusUpdatedBy,
-          lastStatusUpdatedBy: after.lastStatusUpdatedBy,
+          hasLastStatusUpdatedBy: !!lastStatusUpdatedBy,
+          lastStatusUpdatedBy,
           activityId,
           applicationId,
-          updatedAt: after.updatedAt,
+          updated_at: after.updated_at,
         });
 
-        if (afterStatus === "accepted" && after.lastStatusUpdatedBy) {
+        if (afterStatus === "accepted" && lastStatusUpdatedBy) {
           console.log("Email conditions met, fetching activity...");
           try {
             // Fetch activity to check if it's online
@@ -324,7 +325,7 @@ export const onApplicationStatusChangedNotifyUser = onDocumentUpdated(
                 let validatorName = null;
                 try {
                   const validatorUser = await auth.getUser(
-                      after.lastStatusUpdatedBy,
+                      lastStatusUpdatedBy,
                   );
                   validatorEmail = validatorUser.email;
                   validatorName = validatorUser.displayName ||
@@ -341,10 +342,10 @@ export const onApplicationStatusChangedNotifyUser = onDocumentUpdated(
                 // Build recipient list: users who have ACTIVITY.email enabled
                 const participantPrefs = (await db.collection("members")
                     .doc(userId).get())
-                    .data()?.notificationPreferences?.ACTIVITY;
+                    .data()?.notification_preferences?.ACTIVITY;
                 const validatorPrefs = (await db.collection("members")
-                    .doc(after.lastStatusUpdatedBy).get())
-                    .data()?.notificationPreferences?.ACTIVITY;
+                    .doc(lastStatusUpdatedBy).get())
+                    .data()?.notification_preferences?.ACTIVITY;
                 const recipientList = [];
                 if (participantEmail && participantPrefs?.email === true) {
                   recipientList.push(participantEmail);
@@ -366,7 +367,8 @@ export const onApplicationStatusChangedNotifyUser = onDocumentUpdated(
                     participantEmail,
                     validatorName,
                     validatorEmail,
-                    npoResponse: after.npoResponse || null,
+                    npoResponse:
+                      after.npo_response ?? null,
                     locale: "en", // TODO: Get from user preferences for i18n
                   });
 
@@ -416,8 +418,8 @@ export const onApplicationStatusChangedNotifyUser = onDocumentUpdated(
         } else {
           console.log("Email conditions not met:", {
             isAccepted: afterStatus === "accepted",
-            hasLastStatusUpdatedBy: !!after.lastStatusUpdatedBy,
-            lastStatusUpdatedBy: after.lastStatusUpdatedBy,
+            hasLastStatusUpdatedBy: !!lastStatusUpdatedBy,
+            lastStatusUpdatedBy,
           });
         }
       } catch (error) {
@@ -559,11 +561,11 @@ export const sendContactEmail = onCall(
       });
 
       try {
-        await db.collection("contactSubmissions").add({
+        await db.collection("contact_submissions").add({
           name: n,
           email: e,
           message: m,
-          createdAt: FieldValue.serverTimestamp(),
+          created_at: FieldValue.serverTimestamp(),
         });
       } catch (firestoreErr) {
         console.warn(
@@ -619,9 +621,9 @@ export const notifyReferralReward = onCall(
         body,
         link: "/xp-history",
         metadata: {
-          referralCode,
+          referral_code: referralCode,
           mode,
-          badgeXP: Number(badgeXP) || 0,
+          badge_xp: Number(badgeXP) || 0,
         },
       });
 
@@ -657,8 +659,8 @@ export const notifyBadgeEarned = onCall(
         body,
         link: "/badges",
         metadata: {
-          badgeId: badgeId || null,
-          badgeXP: Number(badgeXP) || 0,
+          badge_id: badgeId || null,
+          badge_xp: Number(badgeXP) || 0,
         },
       });
 
@@ -910,13 +912,13 @@ export const grantBadgeToUser = onCall(
         // Log XP history (always log badge earning, even if XP is 0)
         const historyTitle = `Badge Earned: ${badgeData.title}`;
         await db.collection("members").doc(userId)
-            .collection("xpHistory")
+            .collection("xp_history")
             .add({
               title: historyTitle,
               points: badgeXP,
               type: "badge",
-              badgeId: badgeId,
-              timestamp: Timestamp.now(),
+              badge_id: badgeId,
+              created_at: FieldValue.serverTimestamp(),
             });
 
         // Send notification (wrapped in try-catch so badge grant succeeds
@@ -934,8 +936,8 @@ export const grantBadgeToUser = onCall(
               `${badgeXP > 0 ? ` and ${badgeXP} XP` : ""}!`,
             link: "/badges",
             metadata: {
-              badgeId,
-              badgeXP,
+              badge_id: badgeId,
+              badge_xp: badgeXP,
             },
           });
           console.log(
@@ -968,7 +970,7 @@ export const grantBadgeToUser = onCall(
             title: badgeData.title,
             description: badgeData.description || "",
             xp: badgeXP,
-            categoryId: badgeCategoryId,
+            category_id: badgeCategoryId,
           },
         };
       } catch (error) {

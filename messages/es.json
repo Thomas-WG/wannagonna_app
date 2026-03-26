@@ -394,7 +394,7 @@
         "cause": "Causa(s) que me importan",
         "languages": "Idiomas que hablo",
         "languagesHelper": "Puedes seleccionar de la lista o escribir nuevos idiomas",
-        "timeCommitment": "Tu compromiso de tiempo",
+        "time_commitment": "Tu compromiso de tiempo",
         "save": "Guardar perfil",
         "profilePictureHelper": "Haz clic para cambiar la foto de perfil",
         "displayName": "Mi Nombre de Visualización",

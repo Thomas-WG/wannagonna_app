@@ -112,7 +112,7 @@ export default function Home() {
     }
     setWaitlistSubmitting(true);
     try {
-      await addWaitlistEntry({ email: waitlistEmail.trim(), audienceType });
+      await addWaitlistEntry({ email: waitlistEmail.trim(), audience_type: audienceType });
       setWaitlistToast({ show: true, type: 'success', message: t('stayInTouchSuccess') });
       setWaitlistEmail('');
       setTimeout(() => setWaitlistToast((prev) => ({ ...prev, show: false })), 5000);

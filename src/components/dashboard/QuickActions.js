@@ -27,19 +27,19 @@ const QuickActions = memo(function QuickActions({ orgData }) {
         >
           <div className="flex items-center gap-2 sm:gap-3 py-1 sm:py-1.5 px-2 sm:px-2.5">
             {/* Badge indicator */}
-            {orgData?.totalNewApplications > 0 && (
+            {orgData?.total_new_applications > 0 && (
               <div className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center text-xs sm:text-sm font-bold shadow-lg animate-pulse">
-                {orgData.totalNewApplications > 99 ? '99+' : orgData.totalNewApplications}
+                {orgData.total_new_applications > 99 ? '99+' : orgData.total_new_applications}
               </div>
             )}
             <div
               className={`p-2 rounded-full flex-shrink-0 transition-colors ${
-                orgData?.totalNewApplications > 0 ? 'bg-yellow-500' : 'bg-yellow-100'
+                orgData?.total_new_applications > 0 ? 'bg-yellow-500' : 'bg-yellow-100'
               }`}
             >
               <HiDocumentText
                 className={`h-5 w-5 sm:h-6 sm:w-6 ${
-                  orgData?.totalNewApplications > 0 ? 'text-white' : 'text-yellow-600'
+                  orgData?.total_new_applications > 0 ? 'text-white' : 'text-yellow-600'
                 }`}
               />
             </div>
@@ -47,7 +47,7 @@ const QuickActions = memo(function QuickActions({ orgData }) {
               <h2 className="text-xs sm:text-sm font-semibold text-text-primary dark:text-text-primary">
                 {t('reviewApplications')}
               </h2>
-              {orgData?.totalNewApplications > 0 && (
+              {orgData?.total_new_applications > 0 && (
                 <p className="text-[10px] sm:text-xs text-text-tertiary dark:text-text-tertiary mt-0.5">
                   {t('requiresAttention')}
                 </p>

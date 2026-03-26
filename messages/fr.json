@@ -394,7 +394,7 @@
         "cause": "Cause(s) qui me tiennent à cœur",
         "languages": "Langues que je parle",
         "languagesHelper": "Vous pouvez sélectionner dans la liste ou saisir de nouvelles langues",
-        "timeCommitment": "Votre engagement temporel",
+        "time_commitment": "Votre engagement temporel",
         "save": "Enregistrer le profil",
         "profilePictureHelper": "Cliquez pour changer la photo de profil",
         "displayName": "Mon Nom d'Affichage",

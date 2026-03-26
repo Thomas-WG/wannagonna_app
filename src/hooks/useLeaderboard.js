@@ -26,7 +26,7 @@ export function useLeaderboard(dimensionId) {
       const q = query(
         collection(db, 'leaderboard_scores'),
         where('dimension', '==', dimensionId),
-        orderBy('activityScore', 'desc'),
+        orderBy('activity_score', 'desc'),
         limit(10)
       );
       const snap = await getDocs(q);

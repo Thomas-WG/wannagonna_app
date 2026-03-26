@@ -18,7 +18,7 @@ export function useApplications(userId) {
       const appsWithActivities = await Promise.all(
         userApplications.map(async (app) => {
           try {
-            const activity = await fetchActivityById(app.activityId);
+            const activity = await fetchActivityById(app.activity_id);
             if (activity) {
               return {
                 ...app,
@@ -27,7 +27,7 @@ export function useApplications(userId) {
             }
             return { ...app, activity: null };
           } catch (error) {
-            console.error(`Error fetching activity ${app.activityId}:`, error);
+            console.error(`Error fetching activity ${app.activity_id}:`, error);
             return { ...app, activity: null };
           }
         })
@@ -52,8 +52,8 @@ export function useApplications(userId) {
         }
 
         // Finally sort by creation date (newest first)
-        const aDate = a.createdAt?.getTime?.() || 0;
-        const bDate = b.createdAt?.getTime?.() || 0;
+        const aDate = a.created_at?.getTime?.() || 0;
+        const bDate = b.created_at?.getTime?.() || 0;
         return bDate - aDate;
       });
 

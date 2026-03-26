@@ -20,7 +20,7 @@
 
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { auth, db } from 'firebaseConfig';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, Timestamp } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { FcGoogle } from "react-icons/fc";
@@ -246,23 +246,30 @@ export default function LoginPage() {
       // New user - Save user data to Firestore with generated code BEFORE logging in
       // This ensures the document exists even if something goes wrong during login
       const memberData = {
-        displayName: emailPrefix,
+        display_name: emailPrefix,
         email: user.email,
         bio: '',
         country: '',
         languages: [],
         skills: [],
-        profilePicture: '', // Empty string by default for email/password accounts
+        badges: [],
+        cause: '',
+        hobbies: '',
+        website: '',
+        linkedin: '',
+        facebook: '',
+        instagram: '',
+        profile_picture: '', // Empty string by default for email/password accounts
         code: userCode, // Add generated code
-        referredBy: referralCode.toUpperCase().trim(), // Store who referred them
+        referred_by: referralCode.toUpperCase().trim(), // Store who referred them
         xp: 0, // Initialize XP to 0
-        impactSummary: {
-          totalHours: 0,
-          totalActivities: 0,
+        impact_summary: {
+          total_hours: 0,
+          total_activities: 0,
           parameters: {},
-          parameterMeta: {},
+          parameter_meta: {},
         },
-        timeCommitment: {
+        time_commitment: {
           daily: false,
           weekly: false,
           biweekly: false,
@@ -278,10 +285,10 @@ export default function LoginPage() {
           evenings: false,
           flexible: false
         },
-        createdAt: new Date().toISOString(),
+        created_at: Timestamp.now(),
       };
       
-      console.log('Creating member document with data:', { ...memberData, profilePicture: memberData.profilePicture ? 'URL set' : 'empty' });
+      console.log('Creating member document with data:', { ...memberData, profile_picture: memberData.profile_picture ? 'URL set' : 'empty' });
       
       await setDoc(doc(db, 'members', user.uid), memberData);
       console.log('Member document created successfully for user:', user.uid);

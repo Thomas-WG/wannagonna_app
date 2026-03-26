@@ -23,24 +23,22 @@ async function processValidationRewards(event, isUpdate = false) {
       `${validationId} for activity ${activityId}`,
   );
 
-  // Only process if status is 'validated'
-  // For backward compatibility, also process if status is undefined/null
-  // (old QR validations didn't have status field)
   const status = validationData?.status;
-  if (status && status !== "validated") {
+  if (status !== "validated") {
     console.log(
-        `Skipping reward processing - status is '${status}', not 'validated'`,
+        `Skipping reward processing - status is '${String(status)}', ` +
+        `expected 'validated'`,
     );
     return;
   }
 
-  const userId = validationData?.userId;
+  const userId = validationData?.user_id;
   if (!userId) {
-    console.error("Validation document missing userId");
+    console.error("Validation document missing user_id");
     return;
   }
 
-  const validatedBy = validationData?.validatedBy || null;
+  const validatedBy = validationData?.validated_by ?? null;
 
   try {
     // Check if rewards have already been processed
@@ -54,7 +52,7 @@ async function processValidationRewards(event, isUpdate = false) {
     // Check if already processed
     const validationSnap = await validationRef.get();
     const validationDataCheck = validationSnap.data();
-    if (validationDataCheck?.rewardsProcessed === true) {
+    if (validationDataCheck?.rewards_processed === true) {
       console.log(
           `Rewards already processed for validation ${validationId}`,
       );
@@ -70,13 +68,13 @@ async function processValidationRewards(event, isUpdate = false) {
 
     // Mark as processed to prevent duplicate processing
     await validationRef.update({
-      rewardsProcessed: true,
-      rewardsProcessedAt: FieldValue.serverTimestamp(),
-      rewardsResult: {
-        xpReward: result.xpReward,
-        badgeXP: result.badgeXP,
-        totalXP: result.totalXP,
-        badgesGranted: result.badgesGranted,
+      rewards_processed: true,
+      rewards_processed_at: FieldValue.serverTimestamp(),
+      rewards_result: {
+        xp_reward: result.xpReward,
+        badge_xp: result.badgeXP,
+        total_xp: result.totalXP,
+        badges_granted: result.badgesGranted,
       },
     });
 
@@ -93,7 +91,7 @@ async function processValidationRewards(event, isUpdate = false) {
 
     // Write to error collection for monitoring/retry
     try {
-      await db.collection("rewardErrors").add({
+      await db.collection("reward_errors").add({
         validationId,
         activityId,
         userId,

@@ -19,7 +19,7 @@ export const updateApplicantsCountOnRemove = async (
     const newApplicantCount = (activity.applicants || 0) - 1;
 
     // Get organization document
-    const organizationId = activity.organizationId;
+    const organizationId = activity.organization_id;
     if (!organizationId) {
       throw new Error("Activity is missing organizationId!");
     }
@@ -32,12 +32,12 @@ export const updateApplicantsCountOnRemove = async (
     }
 
     const organization = orgSnap.data();
-    const newApplicationCount = (organization.totalNewApplications || 0) - 1;
+    const newApplicationCount = (organization.total_new_applications || 0) - 1;
 
     // Update both documents
     transaction.update(activityRef, {applicants: newApplicantCount});
     transaction.update(organizationRef,
-        {totalNewApplications: newApplicationCount});
+        {total_new_applications: newApplicationCount});
 
     console.log("Updated applicants count:", newApplicantCount);
 
@@ -46,7 +46,7 @@ export const updateApplicantsCountOnRemove = async (
       orgApplications: newApplicationCount,
       organizationId,
       activityTitle: activity.title || "an activity",
-      userId: applicationData?.userId || null,
+      userId: applicationData?.user_id || null,
     };
   });
 
@@ -62,8 +62,8 @@ export const updateApplicantsCountOnRemove = async (
         body: `You cancelled your application for "${activityTitle}".`,
         link: "/dashboard",
         metadata: {
-          activityId,
-          organizationId,
+          activity_id: activityId,
+          organization_id: organizationId,
           status: "cancelled",
         },
       });
@@ -76,7 +76,7 @@ export const updateApplicantsCountOnRemove = async (
   if (organizationId) {
     try {
       const membersSnap = await db.collection("members")
-          .where("npoId", "==", organizationId)
+          .where("npo_id", "==", organizationId)
           .get();
 
       if (!membersSnap.empty) {
@@ -89,10 +89,10 @@ export const updateApplicantsCountOnRemove = async (
               `for "${activityTitle}".`,
             link: "/mynonprofit/activities/applications",
             metadata: {
-              activityId,
-              organizationId,
+              activity_id: activityId,
+              organization_id: organizationId,
               status: "cancelled",
-              cancelledByUserId: userId || null,
+              cancelled_by_user_id: userId || null,
             },
           }),
         );

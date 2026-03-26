@@ -1,14 +1,14 @@
 /**
  * Check if a user profile is complete
  * A profile is considered complete if it has:
- * - displayName (not empty)
+ * - display_name (not empty)
  * - bio (not empty)
  * - cause (not empty)
  * - hobbies (not empty)
  * - country (not empty)
  * - at least one language
- * - profilePicture (not empty)
- * - at least one timeCommitment option selected
+ * - profile_picture (not empty)
+ * - at least one time_commitment option selected
  * - at least one availability option selected
  * @param {Object} profileData - The profile data object
  * @returns {boolean} True if profile is complete, false otherwise
@@ -18,8 +18,8 @@ export function isProfileComplete(profileData) {
     return false;
   }
   
-  // Check displayName
-  if (!profileData.displayName || profileData.displayName.trim() === '') {
+  // Check display_name
+  if (!profileData.display_name || profileData.display_name.trim() === '') {
     return false;
   }
   
@@ -48,18 +48,18 @@ export function isProfileComplete(profileData) {
     return false;
   }
   
-  // Check profilePicture (must be present and not empty)
-  if (!profileData.profilePicture || profileData.profilePicture.trim() === '') {
+  // Check profile_picture (must be present and not empty)
+  if (!profileData.profile_picture || profileData.profile_picture.trim() === '') {
     return false;
   }
   
-  // Check timeCommitment (must have at least one selected)
-  if (!profileData.timeCommitment || typeof profileData.timeCommitment !== 'object') {
+  const tc = profileData.time_commitment;
+  if (!tc || typeof tc !== 'object') {
     return false;
   }
-  const timeCommitmentValues = Object.values(profileData.timeCommitment);
-  const hasTimeCommitment = timeCommitmentValues.some(value => value === true);
-  if (!hasTimeCommitment) {
+  const time_commitment_values = Object.values(tc);
+  const has_time_commitment = time_commitment_values.some(value => value === true);
+  if (!has_time_commitment) {
     return false;
   }
   

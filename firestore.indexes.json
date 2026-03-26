@@ -4,8 +4,8 @@
       "collectionGroup": "notifications",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "userId", "order": "ASCENDING" },
-        { "fieldPath": "createdAt", "order": "DESCENDING" }
+        { "fieldPath": "user_id", "order": "ASCENDING" },
+        { "fieldPath": "created_at", "order": "DESCENDING" }
       ]
     },
     {
@@ -13,8 +13,8 @@
       "queryScope": "COLLECTION_GROUP",
       "fields": [
         { "fieldPath": "status", "order": "ASCENDING" },
-        { "fieldPath": "rewardsProcessed", "order": "ASCENDING" },
-        { "fieldPath": "validatedAt", "order": "ASCENDING" }
+        { "fieldPath": "rewards_processed", "order": "ASCENDING" },
+        { "fieldPath": "validated_at", "order": "ASCENDING" }
       ]
     },
     {
@@ -22,15 +22,15 @@
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "dimension", "order": "ASCENDING" },
-        { "fieldPath": "activityScore", "order": "DESCENDING" }
+        { "fieldPath": "activity_score", "order": "DESCENDING" }
       ]
     },
     {
       "collectionGroup": "leaderboard_scores",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "userId", "order": "ASCENDING" },
-        { "fieldPath": "activityScore", "order": "DESCENDING" }
+        { "fieldPath": "user_id", "order": "ASCENDING" },
+        { "fieldPath": "activity_score", "order": "DESCENDING" }
       ]
     },
     {
@@ -45,7 +45,7 @@
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "country", "order": "ASCENDING" },
-        { "fieldPath": "displayName", "order": "ASCENDING" }
+        { "fieldPath": "display_name", "order": "ASCENDING" }
       ]
     },
     {
@@ -53,7 +53,7 @@
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "country", "order": "ASCENDING" },
-        { "fieldPath": "displayName", "order": "DESCENDING" }
+        { "fieldPath": "display_name", "order": "DESCENDING" }
       ]
     },
     {
@@ -61,7 +61,7 @@
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "country", "order": "ASCENDING" },
-        { "fieldPath": "createdAt", "order": "DESCENDING" }
+        { "fieldPath": "created_at", "order": "DESCENDING" }
       ]
     },
     {
@@ -69,7 +69,7 @@
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "country", "order": "ASCENDING" },
-        { "fieldPath": "createdAt", "order": "ASCENDING" }
+        { "fieldPath": "created_at", "order": "ASCENDING" }
       ]
     }
   ],

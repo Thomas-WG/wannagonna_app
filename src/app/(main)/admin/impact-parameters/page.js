@@ -47,7 +47,7 @@ export default function AdminImpactParametersPage() {
   const [loading, setLoading] = useState(true);
   const [loadingOrgParams, setLoadingOrgParams] = useState(false);
   const [editingGlobal, setEditingGlobal] = useState(null);
-  const [globalForm, setGlobalForm] = useState({ label: '', unit: 'count', category: 'people', measurementType: 'output', sdg: [], isActive: true });
+  const [globalForm, setGlobalForm] = useState({ label: '', unit: 'count', category: 'people', measurement_type: 'output', sdg: [], is_active: true });
   const [creatingGlobal, setCreatingGlobal] = useState(false);
   const [seeding, setSeeding] = useState(false);
   const [toast, setToast] = useState({ show: false, type: 'success', message: '' });
@@ -109,15 +109,15 @@ export default function AdminImpactParametersPage() {
       label: param.label || '',
       unit: param.unit || 'count',
       category: param.category || 'people',
-      measurementType: param.measurementType || 'output',
+      measurement_type: param.measurement_type || 'output',
       sdg: Array.isArray(param.sdg) ? [...param.sdg] : [],
-      isActive: param.isActive !== false,
+      is_active: param.is_active !== false,
     });
   };
 
   const resetGlobalForm = () => {
     setEditingGlobal(null);
-    setGlobalForm({ label: '', unit: 'count', category: 'people', measurementType: 'output', sdg: [], isActive: true });
+    setGlobalForm({ label: '', unit: 'count', category: 'people', measurement_type: 'output', sdg: [], is_active: true });
   };
 
   const toggleSdg = (num) => {
@@ -141,9 +141,9 @@ export default function AdminImpactParametersPage() {
           label: globalForm.label.trim(),
           unit: globalForm.unit,
           category: globalForm.category,
-          measurementType: globalForm.measurementType,
+          measurement_type: globalForm.measurement_type,
           sdg: globalForm.sdg,
-          isActive: globalForm.isActive,
+          is_active: globalForm.is_active,
         });
         showToast('success', t('impactParameterActivated') || 'Parameter updated');
       } else {
@@ -151,9 +151,9 @@ export default function AdminImpactParametersPage() {
           label: globalForm.label.trim(),
           unit: globalForm.unit,
           category: globalForm.category,
-          measurementType: globalForm.measurementType,
+          measurement_type: globalForm.measurement_type,
           sdg: globalForm.sdg,
-          isActive: globalForm.isActive,
+          is_active: globalForm.is_active,
         });
         showToast('success', t('impactParameterCreated') || 'Parameter created');
       }
@@ -285,9 +285,9 @@ export default function AdminImpactParametersPage() {
                       </div>
                       <Select
                         id="global-measurementType"
-                        value={globalForm.measurementType}
+                        value={globalForm.measurement_type}
                         onChange={(e) =>
-                          setGlobalForm((prev) => ({ ...prev, measurementType: e.target.value }))
+                          setGlobalForm((prev) => ({ ...prev, measurement_type: e.target.value }))
                         }
                       >
                         {MEASUREMENT_TYPES.map((mt) => (
@@ -323,11 +323,11 @@ export default function AdminImpactParametersPage() {
                       <Label htmlFor="global-active">{t('active') || 'Active'}</Label>
                       <Select
                         id="global-active"
-                        value={globalForm.isActive ? 'true' : 'false'}
+                        value={globalForm.is_active ? 'true' : 'false'}
                         onChange={(e) =>
                           setGlobalForm((prev) => ({
                             ...prev,
-                            isActive: e.target.value === 'true',
+                            is_active: e.target.value === 'true',
                           }))
                         }
                       >
@@ -387,8 +387,8 @@ export default function AdminImpactParametersPage() {
                                   </span>
                                   <span className="text-text-tertiary dark:text-text-tertiary ml-2">
                                     {p.unit}
-                                    {p.measurementType && ` · ${tExport(`measurementType.${p.measurementType}`)}`}
-                                    {' · '}{p.isActive ? (t('active') || 'Active') : (t('inactive') || 'Inactive')}
+                                    {p.measurement_type && ` · ${tExport(`measurementType.${p.measurement_type}`)}`}
+                                    {' · '}{p.is_active ? (t('active') || 'Active') : (t('inactive') || 'Inactive')}
                                   </span>
                                 </div>
                                 <Button
@@ -428,7 +428,7 @@ export default function AdminImpactParametersPage() {
                     )}
                     {organizations.map((org) => (
                       <option key={org.id} value={org.id}>
-                        {org.name || org.displayName || org.id}
+                        {org.name || org.display_name || org.id}
                       </option>
                     ))}
                   </Select>
@@ -455,17 +455,17 @@ export default function AdminImpactParametersPage() {
                           </div>
                           <div className="text-text-tertiary dark:text-text-tertiary">
                             {p.unit} · {p.category}
-                            {p.measurementType && ` · ${tExport(`measurementType.${p.measurementType}`)}`}
+                            {p.measurement_type && ` · ${tExport(`measurementType.${p.measurement_type}`)}`}
                           </div>
                           <div className="text-xs">
                             <span
                               className={`px-2 py-0.5 rounded ${
-                                p.isActive
+                                p.is_active
                                   ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
                                   : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
                               }`}
                             >
-                              {p.isActive ? (t('active') || 'Active') : (t('inactive') || 'Inactive')}
+                              {p.is_active ? (t('active') || 'Active') : (t('inactive') || 'Inactive')}
                             </span>
                           </div>
                         </div>
@@ -474,10 +474,10 @@ export default function AdminImpactParametersPage() {
                             size="xs"
                             className="min-h-[36px] w-full sm:w-auto"
                             onClick={async () =>
-                              handleUpdateOrgParam(p.id, { isActive: !p.isActive })
+                              handleUpdateOrgParam(p.id, { is_active: !p.is_active })
                             }
                           >
-                            {p.isActive ? (t('deactivate') || 'Deactivate') : (t('activate') || 'Activate')}
+                            {p.is_active ? (t('deactivate') || 'Deactivate') : (t('activate') || 'Activate')}
                           </Button>
                         </div>
                       </Card>

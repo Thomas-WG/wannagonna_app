@@ -10,7 +10,7 @@ const PAGE_SIZE = 30;
 /**
  * Resolve display name, profile picture, and email from members for a list of user IDs.
  * @param {string[]} userIds
- * @returns {Promise<Map<string, { displayName: string, profilePicture: string|null, email: string|null }>>
+ * @returns {Promise<Map<string, { display_name: string, profile_picture: string|null, email: string|null }>>
  */
 async function resolveMemberProfiles(userIds) {
   if (!userIds.length) return new Map();
@@ -20,20 +20,20 @@ async function resolveMemberProfiles(userIds) {
         const memberRef = doc(db, 'members', userId);
         const memberSnap = await getDoc(memberRef);
         if (!memberSnap.exists()) {
-          return [userId, { displayName: 'Unknown User', profilePicture: null, email: null }];
+          return [userId, { display_name: 'Unknown User', profile_picture: null, email: null }];
         }
         const data = memberSnap.data();
         return [
           userId,
           {
-            displayName: data.displayName || data.name || 'Unknown User',
-            profilePicture: data.profilePicture || data.photoURL || null,
+            display_name: data.display_name || data.name || 'Unknown User',
+            profile_picture: data.profile_picture || data.photoURL || null,
             email: data.email || null,
           },
         ];
       } catch (err) {
         console.error(`Error fetching member ${userId}:`, err);
-        return [userId, { displayName: 'Unknown User', profilePicture: null, email: null }];
+        return [userId, { display_name: 'Unknown User', profile_picture: null, email: null }];
       }
     })
   );
@@ -45,8 +45,8 @@ async function resolveMemberProfiles(userIds) {
  * @param {string} organizationId
  * @param {import('firebase/firestore').DocumentSnapshot|null} startAfterDoc
  * @returns {Promise<{ participants: Array<{
- *   id: string, userId: string, displayName: string, profilePicture: string|null, email: string|null,
- *   online: boolean, local: boolean, event: boolean, createdAt: unknown, lastValidatedAt: unknown
+ *   id: string, user_id: string, display_name: string, profile_picture: string|null, email: string|null,
+ *   online: boolean, local: boolean, event: boolean, created_at: unknown, last_validated_at: unknown
  * }>, lastDoc: import('firebase/firestore').DocumentSnapshot|null }>}
  */
 async function fetchParticipantsWithProfiles(organizationId, startAfterDoc = null) {
@@ -55,19 +55,20 @@ async function fetchParticipantsWithProfiles(organizationId, startAfterDoc = nul
     startAfterDoc,
   });
 
-  const userIds = records.map((r) => r.userId);
+  const userIds = records.map((r) => r.user_id);
   const profilesMap = await resolveMemberProfiles(userIds);
 
   const participants = records.map((r) => {
-    const profile = profilesMap.get(r.userId) || {
-      displayName: 'Unknown User',
-      profilePicture: null,
+    const uid = r.user_id;
+    const profile = profilesMap.get(uid) || {
+      display_name: 'Unknown User',
+      profile_picture: null,
       email: null,
     };
     return {
       ...r,
-      displayName: profile.displayName,
-      profilePicture: profile.profilePicture,
+      display_name: profile.display_name,
+      profile_picture: profile.profile_picture,
       email: profile.email,
     };
   });

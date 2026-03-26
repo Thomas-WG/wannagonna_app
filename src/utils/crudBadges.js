@@ -48,7 +48,7 @@ export async function fetchBadgesByCategory(categoryId) {
     
     const badges = snapshot.docs.map((doc) => ({
       id: doc.id,
-      categoryId,
+      category_id: categoryId,
       ...doc.data()
     }));
     
@@ -95,7 +95,7 @@ export async function fetchBadgeById(categoryId, badgeId) {
     if (badgeSnap.exists()) {
       return {
         id: badgeSnap.id,
-        categoryId,
+        category_id: categoryId,
         ...badgeSnap.data()
       };
     }
@@ -145,14 +145,13 @@ export async function fetchBadgeDetailsByIds(badgeIds) {
     // Fetch all badge details in parallel
     const badgePromises = badgeIds.map(async (badgeId) => {
       const badgeDetails = await findBadgeById(badgeId);
-      if (badgeDetails && badgeDetails.categoryId) {
-        // Fetch image URL (will check cache first)
-        const imageUrl = await getBadgeImageUrl(badgeDetails.categoryId, badgeId);
+      if (badgeDetails && badgeDetails.category_id) {
+        const imageUrl = await getBadgeImageUrl(badgeDetails.category_id, badgeId);
         return {
           id: badgeId,
           title: badgeDetails.title || badgeId,
           description: badgeDetails.description || '',
-          categoryId: badgeDetails.categoryId,
+          category_id: badgeDetails.category_id,
           imageUrl: imageUrl || null,
         };
       }
@@ -164,8 +163,8 @@ export async function fetchBadgeDetailsByIds(badgeIds) {
     // Update cache with newly fetched URLs
     const urlMap = {};
     results.forEach(badge => {
-      if (badge && badge.imageUrl) {
-        urlMap[badge.id] = badge.imageUrl;
+      if (badge && (badge.image_url)) {
+        urlMap[badge.id] = badge.image_url;
       }
     });
     if (Object.keys(urlMap).length > 0) {
@@ -302,10 +301,10 @@ export async function batchLoadBadgeImageUrls(badges, batchSize = 10) {
     const batch = badges.slice(i, i + batchSize);
     const promises = batch.map(async (badge) => {
       try {
-        if (!badge.categoryId) {
+        if (!badge.category_id) {
           return { badgeId: badge.id, url: null };
         }
-        const url = await getBadgeImageUrl(badge.categoryId, badge.id);
+        const url = await getBadgeImageUrl(badge.category_id, badge.id);
         return { badgeId: badge.id, url };
       } catch (error) {
         return { badgeId: badge.id, url: null };
@@ -568,7 +567,7 @@ export async function fetchUserBadges(userId) {
  * @param {number} points - The number of XP points to award
  * @param {string} title - The title/description of the XP earning event
  * @param {string} type - The type of XP earning (e.g., "referral", "activity")
- * @param {Object} metadata - Optional metadata (badgeId, activityId, memberId)
+ * @param {Object} metadata - Optional metadata (badgeId, activity_id, referrer_id)
  * @returns {Promise<boolean>} True if successful, false otherwise
  */
 export async function awardXpToUser(userId, points, title, type = 'unknown', metadata = {}) {
@@ -702,7 +701,7 @@ export async function handleReferralReward(referralCode) {
         id: badgeDetails.id, 
         title: badgeDetails.title, 
         xp: badgeDetails.xp,
-        categoryId: badgeDetails.categoryId 
+        category_id: badgeDetails.category_id 
       });
 
       const badgeXP = badgeDetails.xp || 0;
@@ -714,7 +713,7 @@ export async function handleReferralReward(referralCode) {
           badgeXP,
           'Referred member',
           'referral',
-          { memberId: referrerId }
+          { referrer_id: referrerId }
         );
         if (success) {
           try {
@@ -784,9 +783,9 @@ export async function grantActivityCompletionBadges(userId, activity) {
     }
 
     // Grant continent badge if organization has country
-    if (activity.organizationId) {
+    if (activity.organization_id) {
       try {
-        const organization = await fetchOrganizationById(activity.organizationId);
+        const organization = await fetchOrganizationById(activity.organization_id);
         if (organization && organization.country) {
           const continentId = getContinentFromCountry(organization.country);
           
@@ -899,12 +898,16 @@ export async function createBadge(categoryId, badgeId, badgeData, imageFile = nu
     const badgeDoc = doc(badgesCollection, badgeId);
     
     // Create badge document
-    await setDoc(badgeDoc, {
+    const { imageUrl, measurementType, ...restBadgeData } = badgeData;
+    const firestorePayload = {
       title: badgeData.title || badgeId,
       description: badgeData.description || '',
       xp: badgeData.xp || 0,
-      ...badgeData
-    });
+      ...restBadgeData,
+    };
+    if (imageUrl != null) firestorePayload.image_url = imageUrl;
+    if (measurementType != null) firestorePayload.measurement_type = measurementType;
+    await setDoc(badgeDoc, firestorePayload);
     
     // Upload image if provided
     if (imageFile) {
@@ -938,8 +941,11 @@ export async function updateBadge(categoryId, badgeId, badgeData, imageFile = nu
     const categoryDoc = doc(db, 'badges', categoryId);
     const badgeDoc = doc(collection(categoryDoc, 'badges'), badgeId);
     
-    // Update badge document
-    await updateDoc(badgeDoc, badgeData);
+    const { imageUrl, measurementType, ...rest } = badgeData;
+    const payload = { ...rest };
+    if (imageUrl !== undefined) payload.image_url = imageUrl;
+    if (measurementType !== undefined) payload.measurement_type = measurementType;
+    await updateDoc(badgeDoc, payload);
     
     // Upload new image if provided
     if (imageFile) {

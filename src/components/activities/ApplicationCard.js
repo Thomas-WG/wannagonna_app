@@ -35,25 +35,25 @@ export default function ApplicationCard({
 
   const {
     status,
-    createdAt,
-    updatedAt,
+    created_at,
+    updated_at,
     message,
-    npoResponse,
-    cancellationMessage,
-    activityId,
-    applicationId, // ID in activity's applications subcollection
-    id: userApplicationDocId, // ID of doc under member
-    userId,
+    npo_response,
+    cancellation_message,
+    activity_id,
+    application_id,
+    id: userApplicationDocId,
+    user_id,
   } = application;
 
   const orgLogo = activity.organization_logo;
   const orgName = activity.organization_name;
   const activityTitle = activity.title;
 
-  const memberAvatarValue = memberProfile?.profilePicture || null;
+  const memberAvatarValue = memberProfile?.profile_picture || null;
   const memberAvatar = memberAvatarValue && memberAvatarValue.trim() !== '' ? memberAvatarValue : null;
   const memberName =
-    memberProfile?.displayName || memberProfile?.name || t("you") || "You";
+    memberProfile?.display_name || memberProfile?.name || t("you") || "You";
 
   const getStatusBadge = (s) => {
     switch (s) {
@@ -171,10 +171,10 @@ export default function ApplicationCard({
     );
   };
 
-  const appliedDateLabel = createdAt ? formatDate(createdAt) : null;
-  const responseDateLabel = npoResponse && updatedAt ? formatDate(updatedAt) : null;
+  const appliedDateLabel = created_at ? formatDate(created_at) : null;
+  const responseDateLabel = npo_response && updated_at ? formatDate(updated_at) : null;
   const cancelDateLabel =
-    status === "cancelled" && updatedAt ? formatDate(updatedAt) : null;
+    status === "cancelled" && updated_at ? formatDate(updated_at) : null;
 
   return (
     <>
@@ -236,24 +236,24 @@ export default function ApplicationCard({
             onMemberAvatarClick
           )}
 
-          {npoResponse &&
+          {npo_response &&
             renderMessageBubble(
               "left",
               (application.lastUpdatedByProfilePicture && application.lastUpdatedByProfilePicture.trim() !== '') 
                 ? application.lastUpdatedByProfilePicture 
                 : orgLogo,
               application.lastUpdatedByDisplayName || orgName,
-              npoResponse,
+              npo_response,
               responseDateLabel,
               "npo"
             )}
 
-          {cancellationMessage &&
+          {cancellation_message &&
             renderMessageBubble(
               "right",
               memberAvatar,
               memberName,
-              cancellationMessage,
+              cancellation_message,
               cancelDateLabel,
               "cancel",
               onMemberAvatarClick

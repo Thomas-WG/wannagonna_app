@@ -8,7 +8,7 @@ export const updateActivityCountOnRemove = async (activityId, activityData) => {
     const activity = activityData;
 
     // Get organization document
-    const organizationId = activity.organizationId;
+    const organizationId = activity.organization_id;
     if (!organizationId) {
       throw new Error("Activity is missing organizationId!");
     }
@@ -24,19 +24,19 @@ export const updateActivityCountOnRemove = async (activityId, activityData) => {
     const type = activity.type;
     if (type === "online") {
       const totalOnlineActivities =
-        (organization.totalOnlineActivities || 0) - 1;
+        (organization.total_online_activities || 0) - 1;
       transaction.update(organizationRef, {
-        totalOnlineActivities: totalOnlineActivities,
+        total_online_activities: totalOnlineActivities,
       });
     } else if (type === "local") {
       const totalLocalActivities =
-        (organization.totalLocalActivities || 0) - 1;
+        (organization.total_local_activities || 0) - 1;
       transaction.update(organizationRef, {
-        totalLocalActivities: totalLocalActivities,
+        total_local_activities: totalLocalActivities,
       });
     } else if (type === "event") {
-      const totalEvents = (organization.totalEvents || 0) - 1;
-      transaction.update(organizationRef, {totalEvents: totalEvents});
+      const totalEvents = (organization.total_events || 0) - 1;
+      transaction.update(organizationRef, {total_events: totalEvents});
     }
 
     console.log("Updated activity count:");

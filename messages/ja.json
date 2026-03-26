@@ -394,7 +394,7 @@
       "cause": "私が気にかけている原因（複数可）",
       "languages": "私が話す言語",
       "languagesHelper": "リストから選択するか、新しい言語を入力してください",
-      "timeCommitment": "あなたの時間のコミットメント",
+      "time_commitment": "あなたの時間のコミットメント",
       "save": "プロフィールを保存",
       "profilePictureHelper": "プロフィール画像を変更するにはクリックしてください",
       "displayName": "私の表示名",

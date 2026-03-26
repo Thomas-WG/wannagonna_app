@@ -54,7 +54,7 @@ export default function AdminBadgesPage() {
   
   // Form states
   const [badgeForm, setBadgeForm] = useState({
-    categoryId: '',
+    category_id: '',
     badgeId: '',
     title: '',
     description: '',
@@ -62,7 +62,7 @@ export default function AdminBadgesPage() {
     imageFile: null
   });
   const [categoryForm, setCategoryForm] = useState({
-    categoryId: '',
+    category_id: '',
     title: '',
     description: '',
     order: 0
@@ -93,7 +93,7 @@ export default function AdminBadgesPage() {
       const urls = {};
       for (const badge of badgesData) {
         try {
-          const url = await getBadgeImageUrl(badge.categoryId, badge.id);
+          const url = await getBadgeImageUrl(badge.category_id, badge.id);
           if (url) {
             urls[badge.id] = url;
           }
@@ -119,7 +119,7 @@ export default function AdminBadgesPage() {
   const openAddBadgeModal = () => {
     setEditingBadge(null);
     setBadgeForm({
-      categoryId: categories[0]?.id || '',
+      category_id: categories[0]?.id || '',
       badgeId: '',
       title: '',
       description: '',
@@ -132,7 +132,7 @@ export default function AdminBadgesPage() {
   const openEditBadgeModal = (badge) => {
     setEditingBadge(badge);
     setBadgeForm({
-      categoryId: badge.categoryId,
+      category_id: badge.category_id,
       badgeId: badge.id,
       title: badge.title || '',
       description: badge.description || '',
@@ -144,7 +144,7 @@ export default function AdminBadgesPage() {
 
   const openAddCategoryModal = () => {
     setCategoryForm({
-      categoryId: '',
+      category_id: '',
       title: '',
       description: '',
       order: categories.length
@@ -155,13 +155,13 @@ export default function AdminBadgesPage() {
   const handleBadgeSubmit = async (e) => {
     e.preventDefault();
     try {
-      if (!badgeForm.categoryId || !badgeForm.title) {
+      if (!badgeForm.category_id || !badgeForm.title) {
         showToast(t('fillRequiredFields') || 'Please fill all required fields', 'error');
         return;
       }
 
       // Normalize badge ID: lowercase, replace non-alphanumeric with hyphens, remove multiple hyphens
-      const badgeId = badgeForm.badgeId || badgeForm.title
+      const badgeId = (badgeForm.badgeId || badgeForm.title)
         .toLowerCase()
         .replace(/[^a-z0-9]/g, '-')
         .replace(/-+/g, '-')
@@ -169,7 +169,7 @@ export default function AdminBadgesPage() {
       
       if (editingBadge) {
         await updateBadge(
-          badgeForm.categoryId,
+          badgeForm.category_id,
           editingBadge.id,
           {
             title: badgeForm.title,
@@ -181,7 +181,7 @@ export default function AdminBadgesPage() {
         showToast(t('badgeUpdated') || 'Badge updated successfully', 'success');
       } else {
         await createBadge(
-          badgeForm.categoryId,
+          badgeForm.category_id,
           badgeId,
           {
             title: badgeForm.title,
@@ -228,7 +228,7 @@ export default function AdminBadgesPage() {
     try {
       if (!deletingBadge) return;
       
-      await deleteBadge(deletingBadge.categoryId, deletingBadge.id);
+      await deleteBadge(deletingBadge.category_id, deletingBadge.id);
       showToast(t('badgeDeleted') || 'Badge deleted successfully', 'success');
       setShowDeleteBadgeModal(false);
       setDeletingBadge(null);
@@ -300,7 +300,7 @@ export default function AdminBadgesPage() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
             {categories.map((category) => {
-              const categoryBadges = badges.filter(b => b.categoryId === category.id);
+              const categoryBadges = badges.filter(b => b.category_id === category.id);
               return (
                 <Card key={category.id} className="relative">
                   <div className="flex justify-between items-start gap-2">
@@ -352,7 +352,7 @@ export default function AdminBadgesPage() {
                 </Table.Head>
                 <Table.Body className="divide-y">
                   {badges.map((badge) => (
-                    <Table.Row key={`${badge.categoryId}-${badge.id}`}>
+                    <Table.Row key={`${badge.category_id}-${badge.id}`}>
                       <Table.Cell>
                         {imagesLoading ? (
                           <Spinner size="sm" />
@@ -371,7 +371,7 @@ export default function AdminBadgesPage() {
                         )}
                       </Table.Cell>
                       <Table.Cell className="font-medium">
-                        {getCategoryName(badge.categoryId)}
+                        {getCategoryName(badge.category_id)}
                       </Table.Cell>
                       <Table.Cell>{badge.title || badge.id}</Table.Cell>
                       <Table.Cell className="max-w-xs truncate">
@@ -408,7 +408,7 @@ export default function AdminBadgesPage() {
             {/* Mobile Cards */}
             <div className="md:hidden space-y-3">
               {badges.map((badge) => (
-                <Card key={`${badge.categoryId}-${badge.id}`} className="p-4">
+                <Card key={`${badge.category_id}-${badge.id}`} className="p-4">
                   <div className="flex items-start gap-3">
                     {imagesLoading ? (
                       <Spinner size="sm" />
@@ -428,7 +428,7 @@ export default function AdminBadgesPage() {
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold text-base truncate">{badge.title || badge.id}</h3>
                       <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                        <span className="font-medium">{t('category') || 'Category'}:</span> {getCategoryName(badge.categoryId)}
+                        <span className="font-medium">{t('category') || 'Category'}:</span> {getCategoryName(badge.category_id)}
                       </p>
                       {badge.description && (
                         <p className="text-xs text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">{badge.description}</p>
@@ -479,8 +479,8 @@ export default function AdminBadgesPage() {
               <Label htmlFor="categoryId" className="text-sm sm:text-base">{t('category') || 'Category'} *</Label>
               <Select
                 id="categoryId"
-                value={badgeForm.categoryId}
-                onChange={(e) => setBadgeForm({ ...badgeForm, categoryId: e.target.value })}
+                value={badgeForm.category_id}
+                onChange={(e) => setBadgeForm({ ...badgeForm, category_id: e.target.value })}
                 required
                 disabled={!!editingBadge}
                 className="text-sm sm:text-base"

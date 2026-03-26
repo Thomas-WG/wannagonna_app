@@ -17,7 +17,7 @@ export const updateApplicantsCountOnAdd = async (activityId) => {
     const newApplicantCount = (activity.applicants || 0) + 1;
 
     // Get organization document
-    const organizationId = activity.organizationId;
+    const organizationId = activity.organization_id;
     if (!organizationId) {
       throw new Error("Activity is missing organizationId!");
     }
@@ -30,12 +30,12 @@ export const updateApplicantsCountOnAdd = async (activityId) => {
     }
 
     const organization = orgSnap.data();
-    const newApplicationCount = (organization.totalNewApplications || 0) + 1;
+    const newApplicationCount = (organization.total_new_applications || 0) + 1;
 
     // Update both documents
     transaction.update(activityRef, {applicants: newApplicantCount});
     transaction.update(organizationRef,
-        {totalNewApplications: newApplicationCount});
+        {total_new_applications: newApplicationCount});
 
     console.log("Updated applicants count:", newApplicantCount);
 
@@ -55,9 +55,9 @@ export const updateApplicantsCountOnAdd = async (activityId) => {
         `[updateApplicantsCountOnAdd] Sending notifications to NPO ` +
         `members for organization ${organizationId}`,
     );
-    // Find all members whose npoId matches the organizationId
+    // Find all members whose npo_id matches the organizationId
     const membersSnap = await db.collection("members")
-        .where("npoId", "==", organizationId)
+        .where("npo_id", "==", organizationId)
         .get();
 
     console.log(
@@ -79,8 +79,8 @@ export const updateApplicantsCountOnAdd = async (activityId) => {
             body: `A volunteer applied to "${activityTitle}".`,
             link: "/mynonprofit/activities/applications",
             metadata: {
-              activityId,
-              organizationId,
+              activity_id: activityId,
+              organization_id: organizationId,
             },
           });
           console.log(

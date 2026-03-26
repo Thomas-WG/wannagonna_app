@@ -33,6 +33,12 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
+    function belongsToUserOrg(organizationId) {
+      return isAuthenticated() && 
+        'npo_id' in request.auth.token && 
+        request.auth.token.npo_id == organizationId;
+    }
+
     // ============================================
     // MEMBERS COLLECTION
     // ============================================
@@ -47,7 +53,7 @@ service cloud.firestore {
       // Owner can update own "safe" fields only (block privilege/points tampering)
       // Admin can update anything
       // NPO staff can update members that belong to their org, but still block sensitive fields
-      allow update: if isAuthenticated();
+      allow update: if isOwner(userId) || isAdmin();
 
       // Only admins can delete profiles
       allow delete: if isAdmin();
@@ -59,22 +65,22 @@ service cloud.firestore {
       // Applications subcollection
       match /applications/{applicationId} {
         // All authenticated users can read applications
-        allow read: if isAuthenticated();
+        allow read: if isOwner(userId) || isAdmin () || (isNpoStaff() && belongsToUserOrg(resource.data.organization_id))|| (isAmbassador() && belongsToUserOrg(resource.data.organization_id));
 
         // Only owner can create an application under their member doc
         allow create: if isOwner(userId) &&
-          request.resource.data.userId == request.auth.uid;
+          request.resource.data.user_id == request.auth.uid;
 
         // Owner can update their app but not impersonate/change critical fields
         // Admin and NPO staff can update applications for their organization
         allow update: if isAuthenticated() && (
           isAdmin() ||
           (isOwner(userId) &&
-            resource.data.userId == request.auth.uid &&
-            request.resource.data.userId == request.auth.uid 
+            resource.data.user_id == request.auth.uid &&
+            request.resource.data.user_id == request.auth.uid 
           ) ||
-          (isNpoStaff() && resource.data.organizationId == request.auth.token.npoId) ||
-          (isAmbassador() && resource.data.organizationId == request.auth.token.npoId)
+          (isNpoStaff() && resource.data.organization_id == request.auth.token.npo_id) ||
+          (isAmbassador() && resource.data.organization_id == request.auth.token.npo_id)
         );
 
         // Only admins can delete applications
@@ -94,7 +100,7 @@ service cloud.firestore {
       }
 
       // XP History subcollection
-      match /xpHistory/{xpHistoryId} {
+      match /xp_history/{xpHistoryId} {
         // Read: Only owner and admins can read XP history
         allow read: if isAuthenticated() && (
           isOwner(userId) ||
@@ -171,7 +177,7 @@ service cloud.firestore {
         allow create: if isAuthenticated() && (
           isOwner(userId) ||
           isAdmin() ||
-          ((isNpoStaff() || isAmbassador()) && get(/databases/$(database)/documents/activities/$(activityId)).data.organizationId == request.auth.token.npoId)
+          ((isNpoStaff() || isAmbassador()) && get(/databases/$(database)/documents/activities/$(activityId)).data.organization_id == request.auth.token.npo_id)
         ) && (
           !('hours' in request.resource.data) ||
           !('validated' in request.resource.data.hours) ||
@@ -183,7 +189,7 @@ service cloud.firestore {
           (isOwner(userId) &&
             request.resource.data.get('hours', {}).get('validated', 0) == resource.data.get('hours', {}).get('validated', 0)) ||
           isAdmin() ||
-          ((isNpoStaff() || isAmbassador()) && get(/databases/$(database)/documents/activities/$(activityId)).data.organizationId == request.auth.token.npoId)
+          ((isNpoStaff() || isAmbassador()) && get(/databases/$(database)/documents/activities/$(activityId)).data.organization_id == request.auth.token.npo_id)
         );
 
         allow delete: if isAdmin();
@@ -229,13 +235,13 @@ service cloud.firestore {
         // Create/Update: NPO staff for this organization or admin
         allow create, update: if isAuthenticated() && (
           isAdmin() || 
-          (isNpoStaff() && request.auth.token.npoId == organizationId)
+          (isNpoStaff() && request.auth.token.npo_id == organizationId)
         );
         
         // Delete: NPO staff for this organization or admin
         allow delete: if isAuthenticated() && (
           isAdmin() || 
-          (isNpoStaff() && request.auth.token.npoId == organizationId)
+          (isNpoStaff() && request.auth.token.npo_id == organizationId)
         );
       }
 
@@ -243,14 +249,14 @@ service cloud.firestore {
       match /customParameters/{parameterId} {
         allow read: if isAuthenticated();
         allow create, update, delete: if isAuthenticated() && (
-          isAdmin() || (isNpoStaff() && request.auth.token.npoId == organizationId)
+          isAdmin() || (isNpoStaff() && request.auth.token.npo_id == organizationId)
         );
       }
 
       // Participant records subcollection - written by Cloud Functions only
       match /participant_records/{userId} {
         // Read: NPO staff for this organization, or admin
-        allow read: if isAuthenticated() && (isAdmin() || (isNpoStaff() && request.auth.token.npoId == organizationId));
+        allow read: if isAuthenticated() && (isAdmin() || (isNpoStaff() && request.auth.token.npo_id == organizationId));
         // Create/Update/Delete: Cloud Functions (Admin SDK) only; no client writes
         allow create, update, delete: if false;
       }
@@ -316,7 +322,7 @@ service cloud.firestore {
     // ============================================
     // IDEA BOX COLLECTION
     // ============================================
-    match /ideaBox/{ideaId} {
+    match /idea_box/{ideaId} {
       // Read: All authenticated users can read idea box submissions
       allow read: if isAuthenticated();
       
@@ -338,7 +344,7 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       
       // Create/Update: Any authenticated user can manage skills
-      allow create, update: if isAuthenticated();
+      allow create, update: if isAdmin();
       
       // Delete: Only admins can delete skills
       allow delete: if isAdmin();
@@ -347,12 +353,12 @@ service cloud.firestore {
     // ============================================
     // SKILL CATEGORIES COLLECTION
     // ============================================
-    match /skillCategories/{categoryId} {
+    match /skill_categories/{categoryId} {
       // Read: All authenticated users can read skill categories
       allow read: if isAuthenticated();
       
       // Create/Update: Any authenticated user can manage skill categories
-      allow create, update: if isAuthenticated();
+      allow create, update: if isAdmin();
       
       // Delete: Only admins can delete skill categories
       allow delete: if isAdmin();
@@ -361,7 +367,7 @@ service cloud.firestore {
     // ============================================
     // IMPACT PARAMETERS (global, admin-managed)
     // ============================================
-    match /impactParameters/{parameterId} {
+    match /impact_parameters/{parameterId} {
       allow read: if isAuthenticated();
       allow create, update, delete: if isAdmin();
     }
@@ -369,7 +375,7 @@ service cloud.firestore {
     // ============================================
     // REWARD ERRORS COLLECTION (Cloud Functions Only)
     // ============================================
-    match /rewardErrors/{errorId} {
+    match /reward_errors/{errorId} {
       // Read/Write: Only admins and cloud functions (server-side)
       // For client-side, deny all access
       allow read, write: if false;
@@ -378,7 +384,7 @@ service cloud.firestore {
     // ============================================
     // CONTACT SUBMISSIONS (Landing page - anonymous create only)
     // ============================================
-    match /contactSubmissions/{submissionId} {
+    match /contact_submissions/{submissionId} {
       allow create: if true;
       allow read, update, delete: if false;
     }

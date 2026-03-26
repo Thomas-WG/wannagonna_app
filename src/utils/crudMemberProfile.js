@@ -50,14 +50,14 @@ export async function fetchMemberById(userId, setProfileData) {
       
       // Default values for all fields
       const defaultValues = {
-        displayName: '',
+        display_name: '',
         email: '',
         bio: '',
         country: '',
         languages: [],
         skills: [],
-        profilePicture: '',
-        timeCommitment: {
+        profile_picture: '',
+        time_commitment: {
           daily: false,
           weekly: false,
           biweekly: false,
@@ -76,7 +76,7 @@ export async function fetchMemberById(userId, setProfileData) {
         xp: 0,
         badges:[],
         code: '',
-        referredBy: '',
+        referred_by: '',
         cause: '',
         hobbies: '',
         website: '',
@@ -90,9 +90,9 @@ export async function fetchMemberById(userId, setProfileData) {
         ...defaultValues,
         ...memberData,
         // Ensure we don't override with undefined/null values, use defaults
-        displayName: memberData.displayName ?? defaultValues.displayName,
+        display_name: memberData.display_name ?? defaultValues.display_name,
         email: memberData.email ?? defaultValues.email,
-        profilePicture: memberData.profilePicture ?? defaultValues.profilePicture,
+        profile_picture: memberData.profile_picture ?? defaultValues.profile_picture,
         bio: memberData.bio ?? defaultValues.bio,
         country: memberData.country ?? defaultValues.country,
         languages: Array.isArray(memberData.languages) ? memberData.languages : defaultValues.languages,
@@ -100,16 +100,16 @@ export async function fetchMemberById(userId, setProfileData) {
         xp: memberData.xp ?? defaultValues.xp,
         badges: Array.isArray(memberData.badges) ? memberData.badges : defaultValues.badges,
         code: memberData.code ?? defaultValues.code,
-        referredBy: memberData.referredBy ?? defaultValues.referredBy,
+        referred_by: memberData.referred_by ?? defaultValues.referred_by,
         cause: memberData.cause ?? defaultValues.cause,
         hobbies: memberData.hobbies ?? defaultValues.hobbies,
         website: memberData.website ?? defaultValues.website,
         linkedin: memberData.linkedin ?? defaultValues.linkedin,
         facebook: memberData.facebook ?? defaultValues.facebook,
         instagram: memberData.instagram ?? defaultValues.instagram,
-        timeCommitment: {
-          ...defaultValues.timeCommitment,
-          ...(memberData.timeCommitment || {})
+        time_commitment: {
+          ...defaultValues.time_commitment,
+          ...(memberData.time_commitment || {})
         },
         availabilities: {
           ...defaultValues.availabilities,
@@ -148,15 +148,15 @@ export async function fetchPublicMemberProfile(userId) {
     
     const memberData = docSnap.data();
     
-    // Convert createdAt timestamp if it exists
-    let createdAt = null;
-    if (memberData.createdAt) {
-      if (memberData.createdAt.toDate && typeof memberData.createdAt.toDate === 'function') {
-        createdAt = memberData.createdAt.toDate();
-      } else if (memberData.createdAt.seconds) {
-        createdAt = new Date(memberData.createdAt.seconds * 1000);
-      } else if (memberData.createdAt instanceof Date) {
-        createdAt = memberData.createdAt;
+    // Convert created_at timestamp if it exists
+    let created_at = null;
+    if (memberData.created_at) {
+      if (memberData.created_at.toDate && typeof memberData.created_at.toDate === 'function') {
+        created_at = memberData.created_at.toDate();
+      } else if (memberData.created_at.seconds) {
+        created_at = new Date(memberData.created_at.seconds * 1000);
+      } else if (memberData.created_at instanceof Date) {
+        created_at = memberData.created_at;
       }
     }
     
@@ -164,14 +164,14 @@ export async function fetchPublicMemberProfile(userId) {
     const xp = memberData.xp || 0;
     const level = Math.floor(xp / 100) + 1;
     
-    // Return only public fields (exclude email, referredBy, code)
+    // Return only public fields (exclude email, referred_by, code)
     return {
-      displayName: memberData.displayName || '',
+      display_name: memberData.display_name || '',
       bio: memberData.bio || '',
       country: memberData.country || '',
       languages: Array.isArray(memberData.languages) ? memberData.languages : [],
       skills: Array.isArray(memberData.skills) ? memberData.skills : [],
-      profilePicture: memberData.profilePicture || '',
+      profile_picture: memberData.profile_picture || '',
       xp: xp,
       level: level,
       badges: Array.isArray(memberData.badges) ? memberData.badges : [],
@@ -181,8 +181,8 @@ export async function fetchPublicMemberProfile(userId) {
       linkedin: memberData.linkedin || '',
       facebook: memberData.facebook || '',
       instagram: memberData.instagram || '',
-      createdAt: createdAt,
-      timeCommitment: memberData.timeCommitment || {
+      created_at: created_at,
+      time_commitment: memberData.time_commitment || {
         daily: false,
         weekly: false,
         biweekly: false,

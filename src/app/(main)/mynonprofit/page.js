@@ -43,9 +43,9 @@ export default function MyNonProfitDashboard() {
   const [showAnalytics, setShowAnalytics] = useState(false);
 
   // Use custom hooks for data fetching
-  const { orgData, isLoading: isLoadingData } = useNPODashboardData(claims?.npoId);
+  const { orgData, isLoading: isLoadingData } = useNPODashboardData(claims?.npo_id);
   const { activities, metrics, isLoading: isLoadingActivities, handleStatusChange, refetch } =
-    useNPODashboardActivities(claims?.npoId);
+    useNPODashboardActivities(claims?.npo_id);
   const modalManager = useModalManager();
 
   // Auto-dismiss toast after 5 seconds
@@ -69,9 +69,9 @@ export default function MyNonProfitDashboard() {
     async (deletedCount) => {
       try {
         // Invalidate and refetch activities
-        await queryClient.invalidateQueries({ queryKey: ['npoDashboardActivities', claims?.npoId] });
-        await queryClient.invalidateQueries({ queryKey: ['npoOrganization', claims?.npoId] });
-        await queryClient.invalidateQueries({ queryKey: ['npoPendingApplications', claims?.npoId] });
+        await queryClient.invalidateQueries({ queryKey: ['npoDashboardActivities', claims?.npo_id] });
+        await queryClient.invalidateQueries({ queryKey: ['npoOrganization', claims?.npo_id] });
+        await queryClient.invalidateQueries({ queryKey: ['npoPendingApplications', claims?.npo_id] });
         
         await refetch();
         
@@ -87,14 +87,14 @@ export default function MyNonProfitDashboard() {
         showToastMessage('error', t('errorRefreshing'));
       }
     },
-    [claims?.npoId, queryClient, refetch, modalManager, showToastMessage, t]
+    [claims?.npo_id, queryClient, refetch, modalManager, showToastMessage, t]
   );
 
   // Handle organization data update
   const handleOrganizationDataUpdate = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: ['npoOrganization', claims?.npoId] });
-    queryClient.invalidateQueries({ queryKey: ['npoPendingApplications', claims?.npoId] });
-  }, [claims?.npoId, queryClient]);
+    queryClient.invalidateQueries({ queryKey: ['npoOrganization', claims?.npo_id] });
+    queryClient.invalidateQueries({ queryKey: ['npoPendingApplications', claims?.npo_id] });
+  }, [claims?.npo_id, queryClient]);
 
   // Handle status update
   const handleStatusUpdate = useCallback(
@@ -176,7 +176,7 @@ export default function MyNonProfitDashboard() {
 
       {/* Organization Activities */}
       <ActivityManager
-        organizationId={claims?.npoId}
+        organizationId={claims?.npo_id}
         onActivityDeleted={handleActivityDeleted}
         onOrganizationDataUpdate={handleOrganizationDataUpdate}
         onOpenModal={(type, props) => {
@@ -187,7 +187,7 @@ export default function MyNonProfitDashboard() {
       />
 
       {/* Activity Analytics */}
-      {showAnalytics && <ActivityAnalytics organizationId={claims?.npoId} />}
+      {showAnalytics && <ActivityAnalytics organizationId={claims?.npo_id} />}
 
       {/* Floating Action Button */}
       <div className="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-50">

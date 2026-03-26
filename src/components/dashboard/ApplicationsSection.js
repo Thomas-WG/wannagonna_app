@@ -36,9 +36,9 @@ const ApplicationsSection = memo(function ApplicationsSection({
   };
 
   const handleOrgLogoClick = async (activity) => {
-    if (activity.organizationId) {
+    if (activity.organization_id) {
       try {
-        const orgData = await fetchOrganizationById(activity.organizationId);
+        const orgData = await fetchOrganizationById(activity.organization_id);
         if (orgData) {
           setSelectedOrganization(orgData);
           setShowOrgModal(true);
@@ -65,7 +65,7 @@ const ApplicationsSection = memo(function ApplicationsSection({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
         {allApplications.map((activity) => {
           const applicationData = applicationsWithActivities.find(
-            (app) => app.id === activity.applicationId
+            (app) => app.application_id === activity.application_id
           );
 
           if (!applicationData) return null;
@@ -80,7 +80,7 @@ const ApplicationsSection = memo(function ApplicationsSection({
                 profilePicture,
               }}
               onOpenActivity={() => {
-                const activityIdToUse = activity.activityId || activity.id;
+                const activityIdToUse = activity.activity_id;
                 setSelectedActivityId(activityIdToUse);
                 setShowActivityModal(true);
               }}

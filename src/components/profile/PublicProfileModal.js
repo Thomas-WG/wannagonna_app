@@ -129,8 +129,11 @@ export default function PublicProfileModal({ isOpen, onClose, userId, isOwnProfi
               </div>
             </div>
 
-            {/* Impact Summary Section - when member has impactSummary */}
-            {profile?.impactSummary && (profile.impactSummary.totalHours > 0 || profile.impactSummary.totalActivities > 0 || (profile.impactSummary.parameters && Object.keys(profile.impactSummary.parameters).length > 0)) && (
+            {/* Impact Summary Section */}
+            {(() => {
+              const imp = profile?.impact_summary;
+              return (
+            imp && ((imp.total_hours ?? 0) > 0 || (imp.total_activities ?? 0) > 0 || (imp.parameters && Object.keys(imp.parameters).length > 0)) && (
               <div className="w-full space-y-3">
                 <h2 className="text-lg font-semibold text-text-primary dark:text-text-primary">
                   {tProfile('impact') || 'Impact'}
@@ -140,20 +143,21 @@ export default function PublicProfileModal({ isOpen, onClose, userId, isOwnProfi
                     <div>
                       <p className="text-xs text-text-tertiary dark:text-text-tertiary">{tProfile('totalHours') || 'Hours contributed'}</p>
                       <p className="text-xl font-bold text-text-primary dark:text-text-primary">
-                        {(profile.impactSummary.totalHours ?? 0).toFixed(1)}
+                        {(imp.total_hours ?? 0).toFixed(1)}
                       </p>
                     </div>
                     <div>
                       <p className="text-xs text-text-tertiary dark:text-text-tertiary">{tProfile('activitiesCompleted') || 'Activities completed'}</p>
                       <p className="text-xl font-bold text-text-primary dark:text-text-primary">
-                        {profile.impactSummary.totalActivities ?? 0}
+                        {imp.total_activities ?? 0}
                       </p>
                     </div>
                   </div>
-                  {profile.impactSummary.parameters && Object.keys(profile.impactSummary.parameters).length > 0 && (
+                  {imp.parameters && Object.keys(imp.parameters).length > 0 && (
                     <ul className="space-y-1 text-sm border-t border-gray-200 dark:border-gray-700 pt-3">
-                      {Object.entries(profile.impactSummary.parameters).map(([paramId, value]) => {
-                        const metaFromSummary = profile.impactSummary.parameterMeta?.[paramId] || {};
+                      {Object.entries(imp.parameters).map(([paramId, value]) => {
+                        const pm = imp.parameter_meta ?? {};
+                        const metaFromSummary = pm[paramId] || {};
                         const meta = { ...globalParamMeta[paramId], ...metaFromSummary };
                         const label = meta.label || paramId;
                         const unit = meta.unit ? ` ${meta.unit}` : '';
@@ -171,7 +175,9 @@ export default function PublicProfileModal({ isOpen, onClose, userId, isOwnProfi
                   )}
                 </Card>
               </div>
-            )}
+            )
+              );
+            })()}
 
             {/* Completed Activities Section - Full Width, Centered */}
             <ActivitiesSection completedActivities={completedActivities} />

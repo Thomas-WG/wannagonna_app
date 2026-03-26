@@ -13,22 +13,22 @@ export async function addContactSubmission({ name, email, message }) {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email.trim())) throw new Error('Invalid email address');
 
-  const col = collection(db, 'contactSubmissions');
+  const col = collection(db, 'contact_submissions');
   const docRef = await addDoc(col, {
     name: name.trim(),
     email: email.trim().toLowerCase(),
     message: message.trim(),
-    createdAt: Timestamp.now(),
+    created_at: Timestamp.now(),
   });
   return docRef.id;
 }
 
 /**
  * Add an email to the waitlist (landing page - unauthenticated).
- * @param {{ email: string, audienceType?: 'volunteer' | 'npo' }} data
+ * @param {{ email: string, audience_type?: 'volunteer' | 'npo' }} data
  * @returns {Promise<string>} New document ID
  */
-export async function addWaitlistEntry({ email, audienceType }) {
+export async function addWaitlistEntry({ email, audience_type }) {
   if (!email || !email.trim()) throw new Error('Email is required');
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email.trim())) throw new Error('Invalid email address');
@@ -36,8 +36,8 @@ export async function addWaitlistEntry({ email, audienceType }) {
   const col = collection(db, 'waitlist');
   const docRef = await addDoc(col, {
     email: email.trim().toLowerCase(),
-    audienceType: audienceType || 'volunteer',
-    createdAt: Timestamp.now(),
+    audience_type: audience_type || 'volunteer',
+    created_at: Timestamp.now(),
   });
   return docRef.id;
 }

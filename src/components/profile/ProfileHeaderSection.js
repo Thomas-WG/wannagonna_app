@@ -16,7 +16,7 @@ export default function ProfileHeaderSection({ profileData, badges: badgesProp, 
 
   if (!profileData) return null;
 
-  const joinedDate = profileData.createdAt ? formatJoinedDate(profileData.createdAt) : null;
+  const joinedDate = profileData.created_at ? formatJoinedDate(profileData.created_at) : null;
   const totalXP = profileData.xp || 0;
   const level = profileData.level ?? Math.floor(totalXP / 100) + 1;
   const currentXP = totalXP % 100;
@@ -25,7 +25,7 @@ export default function ProfileHeaderSection({ profileData, badges: badgesProp, 
   const progressPercent = Math.min(Math.round((currentXP / xpForNextLevel) * 100), 100);
   const isCloseToLevelUp = xpRemaining <= Math.ceil(xpForNextLevel * 0.2);
   const activitiesCompleted =
-    activitiesCount ?? profileData?.impactSummary?.totalActivities ?? 0;
+    activitiesCount ?? profileData?.impact_summary?.total_activities ?? 0;
 
   const displayBadges = badgesProp?.length
     ? badgesProp.map((b) => ({
@@ -59,8 +59,8 @@ export default function ProfileHeaderSection({ profileData, badges: badgesProp, 
             {/* Avatar with level pill overlapping bottom */}
             <div className="relative flex-shrink-0">
               <ProfilePicture
-                src={profileData.profilePicture}
-                alt={profileData.displayName || tProfile('anonymousUser')}
+                src={profileData.profile_picture}
+                alt={profileData.display_name || tProfile('anonymousUser')}
                 size={80}
                 priority={true}
                 className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-0 !bg-[#009AA2] shadow-md"
@@ -73,7 +73,7 @@ export default function ProfileHeaderSection({ profileData, badges: badgesProp, 
             {/* Name + country + joined date */}
             <div className="sm:mt-5 min-w-0 text-center sm:text-left">
               <h2 className="text-lg sm:text-xl font-bold text-[#1A1A1A] dark:text-gray-100 leading-tight">
-                {profileData.displayName || tProfile('anonymousUser')}
+                {profileData.display_name || tProfile('anonymousUser')}
               </h2>
               {countryName && (
                 <div className="flex items-center justify-center sm:justify-start gap-1.5 mt-1.5">

@@ -7,25 +7,21 @@ import { useTranslations } from 'next-intl';
 import { categoryIcons } from '@/constant/categoryIcons';
 
 /**
- * Helper to format activity date (supports date, completedAt, addedToHistoryAt)
+ * Helper to format activity date (history merge + optional schedule fields)
  */
 function formatDate(activity) {
-  const date = activity.date ?? activity.completedAt ?? activity.addedToHistoryAt;
+  const date =
+    activity.added_to_history_at ?? activity.end_date ?? activity.start_date ?? null;
   return date ? formatDateOnly(date) : null;
 }
 
-/**
- * Get organization name from activity (supports snake_case and camelCase)
- */
+/** @param {Object} activity - Activity with denormalized org fields */
 function getOrgName(activity) {
-  return activity.organization_name ?? activity.organizationName ?? activity.npoName ?? null;
+  return activity.organization_name ?? null;
 }
 
-/**
- * Get organization logo URL from activity (supports snake_case and camelCase)
- */
 function getOrgLogo(activity) {
-  return activity.organization_logo ?? activity.organizationLogo ?? null;
+  return activity.organization_logo ?? null;
 }
 
 /**

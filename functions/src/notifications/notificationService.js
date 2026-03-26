@@ -11,8 +11,8 @@ import {generateNotificationEmail} from "./emailTemplates.js";
  *   title: string;
  *   body: string;
  *   link?: string | null;         // optional deep-link path in the app
- *   createdAt: Timestamp;         // server-generated
- *   readAt?: Timestamp | null;    // null when unread
+ *   created_at: Timestamp;        // server-generated
+ *   read_at?: Timestamp | null;   // null when unread
  *   metadata?: object;            // optional, small JSON payload
  * }
  */
@@ -49,13 +49,13 @@ export async function createNotification({
 
   try {
     const docRef = await db.collection("notifications").add({
-      userId,
+      user_id: userId,
       type,
       title,
       body,
       link: link || null,
-      createdAt: FieldValue.serverTimestamp(),
-      readAt: null,
+      created_at: FieldValue.serverTimestamp(),
+      read_at: null,
       metadata: metadata || {},
     });
 
@@ -104,14 +104,14 @@ export async function markNotificationAsRead(userId, notificationId) {
   }
 
   const data = snap.data();
-  if (data.userId !== userId) {
+  if (data.user_id !== userId) {
     throw new Error(
         "Permission denied: cannot modify another user's notification",
     );
   }
 
   await notifRef.update({
-    readAt: FieldValue.serverTimestamp(),
+    read_at: FieldValue.serverTimestamp(),
   });
 }
 
@@ -129,8 +129,8 @@ export async function markAllUserNotificationsAsRead(userId) {
 
   const querySnap = await db
       .collection("notifications")
-      .where("userId", "==", userId)
-      .where("readAt", "==", null)
+      .where("user_id", "==", userId)
+      .where("read_at", "==", null)
       .get();
 
   if (querySnap.empty) {
@@ -140,7 +140,7 @@ export async function markAllUserNotificationsAsRead(userId) {
   const batch = db.batch();
   querySnap.docs.forEach((doc) => {
     batch.update(doc.ref, {
-      readAt: FieldValue.serverTimestamp(),
+      read_at: FieldValue.serverTimestamp(),
     });
   });
 
@@ -160,7 +160,7 @@ export async function deleteAllUserNotifications(userId) {
 
   const querySnap = await db
       .collection("notifications")
-      .where("userId", "==", userId)
+      .where("user_id", "==", userId)
       .get();
 
   if (querySnap.empty) {
@@ -247,7 +247,7 @@ export async function sendUserNotification({
     );
   }
 
-  const prefsRoot = userData.notificationPreferences || {};
+  const prefsRoot = userData.notification_preferences || {};
   const categoryPrefs = prefsRoot[category] || {
     inApp: true,
     push: false,
@@ -265,10 +265,10 @@ export async function sendUserNotification({
         categoryPrefs,
         shouldInApp,
         shouldPush,
-        hasFcmTokens: Array.isArray(userData.fcmTokens) &&
-          userData.fcmTokens.length > 0,
-        fcmTokensCount: Array.isArray(userData.fcmTokens) ?
-          userData.fcmTokens.length : 0,
+        hasFcmTokens: Array.isArray(userData.fcm_tokens) &&
+          userData.fcm_tokens.length > 0,
+        fcmTokensCount: Array.isArray(userData.fcm_tokens) ?
+          userData.fcm_tokens.length : 0,
       },
   );
 
@@ -314,7 +314,9 @@ export async function sendUserNotification({
   }
 
   if (shouldPush) {
-    const tokens = Array.isArray(userData.fcmTokens) ? userData.fcmTokens : [];
+    const tokens = Array.isArray(userData.fcm_tokens) ?
+        userData.fcm_tokens :
+        [];
     console.log(
         `[sendUserNotification] Push notification requested for user ` +
         `${userId}, tokens count: ${tokens.length}`,
@@ -377,7 +379,7 @@ export async function sendUserNotification({
               `invalid token(s) for user ${userId}`,
           );
           const remaining = tokens.filter((t) => !invalidTokens.includes(t));
-          await userRef.update({fcmTokens: remaining});
+          await userRef.update({fcm_tokens: remaining});
         }
       } catch (error) {
         console.error(

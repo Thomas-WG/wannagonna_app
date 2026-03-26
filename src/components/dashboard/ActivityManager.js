@@ -172,7 +172,7 @@ const ActivityManager = memo(function ActivityManager({
       onOpenModal('activity-qr-code', {
         activity: selectedActivity,
         activityId: selectedActivity.id,
-        qrCodeToken: selectedActivity.qrCodeToken,
+        qr_code_token: selectedActivity.qr_code_token,
         title: selectedActivity.title,
         startDate: selectedActivity.start_date,
       });
@@ -202,7 +202,7 @@ const ActivityManager = memo(function ActivityManager({
   // Render action overlay
   const renderActionOverlay = useCallback(
     (activity) => {
-      const hasQRCode = activity.qrCodeToken && (activity.type === 'local' || activity.type === 'event');
+      const hasQRCode = activity.qr_code_token && (activity.type === 'local' || activity.type === 'event');
       const isEvent = activity.type === 'event';
 
       return (

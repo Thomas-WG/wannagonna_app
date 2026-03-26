@@ -8,7 +8,7 @@
 import { useState } from 'react';
 import { signInWithPopup } from 'firebase/auth';
 import { auth, googleProvider, db } from 'firebaseConfig';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, Timestamp } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'use-intl';
 import { validateReferralCode, generateUserCode } from '@/utils/referralCode';
@@ -69,23 +69,30 @@ export function useGoogleSignIn() {
 
         // Save user data to Firestore with generated code
         const userData = {
-          displayName: user.displayName || '',
+          display_name: user.displayName || '',
           email: user.email || '',
           bio: '',
           country: '',
           languages: [],
           skills: [],
-          profilePicture: user.photoURL || '', // Use Google photo if available, otherwise empty string
+          badges: [],
+          cause: '',
+          hobbies: '',
+          website: '',
+          linkedin: '',
+          facebook: '',
+          instagram: '',
+          profile_picture: user.photoURL || '', // Use Google photo if available, otherwise empty string
           code: userCode, // Add generated code
-          referredBy: referralCode.toUpperCase().trim(), // Store who referred them
+          referred_by: referralCode.toUpperCase().trim(), // Store who referred them
           xp: 0, // Initialize XP to 0
-          impactSummary: {
-            totalHours: 0,
-            totalActivities: 0,
+          impact_summary: {
+            total_hours: 0,
+            total_activities: 0,
             parameters: {},
-            parameterMeta: {},
+            parameter_meta: {},
           },
-          timeCommitment: {
+          time_commitment: {
             daily: false,
             weekly: false,
             biweekly: false,
@@ -101,7 +108,7 @@ export function useGoogleSignIn() {
             evenings: false,
             flexible: false
           },
-          createdAt: new Date().toISOString(),
+          created_at: Timestamp.now(),
         };
 
         await setDoc(userDocRef, userData, { merge: true });

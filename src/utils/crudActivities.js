@@ -63,16 +63,16 @@ export function subscribeToOpenActivities(callback) {
 export async function createActivity(data) {
   try {
     // Validate that organizationId is present
-    if (!data.organizationId) {
+    if (!data.organization_id) {
       console.error('Error creating activity: organizationId is required');
-      throw new Error('organizationId is required to create an activity');
+      throw new Error('organization_id is required to create an activity');
     }
 
     // Generate QR code token for Event and Local activities
     const activityData = { ...data };
-    if ((activityData.type === 'event' || activityData.type === 'local') && !activityData.qrCodeToken) {
-      activityData.qrCodeToken = uuidv4();
-      console.log('Generated QR code token for activity:', activityData.qrCodeToken);
+    if ((activityData.type === 'event' || activityData.type === 'local') && !activityData.qr_code_token) {
+      activityData.qr_code_token = uuidv4();
+      console.log('Generated QR code token for activity:', activityData.qr_code_token);
     }
 
     // Ensure coordinates are stored in Firestore-compatible format
@@ -110,20 +110,20 @@ export async function duplicateActivity(activityId) {
     const {
       id,
       applicants,
-      creation_date,
-      qrCodeToken,
+      created_at: _existingCreatedAt,
+      qr_code_token,
       ...duplicateData
     } = originalActivity;
 
     // Set status to 'Draft'
     duplicateData.status = 'Draft';
 
-    // Set creation_date to current date
-    duplicateData.creation_date = new Date();
+    // Set created_at to current date
+    duplicateData.created_at = new Date();
 
     // Generate new QR code token for Event and Local activities
     if (duplicateData.type === 'event' || duplicateData.type === 'local') {
-      duplicateData.qrCodeToken = uuidv4();
+      duplicateData.qr_code_token = uuidv4();
     }
 
     // Create the duplicate activity
@@ -153,9 +153,9 @@ export async function updateActivity(id, data) {
     // Generate QR code token for Event and Local activities if not present
     if ((updateData.type === 'event' || updateData.type === 'local' || 
          currentData.type === 'event' || currentData.type === 'local') && 
-        !updateData.qrCodeToken && !currentData.qrCodeToken) {
-      updateData.qrCodeToken = uuidv4();
-      console.log('Generated QR code token for activity:', updateData.qrCodeToken);
+        !updateData.qr_code_token && !currentData.qr_code_token) {
+      updateData.qr_code_token = uuidv4();
+      console.log('Generated QR code token for activity:', updateData.qr_code_token);
     }
 
     await updateDoc(activityDoc, updateData); // Update the document with the provided data
@@ -190,7 +190,7 @@ export async function fetchActivitiesByCriteria(organizationId = 'any', type = '
     
     // Add conditions only for non-'any' values
     if (organizationId !== 'any') {
-      conditions.push(where('organizationId', '==', organizationId));
+      conditions.push(where('organization_id', '==', organizationId));
     }
     if (type !== 'any') {
       conditions.push(where('type', '==', type));
@@ -226,8 +226,8 @@ async function addActivityToMemberHistory(activityId, userId, metadata = {}) {
     
     // Store only reference and metadata, not full activity data
     const historyData = {
-      activityId: activityId,
-      addedToHistoryAt: new Date(),
+      activity_id: activityId,
+      added_to_history_at: new Date(),
       ...metadata // Allow additional metadata like validatedViaQR, validatedViaManual, etc.
     };
     
@@ -257,26 +257,24 @@ export const fetchHistoryActivities = async (userId) => {
     for (const docSnapshot of querySnapshot.docs) {
       const data = docSnapshot.data();
       
-      // Extract activityId - handle both old duplicated data and new reference-only data
-      const activityId = data.activityId;
+      const activityId = data.activity_id;
       
       if (!activityId) {
-        // Skip documents without activityId (shouldn't happen, but handle gracefully)
-        console.warn(`History document ${docSnapshot.id} has no activityId, skipping`);
+        console.warn(`History document ${docSnapshot.id} has no activity_id, skipping`);
         continue;
       }
       
       // Store metadata for this activity
       const metadata = {
         historyDocId: docSnapshot.id,
-        addedToHistoryAt: data.addedToHistoryAt,
-        validatedViaQR: data.validatedViaQR,
-        validatedViaManual: data.validatedViaManual,
+        added_to_history_at: data.added_to_history_at,
+        validated_via_qr: data.validated_via_qr,
+        validated_via_manual: data.validated_via_manual,
       };
       
       // Convert Firestore timestamps to Date objects if needed
-      if (metadata.addedToHistoryAt && typeof metadata.addedToHistoryAt.toDate === 'function') {
-        metadata.addedToHistoryAt = metadata.addedToHistoryAt.toDate();
+      if (metadata.added_to_history_at && typeof metadata.added_to_history_at.toDate === 'function') {
+        metadata.added_to_history_at = metadata.added_to_history_at.toDate();
       }
       
       if (!activityIds.includes(activityId)) {
@@ -311,12 +309,12 @@ export const fetchHistoryActivities = async (userId) => {
                 ? new Date(activityData.end_date.seconds * 1000)
                 : new Date(activityData.end_date)
               : null,
-            // Preserve activityId for reference (used in dashboard for modal)
-            activityId: activityId,
+            // Preserve activity_id for reference (used in dashboard for modal)
+            activity_id: activityId,
             // Add history metadata
-            addedToHistoryAt: metadata.addedToHistoryAt,
-            validatedViaQR: metadata.validatedViaQR,
-            validatedViaManual: metadata.validatedViaManual,
+            added_to_history_at: metadata.added_to_history_at,
+            validated_via_qr: metadata.validated_via_qr,
+            validated_via_manual: metadata.validated_via_manual,
             // Mark as from history
             fromHistory: true
           };
@@ -355,7 +353,7 @@ export async function updateActivityStatus(id, status) {
     // Update the activity status
     await updateDoc(activityDoc, {
       status: status,
-      last_updated: new Date()
+      updated_at: new Date()
     });
     console.log('Activity status updated:', id, 'to', status);
     
@@ -382,7 +380,7 @@ export async function deleteActivity(id) {
     }
     
     const activityData = activitySnapshot.data();
-    const organizationId = activityData.organizationId;
+    const organizationId = activityData.organization_id;
     
     // Get all applications for this activity
     const applicationsRef = collection(activityDoc, 'applications');
@@ -408,13 +406,13 @@ export async function deleteActivity(id) {
     // Delete applications from user's applications collection
     for (const applicationDoc of applicationsSnapshot.docs) {
       const applicationData = applicationDoc.data();
-      const userId = applicationData.userId;
+      const userId = applicationData.user_id;
       const applicationId = applicationDoc.id;
 
       if (userId) {
         const userRef = doc(db, 'members', userId);
         const userApplicationsRef = collection(userRef, 'applications');
-        const userQuery = query(userApplicationsRef, where('applicationId', '==', applicationId));
+        const userQuery = query(userApplicationsRef, where('application_id', '==', applicationId));
         const userQuerySnapshot = await getDocs(userQuery);
 
         userQuerySnapshot.docs.forEach((userAppDoc) => {
@@ -431,14 +429,14 @@ export async function deleteActivity(id) {
       if (orgSnap.exists()) {
         if (pendingApplicationsCount > 0) {
           // Decrement by the number of pending applications
-          batch.update(orgRef, { totalNewApplications: increment(-pendingApplicationsCount) });
+          batch.update(orgRef, { total_new_applications: increment(-pendingApplicationsCount) });
         }
 
         // Delete each application's mirror under organization
         for (const applicationDoc of applicationsSnapshot.docs) {
           const applicationId = applicationDoc.id;
           const orgApplicationsRef = collection(orgRef, 'applications');
-          const orgQuery = query(orgApplicationsRef, where('applicationId', '==', applicationId));
+          const orgQuery = query(orgApplicationsRef, where('application_id', '==', applicationId));
           const orgQuerySnapshot = await getDocs(orgQuery);
 
           orgQuerySnapshot.docs.forEach((orgAppDoc) => {
@@ -498,12 +496,12 @@ export async function getAcceptedApplicationsCount(activityId) {
     const rejectedUserIds = new Set(
       validations
         .filter(v => v.status === 'rejected')
-        .map(v => v.userId)
+        .map(v => v.user_id)
     );
 
     // Effective participants = accepted applications minus those explicitly rejected
     const effectiveParticipants = acceptedApplications.filter(
-      app => !rejectedUserIds.has(app.userId)
+      app => !rejectedUserIds.has(app.user_id)
     );
 
     return effectiveParticipants.length;

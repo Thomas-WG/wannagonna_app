@@ -41,19 +41,18 @@ export default function BadgesPage() {
         // Fetch badges for each category in parallel
         const badgesPromises = allCategories.map(async (category) => {
           const badges = await fetchBadgesByCategory(category.id);
-          return { categoryId: category.id, badges };
+          return { category_id: category.id, badges };
         });
         
         const badgesResults = await Promise.all(badgesPromises);
         const badgesMap = {};
         const badgesList = [];
         
-        badgesResults.forEach(({ categoryId, badges }) => {
-          badgesMap[categoryId] = badges;
-          // Ensure each badge has categoryId
+        badgesResults.forEach(({ category_id, badges }) => {
+          badgesMap[category_id] = badges;
           badges.forEach(badge => {
-            if (!badge.categoryId) {
-              badge.categoryId = categoryId;
+            if (!badge.category_id) {
+              badge.category_id = category_id;
             }
           });
           badgesList.push(...badges);

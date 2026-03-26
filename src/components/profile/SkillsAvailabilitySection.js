@@ -7,15 +7,16 @@ import { useTranslations } from 'next-intl';
 /**
  * Helper function to get selected time commitment options
  */
-function getSelectedTimeCommitments(profileData, t) {
-  if (!profileData?.timeCommitment) return [];
+function get_selected_time_commitments(profileData, t) {
+  const tc = profileData?.time_commitment;
+  if (!tc) return [];
   const commitments = [];
-  if (profileData.timeCommitment.daily) commitments.push(t('daily') || 'Daily');
-  if (profileData.timeCommitment.weekly) commitments.push(t('weekly') || 'Weekly');
-  if (profileData.timeCommitment.biweekly) commitments.push(t('biweekly') || 'Every two weeks');
-  if (profileData.timeCommitment.monthly) commitments.push(t('monthly') || 'Monthly');
-  if (profileData.timeCommitment.occasional) commitments.push(t('occasionally') || 'Occasionally');
-  if (profileData.timeCommitment.flexible) commitments.push(t('flexible') || 'Flexible');
+  if (tc.daily) commitments.push(t('daily') || 'Daily');
+  if (tc.weekly) commitments.push(t('weekly') || 'Weekly');
+  if (tc.biweekly) commitments.push(t('biweekly') || 'Every two weeks');
+  if (tc.monthly) commitments.push(t('monthly') || 'Monthly');
+  if (tc.occasional) commitments.push(t('occasionally') || 'Occasionally');
+  if (tc.flexible) commitments.push(t('flexible') || 'Flexible');
   return commitments;
 }
 
@@ -43,11 +44,11 @@ export default function SkillsAvailabilitySection({ profileData, translatedSkill
 
   if (!profileData) return null;
 
-  const timeCommitments = getSelectedTimeCommitments(profileData, t);
+  const selected_time_commitments = get_selected_time_commitments(profileData, t);
   const availabilities = getSelectedAvailabilities(profileData, t);
   const hasSkills = translatedSkills && translatedSkills.length > 0;
   // On mobile, show skills here. On desktop, skills are shown in AboutSection
-  const hasContent = timeCommitments.length > 0 || availabilities.length > 0 || hasSkills;
+  const hasContent = selected_time_commitments.length > 0 || availabilities.length > 0 || hasSkills;
 
   if (!hasContent) return null;
 
@@ -73,14 +74,14 @@ export default function SkillsAvailabilitySection({ profileData, translatedSkill
         )}
 
         {/* Time Commitment — softened read-only style */}
-        {timeCommitments.length > 0 && (
+        {selected_time_commitments.length > 0 && (
           <div>
             <h4 className="text-xs font-bold uppercase tracking-widest text-[#9ca3af] dark:text-text-tertiary mb-2.5 flex items-center gap-2">
               <HiClock className="w-4 h-4" />
               {t('frequency') || 'How often can you help?'}
             </h4>
             <div className="flex flex-wrap gap-2">
-              {timeCommitments.map((commitment, idx) => (
+              {selected_time_commitments.map((commitment, idx) => (
                 <span
                   key={idx}
                   className="px-2.5 py-0.5 rounded-full bg-[#f5f5f5] dark:bg-background-hover text-xs text-[#6b7280] dark:text-text-tertiary font-normal"
