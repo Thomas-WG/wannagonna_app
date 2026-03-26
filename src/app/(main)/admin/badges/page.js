@@ -204,12 +204,12 @@ export default function AdminBadgesPage() {
   const handleCategorySubmit = async (e) => {
     e.preventDefault();
     try {
-      if (!categoryForm.categoryId || !categoryForm.title) {
+      if (!categoryForm.category_id || !categoryForm.title) {
         showToast(t('fillRequiredFields') || 'Please fill all required fields', 'error');
         return;
       }
 
-      await createBadgeCategory(categoryForm.categoryId, {
+      await createBadgeCategory(categoryForm.category_id, {
         title: categoryForm.title,
         description: categoryForm.description,
         order: parseInt(categoryForm.order) || 0
@@ -571,11 +571,16 @@ export default function AdminBadgesPage() {
         <Modal.Body className="px-4 sm:px-6 max-h-[80vh] overflow-y-auto">
           <form onSubmit={handleCategorySubmit} className="space-y-4">
             <div>
-              <Label htmlFor="categoryId" className="text-sm sm:text-base">{t('categoryId') || 'Category ID'} *</Label>
+              <Label htmlFor="newCategorySlug" className="text-sm sm:text-base">{t('categoryId') || 'Category ID'} *</Label>
               <TextInput
-                id="categoryId"
-                value={categoryForm.categoryId}
-                onChange={(e) => setCategoryForm({ ...categoryForm, categoryId: e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '-') })}
+                id="newCategorySlug"
+                value={categoryForm.category_id}
+                onChange={(e) =>
+                  setCategoryForm({
+                    ...categoryForm,
+                    category_id: e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '-'),
+                  })
+                }
                 required
                 placeholder="e.g., sdg, geography"
                 className="text-sm sm:text-base"
