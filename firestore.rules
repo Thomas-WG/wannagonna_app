@@ -196,7 +196,7 @@ service cloud.firestore {
           (isOwner(userId) ||
           isAdmin() ||
           staffOrAmbassadorForActivity(activityId)
-        );
+        ));
 
         allow delete: if isAdmin();
       }
