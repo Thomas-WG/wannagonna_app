@@ -273,6 +273,7 @@
         "dateAndTimeSameDayHelper": "日付と開始・終了時刻を選択してください。",
         "spansSeveralDays": "複数日にわたる",
         "endDay": "終了日（複数日の活動の場合）",
+        "multiDayEndDateAfterStart": "終了日は開始日より後の日付にしてください。",
         "eventTimeRequired": "イベントをカレンダーに正しい時刻で表示するために必要です。",
         "addDateAndTimeShowOnCalendar": "日付と時刻を追加（カレンダーに表示）",
         "optional": "任意",

@@ -273,6 +273,7 @@
         "dateAndTimeSameDayHelper": "Elija el día y la hora de inicio y fin.",
         "spansSeveralDays": "Varios días",
         "endDay": "Día de fin (actividades de varios días)",
+        "multiDayEndDateAfterStart": "La fecha de fin debe ser posterior a la fecha de inicio.",
         "eventTimeRequired": "Requerido para que el evento aparezca a la hora correcta en el calendario.",
         "addDateAndTimeShowOnCalendar": "Añadir fecha y hora (mostrar en el calendario)",
         "optional": "opcional",

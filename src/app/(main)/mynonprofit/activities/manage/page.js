@@ -102,7 +102,7 @@ export default function CreateUpdateActivityPage() {
     applicants: 0, //initialized to 0 applicants
     created_at: new Date(),  // Current date and time as default
     start_date: new Date(),     // Default start date
-    end_date: new Date(),        // Default end date
+    end_date: null,              // Set when "several days"; null = single-day (no persisted end_date)
     start_time: null,            // "HH:mm" or null – optional for online/local, required for events
     end_time: null,              // "HH:mm" or null
     showDateTimeOnCalendar: false, // For online / local role: true when user opts in to show on calendar

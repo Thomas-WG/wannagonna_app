@@ -319,7 +319,22 @@ export default function ActivityDetailsForm({ formData, handleChange, setFormDat
                             weekStart={1}
                             value={startDateValue}
                             name="start_date"
-                            onChange={(date) => setFormData((prev) => ({ ...prev, start_date: date }))}
+                            onChange={(date) =>
+                              setFormData((prev) => {
+                                if (!prev.spansSeveralDays) {
+                                  return { ...prev, start_date: date, end_date: null };
+                                }
+                                if (date != null && prev.end_date == null) {
+                                  const d = date instanceof Date ? date : new Date(date);
+                                  return {
+                                    ...prev,
+                                    start_date: date,
+                                    end_date: new Date(d.getTime()),
+                                  };
+                                }
+                                return { ...prev, start_date: date };
+                              })
+                            }
                             className="w-full"
                           />
                         </div>
@@ -357,11 +372,19 @@ export default function ActivityDetailsForm({ formData, handleChange, setFormDat
                         checked={formData.spansSeveralDays === true}
                         onChange={(e) => {
                           const checked = e.target.checked;
-                          setFormData((prev) => ({
-                            ...prev,
-                            spansSeveralDays: checked,
-                            ...(checked ? {} : { end_date: null }),
-                          }));
+                          setFormData((prev) => {
+                            if (!checked) {
+                              return { ...prev, spansSeveralDays: false, end_date: null };
+                            }
+                            const start = prev.start_date;
+                            const endCopy =
+                              start != null
+                                ? new Date(
+                                    (start instanceof Date ? start : new Date(start)).getTime()
+                                  )
+                                : null;
+                            return { ...prev, spansSeveralDays: true, end_date: endCopy };
+                          });
                         }}
                         className="mt-1"
                       />
@@ -369,7 +392,24 @@ export default function ActivityDetailsForm({ formData, handleChange, setFormDat
                         {t('spansSeveralDays')}
                       </Label>
                     </div>
-                    {formData.spansSeveralDays && (
+                    {formData.spansSeveralDays && (() => {
+                      const multiDayEndInvalid =
+                        formData.start_date &&
+                        formData.end_date &&
+                        (() => {
+                          const s =
+                            formData.start_date instanceof Date
+                              ? formData.start_date
+                              : new Date(formData.start_date);
+                          const e =
+                            formData.end_date instanceof Date
+                              ? formData.end_date
+                              : new Date(formData.end_date);
+                          const ds = new Date(s.getFullYear(), s.getMonth(), s.getDate()).getTime();
+                          const de = new Date(e.getFullYear(), e.getMonth(), e.getDate()).getTime();
+                          return de <= ds;
+                        })();
+                      return (
                       <fieldset className="space-y-4">
                         <legend className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{t('endDay')}</legend>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -385,10 +425,16 @@ export default function ActivityDetailsForm({ formData, handleChange, setFormDat
                               onChange={(date) => setFormData((prev) => ({ ...prev, end_date: date }))}
                               className="w-full"
                             />
+                            {multiDayEndInvalid && (
+                              <p className="text-sm text-red-600 dark:text-red-400 font-medium" role="alert">
+                                {t('multiDayEndDateAfterStart')}
+                              </p>
+                            )}
                           </div>
                         </div>
                       </fieldset>
-                    )}
+                      );
+                    })()}
                     {isEvent && (
                       <p className="text-xs text-gray-500 dark:text-gray-400">{t('eventTimeRequired')}</p>
                     )}
