@@ -400,15 +400,34 @@ export default function ActivityDetailsModal({ isOpen, onClose, activityId, onAp
                         {activity.start_date
                           ? formatDateOnly(activity.start_date)
                           : 'Not specified'}
-                        {(activity.start_time || activity.end_time) && (
-                          <span className="text-text-secondary dark:text-text-secondary">
-                            {activity.start_time && activity.end_time
-                              ? ` · ${activity.start_time} – ${activity.end_time}`
-                              : activity.start_time
-                                ? ` · ${activity.start_time}`
-                                : ` · ${activity.end_time}`}
-                          </span>
-                        )}
+                        {(() => {
+                          const sd = activity.start_date
+                            ? convertTimestampToDate(activity.start_date)
+                            : null;
+                          const ed = activity.end_date
+                            ? convertTimestampToDate(activity.end_date)
+                            : null;
+                          const multiDayDifferentDays =
+                            sd && ed && sd.toDateString() !== ed.toDateString();
+                          if (multiDayDifferentDays) {
+                            if (!activity.start_time) return null;
+                            return (
+                              <span className="text-text-secondary dark:text-text-secondary">
+                                {` · ${activity.start_time}`}
+                              </span>
+                            );
+                          }
+                          if (!activity.start_time && !activity.end_time) return null;
+                          return (
+                            <span className="text-text-secondary dark:text-text-secondary">
+                              {activity.start_time && activity.end_time
+                                ? ` · ${activity.start_time} – ${activity.end_time}`
+                                : activity.start_time
+                                  ? ` · ${activity.start_time}`
+                                  : ` · ${activity.end_time}`}
+                            </span>
+                          );
+                        })()}
                       </p>
                     </div>
                     {(() => {
