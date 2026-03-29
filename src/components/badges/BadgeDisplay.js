@@ -25,8 +25,7 @@ export default function BadgeDisplay({ badge, size = 'default' }) {
 
       try {
         setLoading(true);
-        // Badge should have categoryId, but fallback to searching if not available
-        const categoryId = badge.categoryId;
+        const categoryId = badge.category_id;
         if (categoryId) {
           const url = await getBadgeImageUrl(categoryId, badge.id);
           console.log(`Badge image URL for ${badge.id}:`, url);
@@ -35,8 +34,8 @@ export default function BadgeDisplay({ badge, size = 'default' }) {
           // Fallback: try to find badge across categories (for backward compatibility)
           const { findBadgeById } = await import('@/utils/crudBadges');
           const foundBadge = await findBadgeById(badge.id);
-          if (foundBadge && foundBadge.categoryId) {
-            const url = await getBadgeImageUrl(foundBadge.categoryId, badge.id);
+          if (foundBadge && foundBadge.category_id) {
+            const url = await getBadgeImageUrl(foundBadge.category_id, badge.id);
             setImageUrl(url);
           }
         }
@@ -49,7 +48,7 @@ export default function BadgeDisplay({ badge, size = 'default' }) {
     };
 
     loadBadgeImage();
-  }, [badge?.id, badge?.categoryId]);
+  }, [badge?.id, badge?.category_id]);
 
   if (!badge) {
     return null;

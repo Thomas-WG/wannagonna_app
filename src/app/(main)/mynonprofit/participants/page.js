@@ -49,7 +49,7 @@ function formatDate(date) {
 export default function ParticipantsPage() {
   const t = useTranslations('MyNonProfit');
   const { claims } = useAuth();
-  const organizationId = claims?.npoId ?? null;
+  const organizationId = claims?.npo_id ?? null;
 
   const { participants, isLoading, error, refetch } = useNPOParticipants(
     organizationId,
@@ -77,7 +77,7 @@ export default function ParticipantsPage() {
     if (search.trim()) {
       const q = search.trim().toLowerCase();
       list = list.filter((p) =>
-        (p.displayName || '').toLowerCase().includes(q)
+        (p.display_name || '').toLowerCase().includes(q)
       );
     }
 
@@ -93,12 +93,12 @@ export default function ParticipantsPage() {
 
     list.sort((a, b) => {
       if (sortBy === SORT_NAME) {
-        return (a.displayName || '').localeCompare(b.displayName || '');
+        return (a.display_name || '').localeCompare(b.display_name || '');
       }
-      const aFirst = a.createdAt?.toDate?.() ?? (a.createdAt?.seconds ? new Date(a.createdAt.seconds * 1000) : null);
-      const bFirst = b.createdAt?.toDate?.() ?? (b.createdAt?.seconds ? new Date(b.createdAt.seconds * 1000) : null);
-      const aLast = a.lastValidatedAt?.toDate?.() ?? (a.lastValidatedAt?.seconds ? new Date(a.lastValidatedAt.seconds * 1000) : null);
-      const bLast = b.lastValidatedAt?.toDate?.() ?? (b.lastValidatedAt?.seconds ? new Date(b.lastValidatedAt.seconds * 1000) : null);
+      const aFirst = a.created_at?.toDate?.() ?? (a.created_at?.seconds ? new Date(a.created_at.seconds * 1000) : null);
+      const bFirst = b.created_at?.toDate?.() ?? (b.created_at?.seconds ? new Date(b.created_at.seconds * 1000) : null);
+      const aLast = a.last_validated_at?.toDate?.() ?? (a.last_validated_at?.seconds ? new Date(a.last_validated_at.seconds * 1000) : null);
+      const bLast = b.last_validated_at?.toDate?.() ?? (b.last_validated_at?.seconds ? new Date(b.last_validated_at.seconds * 1000) : null);
       if (sortBy === SORT_FIRST) {
         return (bFirst?.getTime() ?? 0) - (aFirst?.getTime() ?? 0);
       }
@@ -115,15 +115,15 @@ export default function ParticipantsPage() {
   useEffect(() => {
     const ref = headerCheckboxRef.current;
     if (!ref) return;
-    const count = filteredParticipants.filter((p) => selectedIds.has(p.userId)).length;
+    const count = filteredParticipants.filter((p) => selectedIds.has(p.user_id)).length;
     ref.indeterminate = count > 0 && count < filteredParticipants.length;
     ref.checked = filteredParticipants.length > 0 && count === filteredParticipants.length;
   }, [filteredParticipants, selectedIds]);
 
   const toggleSelectAll = useCallback(() => {
-    const visibleIds = new Set(filteredParticipants.map((p) => p.userId));
+    const visibleIds = new Set(filteredParticipants.map((p) => p.user_id));
     const selected = new Set(selectedIds);
-    const allSelected = filteredParticipants.every((p) => selected.has(p.userId));
+    const allSelected = filteredParticipants.every((p) => selected.has(p.user_id));
     if (allSelected) {
       visibleIds.forEach((id) => selected.delete(id));
     } else {
@@ -143,7 +143,7 @@ export default function ParticipantsPage() {
   }, []);
 
   const handleSendMail = useCallback(() => {
-    const selected = filteredParticipants.filter((p) => selectedIds.has(p.userId));
+    const selected = filteredParticipants.filter((p) => selectedIds.has(p.user_id));
     const emails = selected
       .map((p) => p.email)
       .filter((e) => e && String(e).trim());
@@ -376,32 +376,32 @@ export default function ParticipantsPage() {
               <Table.Body className="divide-y divide-border-light dark:divide-border-dark">
                 {filteredParticipants.map((p) => (
                   <Table.Row
-                    key={p.userId}
+                    key={p.user_id}
                     className="cursor-pointer bg-background-card dark:bg-background-card"
-                    onClick={() => handleRowClickToggleSelect(p.userId)}
+                    onClick={() => handleRowClickToggleSelect(p.user_id)}
                   >
                     <Table.Cell onClick={(e) => e.stopPropagation()}>
                       <div className="min-h-[44px] min-w-[44px] flex items-center">
                         <Checkbox
-                          checked={selectedIds.has(p.userId)}
-                          onChange={(e) => toggleSelect(p.userId, e)}
+                          checked={selectedIds.has(p.user_id)}
+                          onChange={(e) => toggleSelect(p.user_id, e)}
                           onClick={(e) => e.stopPropagation()}
-                          aria-label={t('selectParticipant', { name: p.displayName }) ?? `Select ${p.displayName}`}
+                          aria-label={t('selectParticipant', { name: p.display_name }) ?? `Select ${p.display_name}`}
                         />
                       </div>
                     </Table.Cell>
                     <Table.Cell>
                       <div className="flex items-center gap-3">
                         <ProfilePicture
-                          src={p.profilePicture}
-                          alt={p.displayName}
+                          src={p.profile_picture}
+                          alt={p.display_name}
                           size={40}
                           showInitials
-                          name={p.displayName}
+                          name={p.display_name}
                           className="flex-shrink-0"
                         />
                         <span className="font-medium text-text-primary dark:text-text-primary truncate">
-                          {p.displayName ?? '—'}
+                          {p.display_name ?? '—'}
                         </span>
                       </div>
                     </Table.Cell>
@@ -428,19 +428,19 @@ export default function ParticipantsPage() {
                       </div>
                     </Table.Cell>
                     <Table.Cell className="text-text-secondary dark:text-text-secondary text-sm whitespace-nowrap">
-                      {(p.totalHours ?? 0).toFixed(1)} h
+                      {(p.total_hours ?? 0).toFixed(1)} h
                     </Table.Cell>
                     <Table.Cell className="text-text-secondary dark:text-text-secondary text-sm whitespace-nowrap">
-                      {formatDate(p.createdAt)}
+                      {formatDate(p.created_at)}
                     </Table.Cell>
                     <Table.Cell className="text-text-secondary dark:text-text-secondary text-sm whitespace-nowrap">
-                      {formatDate(p.lastValidatedAt)}
+                      {formatDate(p.last_validated_at)}
                     </Table.Cell>
                     <Table.Cell onClick={(e) => e.stopPropagation()}>
                       <Button
                         size="xs"
                         color="light"
-                        onClick={() => handleOpenProfile(p.userId)}
+                        onClick={() => handleOpenProfile(p.user_id)}
                         className="min-h-[44px]"
                         aria-label={t('viewProfile') ?? 'View profile'}
                       >
@@ -458,14 +458,14 @@ export default function ParticipantsPage() {
           <div className="md:hidden space-y-3">
             {filteredParticipants.map((p) => (
               <div
-                key={p.userId}
+                key={p.user_id}
                 role="button"
                 tabIndex={0}
-                onClick={() => handleRowClickToggleSelect(p.userId)}
+                onClick={() => handleRowClickToggleSelect(p.user_id)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
-                    handleRowClickToggleSelect(p.userId);
+                    handleRowClickToggleSelect(p.user_id);
                   }
                 }}
                 className="flex items-start gap-3 p-4 rounded-lg border border-border-light dark:border-border-dark bg-background-card dark:bg-background-card hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors text-left cursor-pointer"
@@ -476,23 +476,23 @@ export default function ParticipantsPage() {
                   onKeyDown={(e) => e.stopPropagation()}
                 >
                   <Checkbox
-                    checked={selectedIds.has(p.userId)}
-                    onChange={(e) => toggleSelect(p.userId, e)}
+                    checked={selectedIds.has(p.user_id)}
+                    onChange={(e) => toggleSelect(p.user_id, e)}
                     onClick={(e) => e.stopPropagation()}
-                    aria-label={t('selectParticipant', { name: p.displayName }) ?? `Select ${p.displayName}`}
+                    aria-label={t('selectParticipant', { name: p.display_name }) ?? `Select ${p.display_name}`}
                   />
                 </div>
                 <ProfilePicture
-                  src={p.profilePicture}
-                  alt={p.displayName}
+                  src={p.profile_picture}
+                  alt={p.display_name}
                   size={48}
                   showInitials
-                  name={p.displayName}
+                  name={p.display_name}
                   className="flex-shrink-0"
                 />
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-text-primary dark:text-text-primary truncate">
-                    {p.displayName ?? '—'}
+                    {p.display_name ?? '—'}
                   </p>
                   <div className="flex flex-wrap gap-1 mt-1">
                     {p.online && (
@@ -506,7 +506,7 @@ export default function ParticipantsPage() {
                     )}
                   </div>
                   <p className="text-xs text-text-tertiary dark:text-text-tertiary mt-1">
-                    {(t('hours') ?? 'Hours')}: {(p.totalHours ?? 0).toFixed(1)} h · {t('firstParticipation')}: {formatDate(p.createdAt)} · {t('lastParticipation')}: {formatDate(p.lastValidatedAt)}
+                    {(t('hours') ?? 'Hours')}: {(p.total_hours ?? 0).toFixed(1)} h · {t('firstParticipation')}: {formatDate(p.created_at)} · {t('lastParticipation')}: {formatDate(p.last_validated_at)}
                   </p>
                 </div>
                 <Button
@@ -514,7 +514,7 @@ export default function ParticipantsPage() {
                   color="light"
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleOpenProfile(p.userId);
+                    handleOpenProfile(p.user_id);
                   }}
                   className="min-h-[44px] flex-shrink-0"
                   aria-label={t('viewProfile') ?? 'View profile'}

@@ -67,7 +67,7 @@ export default function ValidateActivityPage() {
           // Badges are processed in background by Cloud Function, so we don't include them here
           const params = new URLSearchParams({
             validation: 'success',
-            xp: validationResult.xpReward?.toString() || '0',
+            xp: validationResult.total_xp?.toString() || '0',
             activityTitle: validationResult.activityTitle || '',
             activityId: activityId || ''
           });

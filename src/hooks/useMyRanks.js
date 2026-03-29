@@ -25,7 +25,7 @@ export function useMyRanks() {
 
     const q = query(
       collection(db, 'leaderboard_scores'),
-      where('userId', '==', user.uid)
+      where('user_id', '==', user.uid)
     );
 
     const unsub = onSnapshot(
@@ -48,7 +48,7 @@ export function useMyRanks() {
   const getRank = (dimensionId) =>
     myRanks.find((r) => r.dimension === dimensionId) || null;
 
-  const championDimensions = myRanks.filter((r) => r.isCurrentChampion);
+  const championDimensions = myRanks.filter((r) => r.is_current_champion);
 
   return { myRanks, getRank, championDimensions, loading };
 }

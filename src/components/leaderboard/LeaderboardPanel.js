@@ -15,7 +15,7 @@ export default function LeaderboardPanel({
 }) {
   const meetsThreshold = entries.length >= THRESHOLD;
   const top10 = entries.slice(0, 10);
-  const topScore = top10[0]?.activityScore || 1;
+  const topScore = top10[0]?.activity_score ?? 1;
 
   if (loading) {
     return (
@@ -48,10 +48,10 @@ export default function LeaderboardPanel({
       )}
       {top10.map((entry, i) => (
         <LeaderboardRow
-          key={entry.userId}
+          key={entry.user_id}
           entry={entry}
           index={i}
-          isMe={entry.userId === currentUserId}
+          isMe={entry.user_id === currentUserId}
           isLast={i === top10.length - 1}
           topScore={topScore}
         />

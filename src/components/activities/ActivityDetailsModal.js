@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Modal, Badge, Button, Spinner } from 'flowbite-react';
 import Image from 'next/image';
-import { fetchActivityById, getAcceptedApplicationsCount } from '@/utils/crudActivities';
+import { fetchActivityById } from '@/utils/crudActivities';
 import { fetchOrganizationById } from '@/utils/crudOrganizations';
 import { formatDateOnly, convertTimestampToDate } from '@/utils/dateUtils';
 import { useTranslations, useLocale } from 'next-intl';
@@ -47,31 +47,20 @@ export default function ActivityDetailsModal({ isOpen, onClose, activityId, onAp
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showNPOModal, setShowNPOModal] = useState(false);
-  const [validatedCount, setValidatedCount] = useState(null);
   const [skillLabelsMap, setSkillLabelsMap] = useState({});
 
-  // Fetch accepted applications count for local/online activities (not for events)
-  useEffect(() => {
-    const shouldFetchCount = 
-      (activity?.type === 'local' && activity?.acceptApplicationsWG !== false) ||
-      activity?.type === 'online';
-    
-    if (activity?.id && shouldFetchCount) {
-      const fetchCount = async () => {
-        try {
-          const count = await getAcceptedApplicationsCount(activity.id);
-          setValidatedCount(count);
-        } catch (error) {
-          console.error('Error fetching accepted applications count:', error);
-          setValidatedCount(0);
-        }
-      };
-      fetchCount();
-    } else if (activity?.type !== 'event') {
-      // Reset count for local/online activities when not needed
-      setValidatedCount(null);
+  const participantStatCount = useMemo(() => {
+    if (!activity) {
+      return null;
     }
-  }, [activity?.id, activity?.type, activity?.acceptApplicationsWG]);
+    if (activity.effective_participants_count != null) {
+      return activity.effective_participants_count;
+    }
+    if (activity.applicants != null) {
+      return activity.applicants;
+    }
+    return null;
+  }, [activity]);
 
   // Fetch skill labels based on current locale
   useEffect(() => {
@@ -161,10 +150,10 @@ export default function ActivityDetailsModal({ isOpen, onClose, activityId, onAp
 
         setActivity(processedActivity);
 
-        // Fetch organization data if organizationId exists
-        if (activityData.organizationId) {
+        // Fetch organization data if organization_id exists
+        if (activityData.organization_id) {
           try {
-            const orgData = await fetchOrganizationById(activityData.organizationId);
+            const orgData = await fetchOrganizationById(activityData.organization_id);
             setOrganization(orgData);
           } catch (orgError) {
             console.error('Error fetching organization:', orgError);
@@ -293,11 +282,15 @@ export default function ActivityDetailsModal({ isOpen, onClose, activityId, onAp
 
               {/* Key Stats */}
               <div className={`grid ${
-                activity.type === 'event' && activity.participantTarget !== null && activity.participantTarget !== undefined
+                activity.type === 'event' &&
+                activity.participant_target !== null &&
+                activity.participant_target !== undefined
                   ? 'grid-cols-2 sm:grid-cols-3'
                   : activity.type === 'event'
                   ? 'grid-cols-2 sm:grid-cols-2'
-                  : ((activity.type === 'local' && activity.acceptApplicationsWG !== false) || activity.type === 'online') && validatedCount !== null
+                  : ((activity.type === 'local' &&
+                    activity.accept_applications_wg !== false) ||
+                    activity.type === 'online') && participantStatCount != null
                   ? 'grid-cols-2 sm:grid-cols-3'
                   : 'grid-cols-2 sm:grid-cols-2'
               } gap-3 sm:gap-4 pt-4 border-t-2 border-border-light dark:border-[#475569]`}>
@@ -309,26 +302,31 @@ export default function ActivityDetailsModal({ isOpen, onClose, activityId, onAp
                   </div>
                 </div>
                 {/* Participant Counter - Show for local (when accepting WG) and online */}
-                {((activity.type === 'local' && activity.acceptApplicationsWG !== false) || 
-                    activity.type === 'online') && validatedCount !== null && (
+                {((activity.type === 'local' &&
+                  activity.accept_applications_wg !== false) || 
+                    activity.type === 'online') && participantStatCount != null && (
                   <div className="flex items-center gap-2">
                     <HiUsers className="h-5 w-5 text-semantic-info-500 dark:text-semantic-info-400 flex-shrink-0" />
                     <div className="min-w-0">
                       <p className="text-xs text-text-tertiary dark:text-text-tertiary">{t('participants')}</p>
                       <p className="text-base sm:text-lg font-semibold text-semantic-info-600 dark:text-semantic-info-400">
-                        {activity.participantTarget ? `${validatedCount}/${activity.participantTarget}` : validatedCount}
+                        {activity.participant_target
+                          ? `${participantStatCount}/${activity.participant_target}`
+                          : participantStatCount}
                       </p>
                     </div>
                   </div>
                 )}
                 {/* People Max - Show for events when participantTarget is set */}
-                {activity.type === 'event' && activity.participantTarget !== null && activity.participantTarget !== undefined && (
+                {activity.type === 'event' &&
+                activity.participant_target !== null &&
+                activity.participant_target !== undefined && (
                   <div className="flex items-center gap-2">
                     <HiUsers className="h-5 w-5 text-semantic-info-500 dark:text-semantic-info-400 flex-shrink-0" />
                     <div className="min-w-0">
                       <p className="text-xs text-text-tertiary dark:text-text-tertiary">{t('peopleMax')}</p>
                       <p className="text-base sm:text-lg font-semibold text-semantic-info-600 dark:text-semantic-info-400">
-                        {activity.participantTarget}
+                        {activity.participant_target}
                       </p>
                     </div>
                   </div>
@@ -366,7 +364,7 @@ export default function ActivityDetailsModal({ isOpen, onClose, activityId, onAp
               </div>
 
               {/* External Platform Link */}
-              {(activity.externalPlatformLink || activity.activity_url) && (
+              {activity.external_platform_link && (
                 <div className="flex items-center gap-4 p-4 bg-background-hover dark:bg-background-hover rounded-xl border-2 border-border-light dark:border-[#475569] hover:shadow-md transition-all">
                   <div className="bg-semantic-info-100 dark:bg-semantic-info-900 p-3 rounded-full">
                     <HiExternalLink className="h-6 w-6 text-semantic-info-600 dark:text-semantic-info-400 flex-shrink-0" />
@@ -374,14 +372,14 @@ export default function ActivityDetailsModal({ isOpen, onClose, activityId, onAp
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-medium text-text-tertiary dark:text-text-tertiary mb-1 uppercase tracking-wide">{t('externalPlatformLink')}</p>
                     <a
-                      href={(activity.externalPlatformLink || activity.activity_url).startsWith('http') 
-                        ? (activity.externalPlatformLink || activity.activity_url) 
-                        : `https://${activity.externalPlatformLink || activity.activity_url}`}
+                      href={activity.external_platform_link.startsWith('http')
+                        ? activity.external_platform_link
+                        : `https://${activity.external_platform_link}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-semantic-info-600 dark:text-semantic-info-400 hover:text-semantic-info-700 dark:hover:text-semantic-info-300 text-sm font-medium break-all hover:underline"
                     >
-                      {activity.externalPlatformLink || activity.activity_url}
+                      {activity.external_platform_link}
                     </a>
                   </div>
                 </div>
@@ -402,15 +400,34 @@ export default function ActivityDetailsModal({ isOpen, onClose, activityId, onAp
                         {activity.start_date
                           ? formatDateOnly(activity.start_date)
                           : 'Not specified'}
-                        {(activity.start_time || activity.end_time) && (
-                          <span className="text-text-secondary dark:text-text-secondary">
-                            {activity.start_time && activity.end_time
-                              ? ` · ${activity.start_time} – ${activity.end_time}`
-                              : activity.start_time
-                                ? ` · ${activity.start_time}`
-                                : ` · ${activity.end_time}`}
-                          </span>
-                        )}
+                        {(() => {
+                          const sd = activity.start_date
+                            ? convertTimestampToDate(activity.start_date)
+                            : null;
+                          const ed = activity.end_date
+                            ? convertTimestampToDate(activity.end_date)
+                            : null;
+                          const multiDayDifferentDays =
+                            sd && ed && sd.toDateString() !== ed.toDateString();
+                          if (multiDayDifferentDays) {
+                            if (!activity.start_time) return null;
+                            return (
+                              <span className="text-text-secondary dark:text-text-secondary">
+                                {` · ${activity.start_time}`}
+                              </span>
+                            );
+                          }
+                          if (!activity.start_time && !activity.end_time) return null;
+                          return (
+                            <span className="text-text-secondary dark:text-text-secondary">
+                              {activity.start_time && activity.end_time
+                                ? ` · ${activity.start_time} – ${activity.end_time}`
+                                : activity.start_time
+                                  ? ` · ${activity.start_time}`
+                                  : ` · ${activity.end_time}`}
+                            </span>
+                          );
+                        })()}
                       </p>
                     </div>
                     {(() => {
@@ -588,7 +605,8 @@ export default function ActivityDetailsModal({ isOpen, onClose, activityId, onAp
                   {/* Hide Apply button for events or local activities with external platform only */}
                   {onApply && 
                    activity?.type !== 'event' && 
-                   !(activity?.type === 'local' && activity?.acceptApplicationsWG === false) && (
+                   !(activity?.type === 'local' &&
+                     activity?.accept_applications_wg === false) && (
                     <Button onClick={onApply} className="bg-primary-500 hover:bg-primary-600 dark:bg-primary-600 dark:hover:bg-primary-700 text-white">
                       Apply Now
                     </Button>

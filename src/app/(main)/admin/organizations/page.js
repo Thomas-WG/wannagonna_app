@@ -26,6 +26,7 @@ import { useTheme } from '@/utils/theme/ThemeContext';
 import { useModal } from '@/utils/modal/useModal';
 import BackButton from '@/components/layout/BackButton';
 import { normalizeUrl, formatUrlForDisplay } from '@/utils/urlUtils';
+import { Timestamp } from 'firebase/firestore';
 
 // Register the languages you want to use
 languages.registerLocale(require("@cospired/i18n-iso-languages/langs/en.json"));
@@ -61,7 +62,7 @@ export default function OrganizationsManagementPage() {
     email: '',
     members: [],
     registrationNumber: '',
-    createdAt: '',
+    created_at: '',
     linkedin: '',
     facebook: '',
     instagram: ''
@@ -156,7 +157,7 @@ export default function OrganizationsManagementPage() {
         // Create new organization
         const organizationWithCreatedAt = {
           ...normalizedForm,
-          createdAt: new Date().toISOString()
+          created_at: Timestamp.now()
         };
         
         // Handle logo upload for new organization
@@ -257,7 +258,7 @@ export default function OrganizationsManagementPage() {
       email: '',
       members: [],
       registrationNumber: '',
-      createdAt: '',
+      created_at: '',
       linkedin: '',
       facebook: '',
       instagram: ''

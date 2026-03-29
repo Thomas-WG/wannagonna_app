@@ -41,7 +41,7 @@ export default function SkillsManagementPage() {
   });
   const [skillForm, setSkillForm] = useState({
     name: { en: '', fr: '', es: '', ja: '' },
-    categoryId: '',
+    category_id: '',
     order: 0
   });
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
@@ -123,7 +123,7 @@ export default function SkillsManagementPage() {
     setSkillForm({
       id: skill.id,
       name: skill.name,
-      categoryId: skill.categoryId,
+      category_id: skill.category_id,
       order: skill.order
     });
     setShowSkillModal(true);
@@ -140,7 +140,7 @@ export default function SkillsManagementPage() {
   const resetSkillForm = () => {
     setSkillForm({
       name: { en: '', fr: '', es: '', ja: '' },
-      categoryId: '',
+      category_id: '',
       order: 0
     });
   };
@@ -297,7 +297,7 @@ export default function SkillsManagementPage() {
               </Table.Head>
               <Table.Body>
                 {skills.map(skill => {
-                  const category = categories.find(c => c.id === skill.categoryId);
+                  const category = categories.find(c => c.id === skill.category_id);
                   return (
                     <Table.Row key={skill.id}>
                       <Table.Cell className="text-sm">{skill.name.en}</Table.Cell>
@@ -330,7 +330,7 @@ export default function SkillsManagementPage() {
             <p className="text-sm text-gray-500 dark:text-gray-400 py-4">No skills found</p>
           ) : (
             skills.map(skill => {
-              const category = categories.find(c => c.id === skill.categoryId);
+              const category = categories.find(c => c.id === skill.category_id);
               return (
                 <Card key={skill.id} className="p-4">
                   <div className="space-y-2">
@@ -528,10 +528,10 @@ export default function SkillsManagementPage() {
               <Label htmlFor="skillCategory" className="text-sm sm:text-base">{t('category')}</Label>
               <Select
                 id="skillCategory"
-                value={skillForm.categoryId}
+                value={skillForm.category_id}
                 onChange={(e) => setSkillForm({
                   ...skillForm,
-                  categoryId: e.target.value
+                  category_id: e.target.value
                 })}
                 required
                 className="text-sm sm:text-base"

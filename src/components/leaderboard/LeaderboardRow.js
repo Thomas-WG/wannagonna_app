@@ -15,10 +15,10 @@ export default function LeaderboardRow({
   topScore,
 }) {
   const t = useTranslations('Leaderboard');
-  const medal = getRankDisplay(entry.currentRank);
-  const isTop3 = entry.currentRank <= 3;
+  const medal = getRankDisplay(entry.current_rank);
+  const isTop3 = entry.current_rank <= 3;
   const barPct = topScore > 0
-    ? Math.round((entry.activityScore / topScore) * 100)
+    ? Math.round((entry.activity_score / topScore) * 100)
     : 0;
 
   return (
@@ -37,17 +37,17 @@ export default function LeaderboardRow({
           <span className="text-lg">{medal.emoji}</span>
         ) : (
           <span className="font-heading font-bold text-[13px] text-text-tertiary dark:text-text-tertiary">
-            #{entry.currentRank}
+            #{entry.current_rank}
           </span>
         )}
       </div>
 
       <Avatar
-        userId={entry.userId}
-        displayName={entry.displayName}
-        profilePicture={entry.profilePicture}
+        userId={entry.user_id}
+        displayName={entry.display_name}
+        profilePicture={entry.profile_picture}
         size={36}
-        isChampion={entry.isCurrentChampion}
+        isChampion={entry.is_current_champion}
       />
 
       <div className="flex-1 min-w-0">
@@ -57,19 +57,19 @@ export default function LeaderboardRow({
               isMe ? 'font-extrabold text-primary-600 dark:text-primary-400' : 'font-semibold text-text-primary dark:text-text-primary'
             }`}
           >
-            {entry.displayName || 'Anonymous'}
+            {entry.display_name || 'Anonymous'}
             {isMe && (
               <span className="font-normal text-primary-600/75 dark:text-primary-400/75 text-[11px]"> · {t('you')}</span>
             )}
           </span>
-          {entry.isCurrentChampion && (
+          {entry.is_current_champion && (
             <span className="text-[9px] font-bold uppercase tracking-widest font-heading text-[#F08602] bg-[#F08602]/10 border border-[#F08602]/30 py-0.5 px-1.5 rounded-full flex-shrink-0">
               Champion
             </span>
           )}
-          {!entry.isCurrentChampion && entry.totalChampionships > 0 && (
+          {!entry.is_current_champion && entry.total_championships > 0 && (
             <span className="text-[10px] text-text-tertiary dark:text-text-tertiary flex-shrink-0">
-              ×{entry.totalChampionships} 🏆
+              ×{entry.total_championships} 🏆
             </span>
           )}
         </div>
@@ -94,7 +94,7 @@ export default function LeaderboardRow({
             isTop3 ? 'text-[#F08602]' : isMe ? 'text-primary-600 dark:text-primary-400' : 'text-text-primary dark:text-text-primary'
           }`}
         >
-          {formatScore(entry.activityScore)}
+          {formatScore(entry.activity_score)}
         </div>
         <div className="text-[9.5px] text-text-tertiary dark:text-text-tertiary mt-0.5 tracking-wide">
           pts

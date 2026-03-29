@@ -29,17 +29,17 @@ export default function ReviewApplicationsPage() {
   const [showOrgModal, setShowOrgModal] = useState(false)
   const [selectedOrganization, setSelectedOrganization] = useState(null)
   
-  const organizationId = claims?.npoId || null
+  const organizationId = claims?.npo_id || null
 
   const loadData = useCallback(async () => {
     if (!organizationId) return
     setLoading(true)
     try {
       const orgActivities = await fetchActivitiesByCriteria(organizationId, 'any', 'any')
-      // Sort by creation_date or start_date desc if present
+      // Sort by created_at or start_date desc if present
       const sorted = [...orgActivities].sort((a, b) => {
-        const aDate = (a.creation_date?.seconds ? new Date(a.creation_date.seconds * 1000) : (a.creation_date ? new Date(a.creation_date) : 0))
-        const bDate = (b.creation_date?.seconds ? new Date(b.creation_date.seconds * 1000) : (b.creation_date ? new Date(b.creation_date) : 0))
+        const aDate = (a.created_at?.seconds ? new Date(a.created_at.seconds * 1000) : (a.created_at ? new Date(a.created_at) : 0))
+        const bDate = (b.created_at?.seconds ? new Date(b.created_at.seconds * 1000) : (b.created_at ? new Date(b.created_at) : 0))
         return (bDate?.getTime?.() || 0) - (aDate?.getTime?.() || 0)
       })
       setActivities(sorted)
@@ -65,7 +65,7 @@ export default function ReviewApplicationsPage() {
   }, [organizationId, loadData])
 
   const openConfirm = (activityId, application, nextStatus) => {
-    setConfirmation({ activityId, application, nextStatus })
+    setConfirmation({ activity_id: activityId, application, nextStatus })
     setNpoResponse('')
     setConfirmationOpen(true)
   }
@@ -81,17 +81,15 @@ export default function ReviewApplicationsPage() {
 
   const confirmAction = async () => {
     if (!confirmation) return
-    const { activityId, application, nextStatus } = confirmation
+    const { activity_id, application, nextStatus } = confirmation
     try {
       setProcessingApplicationId(application.id)
-      // Pass the current user's UID to track who approved/rejected the application
       const updatedByUserId = user?.uid || null
-      await updateApplicationStatus(activityId, application.id, nextStatus, npoResponse, updatedByUserId)
-      // Update local state for application status and response
+      await updateApplicationStatus(activity_id, application.application_id ?? application.id, nextStatus, npoResponse, updatedByUserId)
       setApplicationsByActivityId((prev) => ({
         ...prev,
-        [activityId]: (prev[activityId] || []).map((app) =>
-          app.id === application.id ? { ...app, status: nextStatus, npoResponse } : app
+        [activity_id]: (prev[activity_id] || []).map((app) =>
+          app.id === application.id ? { ...app, status: nextStatus, npo_response: npoResponse } : app
         ),
       }))
     } catch (err) {
@@ -144,8 +142,8 @@ export default function ReviewApplicationsPage() {
       if (a.status !== 'pending' && b.status === 'pending') return 1
       
       // Within same status, sort by date (newest first)
-      const aDate = a.createdAt?.getTime?.() || (a.createdAt ? new Date(a.createdAt).getTime() : 0)
-      const bDate = b.createdAt?.getTime?.() || (b.createdAt ? new Date(b.createdAt).getTime() : 0)
+      const aDate = a.created_at?.getTime?.() || (a.created_at ? new Date(a.created_at).getTime() : 0)
+      const bDate = b.created_at?.getTime?.() || (b.created_at ? new Date(b.created_at).getTime() : 0)
       return (bDate || 0) - (aDate || 0)
     })
   }
@@ -201,23 +199,23 @@ export default function ReviewApplicationsPage() {
                 key={application.id}
                 application={{
                   ...application,
-                  activityId: activity.id,
-                  applicationId: application.id,
+                  activity_id: activity.id,
+                  application_id: application.id,
                 }}
                 activity={activity}
                 memberProfile={{
-                  displayName: application.displayName,
-                  profilePicture: application.profilePicture,
+                  display_name: application.display_name,
+                  profile_picture: application.profile_picture,
                 }}
                 onMemberAvatarClick={() => {
-                  if (application.userId) {
-                    setSelectedUserId(application.userId);
+                  if (application.user_id) {
+                    setSelectedUserId(application.user_id);
                     setProfileModalOpen(true);
                   }
                 }}
                 onOrgLogoClick={async () => {
                   // Fetch organization data and open modal
-                  const orgId = activity.organizationId || application.organizationId || organizationId;
+                  const orgId = activity.organization_id || application.organization_id || organizationId;
                   if (orgId) {
                     try {
                       const orgData = await fetchOrganizationById(orgId);
@@ -259,14 +257,14 @@ export default function ReviewApplicationsPage() {
             </h3>
             <p className="text-sm text-text-secondary dark:text-text-secondary mb-4">
               {t('confirmActionMessage') || 'Are you sure you want to'} {confirmation?.nextStatus === 'accepted' ? (t('accept').toLowerCase() || 'accept') : (t('reject').toLowerCase() || 'reject')} {t('theApplicationFrom') || 'the application from'}{' '}
-              <span className="font-medium">{confirmation?.application?.displayName}</span>?
+              <span className="font-medium">{confirmation?.application?.display_name}</span>?
             </p>
             <div className="bg-background-hover dark:bg-background-hover p-3 rounded-lg text-left">
               <p className="text-xs text-text-secondary dark:text-text-secondary mb-1">
-                <strong className="text-text-primary dark:text-text-primary">{t('activity') || 'Activity'}:</strong> {activities.find((a) => a.id === confirmation?.activityId)?.title || (t('untitledActivity') || 'Untitled activity')}
+                <strong className="text-text-primary dark:text-text-primary">{t('activity') || 'Activity'}:</strong> {activities.find((a) => a.id === confirmation?.activity_id)?.title || (t('untitledActivity') || 'Untitled activity')}
               </p>
               <p className="text-xs text-text-secondary dark:text-text-secondary mb-1">
-                <strong className="text-text-primary dark:text-text-primary">{t('applicant') || 'Applicant'}:</strong> {confirmation?.application?.displayName}
+                <strong className="text-text-primary dark:text-text-primary">{t('applicant') || 'Applicant'}:</strong> {confirmation?.application?.display_name}
               </p>
               <p className="text-xs text-text-secondary dark:text-text-secondary">
                 <strong className="text-text-primary dark:text-text-primary">{t('message') || 'Message'}:</strong> {confirmation?.application?.message || (t('noMessageProvided') || 'No message provided')}
@@ -282,7 +280,7 @@ export default function ReviewApplicationsPage() {
                 rows={3}
                 value={npoResponse}
                 onChange={(e) => setNpoResponse(e.target.value)}
-                placeholder={t('addPersonalMessagePlaceholder', { name: confirmation?.application?.displayName || t('theVolunteer') || 'the volunteer' }) || `Add a personal message for ${confirmation?.application?.displayName || 'the volunteer'}...`}
+                placeholder={t('addPersonalMessagePlaceholder', { name: confirmation?.application?.display_name || t('theVolunteer') || 'the volunteer' }) || `Add a personal message for ${confirmation?.application?.display_name || 'the volunteer'}...`}
                 className="w-full px-3 py-2 border border-border-light dark:border-border-dark rounded-md shadow-sm bg-background-card dark:bg-background-card text-text-primary dark:text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 focus:border-primary-500 dark:focus:border-primary-400 text-sm"
                 maxLength={500}
               />

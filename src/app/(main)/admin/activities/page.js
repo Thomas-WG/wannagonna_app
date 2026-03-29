@@ -2,11 +2,13 @@
 
 import { Card, Toast } from "flowbite-react";
 import SortBySelect from '@/components/common/SortBySelect';
-import { HiUsers, HiOfficeBuilding, HiCalendar, HiDocumentText, HiPencil, HiTrash, HiEye, HiUserGroup, HiViewGrid, HiLockClosed, HiQrcode, HiDuplicate } from "react-icons/hi";
+import { HiUsers, HiOfficeBuilding, HiCalendar, HiDocumentText, HiViewGrid, HiLockClosed } from "react-icons/hi";
+import { HiDocumentText } from "react-icons/hi2";
+import ActivityCardActionsOverlay from "@/components/activities/ActivityCardActionsOverlay";
 import { MdOutlineSocialDistance } from "react-icons/md";
 import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { fetchActivities, deleteActivity, updateActivityStatus } from "@/utils/crudActivities";
+import { fetchActivities, deleteActivity, updateActivityStatus, duplicateActivity } from "@/utils/crudActivities";
 import { fetchOrganizations } from "@/utils/crudOrganizations";
 import { useTranslations } from "next-intl";
 import { useTheme } from '@/utils/theme/ThemeContext';
@@ -129,12 +131,12 @@ export default function AdminActivitiesPage() {
   const availableOrganizations = useMemo(() => {
     const orgMap = new Map();
     allActivities.forEach((activity) => {
-      if (activity.organizationId) {
+      if (activity.organization_id) {
         // Find organization name from fetched organizations or use activity's organization_name
-        const org = organizations.find(o => o.id === activity.organizationId);
-        const orgName = org?.name || activity.organization_name || activity.organizationId;
-        orgMap.set(activity.organizationId, {
-          id: activity.organizationId,
+        const org = organizations.find(o => o.id === activity.organization_id);
+        const orgName = org?.name || activity.organization_name || activity.organization_id;
+        orgMap.set(activity.organization_id, {
+          id: activity.organization_id,
           name: orgName
         });
       }
@@ -154,7 +156,7 @@ export default function AdminActivitiesPage() {
       if (filters.sdg !== 'all' && activity.sdg !== filters.sdg) return false;
       if (filters.status !== 'all' && activity.status !== filters.status) return false;
       if (filters.organization !== 'all') {
-        const orgMatch = activity.organizationId === filters.organization || 
+        const orgMatch = activity.organization_id === filters.organization || 
                         activity.organization_name === filters.organization;
         if (!orgMatch) return false;
       }
@@ -183,14 +185,14 @@ export default function AdminActivitiesPage() {
     switch (sortBy) {
       case 'newest':
         return sorted.sort((a, b) => {
-          const aDate = a.creation_date?.toDate?.() || a.creation_date || new Date(0);
-          const bDate = b.creation_date?.toDate?.() || b.creation_date || new Date(0);
+          const aDate = a.created_at?.toDate?.() || a.created_at || new Date(0);
+          const bDate = b.created_at?.toDate?.() || b.created_at || new Date(0);
           return bDate - aDate;
         });
       case 'oldest':
         return sorted.sort((a, b) => {
-          const aDate = a.creation_date?.toDate?.() || a.creation_date || new Date(0);
-          const bDate = b.creation_date?.toDate?.() || b.creation_date || new Date(0);
+          const aDate = a.created_at?.toDate?.() || a.created_at || new Date(0);
+          const bDate = b.created_at?.toDate?.() || b.created_at || new Date(0);
           return aDate - bDate;
         });
       case 'xp_high':
@@ -305,13 +307,14 @@ export default function AdminActivitiesPage() {
 
   const handleDuplicateActivity = async () => {
     if (!selectedActivity) return;
-    
+
     try {
       setShowActionModal(false);
-      // Duplicate the activity
-      const newActivityId = await duplicateActivity(selectedActivity.id);
-      // Navigate to edit page for the new activity
-      router.push(`/mynonprofit/activities/manage?activityId=${newActivityId}`);
+      await duplicateActivity(selectedActivity.id);
+      const results = await fetchActivities();
+      setAllActivities(results || []);
+      setToastMessage({ type: 'success', message: t('successDuplicating') });
+      setShowToast(true);
     } catch (error) {
       console.error('Error duplicating activity:', error);
       setToastMessage({ type: 'error', message: t('errorDuplicating') || 'Error duplicating activity' });
@@ -546,142 +549,43 @@ export default function AdminActivitiesPage() {
                   xp_reward={activity.xp_reward}
                   description={activity.description}
                   status={activity.status}
-                  last_updated={activity.last_updated}
+                  updated_at={activity.updated_at}
                   city={activity.city}
                   category={activity.category}
-                  qrCodeToken={activity.qrCodeToken}
+                  qr_code_token={activity.qr_code_token}
                   frequency={activity.frequency}
                   skills={activity.skills}
-                  participantTarget={activity.participantTarget}
-                  acceptApplicationsWG={activity.acceptApplicationsWG}
+                  participant_target={activity.participant_target}
+                  accept_applications_wg={activity.accept_applications_wg}
                   onClick={() => handleActivityCardClick(activity)}
                   canEditStatus={true}
                   onStatusChange={handleStatusChange}
                   showQRButton={true}
                 />
                 
-                {/* Overlay with action buttons */}
                 {selectedActivity && selectedActivity.id === activity.id && showActionModal && (
-                  <div className="absolute inset-0 bg-black bg-opacity-60 rounded-lg flex items-center justify-center z-10 p-3 sm:p-3">
-                    {(() => {
-                      const hasQRCode = activity.qrCodeToken && (activity.type === 'local' || activity.type === 'event');
-                      const isEvent = activity.type === 'event';
-                      return (
-                        <div className="grid grid-cols-3 gap-3 sm:gap-2.5 md:gap-3 w-full max-w-xs sm:max-w-sm">
-                          {/* Change Status Button */}
-                          <div className="flex flex-col items-center">
-                            <button
-                              onClick={handleChangeStatus}
-                              className="w-16 h-16 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-orange-500 text-white flex items-center justify-center shadow-lg hover:bg-orange-600 active:bg-orange-700 transition-colors touch-manipulation"
-                              aria-label="Change Status"
-                            >
-                              <HiDocumentText className="h-7 w-7 sm:h-6 sm:w-6 md:h-7 md:w-7" />
-                            </button>
-                            <span className="mt-1.5 text-xs sm:text-[11px] md:text-xs text-white font-medium text-center leading-tight px-0.5">{t('changeStatus') || 'Status'}</span>
-                          </div>
-
-                          {/* Edit Button - hidden for closed activities (view only) */}
-                          {activity.status !== 'Closed' && (
-                            <div className="flex flex-col items-center">
-                              <button
-                                onClick={handleEditActivity}
-                                className="w-16 h-16 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-blue-500 text-white flex items-center justify-center shadow-lg hover:bg-blue-600 active:bg-blue-700 transition-colors touch-manipulation"
-                                aria-label="Edit Activity"
-                              >
-                                <HiPencil className="h-7 w-7 sm:h-6 sm:w-6 md:h-7 md:w-7" />
-                              </button>
-                              <span className="mt-1.5 text-xs sm:text-[11px] md:text-xs text-white font-medium text-center leading-tight px-0.5">{t('edit') || 'Edit'}</span>
-                            </div>
-                          )}
-
-                          {/* Duplicate Button */}
-                          <div className="flex flex-col items-center">
-                            <button
-                              onClick={handleDuplicateActivity}
-                              className="w-16 h-16 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-yellow-500 text-white flex items-center justify-center shadow-lg hover:bg-yellow-600 active:bg-yellow-700 transition-colors touch-manipulation"
-                              aria-label="Duplicate Activity"
-                            >
-                              <HiDuplicate className="h-7 w-7 sm:h-6 sm:w-6 md:h-7 md:w-7" />
-                            </button>
-                            <span className="mt-1.5 text-xs sm:text-[11px] md:text-xs text-white font-medium text-center leading-tight px-0.5">{t('duplicate') || 'Duplicate'}</span>
-                          </div>
-
-                          {/* Delete Button */}
-                          <div className="flex flex-col items-center">
-                            <button
-                              onClick={handleDeleteActivity}
-                              className="w-16 h-16 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-red-500 text-white flex items-center justify-center shadow-lg hover:bg-red-600 active:bg-red-700 transition-colors touch-manipulation"
-                              aria-label="Delete Activity"
-                            >
-                              <HiTrash className="h-7 w-7 sm:h-6 sm:w-6 md:h-7 md:w-7" />
-                            </button>
-                            <span className="mt-1.5 text-xs sm:text-[11px] md:text-xs text-white font-medium text-center leading-tight px-0.5">{t('delete') || 'Delete'}</span>
-                          </div>
-
-                          {/* View Activity Button */}
-                          <div className="flex flex-col items-center">
-                            <button
-                              onClick={handleViewActivity}
-                              className="w-16 h-16 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-purple-500 text-white flex items-center justify-center shadow-lg hover:bg-purple-600 active:bg-purple-700 transition-colors touch-manipulation"
-                              aria-label="View Activity"
-                            >
-                              <HiEye className="h-7 w-7 sm:h-6 sm:w-6 md:h-7 md:w-7" />
-                            </button>
-                            <span className="mt-1.5 text-xs sm:text-[11px] md:text-xs text-white font-medium text-center leading-tight px-0.5">{t('view') || 'View'}</span>
-                          </div>
-
-                          {/* Review Applications Button - Hidden for events */}
-                          {!isEvent && (
-                            <div className="flex flex-col items-center">
-                              <button
-                                onClick={handleReviewApplications}
-                                className="w-16 h-16 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-green-500 text-white flex items-center justify-center shadow-lg hover:bg-green-600 active:bg-green-700 transition-colors touch-manipulation"
-                                aria-label="Review Applications"
-                              >
-                                <HiUserGroup className="h-7 w-7 sm:h-6 sm:w-6 md:h-7 md:w-7" />
-                              </button>
-                              <span className="mt-1.5 text-xs sm:text-[11px] md:text-xs text-white font-medium text-center leading-tight px-0.5">{t('applications') || 'Applications'}</span>
-                            </div>
-                          )}
-
-                          {/* View Participants Button */}
-                          <div className="flex flex-col items-center">
-                            <button
-                              onClick={handleViewParticipants}
-                              className="w-16 h-16 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-teal-500 text-white flex items-center justify-center shadow-lg hover:bg-teal-600 active:bg-teal-700 transition-colors touch-manipulation"
-                              aria-label="View Participants"
-                            >
-                              <HiUsers className="h-7 w-7 sm:h-6 sm:w-6 md:h-7 md:w-7" />
-                            </button>
-                            <span className="mt-1.5 text-xs sm:text-[11px] md:text-xs text-white font-medium text-center leading-tight px-0.5">{t('viewParticipants') || 'Participants'}</span>
-                          </div>
-
-                          {/* Show QR Code Button - Conditional */}
-                          {hasQRCode && (
-                            <div className="flex flex-col items-center">
-                              <button
-                                onClick={handleShowQRCode}
-                                className="w-16 h-16 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-indigo-500 text-white flex items-center justify-center shadow-lg hover:bg-indigo-600 active:bg-indigo-700 transition-colors touch-manipulation"
-                                aria-label="Show QR Code"
-                              >
-                                <HiQrcode className="h-7 w-7 sm:h-6 sm:w-6 md:h-7 md:w-7" />
-                              </button>
-                              <span className="mt-1.5 text-xs sm:text-[11px] md:text-xs text-white font-medium text-center leading-tight px-0.5">{t('showQRCode') || 'QR Code'}</span>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })()}
-                    
-                    {/* Close button */}
-                    <button
-                      onClick={() => setShowActionModal(false)}
-                      className="absolute top-2 right-2 w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-full bg-gray-600 text-white flex items-center justify-center hover:bg-gray-700 active:bg-gray-800 transition-colors text-lg sm:text-xl md:text-2xl touch-manipulation"
-                      aria-label="Close"
-                    >
-                      ×
-                    </button>
-                  </div>
+                  <ActivityCardActionsOverlay
+                    activity={activity}
+                    onClose={() => setShowActionModal(false)}
+                    onChangeStatus={handleChangeStatus}
+                    onEdit={handleEditActivity}
+                    onDuplicate={handleDuplicateActivity}
+                    onDelete={handleDeleteActivity}
+                    onView={handleViewActivity}
+                    onApplications={handleReviewApplications}
+                    onParticipants={handleViewParticipants}
+                    onQRCode={handleShowQRCode}
+                    labels={{
+                      changeStatus: t('changeStatus') || 'Status',
+                      edit: t('edit') || 'Edit',
+                      duplicate: t('duplicate') || 'Duplicate',
+                      delete: t('delete') || 'Delete',
+                      view: t('view') || 'View',
+                      applications: t('applications') || 'Applications',
+                      viewParticipants: t('viewParticipants') || 'Participants',
+                      showQRCode: t('showQRCode') || 'QR Code',
+                    }}
+                  />
                 )}
               </div>
             ))}
@@ -729,7 +633,7 @@ export default function AdminActivitiesPage() {
           isOpen={showQRModal}
           onClose={() => setShowQRModal(false)}
           activityId={selectedActivity.id}
-          qrCodeToken={selectedActivity.qrCodeToken}
+          qr_code_token={selectedActivity.qr_code_token}
           title={selectedActivity.title}
           startDate={selectedActivity.start_date}
         />

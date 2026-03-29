@@ -127,7 +127,7 @@ export const getRelativeTime = (date) => {
  * @param {Array} timestampFields - Array of field names that contain timestamps
  * @returns {Array} Array with converted timestamps
  */
-export const convertTimestampsInArray = (items, timestampFields = ['createdAt', 'updatedAt']) => {
+export const convertTimestampsInArray = (items, timestampFields = ['created_at', 'updated_at']) => {
   if (!Array.isArray(items)) return items;
   
   return items.map(item => {

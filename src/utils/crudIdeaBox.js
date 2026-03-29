@@ -2,10 +2,10 @@ import { collection, addDoc, Timestamp } from 'firebase/firestore';
 import { db } from 'firebaseConfig';
 
 /**
- * Add a new entry to the ideaBox collection
+ * Add a new entry to the idea_box collection
  * @param {string} userId - Firebase user UID
  * @param {string} content - User's feedback/idea/bug report content
- * @returns {Promise<string>} New ideaBox document ID
+ * @returns {Promise<string>} New idea_box document ID
  */
 export async function addIdeaBoxEntry(userId, content) {
   try {
@@ -14,12 +14,12 @@ export async function addIdeaBoxEntry(userId, content) {
       throw new Error('userId and content are required');
     }
 
-    const ideaBoxCollection = collection(db, 'ideaBox');
+    const ideaBoxCollection = collection(db, 'idea_box');
     
     const docRef = await addDoc(ideaBoxCollection, {
-      userId: userId,
+      user_id: userId,
       content: content.trim(),
-      createdAt: Timestamp.now()
+      created_at: Timestamp.now()
     });
     
     console.log('IdeaBox entry created with ID:', docRef.id);

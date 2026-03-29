@@ -2,7 +2,8 @@
 // Page Component: CreateUpdateActivityPage
 // Description: This Next.js page component is used for creating or updating an activity. It has a form divided into three steps, allowing users to select the activity type, input activity details, and select relevant SDGs (Sustainable Development Goals). The page can handle both creation and editing of activities, depending on the presence of an activity ID. The data is managed via the useState hook and includes support for categories based on activity type, form validation, and step-by-step navigation.
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useSearchParams, useRouter } from 'next/navigation';
 import categories from '@/constant/categories';
 import {
@@ -77,7 +78,17 @@ export default function CreateUpdateActivityPage() {
   const prefillType = searchParams.get('type'); // Prefill type when coming from NPO radial menu
   const isEditMode = Boolean(activityId); // Determine if the page is in edit mode
   const { user, claims, loading } = useAuth(); // Get authenticated user information and loading status
+  const queryClient = useQueryClient();
   const t = useTranslations('ManageActivities'); // Internationalization function for translations
+
+  /** Keeps NPO dashboard activity list and KPIs in sync after create/update/publish (cache is refetched because refetchOnMount is off). */
+  const refreshNpoActivityListAndRelated = useCallback(async () => {
+    const orgId = claims?.npo_id;
+    if (!orgId) return;
+    await queryClient.refetchQueries({ queryKey: ['npoDashboardActivities', orgId] });
+    await queryClient.invalidateQueries({ queryKey: ['npoOrganization', orgId] });
+    await queryClient.invalidateQueries({ queryKey: ['npoPendingApplications', orgId] });
+  }, [claims?.npo_id, queryClient]);
 
   // State to manage form data
   const [formData, setFormData] = useState({
@@ -90,30 +101,28 @@ export default function CreateUpdateActivityPage() {
     country: '', // Default country
     city: '', // Default city
     location: '', // Specific location/venue for local and event activities
-    addressId: null, // Reference to saved address
+    address_id: null, // Reference to saved address
     coordinates: null, // { latitude, longitude } for map display
     xp_reward: 20, // Default XP points (will be auto-calculated)
-    timeCommitment: 50, // Time commitment slider value (0-100, default: 50 for standard)
+    time_commitment: 50, // Time commitment slider value (0-100, default: 50 for standard)
     complexity: 50, // Complexity slider value (0-100, default: 50 for moderate)
     sdg: '', // Sustainable Development Goal
     languages: ['English'],
     organization_logo: '/logo/Favicon.png', // Default NPO logo path
     organization_name: 'Wanna Gonna',
     applicants: 0, //initialized to 0 applicants
-    creation_date: new Date(),  // Current date and time as default
+    created_at: new Date(),  // Current date and time as default
     start_date: new Date(),     // Default start date
-    end_date: new Date(),        // Default end date
+    end_date: null,              // Set when "several days"; null = single-day (no persisted end_date)
     start_time: null,            // "HH:mm" or null – optional for online/local, required for events
     end_time: null,              // "HH:mm" or null
     showDateTimeOnCalendar: false, // For online / local role: true when user opts in to show on calendar
     spansSeveralDays: false,       // When true, show end date (multi-day); when false, single day, no end_date
-    status: 'created',
-    // New fields
-    externalPlatformLink: '', // External platform/event link
-    participantTarget: null, // Number of participants target
-    acceptApplicationsWG: true, // For local activities: accept applications through WG (default: true)
-    autoAcceptApplications: false, // Auto-accept applications when enabled
-    activity_url: '' // Legacy field name for external link (keeping for backward compatibility)
+    status: 'Draft',
+    external_platform_link: '',
+    participant_target: null,
+    accept_applications_wg: true,
+    auto_accept_applications: false,
   });
 
   const [currentStep, setCurrentStep] = useState(1); // Track the current step
@@ -129,15 +138,15 @@ export default function CreateUpdateActivityPage() {
   // Fetch organization data if user has npoId in claims
   useEffect(() => {
     const fetchOrgData = async () => {
-      if (claims && claims.npoId) {
+      if (claims && claims.npo_id) {
         try {
-          const orgData = await fetchOrganizationById(claims.npoId);
+          const orgData = await fetchOrganizationById(claims.npo_id);
           if (orgData) {
             setOrganizationData(orgData);
             // Update form data with organization information (preserve date fields)
             setFormData(prev => ({
               ...prev,
-              organizationId: claims.npoId,
+              organization_id: claims.npo_id,
               organization_name: orgData.name || prev.organization_name,
               organization_logo: orgData.logo || prev.organization_logo,
               country: orgData.country ? normalizeCountryToCode(orgData.country) : prev.country,
@@ -151,7 +160,7 @@ export default function CreateUpdateActivityPage() {
               end_time: prev.end_time,
               showDateTimeOnCalendar: prev.showDateTimeOnCalendar,
               spansSeveralDays: prev.spansSeveralDays,
-              creation_date: prev.creation_date
+              created_at: prev.created_at
             }));
           }
         } catch (error) {
@@ -181,21 +190,23 @@ export default function CreateUpdateActivityPage() {
               start_date: startDate,
               // Single-day: no end date in form; multi-day: keep end date so form shows same info as saved
               end_date: isMultiDay ? endDateRaw : null,
-              creation_date: convertTimestampToDate(data.creation_date) || new Date(),
-              // Handle backward compatibility for external platform link
-              externalPlatformLink: data.externalPlatformLink || data.activity_url || '',
-              activity_url: data.activity_url || data.externalPlatformLink || '',
-              // Set defaults for new fields if not present
-              participantTarget: data.participantTarget || null,
-              acceptApplicationsWG: data.acceptApplicationsWG !== undefined ? data.acceptApplicationsWG : (data.type === 'local' ? true : undefined),
-              autoAcceptApplications: data.autoAcceptApplications || false,
+              created_at: convertTimestampToDate(data.created_at) || new Date(),
+              external_platform_link: data.external_platform_link || '',
+              participant_target: data.participant_target ?? null,
+              accept_applications_wg:
+                data.accept_applications_wg !== undefined
+                  ? data.accept_applications_wg
+                  : data.type === 'local'
+                    ? true
+                    : undefined,
+              auto_accept_applications: data.auto_accept_applications || false,
               location: data.location || '',
-              addressId: data.addressId || null,
+              address_id: data.address_id ?? null,
               coordinates: data.coordinates || null,
               // Ensure frequency is 'once' for events
               frequency: data.type === 'event' ? 'once' : (data.frequency || ''),
-              // Backward compatibility: default to 50 if fields are missing
-              timeCommitment: data.timeCommitment !== undefined ? data.timeCommitment : 50,
+              // Default sliders when editing an activity missing these fields
+              time_commitment: data.time_commitment !== undefined ? data.time_commitment : 50,
               complexity: data.complexity !== undefined ? data.complexity : 50,
               // Date/time – store as "HH:mm" or null (same as create)
               start_time: data.start_time ?? null,
@@ -205,7 +216,7 @@ export default function CreateUpdateActivityPage() {
             };
             console.log('Processed form data:', processedData);
             setFormData(processedData);
-            setSelectedImpactParameters(Array.isArray(data.impactParameters) ? data.impactParameters : []);
+            setSelectedImpactParameters(Array.isArray(data.impact_parameters) ? data.impact_parameters : []);
           }
         } catch (error) {
           console.error('Error in fetchData:', error);
@@ -253,14 +264,14 @@ export default function CreateUpdateActivityPage() {
         const calculatedXP = calculateActivityXP({
           type: formData.type,
           category: formData.category,
-          timeCommitment: formData.timeCommitment ?? 50,
+          time_commitment: formData.time_commitment ?? 50,
           complexity: formData.complexity ?? 50,
           frequency: formData.frequency || 'once',
         });
         setFormData((prev) => ({ ...prev, xp_reward: calculatedXP }));
       }
     }
-  }, [formData.type, formData.category, formData.timeCommitment, formData.complexity, formData.frequency]);
+  }, [formData.type, formData.category, formData.time_commitment, formData.complexity, formData.frequency]);
 
   // Reset sliders to defaults when activity type changes
   useEffect(() => {
@@ -268,13 +279,13 @@ export default function CreateUpdateActivityPage() {
       // Events don't use sliders, but we can reset them anyway
       setFormData((prev) => ({ 
         ...prev, 
-        timeCommitment: 50, 
+        time_commitment: 50, 
         complexity: 50 
       }));
     } else if (formData.type === 'online' || formData.type === 'local') {
       // Only reset if they're not already set (to preserve values when editing)
-      if (formData.timeCommitment === undefined) {
-        setFormData((prev) => ({ ...prev, timeCommitment: 50 }));
+      if (formData.time_commitment === undefined) {
+        setFormData((prev) => ({ ...prev, time_commitment: 50 }));
       }
       if (formData.complexity === undefined) {
         setFormData((prev) => ({ ...prev, complexity: 50 }));
@@ -328,14 +339,10 @@ export default function CreateUpdateActivityPage() {
         start_time: null,
         end_time: null,
       }),
-      // Add automatic attributes here if needed (e.g., organizationId, creatorId)
-      organizationId: claims?.npoId || formData.organizationId, // Ensure organizationId is set
-      creatorId: user?.uid, // Add the creator's ID
-      // Ensure frequency is 'once' for events
+      organization_id: claims?.npo_id || formData.organization_id,
+      creator_id: user?.uid,
       frequency: formData.type === 'event' ? 'once' : formData.frequency,
-      // Ensure both externalPlatformLink and activity_url are saved for backward compatibility
-      externalPlatformLink: formData.externalPlatformLink || formData.activity_url || '',
-      activity_url: formData.activity_url || formData.externalPlatformLink || '',
+      external_platform_link: formData.external_platform_link || '',
       // Normalize skills to store only values
       skills: normalizedSkills,
       // Normalize country to ensure it's always a country code (e.g., "JP" not "Japan")
@@ -351,12 +358,14 @@ export default function CreateUpdateActivityPage() {
           if (hasImpactStep) {
             await setActivityImpactParameters(activityId, selectedImpactParameters ?? []);
           }
+          await refreshNpoActivityListAndRelated();
           router.back();
     } else {
           const newActivityId = await createActivity(baseDataToSave);
           if (hasImpactStep) {
             await setActivityImpactParameters(newActivityId, selectedImpactParameters ?? []);
           }
+          await refreshNpoActivityListAndRelated();
           setSavedActivityId(newActivityId);
           setShowStatusModal(true);
         }
@@ -380,6 +389,7 @@ export default function CreateUpdateActivityPage() {
       await updateActivityStatus(savedActivityId, 'Open');
       console.log('Activity status updated successfully');
       setShowStatusModal(false);
+      await refreshNpoActivityListAndRelated();
       // Redirect to NPO dashboard after successful status update
       router.push('/mynonprofit');
     } catch (error) {
@@ -404,6 +414,7 @@ export default function CreateUpdateActivityPage() {
       await updateActivityStatus(savedActivityId, 'Draft');
       console.log('Activity status updated successfully');
       setShowStatusModal(false);
+      await refreshNpoActivityListAndRelated();
       // Navigate back after successful status update
       router.back();
     } catch (error) {
@@ -421,6 +432,7 @@ export default function CreateUpdateActivityPage() {
       try {
         await deleteActivity(savedActivityId);
         console.log('Activity deleted after cancel');
+        await refreshNpoActivityListAndRelated();
       } catch (error) {
         console.error('Error deleting activity:', error);
         // Still close the modal even if deletion fails
@@ -519,7 +531,7 @@ export default function CreateUpdateActivityPage() {
             {hasImpactStep && currentStep === 4 && (
               <div className='animate-fadeIn'>
                 <ActivityImpactParametersStep
-                  orgId={claims?.npoId}
+                  orgId={claims?.npo_id}
                   initialSelected={selectedImpactParameters}
                   onChange={setSelectedImpactParameters}
                 />

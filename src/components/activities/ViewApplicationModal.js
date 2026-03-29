@@ -34,8 +34,7 @@ export default function ViewApplicationModal({ isOpen, onClose, application, act
   const handleCancelApplication = async () => {
     if (!application || !activityId) return;
     
-    // Use applicationId field if available (ID in activity's applications collection), otherwise fall back to id
-    const activityApplicationId = application.applicationId || application.id;
+    const activityApplicationId = application.application_id || application.id;
     
     setIsCancelling(true);
     try {
@@ -43,8 +42,8 @@ export default function ViewApplicationModal({ isOpen, onClose, application, act
         activityId,
         activityApplicationId,
         'cancelled',
-        application.npoResponse || '',
-        application.userId || null,
+        application.npo_response || '',
+        application.user_id || null,
         cancelMessage.trim() || ''
       );
       
@@ -86,13 +85,13 @@ export default function ViewApplicationModal({ isOpen, onClose, application, act
             </div>
 
             {/* Application Date */}
-            {application.createdAt && (
+            {application.created_at && (
               <div className="pb-4 border-b-2 border-border-light dark:border-[#475569]">
                 <span className="text-sm font-medium text-text-primary dark:text-text-primary">
                   {t('appliedOn') || 'Applied on'}:
                 </span>
                 <p className="text-sm text-text-secondary dark:text-text-secondary mt-1">
-                  {formatDate(application.createdAt)}
+                  {formatDate(application.created_at)}
                 </p>
               </div>
             )}
@@ -110,14 +109,14 @@ export default function ViewApplicationModal({ isOpen, onClose, application, act
             </div>
 
             {/* NPO Response */}
-            {application.npoResponse && (
+            {application.npo_response && (
               <div className="pb-4 border-b-2 border-border-light dark:border-[#475569]">
                 <h4 className="text-sm font-semibold text-text-primary dark:text-text-primary mb-2">
                   {t('npoResponse') || 'NPO Response'}
                 </h4>
                 <div className="bg-gradient-to-r from-semantic-info-50 to-semantic-info-100 dark:from-semantic-info-900 dark:to-semantic-info-800 border-2 border-semantic-info-200 dark:border-semantic-info-700 rounded-lg p-4">
                   <p className="text-sm text-text-secondary dark:text-text-secondary whitespace-pre-wrap">
-                    {application.npoResponse}
+                    {application.npo_response}
                   </p>
                 </div>
               </div>

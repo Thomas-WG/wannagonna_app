@@ -38,8 +38,8 @@ export function useApplicationStatuses(userId) {
     const statusMap = {};
     applications.forEach((app) => {
       // Only mark as applied if the application is not cancelled
-      if (app.status !== 'cancelled' && app.activityId) {
-        statusMap[app.activityId] = true;
+      if (app.status !== 'cancelled' && app.activity_id) {
+        statusMap[app.activity_id] = true;
       }
     });
 

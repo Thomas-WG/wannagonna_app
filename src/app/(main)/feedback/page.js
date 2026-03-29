@@ -4,7 +4,7 @@
  * Feedback Page
  * 
  * Allows users to submit feedback, ideas, or bug reports.
- * Submissions are saved to the ideaBox collection in Firestore.
+ * Submissions are saved to the idea_box collection in Firestore.
  */
 
 import { useState } from 'react';

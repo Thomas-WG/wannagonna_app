@@ -409,16 +409,6 @@
         "es": "Atributos Personales",
         "ja": "ソフトスキル・個人特性"
       }
-    },
-    {
-      "id": "other",
-      "order": 42,
-      "name": {
-        "en": "Other Services",
-        "fr": "Autres Services",
-        "es": "Otros Servicios",
-        "ja": "その他のサービス"
-      }
     }
   ],
   "skills": [
@@ -2990,16 +2980,6 @@
         "fr": "Sensibilité Interculturelle",
         "es": "Sensibilidad Intercultural",
         "ja": "異文化理解"
-      }
-    },
-    {
-      "categoryId": "other",
-      "order": 1,
-      "name": {
-        "en": "Other Skill",
-        "fr": "Autre Compétence",
-        "es": "Otra Habilidad",
-        "ja": "その他のスキル"
       }
     }
   ]

@@ -4,18 +4,26 @@ import {sendMailgunEmail} from "./emailService.js";
 import {generateNotificationEmail} from "./emailTemplates.js";
 
 /**
- * Notification schema (Firestore collection: notifications)
+ * In-app notifications live under members/{userId}/notifications/{id}.
+ * Recipient UID is implied by the path (no user_id field on the document).
  * {
- *   userId: string;               // UID of the recipient
  *   type: string;                 // e.g. 'REWARD' | 'REMINDER' | 'SYSTEM'
  *   title: string;
  *   body: string;
- *   link?: string | null;         // optional deep-link path in the app
- *   createdAt: Timestamp;         // server-generated
- *   readAt?: Timestamp | null;    // null when unread
- *   metadata?: object;            // optional, small JSON payload
+ *   link?: string | null;
+ *   created_at: Timestamp;
+ *   read_at?: Timestamp | null;
+ *   metadata?: object;
  * }
  */
+
+/**
+ * @param {string} userId
+ * @return {Object} CollectionReference under members/{userId}/notifications
+ */
+function memberNotificationsCollection(userId) {
+  return db.collection("members").doc(userId).collection("notifications");
+}
 
 /**
  * Create a notification document for a user.
@@ -48,14 +56,13 @@ export async function createNotification({
   });
 
   try {
-    const docRef = await db.collection("notifications").add({
-      userId,
+    const docRef = await memberNotificationsCollection(userId).add({
       type,
       title,
       body,
       link: link || null,
-      createdAt: FieldValue.serverTimestamp(),
-      readAt: null,
+      created_at: FieldValue.serverTimestamp(),
+      read_at: null,
       metadata: metadata || {},
     });
 
@@ -96,22 +103,15 @@ export async function markNotificationAsRead(userId, notificationId) {
     );
   }
 
-  const notifRef = db.collection("notifications").doc(notificationId);
+  const notifRef = memberNotificationsCollection(userId).doc(notificationId);
   const snap = await notifRef.get();
 
   if (!snap.exists) {
     throw new Error("Notification not found");
   }
 
-  const data = snap.data();
-  if (data.userId !== userId) {
-    throw new Error(
-        "Permission denied: cannot modify another user's notification",
-    );
-  }
-
   await notifRef.update({
-    readAt: FieldValue.serverTimestamp(),
+    read_at: FieldValue.serverTimestamp(),
   });
 }
 
@@ -127,10 +127,8 @@ export async function markAllUserNotificationsAsRead(userId) {
     throw new Error("markAllUserNotificationsAsRead: userId is required");
   }
 
-  const querySnap = await db
-      .collection("notifications")
-      .where("userId", "==", userId)
-      .where("readAt", "==", null)
+  const querySnap = await memberNotificationsCollection(userId)
+      .where("read_at", "==", null)
       .get();
 
   if (querySnap.empty) {
@@ -140,7 +138,7 @@ export async function markAllUserNotificationsAsRead(userId) {
   const batch = db.batch();
   querySnap.docs.forEach((doc) => {
     batch.update(doc.ref, {
-      readAt: FieldValue.serverTimestamp(),
+      read_at: FieldValue.serverTimestamp(),
     });
   });
 
@@ -158,10 +156,7 @@ export async function deleteAllUserNotifications(userId) {
     throw new Error("deleteAllUserNotifications: userId is required");
   }
 
-  const querySnap = await db
-      .collection("notifications")
-      .where("userId", "==", userId)
-      .get();
+  const querySnap = await memberNotificationsCollection(userId).get();
 
   if (querySnap.empty) {
     return 0;
@@ -247,7 +242,7 @@ export async function sendUserNotification({
     );
   }
 
-  const prefsRoot = userData.notificationPreferences || {};
+  const prefsRoot = userData.notification_preferences || {};
   const categoryPrefs = prefsRoot[category] || {
     inApp: true,
     push: false,
@@ -265,10 +260,10 @@ export async function sendUserNotification({
         categoryPrefs,
         shouldInApp,
         shouldPush,
-        hasFcmTokens: Array.isArray(userData.fcmTokens) &&
-          userData.fcmTokens.length > 0,
-        fcmTokensCount: Array.isArray(userData.fcmTokens) ?
-          userData.fcmTokens.length : 0,
+        hasFcmTokens: Array.isArray(userData.fcm_tokens) &&
+          userData.fcm_tokens.length > 0,
+        fcmTokensCount: Array.isArray(userData.fcm_tokens) ?
+          userData.fcm_tokens.length : 0,
       },
   );
 
@@ -314,7 +309,9 @@ export async function sendUserNotification({
   }
 
   if (shouldPush) {
-    const tokens = Array.isArray(userData.fcmTokens) ? userData.fcmTokens : [];
+    const tokens = Array.isArray(userData.fcm_tokens) ?
+        userData.fcm_tokens :
+        [];
     console.log(
         `[sendUserNotification] Push notification requested for user ` +
         `${userId}, tokens count: ${tokens.length}`,
@@ -377,7 +374,7 @@ export async function sendUserNotification({
               `invalid token(s) for user ${userId}`,
           );
           const remaining = tokens.filter((t) => !invalidTokens.includes(t));
-          await userRef.update({fcmTokens: remaining});
+          await userRef.update({fcm_tokens: remaining});
         }
       } catch (error) {
         console.error(

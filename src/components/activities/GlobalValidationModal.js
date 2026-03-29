@@ -35,9 +35,8 @@ export default function GlobalValidationModal() {
     <ActivityValidationSuccessModal
       show={showModal}
       onClose={handleClose}
-      xpReward={validationResult.xpReward || validationResult.xpBreakdown?.totalXP || 0}
-      badgeIds={validationResult.badgeIds || []}
-      badges={validationResult.badges || []}
+      xpReward={validationResult.total_xp ?? validationResult?.xpBreakdown?.total_xp ?? 0}
+      badgeIds={validationResult.badge_ids ?? []}
       activityTitle={validationResult.activityTitle || ''}
       xpBreakdown={validationResult.xpBreakdown || null}
     />

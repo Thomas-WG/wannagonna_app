@@ -1,6 +1,6 @@
 /**
  * Callable Cloud Function to return a sanitized list of members for the
- * public members page. Strips PII (email, referredBy, code) so sensitive
+ * public members page. Strips PII (email, referred_by, code) so sensitive
  * data never leaves the server.
  *
  * request.data: { filters: { country?: string }, sortBy, pageSize, lastDocId? }
@@ -11,7 +11,7 @@ import {onCall} from "firebase-functions/v2/https";
 import {db} from "../init.js";
 
 const SANITIZED_FIELDS = [
-  "displayName", "profilePicture", "country", "xp", "badges", "createdAt",
+  "display_name", "profile_picture", "country", "xp", "badges", "created_at",
 ];
 
 /**
@@ -53,19 +53,19 @@ export const getMembersList = onCall(
 
       switch (sortBy) {
         case "name_az":
-          query = query.orderBy("displayName", "asc");
+          query = query.orderBy("display_name", "asc");
           break;
         case "name_za":
-          query = query.orderBy("displayName", "desc");
+          query = query.orderBy("display_name", "desc");
           break;
         case "joined_newest":
-          query = query.orderBy("createdAt", "desc");
+          query = query.orderBy("created_at", "desc");
           break;
         case "joined_oldest":
-          query = query.orderBy("createdAt", "asc");
+          query = query.orderBy("created_at", "asc");
           break;
         default:
-          query = query.orderBy("displayName", "asc");
+          query = query.orderBy("display_name", "asc");
       }
 
       if (lastDocId) {

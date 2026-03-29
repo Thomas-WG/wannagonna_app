@@ -47,9 +47,9 @@ export default function BadgesSection({ badges, championDimensions = [] }) {
                   <div key={badge.id} className="w-full max-w-[70px] flex justify-center">
                     {champion ? (
                       <ChampionBadge
-                        dimensionLabel={champion.dimensionLabel || `SDG ${badge.id}`}
-                        totalChampionships={champion.totalChampionships || 0}
-                        isCurrentChampion={champion.isCurrentChampion}
+                        dimensionLabel={champion.dimension_label || `SDG ${badge.id}`}
+                        totalChampionships={champion.total_championships || 0}
+                        isCurrentChampion={champion.is_current_champion}
                       >
                         {content}
                       </ChampionBadge>

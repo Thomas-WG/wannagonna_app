@@ -142,15 +142,15 @@ export default function MembersPage() {
         countryName = countryData ? countryData.name : member.country;
       }
 
-      // Convert createdAt timestamp
-      let createdAt = null;
-      if (member.createdAt) {
-        if (member.createdAt.toDate && typeof member.createdAt.toDate === 'function') {
-          createdAt = member.createdAt.toDate();
-        } else if (member.createdAt.seconds) {
-          createdAt = new Date(member.createdAt.seconds * 1000);
-        } else if (member.createdAt instanceof Date) {
-          createdAt = member.createdAt;
+      // Convert created_at timestamp
+      let created_at = null;
+      if (member.created_at) {
+        if (member.created_at.toDate && typeof member.created_at.toDate === 'function') {
+          created_at = member.created_at.toDate();
+        } else if (member.created_at.seconds) {
+          created_at = new Date(member.created_at.seconds * 1000);
+        } else if (member.created_at instanceof Date) {
+          created_at = member.created_at;
         }
       }
 
@@ -159,7 +159,7 @@ export default function MembersPage() {
         level,
         badgeCount,
         countryName,
-        createdAt,
+        created_at,
       };
     });
   }, [paginatedMembers]);
@@ -173,7 +173,7 @@ export default function MembersPage() {
 
     const query = debouncedSearchQuery.toLowerCase();
     return processedMembers.filter((member) => {
-      const displayName = member.displayName || '';
+      const displayName = member.display_name || '';
       return displayName.toLowerCase().includes(query);
     });
   }, [processedMembers, debouncedSearchQuery]);
@@ -196,8 +196,8 @@ export default function MembersPage() {
   }, [processedMembers]);
 
   // Handle member card click
-  const handleMemberClick = (memberId) => {
-    setSelectedUserId(memberId);
+  const handleMemberClick = (userId) => {
+    setSelectedUserId(userId);
     setProfileModalOpen(true);
   };
 
@@ -482,11 +482,11 @@ export default function MembersPage() {
                   {/* Profile Picture - Left */}
                   <div className="flex-shrink-0">
                     <ProfilePicture
-                      src={member.profilePicture}
-                      alt={member.displayName || 'Member'}
+                      src={member.profile_picture}
+                      alt={member.display_name || 'Member'}
                       size={48}
                       showInitials={true}
-                      name={member.displayName || 'Member'}
+                      name={member.display_name || 'Member'}
                       loading="lazy"
                     />
                   </div>
@@ -495,7 +495,7 @@ export default function MembersPage() {
                   <div className="flex-1 min-w-0">
                     {/* Display Name */}
                     <h3 className="text-base font-semibold text-text-primary dark:text-text-primary mb-1 line-clamp-1">
-                      {member.displayName || 'Anonymous'}
+                      {member.display_name || 'Anonymous'}
                     </h3>
 
                     {/* Country */}
@@ -539,11 +539,11 @@ export default function MembersPage() {
                   {/* Profile Picture - Left */}
                   <div className="flex-shrink-0">
                     <ProfilePicture
-                      src={member.profilePicture}
-                      alt={member.displayName || 'Member'}
+                      src={member.profile_picture}
+                      alt={member.display_name || 'Member'}
                       size={48}
                       showInitials={true}
-                      name={member.displayName || 'Member'}
+                      name={member.display_name || 'Member'}
                       loading="lazy"
                     />
                   </div>
@@ -552,7 +552,7 @@ export default function MembersPage() {
                   <div className="flex-1 min-w-0">
                     {/* Display Name */}
                     <h3 className="text-xl font-semibold text-text-primary dark:text-text-primary mb-1.5 line-clamp-1">
-                      {member.displayName || 'Anonymous'}
+                      {member.display_name || 'Anonymous'}
                     </h3>
 
                     {/* Country */}

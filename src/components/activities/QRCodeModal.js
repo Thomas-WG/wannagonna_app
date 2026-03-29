@@ -12,7 +12,7 @@ import { useModal } from '@/utils/modal/useModal';
  * @param {boolean} props.isOpen - Whether modal is open
  * @param {Function} props.onClose - Function to close modal
  * @param {string} props.activityId - Activity ID
- * @param {string} props.qrCodeToken - QR code token
+ * @param {string} props.qr_code_token - QR code token
  * @param {string} props.title - Activity title
  * @param {Date} props.startDate - Activity start date
  */
@@ -20,7 +20,7 @@ export default function QRCodeModal({
   isOpen, 
   onClose, 
   activityId, 
-  qrCodeToken, 
+  qr_code_token, 
   title, 
   startDate 
 }) {
@@ -37,7 +37,7 @@ export default function QRCodeModal({
       <Modal.Body className="bg-background-card dark:bg-background-card">
         <ActivityQRCode
           activityId={activityId}
-          qrCodeToken={qrCodeToken}
+          qr_code_token={qr_code_token}
           title={title}
           startDate={startDate}
           size={256}

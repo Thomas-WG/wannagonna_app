@@ -10,14 +10,21 @@ import { suggestMeasurementTypeFromUnit } from '@/constant/measurementTypes';
 /**
  * Returns selected impact parameters with optional target values.
  * @param {string} orgId
- * @param {Array<{ parameterId: string, scope: string, label: string, unit: string, category?: string, measurementType?: string, targetValue?: number|null }>} initialSelected
- * @param {(params: Array<{ parameterId: string, scope: string, label: string, unit: string, category: string, measurementType?: string, targetValue?: number|null }>) => void} onChange
+ * @param {Array<{ parameter_id: string, scope: string, label: string, unit: string, category?: string, measurement_type?: string, target_value?: number|null }>} initialSelected
+ * @param {(params: Array<{ parameter_id: string, scope: string, label: string, unit: string, category: string, measurement_type?: string, target_value?: number|null }>) => void} onChange
  */
 export default function ActivityImpactParametersStep({ orgId, initialSelected = [], onChange }) {
   const t = useTranslations('ManageActivities');
   const [selected, setSelected] = useState(() => {
     const map = new Map();
-    (initialSelected || []).forEach((p) => map.set(p.parameterId, { ...p, targetValue: p.targetValue ?? null }));
+    (initialSelected || []).forEach((p) => {
+      const paramId = p.parameter_id ?? p.id;
+      map.set(paramId, {
+        ...p,
+        parameter_id: paramId,
+        target_value: p.target_value ?? null,
+      });
+    });
     return map;
   });
 
@@ -30,13 +37,13 @@ export default function ActivityImpactParametersStep({ orgId, initialSelected = 
 
   useEffect(() => {
     const arr = Array.from(selected.values()).map((p) => ({
-      parameterId: p.parameterId || p.id,
+      parameter_id: p.parameter_id ?? p.id,
       scope: p.scope,
       label: p.label,
       unit: p.unit,
       category: p.category ?? '',
-      measurementType: p.measurementType || null,
-      targetValue: p.targetValue ?? null,
+      measurement_type: p.measurement_type ?? null,
+      target_value: p.target_value ?? null,
     }));
     onChange?.(arr);
   }, [selected, onChange]);
@@ -45,16 +52,16 @@ export default function ActivityImpactParametersStep({ orgId, initialSelected = 
     setSelected((prev) => {
       const next = new Map(prev);
       if (checked) {
-        const measurementType = p.measurementType || suggestMeasurementTypeFromUnit(p.unit);
+        const measurement_type = p.measurement_type ?? suggestMeasurementTypeFromUnit(p.unit);
         next.set(p.id, {
           id: p.id,
-          parameterId: p.id,
+          parameter_id: p.id,
           scope: p.scope,
           label: p.label,
           unit: p.unit,
           category: p.category ?? '',
-          measurementType: measurementType || null,
-          targetValue: null,
+          measurement_type: measurement_type || null,
+          target_value: null,
         });
       } else {
         next.delete(p.id);
@@ -68,7 +75,7 @@ export default function ActivityImpactParametersStep({ orgId, initialSelected = 
     setSelected((prev) => {
       const next = new Map(prev);
       const entry = next.get(paramId);
-      if (entry) next.set(paramId, { ...entry, targetValue: v });
+      if (entry) next.set(paramId, { ...entry, target_value: v });
       return next;
     });
   };
@@ -125,7 +132,7 @@ export default function ActivityImpactParametersStep({ orgId, initialSelected = 
                             min={0}
                             step="any"
                             placeholder="—"
-                            value={selected.get(p.id)?.targetValue ?? ''}
+                            value={selected.get(p.id)?.target_value ?? ''}
                             onChange={(e) => setTarget(p.id, e.target.value)}
                             className="max-w-[120px]"
                           />

@@ -28,7 +28,7 @@ const StatsSection = memo(function StatsSection({ stats }) {
               {t('localActivities') || 'Local Activities'}
             </h2>
             <p className="text-xl sm:text-2xl font-bold text-activityType-local-600 dark:text-activityType-local-400 flex-shrink-0">
-              {stats.totalLocalActivities}
+              {stats.total_local_activities}
             </p>
           </div>
         </div>
@@ -43,7 +43,7 @@ const StatsSection = memo(function StatsSection({ stats }) {
               {t('onlineActivities') || 'Online Activities'}
             </h2>
             <p className="text-xl sm:text-2xl font-bold text-activityType-online-600 dark:text-activityType-online-400 flex-shrink-0">
-              {stats.totalOnlineActivities}
+              {stats.total_online_activities}
             </p>
           </div>
         </div>
@@ -58,7 +58,7 @@ const StatsSection = memo(function StatsSection({ stats }) {
               {t('events') || 'Events'}
             </h2>
             <p className="text-xl sm:text-2xl font-bold text-activityType-event-600 dark:text-activityType-event-400 flex-shrink-0">
-              {stats.totalEvents}
+              {stats.total_events}
             </p>
           </div>
         </div>
@@ -73,7 +73,7 @@ const StatsSection = memo(function StatsSection({ stats }) {
               {t('totalApplications') || 'Total applications'}
             </h2>
             <p className="text-xl sm:text-2xl font-bold text-semantic-warning-600 dark:text-semantic-warning-400 flex-shrink-0">
-              {stats.totalApplications}
+              {stats.total_applications}
             </p>
           </div>
         </div>

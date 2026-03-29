@@ -43,11 +43,11 @@ export async function addOrganization(data) {
     const organizationsCollection = collection(db, 'organizations');
     const docRef = await addDoc(organizationsCollection, {
       ...data,
-      totalOnlineActivities: 0,
-      totalLocalActivities: 0,
-      totalEvents: 0,
-      totalNewApplications: 0,
-      totalParticipants: 0
+      total_online_activities: 0,
+      total_local_activities: 0,
+      total_events: 0,
+      total_new_applications: 0,
+      total_participants: 0
     });
     return docRef.id;
   } catch (error) {

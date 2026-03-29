@@ -12,14 +12,14 @@ export default function ProfileProgress({ formData }) {
   const { percentage, completedFields, totalFields, missingFields } = useMemo(() => {
     // Match the requirements from isProfileComplete function
     const fields = [
-      { key: 'displayName', label: 'Display Name', value: formData?.displayName },
+      { key: 'display_name', label: 'Display Name', value: formData?.display_name },
       { key: 'bio', label: 'Bio', value: formData?.bio },
       { key: 'cause', label: 'Cause', value: formData?.cause },
       { key: 'hobbies', label: 'Hobbies', value: formData?.hobbies },
       { key: 'country', label: 'Country', value: formData?.country },
       { key: 'languages', label: 'Languages', value: formData?.languages, isArray: true },
-      { key: 'profilePicture', label: 'Profile Picture', value: formData?.profilePicture },
-      { key: 'timeCommitment', label: 'Time Commitment', value: formData?.timeCommitment, isObject: true },
+      { key: 'profile_picture', label: 'Profile Picture', value: formData?.profile_picture },
+      { key: 'time_commitment', label: 'Time Commitment', value: formData?.time_commitment, isObject: true },
       { key: 'availabilities', label: 'Availability', value: formData?.availabilities, isObject: true },
     ];
 

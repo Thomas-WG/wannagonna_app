@@ -4,7 +4,7 @@ import { db } from 'firebaseConfig';
 // Fetch all skill categories
 export async function fetchSkillCategories() {
   try {
-    const categoriesCollection = collection(db, 'skillCategories');
+    const categoriesCollection = collection(db, 'skill_categories');
     const q = query(categoriesCollection, orderBy('order'));
     const snapshot = await getDocs(q);
     
@@ -25,7 +25,7 @@ export async function fetchSkills(categoryId = null) {
     let q = query(skillsCollection, orderBy('order'));
     
     if (categoryId) {
-      q = query(q, where('categoryId', '==', categoryId));
+      q = query(q, where('category_id', '==', categoryId));
     }
     
     const snapshot = await getDocs(q);
@@ -43,7 +43,7 @@ export async function fetchSkills(categoryId = null) {
 // Add a new skill category
 export async function addSkillCategory(categoryData) {
   try {
-    const categoriesCollection = collection(db, 'skillCategories');
+    const categoriesCollection = collection(db, 'skill_categories');
     const docRef = await addDoc(categoriesCollection, categoryData);
     return docRef.id;
   } catch (error) {
@@ -67,7 +67,7 @@ export async function addSkill(skillData) {
 // Update a skill category
 export async function updateSkillCategory(categoryId, categoryData) {
   try {
-    const categoryDoc = doc(db, 'skillCategories', categoryId);
+    const categoryDoc = doc(db, 'skill_categories', categoryId);
     await updateDoc(categoryDoc, categoryData);
   } catch (error) {
     console.error('Error updating skill category:', error);
@@ -95,7 +95,7 @@ export async function getSkillsForSelect(locale = 'en', categoryId = null) {
     // Group skills by category
     const groupedSkills = categories.map(category => {
       const categorySkills = skills
-        .filter(skill => skill.categoryId === category.id)
+        .filter(skill => skill.category_id === category.id)
         .map(skill => ({
           value: skill.id,
           label: skill.name[locale] || skill.name['en'],
@@ -118,7 +118,7 @@ export async function getSkillsForSelect(locale = 'en', categoryId = null) {
 // Delete a skill category
 export async function deleteSkillCategory(categoryId) {
   try {
-    const categoryDoc = doc(db, 'skillCategories', categoryId);
+    const categoryDoc = doc(db, 'skill_categories', categoryId);
     await deleteDoc(categoryDoc);
   } catch (error) {
     console.error('Error deleting skill category:', error);

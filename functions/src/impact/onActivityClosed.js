@@ -2,7 +2,7 @@ import {onDocumentUpdated} from "firebase-functions/v2/firestore";
 import {db} from "../init.js";
 import {FieldValue, Timestamp} from "firebase-admin/firestore";
 
-// 4 writes per member (member, participation, participant_record, xpHistory)
+// 4 writes per member (member, participation, participant_record, xp_history)
 const BATCH_SIZE = 100; // 100*4 < 500
 
 /**
@@ -65,10 +65,10 @@ function getActivityDurationHours(activity) {
 
 /**
  * When an activity's status changes to Closed:
- * - Sum participations hours.validated -> impactResults.totalHours
- * - Update org impactSummary (totalHours, totalActivities, parameters)
- * - For each participation: update member impactSummary. Skip XP/xpHistory for
- *   participants already rewarded by processActivityValidationRewards (on
+ * - Sum participations hours.validated -> impact_results.total_hours
+ * - Update org impact_summary (total_hours, total_activities, parameters)
+ * - For each participation: update member impact_summary. Skip XP/xp_history
+ *   for participants already rewarded by processActivityValidationRewards (on
  *   validation); award XP only to those not yet validated.
  * @param {string} activityId - Activity document ID.
  * @param {Object} activityBefore - Snapshot before update.
@@ -77,7 +77,7 @@ function getActivityDurationHours(activity) {
 async function processActivityClosed(
     activityId, activityBefore, activityAfter) {
   const activity = activityAfter;
-  const organizationId = activity.organizationId;
+  const organizationId = activity.organization_id;
   if (!organizationId) {
     console.warn("[onActivityClosed] No organizationId:", activityId);
     return;
@@ -88,14 +88,15 @@ async function processActivityClosed(
     const activityRef = db.collection("activities").doc(activityId);
     const activityDoc = await activityRef.get();
     const current = activityDoc?.data();
-    if (current?.impactResults?.lastAggregation) {
+    const ir = current?.impact_results || {};
+    if (ir.last_aggregation) {
       console.log("[onActivityClosed] Event already processed, skipping:",
           activityId);
       return;
     }
     await activityRef.update({
-      "impactResults.totalHours": 0,
-      "impactResults.lastAggregation": {event: true},
+      "impact_results.total_hours": 0,
+      "impact_results.last_aggregation": {event: true},
     });
     console.log("[onActivityClosed] Event closed (no impact):", activityId);
     return;
@@ -105,7 +106,8 @@ async function processActivityClosed(
   // Re-read from Firestore; event snapshot is stale on retry.
   const activityDoc = await db.collection("activities").doc(activityId).get();
   const currentActivity = activityDoc?.data();
-  if (currentActivity?.impactResults?.lastAggregation) {
+  const currIr = currentActivity?.impact_results || {};
+  if (currIr.last_aggregation) {
     console.log("[onActivityClosed] Already processed, skipping:", activityId);
     return;
   }
@@ -120,7 +122,7 @@ async function processActivityClosed(
       validationsSnap.docs
           .map((d) => d.data())
           .filter((v) => v.status === "rejected")
-          .map((v) => v.userId)
+          .map((v) => v.user_id)
           .filter(Boolean),
   );
 
@@ -130,7 +132,7 @@ async function processActivityClosed(
       validationsSnap.docs
           .map((d) => d.data())
           .filter((v) => v.status === "validated")
-          .map((v) => v.userId)
+          .map((v) => v.user_id)
           .filter(Boolean),
   );
 
@@ -171,12 +173,13 @@ async function processActivityClosed(
   // Build parameter meta map from the activity's configured impact parameters
   // so we can persist human-readable labels/units alongside summaries.
   const activityParamMeta = {};
-  const activityImpactParameters = Array.isArray(activity.impactParameters) ?
-    activity.impactParameters :
+  const activityImpactParameters = Array.isArray(activity.impact_parameters) ?
+    activity.impact_parameters :
     [];
   for (const p of activityImpactParameters) {
-    if (p && p.parameterId) {
-      activityParamMeta[p.parameterId] = {
+    const paramId = p?.parameter_id;
+    if (p && paramId) {
+      activityParamMeta[paramId] = {
         label: p.label || "",
         unit: p.unit || "",
         category: p.category || "",
@@ -202,43 +205,43 @@ async function processActivityClosed(
     totalHours += effective;
   }
 
-  const impactResults = activity.impactResults || {};
-  const parameters = impactResults.parameters || {};
-  const closedAt = impactResults.closedAt || Timestamp.now();
+  const impactResultsDoc = activity.impact_results || {};
+  const parameters = impactResultsDoc.parameters || {};
+  const closedAt = impactResultsDoc.closed_at ?? Timestamp.now();
 
   const activityRef = db.collection("activities").doc(activityId);
 
-  // Build lastAggregation for future recalculations
+  // Build last_aggregation for future recalculations
   const memberDeltasForAgg = {};
   for (const p of participations) {
     const validatedHours = Number(hoursByUser[p.id]) || 0;
     memberDeltasForAgg[p.id] = {
-      totalHours: validatedHours,
-      totalActivities: 1,
+      total_hours: validatedHours,
+      total_activities: 1,
       parameters: {...parameters},
     };
   }
   const lastAggregation = {
     orgDelta: {
-      totalHours,
-      totalActivities: 1,
+      total_hours: totalHours,
+      total_activities: 1,
       parameters: {...parameters},
     },
     memberDeltas: memberDeltasForAgg,
   };
 
-  // Perform org and member updates first. Write lastAggregation (idempotency
+  // Perform org and member updates first. Write last_aggregation (idempotency
   // guard) only after all succeed so retries can recover from partial failures.
   const orgRef = db.collection("organizations").doc(organizationId);
   const orgUpdates = {
-    "impactSummary.totalHours": FieldValue.increment(totalHours),
-    "impactSummary.totalActivities": FieldValue.increment(1),
+    "impact_summary.total_hours": FieldValue.increment(totalHours),
+    "impact_summary.total_activities": FieldValue.increment(1),
   };
   for (const [paramId, value] of Object.entries(parameters)) {
     const num = Number(value) || 0;
-    orgUpdates["impactSummary.parameters." + paramId] =
+    orgUpdates["impact_summary.parameters." + paramId] =
         FieldValue.increment(num);
-    orgUpdates["impactSummary.parameterMeta." + paramId] =
+    orgUpdates["impact_summary.parameter_meta." + paramId] =
         activityParamMeta[paramId] || {label: paramId};
   }
   const batch2 = db.batch();
@@ -263,8 +266,8 @@ async function processActivityClosed(
 
         const userRef = db.collection("members").doc(userId);
         const memberUpdates = {
-          "impactSummary.totalHours": FieldValue.increment(validatedHours),
-          "impactSummary.totalActivities": FieldValue.increment(1),
+          "impact_summary.total_hours": FieldValue.increment(validatedHours),
+          "impact_summary.total_activities": FieldValue.increment(1),
         };
         // Skip XP for users already rewarded on validation
         if (!alreadyRewardedUserIds.has(userId)) {
@@ -273,16 +276,16 @@ async function processActivityClosed(
         }
         for (const [paramId, value] of Object.entries(parameters)) {
           const num = Number(value) || 0;
-          memberUpdates["impactSummary.parameters." + paramId] =
+          memberUpdates["impact_summary.parameters." + paramId] =
               FieldValue.increment(num);
-          memberUpdates["impactSummary.parameterMeta." + paramId] =
+          memberUpdates["impact_summary.parameter_meta." + paramId] =
           activityParamMeta[paramId] || {label: paramId};
         }
         batch.update(userRef, memberUpdates);
 
         const participationRef = db.collection("activities").doc(activityId)
             .collection("participations").doc(userId);
-        batch.update(participationRef, {xpAwarded: activityXP});
+        batch.update(participationRef, {xp_awarded: activityXP});
 
         // Accumulate in participant_record
         if (validatedHours > 0) {
@@ -292,10 +295,10 @@ async function processActivityClosed(
               .collection("participant_records")
               .doc(userId);
           const prUpdates = {
-            userId,
-            totalHours: FieldValue.increment(validatedHours),
-            totalActivities: FieldValue.increment(1),
-            lastValidatedAt: closedAt,
+            user_id: userId,
+            total_hours: FieldValue.increment(validatedHours),
+            total_activities: FieldValue.increment(1),
+            last_validated_at: closedAt,
           };
           for (const [paramId, value] of Object.entries(parameters)) {
             const key = "parameters." + paramId;
@@ -304,15 +307,15 @@ async function processActivityClosed(
           batch.set(participantRecordRef, prUpdates, {merge: true});
         }
 
-        // Skip xpHistory for users already rewarded on validation
+        // Skip xp_history for users already rewarded on validation
         if (!alreadyRewardedUserIds.has(userId) && activityXP > 0) {
-          const xpHistoryRef = userRef.collection("xpHistory");
+          const xpHistoryRef = userRef.collection("xp_history");
           batch.set(xpHistoryRef.doc(), {
             title: `Activity: ${activityTitle}`,
             points: activityXP,
             type: "activity",
-            activityId,
-            timestamp: FieldValue.serverTimestamp(),
+            activity_id: activityId,
+            created_at: FieldValue.serverTimestamp(),
           });
         }
       }
@@ -322,12 +325,12 @@ async function processActivityClosed(
     }
   }
 
-  // Write activity impactResults and idempotency guard last, so retries recover
-  // from any earlier batch failure (org/member updates).
+  // Write activity impact_results + idempotency guard last, so retries
+  // recover from any earlier batch failure (org/member updates).
   const finalBatch = db.batch();
   finalBatch.update(activityRef, {
-    "impactResults.totalHours": totalHours,
-    "impactResults.lastAggregation": lastAggregation,
+    "impact_results.total_hours": totalHours,
+    "impact_results.last_aggregation": lastAggregation,
   });
   await finalBatch.commit();
 
@@ -365,7 +368,7 @@ export const onActivityClosed = onDocumentUpdated(
       } catch (error) {
         console.error("[onActivityClosed] Error:", error);
         try {
-          await db.collection("rewardErrors").add({
+          await db.collection("reward_errors").add({
             activityId,
             error: error.message,
             stack: error.stack,

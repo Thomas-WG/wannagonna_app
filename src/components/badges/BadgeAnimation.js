@@ -36,9 +36,8 @@ export default function BadgeAnimation({ badgeId, show, onClose }) {
       // Find badge across all categories (since we don't know the category)
       const details = await findBadgeById(badgeId);
       
-      if (details && details.categoryId) {
-        // Fetch image using categoryId
-        const image = await getBadgeImageUrl(details.categoryId, badgeId);
+      if (details && details.category_id) {
+        const image = await getBadgeImageUrl(details.category_id, badgeId);
         setBadgeDetails(details);
         setImageUrl(image);
       } else {

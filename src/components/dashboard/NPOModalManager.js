@@ -106,7 +106,7 @@ const NPOModalManager = memo(function NPOModalManager({
           isOpen={true}
           onClose={handleClose}
           activityId={activity.id}
-          qrCodeToken={activity.qrCodeToken || modalProps?.qrCodeToken}
+          qr_code_token={activity.qr_code_token || modalProps?.qr_code_token}
           title={activity.title || modalProps?.title}
           startDate={activity.start_date || modalProps?.startDate}
         />

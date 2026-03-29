@@ -71,7 +71,7 @@ export default function OrganizationsPage() {
         ...org,
         countryName,
         languageNames,
-        displayName: displayName || t('anonymousOrganization'),
+        display_name: displayName || t('anonymousOrganization'),
       };
     });
   }, [paginatedOrganizations, t]);
@@ -83,7 +83,7 @@ export default function OrganizationsPage() {
 
     const query = debouncedSearchQuery.toLowerCase();
     return processedOrganizations.filter((org) => {
-      const name = org.displayName || '';
+      const name = org.display_name || '';
       const description = org.description || '';
       return (
         name.toLowerCase().includes(query) ||
@@ -496,14 +496,14 @@ export default function OrganizationsPage() {
                     <div className="flex-shrink-0">
                       <Avatar
                         img={org.logo || '/logo/Favicon.png'}
-                        alt={org.displayName}
+                        alt={org.display_name}
                         size="lg"
                         rounded
                       />
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="text-base sm:text-xl font-semibold text-text-primary dark:text-text-primary mb-1.5 line-clamp-1">
-                        {org.displayName}
+                        {org.display_name}
                       </h3>
 
                       {(org.city || org.countryName) && (
