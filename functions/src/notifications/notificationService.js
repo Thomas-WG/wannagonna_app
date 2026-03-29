@@ -4,18 +4,26 @@ import {sendMailgunEmail} from "./emailService.js";
 import {generateNotificationEmail} from "./emailTemplates.js";
 
 /**
- * Notification schema (Firestore collection: notifications)
+ * In-app notifications live under members/{userId}/notifications/{id}.
+ * Recipient UID is implied by the path (no user_id field on the document).
  * {
- *   userId: string;               // UID of the recipient
  *   type: string;                 // e.g. 'REWARD' | 'REMINDER' | 'SYSTEM'
  *   title: string;
  *   body: string;
- *   link?: string | null;         // optional deep-link path in the app
- *   created_at: Timestamp;        // server-generated
- *   read_at?: Timestamp | null;   // null when unread
- *   metadata?: object;            // optional, small JSON payload
+ *   link?: string | null;
+ *   created_at: Timestamp;
+ *   read_at?: Timestamp | null;
+ *   metadata?: object;
  * }
  */
+
+/**
+ * @param {string} userId
+ * @return {Object} CollectionReference under members/{userId}/notifications
+ */
+function memberNotificationsCollection(userId) {
+  return db.collection("members").doc(userId).collection("notifications");
+}
 
 /**
  * Create a notification document for a user.
@@ -48,8 +56,7 @@ export async function createNotification({
   });
 
   try {
-    const docRef = await db.collection("notifications").add({
-      user_id: userId,
+    const docRef = await memberNotificationsCollection(userId).add({
       type,
       title,
       body,
@@ -96,18 +103,11 @@ export async function markNotificationAsRead(userId, notificationId) {
     );
   }
 
-  const notifRef = db.collection("notifications").doc(notificationId);
+  const notifRef = memberNotificationsCollection(userId).doc(notificationId);
   const snap = await notifRef.get();
 
   if (!snap.exists) {
     throw new Error("Notification not found");
-  }
-
-  const data = snap.data();
-  if (data.user_id !== userId) {
-    throw new Error(
-        "Permission denied: cannot modify another user's notification",
-    );
   }
 
   await notifRef.update({
@@ -127,9 +127,7 @@ export async function markAllUserNotificationsAsRead(userId) {
     throw new Error("markAllUserNotificationsAsRead: userId is required");
   }
 
-  const querySnap = await db
-      .collection("notifications")
-      .where("user_id", "==", userId)
+  const querySnap = await memberNotificationsCollection(userId)
       .where("read_at", "==", null)
       .get();
 
@@ -158,10 +156,7 @@ export async function deleteAllUserNotifications(userId) {
     throw new Error("deleteAllUserNotifications: userId is required");
   }
 
-  const querySnap = await db
-      .collection("notifications")
-      .where("user_id", "==", userId)
-      .get();
+  const querySnap = await memberNotificationsCollection(userId).get();
 
   if (querySnap.empty) {
     return 0;

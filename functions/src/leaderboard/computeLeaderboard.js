@@ -231,16 +231,16 @@ export async function runComputeLeaderboard() {
       const prefs = member?.notification_preferences?.GAMIFICATION;
       const inAppEnabled = prefs?.inApp !== false;
       if (!inAppEnabled) continue;
-      await db.collection("notifications").add({
-        user_id: notif.user_id,
-        type: notif.type,
-        title: notif.title,
-        body: notif.body,
-        link: notif.link,
-        created_at: FieldValue.serverTimestamp(),
-        read_at: null,
-        metadata: notif.metadata,
-      });
+      await db.collection("members").doc(notif.user_id)
+          .collection("notifications").add({
+            type: notif.type,
+            title: notif.title,
+            body: notif.body,
+            link: notif.link,
+            created_at: FieldValue.serverTimestamp(),
+            read_at: null,
+            metadata: notif.metadata,
+          });
     }
     console.log(
         "No validated validations in window. All Time written.",
@@ -477,16 +477,16 @@ export async function runComputeLeaderboard() {
     const inAppEnabled = prefs?.inApp !== false;
     if (!inAppEnabled) continue;
 
-    await db.collection("notifications").add({
-      user_id: notif.user_id,
-      type: notif.type,
-      title: notif.title,
-      body: notif.body,
-      link: notif.link,
-      created_at: FieldValue.serverTimestamp(),
-      read_at: null,
-      metadata: notif.metadata,
-    });
+    await db.collection("members").doc(notif.user_id)
+        .collection("notifications").add({
+          type: notif.type,
+          title: notif.title,
+          body: notif.body,
+          link: notif.link,
+          created_at: FieldValue.serverTimestamp(),
+          read_at: null,
+          metadata: notif.metadata,
+        });
   }
 
   totalDimensions += allDimensions.size;

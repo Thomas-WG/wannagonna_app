@@ -5,7 +5,6 @@ import {app, db, functions} from 'firebaseConfig';
 import {
   collection,
   query,
-  where,
   orderBy,
   limit as fsLimit,
   onSnapshot,
@@ -39,10 +38,9 @@ export function useNotificationsListener(userId, limitCount = DEFAULT_LIMIT) {
       return undefined;
     }
 
-    const notificationsRef = collection(db, "notifications");
+    const notificationsRef = collection(db, "members", userId, "notifications");
     const q = query(
         notificationsRef,
-        where("user_id", "==", userId),
         orderBy("created_at", "desc"),
         fsLimit(limitCount || DEFAULT_LIMIT),
     );
