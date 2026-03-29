@@ -6,7 +6,7 @@ const VALID_ACTIVITY_TYPES = ["online", "local", "event"];
 /**
  * Upserts a participant record for an NPO when a volunteer is validated.
  * Creates the record and increments totalParticipants on first participation;
- * updates only type flags and lastValidatedAt on subsequent validations.
+ * updates only type flags and last_validated_at on subsequent validations.
  *
  * @param {string} organizationId - Organization (NPO) ID
  * @param {string} userId - Volunteer user ID
@@ -48,18 +48,18 @@ export async function upsertParticipantRecord(
 
   if (!participantSnap.exists) {
     const initialData = {
-      userId,
+      user_id: userId,
       online: normalizedType === "online",
       local: normalizedType === "local",
       event: normalizedType === "event",
-      createdAt: now,
-      lastValidatedAt: now,
+      created_at: now,
+      last_validated_at: now,
     };
     const batch = db.batch();
     batch.set(participantRef, initialData);
     const orgRef = db.collection("organizations").doc(organizationId);
     batch.update(orgRef, {
-      totalParticipants: FieldValue.increment(1),
+      total_participants: FieldValue.increment(1),
     });
     await batch.commit();
     console.log(
@@ -72,7 +72,7 @@ export async function upsertParticipantRecord(
 
   const updates = {
     [normalizedType]: true,
-    lastValidatedAt: now,
+    last_validated_at: now,
   };
   await participantRef.update(updates);
   console.log(

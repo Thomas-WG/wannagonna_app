@@ -42,9 +42,9 @@ export function ThemeProvider({ children }) {
         
         if (userSnap.exists()) {
           const userData = userSnap.data();
-          if (userData.themePreference && (userData.themePreference === 'light' || userData.themePreference === 'dark')) {
-            setTheme(userData.themePreference);
-            localStorage.setItem('theme', userData.themePreference);
+          if (userData.theme_preference && (userData.theme_preference === 'light' || userData.theme_preference === 'dark')) {
+            setTheme(userData.theme_preference);
+            localStorage.setItem('theme', userData.theme_preference);
           }
         }
       } catch (error) {
@@ -80,7 +80,7 @@ export function ThemeProvider({ children }) {
       try {
         const userRef = doc(db, 'members', user.uid);
         await setDoc(userRef, {
-          themePreference: newTheme,
+          theme_preference: newTheme,
         }, { merge: true });
       } catch (error) {
         if (process.env.NODE_ENV === 'development') {
@@ -102,7 +102,7 @@ export function ThemeProvider({ children }) {
       try {
         const userRef = doc(db, 'members', user.uid);
         await setDoc(userRef, {
-          themePreference: newTheme,
+          theme_preference: newTheme,
         }, { merge: true });
       } catch (error) {
         if (process.env.NODE_ENV === 'development') {

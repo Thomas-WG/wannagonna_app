@@ -11,19 +11,19 @@ import { db } from 'firebaseConfig';
  * @typedef {Object} ParticipationHours
  * @property {number} reported
  * @property {number} validated
- * @property {import('firebase/firestore').Timestamp} [reportedAt]
- * @property {import('firebase/firestore').Timestamp} [validatedAt]
+ * @property {import('firebase/firestore').Timestamp} [reported_at]
+ * @property {import('firebase/firestore').Timestamp} [validated_at]
  */
 
 /**
  * @typedef {Object} Participation
- * @property {string} memberId
+ * @property {string} user_id
  * @property {string} status
  * @property {ParticipationHours} hours
- * @property {import('firebase/firestore').Timestamp|null} [checkedInAt]
- * @property {import('firebase/firestore').Timestamp|null} [checkedOutAt]
- * @property {number} [xpAwarded]
- * @property {import('firebase/firestore').Timestamp} [joinedAt]
+ * @property {import('firebase/firestore').Timestamp|null} [checked_in_at]
+ * @property {import('firebase/firestore').Timestamp|null} [checked_out_at]
+ * @property {number} [xp_awarded]
+ * @property {import('firebase/firestore').Timestamp} [joined_at]
  */
 
 /**
@@ -43,18 +43,18 @@ export async function createOrUpdateParticipation(activityId, userId, data) {
     await updateDoc(ref, updates);
   } else {
     await setDoc(ref, {
-      memberId: userId,
+      user_id: userId,
       status: data.status ?? 'registered',
       hours: data.hours ?? {
         reported: 0,
         validated: 0,
-        reportedAt: null,
-        validatedAt: null
+        reported_at: null,
+        validated_at: null
       },
-      checkedInAt: data.checkedInAt ?? null,
-      checkedOutAt: data.checkedOutAt ?? null,
-      xpAwarded: data.xpAwarded ?? 0,
-      joinedAt: data.joinedAt ?? now
+      checked_in_at: data.checked_in_at ?? null,
+      checked_out_at: data.checked_out_at ?? null,
+      xp_awarded: data.xp_awarded ?? 0,
+      joined_at: data.joined_at ?? now
     });
   }
 }
@@ -96,18 +96,18 @@ export async function reportHours(activityId, userId, hours) {
   const num = Number(hours);
   if (!snap.exists()) {
     await setDoc(ref, {
-      memberId: userId,
+      user_id: userId,
       status: 'registered',
       hours: {
         reported: num,
         validated: 0,
-        reportedAt: now,
-        validatedAt: null
+        reported_at: now,
+        validated_at: null
       },
-      checkedInAt: null,
-      checkedOutAt: null,
-      xpAwarded: 0,
-      joinedAt: now
+      checked_in_at: null,
+      checked_out_at: null,
+      xp_awarded: 0,
+      joined_at: now
     });
     return;
   }
@@ -115,7 +115,7 @@ export async function reportHours(activityId, userId, hours) {
   const hoursData = {
     ...(current.hours || {}),
     reported: num,
-    reportedAt: now
+    reported_at: now
   };
   await updateDoc(ref, { hours: hoursData });
 }
@@ -137,26 +137,26 @@ export async function validateHours(activityId, userId, validatedHours) {
     // Create with validated==0 (Firestore rules enforce this on create).
     // Then update to set validated hours (NPO staff/admin permitted via update rule).
     await setDoc(ref, {
-      memberId: userId,
+      user_id: userId,
       status: 'validated',
       hours: {
         reported: num,
         validated: 0,
-        reportedAt: null,
-        validatedAt: null
+        reported_at: null,
+        validated_at: null
       },
-      checkedInAt: null,
-      checkedOutAt: null,
-      xpAwarded: 0,
-      joinedAt: now
+      checked_in_at: null,
+      checked_out_at: null,
+      xp_awarded: 0,
+      joined_at: now
     });
     if (num > 0) {
       await updateDoc(ref, {
         hours: {
           reported: num,
           validated: num,
-          reportedAt: null,
-          validatedAt: now
+          reported_at: null,
+          validated_at: now
         }
       });
     }
@@ -166,7 +166,7 @@ export async function validateHours(activityId, userId, validatedHours) {
   const hoursData = {
     ...(current.hours || {}),
     validated: num,
-    validatedAt: now
+    validated_at: now
   };
   await updateDoc(ref, { hours: hoursData });
 }

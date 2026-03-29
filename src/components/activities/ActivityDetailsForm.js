@@ -104,11 +104,10 @@ export default function ActivityDetailsForm({ formData, handleChange, setFormDat
     }
   }, [formData.type, setFormData]);
 
-  // Get external platform link (use externalPlatformLink or fallback to activity_url for backward compatibility)
-  const externalLink = formData.externalPlatformLink || formData.activity_url || '';
-  
-  // Determine if external link is required (for local activities when not accepting WG applications)
-  const isExternalLinkRequired = formData.type === 'local' && formData.acceptApplicationsWG === false;
+  const externalLink = formData.external_platform_link || '';
+
+  const isExternalLinkRequired =
+    formData.type === 'local' && formData.accept_applications_wg === false;
   
   return (
     <div className="w-full space-y-4 sm:space-y-6">
@@ -233,13 +232,13 @@ export default function ActivityDetailsForm({ formData, handleChange, setFormDat
                 {t('location-label') || 'Location'}
               </label>
               <AddressSelector
-                organizationId={claims?.npoId}
-                value={formData.addressId}
+                organizationId={claims?.npo_id}
+                value={formData.address_id}
                 onChange={(addressId, addressData) => {
                   if (addressData) {
                     setFormData(prev => ({
                       ...prev,
-                      addressId: addressId,
+                      address_id: addressId,
                       location: addressData.formattedAddress,
                       coordinates: addressData.coordinates,
                       city: addressData.addressComponents?.city || prev.city,
@@ -248,7 +247,7 @@ export default function ActivityDetailsForm({ formData, handleChange, setFormDat
                   } else {
                     setFormData(prev => ({
                       ...prev,
-                      addressId: null,
+                      address_id: null,
                       location: '',
                       coordinates: null
                     }));
@@ -320,7 +319,22 @@ export default function ActivityDetailsForm({ formData, handleChange, setFormDat
                             weekStart={1}
                             value={startDateValue}
                             name="start_date"
-                            onChange={(date) => setFormData((prev) => ({ ...prev, start_date: date }))}
+                            onChange={(date) =>
+                              setFormData((prev) => {
+                                if (!prev.spansSeveralDays) {
+                                  return { ...prev, start_date: date, end_date: null };
+                                }
+                                if (date != null && prev.end_date == null) {
+                                  const d = date instanceof Date ? date : new Date(date);
+                                  return {
+                                    ...prev,
+                                    start_date: date,
+                                    end_date: new Date(d.getTime()),
+                                  };
+                                }
+                                return { ...prev, start_date: date };
+                              })
+                            }
                             className="w-full"
                           />
                         </div>
@@ -358,11 +372,19 @@ export default function ActivityDetailsForm({ formData, handleChange, setFormDat
                         checked={formData.spansSeveralDays === true}
                         onChange={(e) => {
                           const checked = e.target.checked;
-                          setFormData((prev) => ({
-                            ...prev,
-                            spansSeveralDays: checked,
-                            ...(checked ? {} : { end_date: null }),
-                          }));
+                          setFormData((prev) => {
+                            if (!checked) {
+                              return { ...prev, spansSeveralDays: false, end_date: null };
+                            }
+                            const start = prev.start_date;
+                            const endCopy =
+                              start != null
+                                ? new Date(
+                                    (start instanceof Date ? start : new Date(start)).getTime()
+                                  )
+                                : null;
+                            return { ...prev, spansSeveralDays: true, end_date: endCopy };
+                          });
                         }}
                         className="mt-1"
                       />
@@ -370,7 +392,24 @@ export default function ActivityDetailsForm({ formData, handleChange, setFormDat
                         {t('spansSeveralDays')}
                       </Label>
                     </div>
-                    {formData.spansSeveralDays && (
+                    {formData.spansSeveralDays && (() => {
+                      const multiDayEndInvalid =
+                        formData.start_date &&
+                        formData.end_date &&
+                        (() => {
+                          const s =
+                            formData.start_date instanceof Date
+                              ? formData.start_date
+                              : new Date(formData.start_date);
+                          const e =
+                            formData.end_date instanceof Date
+                              ? formData.end_date
+                              : new Date(formData.end_date);
+                          const ds = new Date(s.getFullYear(), s.getMonth(), s.getDate()).getTime();
+                          const de = new Date(e.getFullYear(), e.getMonth(), e.getDate()).getTime();
+                          return de <= ds;
+                        })();
+                      return (
                       <fieldset className="space-y-4">
                         <legend className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{t('endDay')}</legend>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -386,10 +425,16 @@ export default function ActivityDetailsForm({ formData, handleChange, setFormDat
                               onChange={(date) => setFormData((prev) => ({ ...prev, end_date: date }))}
                               className="w-full"
                             />
+                            {multiDayEndInvalid && (
+                              <p className="text-sm text-red-600 dark:text-red-400 font-medium" role="alert">
+                                {t('multiDayEndDateAfterStart')}
+                              </p>
+                            )}
                           </div>
                         </div>
                       </fieldset>
-                    )}
+                      );
+                    })()}
                     {isEvent && (
                       <p className="text-xs text-gray-500 dark:text-gray-400">{t('eventTimeRequired')}</p>
                     )}
@@ -419,14 +464,13 @@ export default function ActivityDetailsForm({ formData, handleChange, setFormDat
             <div className="flex items-start gap-3 p-4 rounded-lg border-2 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
               <Checkbox
                 id="acceptApplicationsWG"
-                checked={formData.acceptApplicationsWG !== false}
+                checked={formData.accept_applications_wg !== false}
                 onChange={(e) => {
                   const checked = e.target.checked;
                   setFormData((prev) => ({
                     ...prev,
-                    acceptApplicationsWG: checked,
-                    // Reset auto-accept if WG applications are disabled
-                    autoAcceptApplications: checked ? prev.autoAcceptApplications : false
+                    accept_applications_wg: checked,
+                    auto_accept_applications: checked ? prev.auto_accept_applications : false
                   }));
                 }}
                 className="mt-1"
@@ -442,15 +486,15 @@ export default function ActivityDetailsForm({ formData, handleChange, setFormDat
             </div>
 
             {/* Auto-accept checkbox - only shown when WG applications are enabled */}
-            {formData.acceptApplicationsWG !== false && (
+            {formData.accept_applications_wg !== false && (
               <div className="flex items-start gap-3 p-4 rounded-lg border-2 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 ml-6">
                 <Checkbox
                   id="autoAcceptApplications"
-                  checked={formData.autoAcceptApplications === true}
+                  checked={formData.auto_accept_applications === true}
                   onChange={(e) => {
                     setFormData((prev) => ({
                       ...prev,
-                      autoAcceptApplications: e.target.checked
+                      auto_accept_applications: e.target.checked
                     }));
                   }}
                   className="mt-1"
@@ -499,15 +543,12 @@ export default function ActivityDetailsForm({ formData, handleChange, setFormDat
                 : (isExternalLinkRequired 
                     ? t('external-platform-url-helper-required')
                     : t('external-platform-url-helper-optional'))}
-              name='externalPlatformLink'
+              name="external_platform_link"
               value={externalLink}
               onChange={(e) => {
-                handleChange(e);
-                // Also update activity_url for backward compatibility
                 setFormData((prev) => ({
                   ...prev,
-                  externalPlatformLink: e.target.value,
-                  activity_url: e.target.value
+                  external_platform_link: e.target.value,
                 }));
               }}
               type='url'
@@ -542,12 +583,12 @@ export default function ActivityDetailsForm({ formData, handleChange, setFormDat
               variant='filled'
               label={t('participant-target-label')}
               helperText={t('participant-target-helper')}
-              name='participantTarget'
-              value={formData.participantTarget || ''}
+              name="participant_target"
+              value={formData.participant_target ?? ''}
               onChange={(e) => {
                 const value = e.target.value === '' ? null : parseInt(e.target.value, 10);
                 if (value === null || (!isNaN(value) && value > 0)) {
-                  setFormData((prev) => ({ ...prev, participantTarget: value }));
+                  setFormData((prev) => ({ ...prev, participant_target: value }));
                 }
               }}
               onFocus={handleInputFocus}
@@ -576,11 +617,11 @@ export default function ActivityDetailsForm({ formData, handleChange, setFormDat
             {/* Time Commitment Slider */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <Label htmlFor="timeCommitment" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <Label htmlFor="time_commitment" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   {t('time-commitment-label')}
                 </Label>
                 <Tooltip content={(() => {
-                  const value = formData.timeCommitment ?? 50;
+                  const value = formData.time_commitment ?? 50;
                   if (value <= 20) return t('time-commitment-tooltip-very-quick');
                   if (value <= 40) return t('time-commitment-tooltip-quick');
                   if (value <= 60) return t('time-commitment-tooltip-standard');
@@ -598,18 +639,18 @@ export default function ActivityDetailsForm({ formData, handleChange, setFormDat
                   <span>{t('time-commitment-takes-long')}</span>
                 </div>
                 <RangeSlider
-                  id="timeCommitment"
+                  id="time_commitment"
                   min={0}
                   max={100}
-                  value={formData.timeCommitment ?? 50}
+                  value={formData.time_commitment ?? 50}
                   onChange={(e) => {
                     const value = parseInt(e.target.value, 10);
-                    setFormData((prev) => ({ ...prev, timeCommitment: value }));
+                    setFormData((prev) => ({ ...prev, time_commitment: value }));
                   }}
                   className="w-full"
                 />
                 <div className="text-xs text-gray-500 dark:text-gray-400 text-center mt-1">
-                  {formData.timeCommitment ?? 50}%
+                  {formData.time_commitment ?? 50}%
                 </div>
               </div>
             </div>

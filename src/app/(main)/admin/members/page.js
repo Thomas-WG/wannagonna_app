@@ -16,7 +16,7 @@ import { fetchOrganizations } from '@/utils/crudOrganizations';
 import { functions } from 'firebaseConfig';
 import { httpsCallable } from 'firebase/functions';
 import { useAuth } from '@/utils/auth/AuthContext';
-import { fetchUserBadges, grantBadgeToUser, removeBadgeFromUser, fetchAllBadges } from '@/utils/crudBadges';
+import { fetchUserBadges, grantBadgeToUser, adminRemoveBadgeFromUser, fetchAllBadges } from '@/utils/crudBadges';
 import BackButton from '@/components/layout/BackButton';
 import ProfilePicture from '@/components/common/ProfilePicture';
 import { useTheme } from '@/utils/theme/ThemeContext';
@@ -153,7 +153,7 @@ export default function MembersManagementPage() {
     setSelectedMember(member);
     setRoleForm({
       role: member.role || '',
-      npoId: member.npoId || '',
+      npoId: member.npo_id || '',
       xp: member.xp || 0
     });
     setShowModal(true);
@@ -173,9 +173,9 @@ export default function MembersManagementPage() {
         role: roleForm.role
       };
       
-      // Add npoId to claims if role is npo-staff
+      // Add npo_id to claims if role is npo-staff
       if (roleForm.role === 'npo-staff' && roleForm.npoId) {
-        claims.npoId = roleForm.npoId;
+        claims.npo_id = roleForm.npoId;
       }
 
       // Call the Cloud Function to set custom claims
@@ -189,7 +189,7 @@ export default function MembersManagementPage() {
       const newXp = parseInt(roleForm.xp) || 0;
       const updateData = {
         role: roleForm.role,
-        npoId: roleForm.role === 'npo-staff' ? roleForm.npoId : null,
+        npo_id: roleForm.role === 'npo-staff' ? roleForm.npoId : null,
         xp: newXp // Always update XP to ensure consistency
       };
 
@@ -203,7 +203,7 @@ export default function MembersManagementPage() {
             ? { 
                 ...member, 
                 role: roleForm.role, 
-                npoId: roleForm.role === 'npo-staff' ? roleForm.npoId : null,
+                npo_id: roleForm.role === 'npo-staff' ? roleForm.npoId : null,
                 xp: newXp
               } 
             : member
@@ -303,7 +303,7 @@ export default function MembersManagementPage() {
     
     try {
       setIsLoadingBadges(true);
-      const result = await removeBadgeFromUser(selectedMemberForBadges.id, badgeId);
+      const result = await adminRemoveBadgeFromUser(selectedMemberForBadges.id, badgeId);
       
       if (result) {
         // Refresh badges list
@@ -328,11 +328,11 @@ export default function MembersManagementPage() {
     const lowerQuery = searchQuery.toLowerCase().trim();
     
     return members.filter(member => {
-      const displayName = (member.displayName || '').toLowerCase();
+      const displayName = (member.display_name || '').toLowerCase();
       const email = (member.email || '').toLowerCase();
       const role = getRoleDisplayName(member.role || '').toLowerCase();
       const organization = member.role === 'npo-staff' 
-        ? getOrganizationName(member.npoId).toLowerCase() 
+        ? getOrganizationName(member.npo_id).toLowerCase() 
         : '';
       
       return displayName.includes(lowerQuery) ||
@@ -422,19 +422,19 @@ export default function MembersManagementPage() {
                   <Table.Cell>
                     {/* Member Profile Picture */}
                     <ProfilePicture
-                      src={member.profilePicture}
-                      alt={member.displayName}
+                      src={member.profile_picture}
+                      alt={member.display_name}
                       size={40}
                       showInitials={true}
-                      name={member.displayName}
+                      name={member.display_name}
                       loading="lazy"
                     />
                   </Table.Cell>
-                  <Table.Cell className="max-w-[150px] truncate">{member.displayName}</Table.Cell>
+                  <Table.Cell className="max-w-[150px] truncate">{member.display_name}</Table.Cell>
                   <Table.Cell className="max-w-[200px] truncate">{member.email}</Table.Cell>
                   <Table.Cell>{getRoleDisplayName(member.role)}</Table.Cell>
                   <Table.Cell className="max-w-[150px] truncate">
-                    {member.role === 'npo-staff' && getOrganizationName(member.npoId)}
+                    {member.role === 'npo-staff' && getOrganizationName(member.npo_id)}
                   </Table.Cell>
                   <Table.Cell>
                     <Button size="xs" color="purple" onClick={() => openBadgeModal(member)}>
@@ -473,25 +473,25 @@ export default function MembersManagementPage() {
             <div className="flex items-start gap-3">
               {/* Profile Picture */}
               <ProfilePicture
-                src={member.profilePicture}
-                alt={member.displayName}
+                src={member.profile_picture}
+                alt={member.display_name}
                 size={50}
                 showInitials={true}
-                name={member.displayName}
+                name={member.display_name}
                 loading="lazy"
               />
               <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-base truncate">{member.displayName}</h3>
+                <h3 className="font-semibold text-base truncate">{member.display_name}</h3>
                 <p className="text-sm text-gray-600 truncate">{member.email}</p>
                 <div className="mt-2 space-y-1">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-medium text-gray-500">{t('role')}:</span>
                     <span className="text-xs">{getRoleDisplayName(member.role)}</span>
                   </div>
-                  {member.role === 'npo-staff' && getOrganizationName(member.npoId) && (
+                  {member.role === 'npo-staff' && getOrganizationName(member.npo_id) && (
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-medium text-gray-500">{t('organization')}:</span>
-                      <span className="text-xs truncate">{getOrganizationName(member.npoId)}</span>
+                      <span className="text-xs truncate">{getOrganizationName(member.npo_id)}</span>
                     </div>
                   )}
                 </div>
@@ -526,7 +526,7 @@ export default function MembersManagementPage() {
         onClose={() => setShowModal(false)}
       >
         <Modal.Header className="text-base sm:text-lg px-4 sm:px-6">
-          {t('editMember') || 'Edit Member'} - {selectedMember?.displayName}
+          {t('editMember') || 'Edit Member'} - {selectedMember?.display_name}
         </Modal.Header>
         <Modal.Body className="px-4 sm:px-6">
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -634,7 +634,7 @@ export default function MembersManagementPage() {
       >
         <Modal.Header className="text-base sm:text-lg px-4 sm:px-6">
           <div className="truncate">
-            {t('manageBadges') || 'Manage Badges'} - <span className="font-normal">{selectedMemberForBadges?.displayName}</span>
+            {t('manageBadges') || 'Manage Badges'} - <span className="font-normal">{selectedMemberForBadges?.display_name}</span>
           </div>
         </Modal.Header>
         <Modal.Body className="px-4 sm:px-6 max-h-[70vh] overflow-y-auto">

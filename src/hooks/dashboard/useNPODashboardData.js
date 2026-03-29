@@ -46,18 +46,18 @@ export function useNPODashboardData(organizationId) {
     refetchOnWindowFocus: true, // Refetch on focus to catch new applications
   });
 
-  // Combine data
+  // Combine data (snake_case for Firestore fields)
   const combinedData = orgData
     ? {
         ...orgData,
-        totalNewApplications: pendingCount,
+        total_new_applications: pendingCount,
       }
     : {
-        totalOnlineActivities: 0,
-        totalLocalActivities: 0,
-        totalEvents: 0,
-        totalNewApplications: 0,
-        totalParticipants: 0,
+        total_online_activities: 0,
+        total_local_activities: 0,
+        total_events: 0,
+        total_new_applications: 0,
+        total_participants: 0,
       };
 
   return {

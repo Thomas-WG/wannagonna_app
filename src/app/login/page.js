@@ -20,7 +20,7 @@
 
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { auth, db } from 'firebaseConfig';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, Timestamp } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { FcGoogle } from "react-icons/fc";
@@ -54,6 +54,7 @@ export default function LoginPage() {
   const [createPassword, setCreatePassword] = useState('');
   const [createConfirmPassword, setCreateConfirmPassword] = useState('');
   const [createReferralCode, setCreateReferralCode] = useState('');
+  const [createSubmitting, setCreateSubmitting] = useState(false);
 
   // Lost password state
   const [showResetPassword, setShowResetPassword] = useState(false);
@@ -217,6 +218,9 @@ export default function LoginPage() {
 
   // Function to handle account creation - Updated to validate referral code
   const handleCreateAccount = async ({ email, password, confirmPassword, referralCode }) => {
+    if (createSubmitting) {
+      return;
+    }
     setCreateErrorMessage('');
 
     // Check if passwords match
@@ -232,6 +236,7 @@ export default function LoginPage() {
       return;
     }
 
+    setCreateSubmitting(true);
     try {
       // Create a new user with Firebase
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -246,23 +251,30 @@ export default function LoginPage() {
       // New user - Save user data to Firestore with generated code BEFORE logging in
       // This ensures the document exists even if something goes wrong during login
       const memberData = {
-        displayName: emailPrefix,
+        display_name: emailPrefix,
         email: user.email,
         bio: '',
         country: '',
         languages: [],
         skills: [],
-        profilePicture: '', // Empty string by default for email/password accounts
+        badges: [],
+        cause: '',
+        hobbies: '',
+        website: '',
+        linkedin: '',
+        facebook: '',
+        instagram: '',
+        profile_picture: '', // Empty string by default for email/password accounts
         code: userCode, // Add generated code
-        referredBy: referralCode.toUpperCase().trim(), // Store who referred them
+        referred_by: referralCode.toUpperCase().trim(), // Store who referred them
         xp: 0, // Initialize XP to 0
-        impactSummary: {
-          totalHours: 0,
-          totalActivities: 0,
+        impact_summary: {
+          total_hours: 0,
+          total_activities: 0,
           parameters: {},
-          parameterMeta: {},
+          parameter_meta: {},
         },
-        timeCommitment: {
+        time_commitment: {
           daily: false,
           weekly: false,
           biweekly: false,
@@ -278,23 +290,23 @@ export default function LoginPage() {
           evenings: false,
           flexible: false
         },
-        createdAt: new Date().toISOString(),
+        created_at: Timestamp.now(),
       };
       
-      console.log('Creating member document with data:', { ...memberData, profilePicture: memberData.profilePicture ? 'URL set' : 'empty' });
+      console.log('Creating member document with data:', { ...memberData, profile_picture: memberData.profile_picture ? 'URL set' : 'empty' });
       
       await setDoc(doc(db, 'members', user.uid), memberData);
       console.log('Member document created successfully for user:', user.uid);
       
       // Reward the referrer (non-blocking - account creation succeeds even if reward fails)
       try {
-        await handleReferralReward(referralCode);
+        await handleReferralReward(
+          referralCode.toUpperCase().trim(),
+        );
       } catch (rewardError) {
         console.error('Error rewarding referrer (non-blocking):', rewardError);
       }
-      
-      // Log the user in with the newly created credentials
-      await signInWithEmailAndPassword(auth, email, password);
+
       setHasInteracted(false);
       
       router.push('/complete-profile');
@@ -316,6 +328,8 @@ export default function LoginPage() {
       } else {
         setCreateErrorMessage(error.message || 'An error occurred while creating your account. Please try again.');
       }
+    } finally {
+      setCreateSubmitting(false);
     }
   };
 
@@ -467,6 +481,9 @@ export default function LoginPage() {
               className="flex flex-col gap-4 w-full max-w-sm mx-auto"
               onSubmit={(event) => {
                 event.preventDefault();
+                if (createSubmitting) {
+                  return;
+                }
                 setHasInteracted(true);
                 handleCreateAccount({
                   email: createEmail,
@@ -543,7 +560,8 @@ export default function LoginPage() {
               )}
               <button
                 type="submit"
-                className="mt-2 bg-primary-500 hover:bg-primary-600 dark:bg-primary-600 dark:hover:bg-primary-700 text-white py-2 px-4 rounded-md text-sm font-medium"
+                disabled={createSubmitting}
+                className="mt-2 bg-primary-500 hover:bg-primary-600 dark:bg-primary-600 dark:hover:bg-primary-700 text-white py-2 px-4 rounded-md text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {t('create')}
               </button>
@@ -557,10 +575,13 @@ export default function LoginPage() {
             {/* Google sign-up with mandatory referral code */}
             <button
               onClick={() => {
+                if (createSubmitting || googleIsLoading) {
+                  return;
+                }
                 setHasInteracted(true);
                 signInWithGoogle(createReferralCode);
               }}
-              disabled={googleIsLoading || !createReferralCode.trim()}
+              disabled={createSubmitting || googleIsLoading || !createReferralCode.trim()}
               className="w-full max-w-xs mx-auto py-3 px-6 bg-background-card dark:bg-background-card border border-border-light dark:border-border-dark rounded-lg flex items-center justify-center gap-3 hover:bg-background-hover dark:hover:bg-background-hover transition-colors duration-200 text-text-primary dark:text-text-primary text-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <FcGoogle className="text-2xl" />

@@ -118,7 +118,7 @@ export default function ApplyActivityModal({
             </div>
 
             {/* External Platform Link */}
-            {(activity.externalPlatformLink || activity.activity_url) && (
+            {activity.external_platform_link && (
               <div className="flex items-center gap-4 p-4 bg-background-hover dark:bg-background-hover rounded-xl border-2 border-border-light dark:border-[#475569] hover:shadow-md transition-all">
                 <div className="bg-semantic-info-100 dark:bg-semantic-info-900 p-3 rounded-full">
                   <HiExternalLink className="h-6 w-6 text-semantic-info-600 dark:text-semantic-info-400 flex-shrink-0" />
@@ -126,14 +126,14 @@ export default function ApplyActivityModal({
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-medium text-text-tertiary dark:text-text-tertiary mb-1 uppercase tracking-wide">{t('externalPlatformLink')}</p>
                   <a
-                    href={(activity.externalPlatformLink || activity.activity_url).startsWith('http') 
-                      ? (activity.externalPlatformLink || activity.activity_url) 
-                      : `https://${activity.externalPlatformLink || activity.activity_url}`}
+                    href={activity.external_platform_link.startsWith('http')
+                      ? activity.external_platform_link
+                      : `https://${activity.external_platform_link}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-semantic-info-600 dark:text-semantic-info-400 hover:text-semantic-info-700 dark:hover:text-semantic-info-300 text-sm font-medium break-all hover:underline"
                   >
-                    {activity.externalPlatformLink || activity.activity_url}
+                    {activity.external_platform_link}
                   </a>
                 </div>
               </div>

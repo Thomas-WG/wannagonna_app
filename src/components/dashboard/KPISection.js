@@ -45,7 +45,7 @@ const KPISection = memo(function KPISection({ orgData, closedActivitiesCount, to
               {t('online')}
             </h2>
             <p className="text-lg sm:text-xl md:text-2xl font-bold text-activityType-online-600 dark:text-activityType-online-400 flex-shrink-0 ml-1">
-              {orgData?.totalOnlineActivities || 0}
+              {orgData?.total_online_activities || 0}
             </p>
           </div>
         </div>
@@ -75,7 +75,7 @@ const KPISection = memo(function KPISection({ orgData, closedActivitiesCount, to
               {t('events')}
             </h2>
             <p className="text-lg sm:text-xl md:text-2xl font-bold text-activityType-event-600 dark:text-activityType-event-400 flex-shrink-0 ml-1">
-              {orgData?.totalEvents || 0}
+              {orgData?.total_events || 0}
             </p>
           </div>
         </div>
@@ -105,7 +105,7 @@ const KPISection = memo(function KPISection({ orgData, closedActivitiesCount, to
               {t('participants')}
             </h2>
             <p className="text-lg sm:text-xl md:text-2xl font-bold text-semantic-error-600 dark:text-semantic-error-400 flex-shrink-0 ml-1">
-              {orgData?.totalParticipants || 0}
+              {orgData?.total_participants || 0}
             </p>
           </div>
         </div>

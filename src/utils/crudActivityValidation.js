@@ -14,18 +14,16 @@ async function hasUserValidatedActivity(userId, activityId) {
   try {
     const activityDoc = doc(db, 'activities', activityId);
     const validationsRef = collection(activityDoc, 'validations');
-    const q = query(validationsRef, where('userId', '==', userId));
+    const q = query(validationsRef, where('user_id', '==', userId));
     const querySnapshot = await getDocs(q);
     
     if (querySnapshot.empty) {
       return false;
     }
     
-    // Check if any validation has status 'validated'
-    // For backward compatibility, if no status field, assume validated (old QR validations)
     for (const docSnapshot of querySnapshot.docs) {
       const data = docSnapshot.data();
-      if (!data.status || data.status === 'validated') {
+      if (data.status === 'validated') {
         return true;
       }
     }
@@ -51,20 +49,21 @@ async function recordValidation(userId, activityId, token, validatedBy = null) {
     const validationsRef = collection(activityDoc, 'validations');
     
     // Check if validation already exists
-    const q = query(validationsRef, where('userId', '==', userId));
+    const q = query(validationsRef, where('user_id', '==', userId));
     const querySnapshot = await getDocs(q);
     
     if (!querySnapshot.empty) {
       // Update existing validation
       const existingValidation = querySnapshot.docs[0];
       const existingData = existingValidation.data();
+      const existingValidatedBy = existingData.validated_by;
       const updateData = {
         status: 'validated',
-        validatedAt: Timestamp.now(),
-        validatedBy: validatedBy || existingData.validatedBy || null,
+        validated_at: Timestamp.now(),
+        validated_by: validatedBy ?? existingValidatedBy ?? null,
         // Clear rejection fields if they exist
-        rejectedAt: null,
-        rejectedBy: null,
+        rejected_at: null,
+        rejected_by: null,
       };
       // Only include token if it exists in existing data or if we're providing a new token
       if (token) {
@@ -76,11 +75,11 @@ async function recordValidation(userId, activityId, token, validatedBy = null) {
     } else {
       // Create new validation
       await addDoc(validationsRef, {
-        userId,
+        user_id: userId,
         token: token || null,
         status: 'validated',
-        validatedAt: Timestamp.now(),
-        validatedBy: validatedBy || null,
+        validated_at: Timestamp.now(),
+        validated_by: validatedBy ?? null,
       });
     }
     
@@ -158,7 +157,7 @@ export async function validateActivityByQR(userId, activityId, token) {
     }
 
     // Verify token matches
-    if (activity.qrCodeToken !== token) {
+    if (activity.qr_code_token !== token) {
       return {
         success: false,
         error: 'INVALID_TOKEN',
@@ -208,7 +207,7 @@ export async function validateActivityByQR(userId, activityId, token) {
     try {
       await createOrUpdateParticipation(activityId, userId, {
         status: 'validated',
-        hours: { reported: 0, validated: 0, reportedAt: null, validatedAt: Timestamp.now() },
+        hours: { reported: 0, validated: 0, reported_at: null, validated_at: Timestamp.now() },
       });
     } catch (partErr) {
       console.warn('Error ensuring participation for QR validation (non-blocking):', partErr);
@@ -222,7 +221,7 @@ export async function validateActivityByQR(userId, activityId, token) {
       const applicationsRef = collection(activityDocRef, 'applications');
       const qApps = query(
         applicationsRef,
-        where('userId', '==', userId),
+        where('user_id', '==', userId),
         where('status', '==', 'pending')
       );
       const appsSnapshot = await getDocs(qApps);
@@ -246,13 +245,11 @@ export async function validateActivityByQR(userId, activityId, token) {
       // Do not fail the validation if this step has an issue
     }
 
-    // Return expected structure for backward compatibility
-    // Note: Actual rewards are processed by Cloud Function in background
-    const xpReward = activity.xp_reward || 0;
+    // Immediate response; full rewards are processed by Cloud Function
+    const total_xp = activity.xp_reward || 0;
     return {
       success: true,
-      xpReward,
-      badges: [], // Will be populated by Cloud Function
+      total_xp,
       activityTitle: activity.title || '',
       message: 'Activity validated successfully! Rewards are being processed in the background.'
     };
@@ -278,7 +275,7 @@ export async function initializeValidationDocument(activityId, userId) {
     const validationsRef = collection(activityDoc, 'validations');
     
     // Check if validation already exists to avoid duplicates
-    const q = query(validationsRef, where('userId', '==', userId));
+    const q = query(validationsRef, where('user_id', '==', userId));
     const querySnapshot = await getDocs(q);
     
     if (!querySnapshot.empty) {
@@ -292,9 +289,9 @@ export async function initializeValidationDocument(activityId, userId) {
     
     // Create new validation document with pending status
     await addDoc(validationsRef, {
-      userId,
+      user_id: userId,
       status: 'pending',
-      createdAt: Timestamp.now(),
+      created_at: Timestamp.now(),
     });
     
     console.log(`Validation document initialized for user ${userId} on activity ${activityId} with status 'pending'`);
@@ -328,11 +325,12 @@ export async function fetchValidationsForActivity(activityId) {
       const data = doc.data();
       validations.push({
         id: doc.id,
-        userId: data.userId,
-        status: data.status || 'validated', // Default to 'validated' for backward compatibility
-        validatedAt: data.validatedAt?.toDate ? data.validatedAt.toDate() : data.validatedAt,
-        rejectedAt: data.rejectedAt?.toDate ? data.rejectedAt.toDate() : data.rejectedAt,
-        validatedBy: data.validatedBy || null,
+        user_id: data.user_id,
+        status: data.status ?? null,
+        validated_at: data.validated_at?.toDate ? data.validated_at.toDate() : data.validated_at,
+        rejected_at: data.rejected_at?.toDate ? data.rejected_at.toDate() : data.rejected_at,
+        validated_by: data.validated_by ?? null,
+        rejected_by: data.rejected_by ?? null,
         token: data.token || null,
       });
     });
@@ -360,7 +358,7 @@ export async function validateApplicant(activityId, userId, validatedBy) {
     if (alreadyValidated) {
       // Check if it's already validated (not rejected)
       const validations = await fetchValidationsForActivity(activityId);
-      const existingValidation = validations.find(v => v.userId === userId);
+      const existingValidation = validations.find(v => v.user_id === userId);
       if (existingValidation && existingValidation.status === 'validated') {
         return {
           success: false,
@@ -419,7 +417,7 @@ export async function rejectApplicant(activityId, userId, rejectedBy) {
     const validationsRef = collection(activityDoc, 'validations');
     
     // Check if validation already exists
-    const q = query(validationsRef, where('userId', '==', userId));
+    const q = query(validationsRef, where('user_id', '==', userId));
     const querySnapshot = await getDocs(q);
     
     if (!querySnapshot.empty) {
@@ -428,11 +426,11 @@ export async function rejectApplicant(activityId, userId, rejectedBy) {
       const existingData = existingValidation.data();
       const updateData = {
         status: 'rejected',
-        rejectedAt: Timestamp.now(),
-        rejectedBy: rejectedBy,
+        rejected_at: Timestamp.now(),
+        rejected_by: rejectedBy,
         // Clear validation fields if they exist
-        validatedAt: null,
-        validatedBy: null,
+        validated_at: null,
+        validated_by: null,
       };
       // Only set token to null if it exists in the document (to clear it)
       // Don't set it if it doesn't exist to avoid undefined
@@ -443,10 +441,10 @@ export async function rejectApplicant(activityId, userId, rejectedBy) {
     } else {
       // Create new rejection record
       await addDoc(validationsRef, {
-        userId,
+        user_id: userId,
         status: 'rejected',
-        rejectedAt: Timestamp.now(),
-        rejectedBy: rejectedBy,
+        rejected_at: Timestamp.now(),
+        rejected_by: rejectedBy,
       });
     }
     

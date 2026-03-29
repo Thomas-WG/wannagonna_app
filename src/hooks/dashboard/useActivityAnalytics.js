@@ -43,11 +43,11 @@ export function useActivityAnalytics(organizationId, timeRange = 'all') {
   const filteredActivities = useMemo(() => {
     if (!dateFilter) return activities;
     return activities.filter((activity) => {
-      const activityDate = activity.creation_date?.toDate
-        ? activity.creation_date.toDate()
-        : activity.creation_date?.seconds
-        ? new Date(activity.creation_date.seconds * 1000)
-        : new Date(activity.creation_date);
+      const activityDate = activity.created_at?.toDate
+        ? activity.created_at.toDate()
+        : activity.created_at?.seconds
+        ? new Date(activity.created_at.seconds * 1000)
+        : new Date(activity.created_at);
       return activityDate >= dateFilter;
     });
   }, [activities, dateFilter]);
@@ -101,7 +101,7 @@ export function useActivityAnalytics(organizationId, timeRange = 'all') {
     return {
       totalActivities,
       totalApplications,
-      totalXP,
+      total_xp: totalXP,
       averageXP: Math.round(averageXP),
       averageApplications: Math.round(averageApplications * 10) / 10,
       statusBreakdown,

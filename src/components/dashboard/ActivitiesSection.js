@@ -83,7 +83,7 @@ const ActivitiesSection = memo(function ActivitiesSection({
         setSelectedApplicationActivity(activity);
         setShowActionModal(true);
       } else {
-        const activityIdToUse = activity.activityId || activity.id;
+        const activityIdToUse = activity.activity_id;
         setSelectedActivityId(activityIdToUse);
         setShowActivityModal(true);
       }
@@ -95,7 +95,7 @@ const ActivitiesSection = memo(function ActivitiesSection({
   const handleViewActivity = useCallback(() => {
     if (selectedApplicationActivity) {
       const activityIdToUse =
-        selectedApplicationActivity.activityId || selectedApplicationActivity.id;
+        selectedApplicationActivity.activity_id ?? selectedApplicationActivity.id;
       setSelectedActivityId(activityIdToUse);
       setShowActivityModal(true);
       setShowActionModal(false);
@@ -115,7 +115,7 @@ const ActivitiesSection = memo(function ActivitiesSection({
       if (showApplications) {
         handleApplicationCardClick(activity);
       } else {
-        const activityIdToUse = activity.activityId || activity.id;
+        const activityIdToUse = activity.activity_id;
         setSelectedActivityId(activityIdToUse);
         setShowActivityModal(true);
       }
@@ -174,11 +174,11 @@ const ActivitiesSection = memo(function ActivitiesSection({
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 items-stretch">
           {sortedActivities.map((activity) => {
             const applicationData = showApplications
-              ? applicationsWithActivities.find((app) => app.id === activity.applicationId)
+              ? applicationsWithActivities.find((app) => app.application_id === activity.application_id)
               : null;
 
             return (
-              <div key={activity.id || activity.applicationId} className="relative">
+              <div key={activity.id || activity.application_id} className="relative">
                 <ActivityCard
                   id={activity.id}
                   organization_name={activity.organization_name}
@@ -195,14 +195,14 @@ const ActivitiesSection = memo(function ActivitiesSection({
                   xp_reward={activity.xp_reward}
                   description={activity.description}
                   status={activity.status}
-                  last_updated={activity.last_updated}
+                  updated_at={activity.updated_at}
                   city={activity.city}
                   category={activity.category}
-                  qrCodeToken={activity.qrCodeToken}
+                  qr_code_token={activity.qr_code_token}
                   frequency={activity.frequency}
                   skills={activity.skills}
-                  participantTarget={activity.participantTarget}
-                  acceptApplicationsWG={activity.acceptApplicationsWG}
+                  participant_target={activity.participant_target}
+                  accept_applications_wg={activity.accept_applications_wg}
                   onClick={() => handleActivityClick(activity)}
                   canEditStatus={false}
                 />

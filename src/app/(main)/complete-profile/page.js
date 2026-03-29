@@ -38,7 +38,7 @@ const countryOptions = Object.entries(countries).map(([code, country]) => ({
 
 // Default form values
 const defaultValues = {
-  displayName: '',
+  display_name: '',
   email: '',
   bio: '',
   cause: '',
@@ -50,8 +50,8 @@ const defaultValues = {
   country: '',
   languages: [],
   skills: [],
-  profilePicture: '',
-  timeCommitment: {
+  profile_picture: '',
+  time_commitment: {
     daily: false,
     weekly: false,
     biweekly: false,
@@ -148,14 +148,14 @@ export default function CompleteProfilePage() {
         const mergedData = {
           ...defaultValues,
           ...profileData,
-          displayName: profileData.displayName || auth.currentUser?.displayName || '',
+          display_name: profileData.display_name || auth.currentUser?.displayName || '',
           email: profileData.email || auth.currentUser?.email || '',
-          profilePicture: profileData.profilePicture || auth.currentUser?.photoURL || '',
+          profile_picture: profileData.profile_picture || auth.currentUser?.photoURL || '',
           languages: Array.isArray(profileData.languages) ? profileData.languages : [],
           skills: Array.isArray(profileData.skills) ? profileData.skills : [],
-          timeCommitment: {
-            ...defaultValues.timeCommitment,
-            ...(profileData.timeCommitment || {}),
+          time_commitment: {
+            ...defaultValues.time_commitment,
+            ...(profileData.time_commitment || {}),
           },
           availabilities: {
             ...defaultValues.availabilities,
@@ -167,9 +167,9 @@ export default function CompleteProfilePage() {
         // No existing profile, use auth defaults
         reset({
           ...defaultValues,
-          displayName: auth.currentUser?.displayName || '',
+          display_name: auth.currentUser?.displayName || '',
           email: auth.currentUser?.email || '',
-          profilePicture: auth.currentUser?.photoURL || '',
+          profile_picture: auth.currentUser?.photoURL || '',
         });
       }
       setIsLoading(false);
@@ -182,7 +182,7 @@ export default function CompleteProfilePage() {
       try {
         setSelectedFile(file);
         const imageUrl = URL.createObjectURL(file);
-        setValue('profilePicture', imageUrl, { shouldValidate: true });
+        setValue('profile_picture', imageUrl, { shouldValidate: true });
         // Note: We'll revoke the blob URL after upload in onSubmit
       } catch (error) {
         console.error("Error handling profile picture:", error);
@@ -198,12 +198,12 @@ export default function CompleteProfilePage() {
       if (selectedFile && user?.uid) {
         try {
           const downloadURL = await uploadProfilePicture(selectedFile, user.uid);
-          finalProfileData.profilePicture = downloadURL;
+          finalProfileData.profile_picture = downloadURL;
           // Update form value with Firebase URL
-          setValue('profilePicture', downloadURL, { shouldValidate: true });
+          setValue('profile_picture', downloadURL, { shouldValidate: true });
           
           // Revoke the blob URL to free memory
-          const currentProfilePicture = watch('profilePicture');
+          const currentProfilePicture = watch('profile_picture');
           if (currentProfilePicture && currentProfilePicture.startsWith('blob:')) {
             URL.revokeObjectURL(currentProfilePicture);
           }

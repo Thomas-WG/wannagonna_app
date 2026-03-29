@@ -65,7 +65,7 @@ const Header = () => {
 
   const handleNotificationClick = async (notification) => {
     try {
-      if (!notification.readAt) {
+      if (!notification.read_at) {
         // Optimistically update count
         setOptimisticUnreadCount((prev) => Math.max(0, (prev ?? unreadCount) - 1));
         // Fire-and-forget; realtime listener will refresh state
@@ -80,16 +80,21 @@ const Header = () => {
     // Check if this is a REWARD notification with activity validation data
     if (notification.type === 'REWARD' && notification.metadata) {
       const metadata = notification.metadata;
-      if (metadata.activityId && metadata.badgesGranted) {
+      const activityId = metadata.activity_id;
+      const badgesGranted = metadata.badges_granted;
+      if (activityId && badgesGranted) {
         // This is an activity validation notification - show animation instead of navigating
+        const total_xp = metadata.total_xp ?? 0;
+        const activity_xp = metadata.activity_xp ?? 0;
+        const badge_xp_map = metadata.badge_xp_map ?? {};
         const validationResult = {
-          xpReward: metadata.totalXP || 0,
-          badgeIds: Array.isArray(metadata.badgesGranted) ? metadata.badgesGranted : [],
+          total_xp,
+          badge_ids: Array.isArray(badgesGranted) ? badgesGranted : [],
           activityTitle: notification.body?.match(/for "([^"]+)"/)?.[1] || '',
           xpBreakdown: {
-            totalXP: metadata.totalXP || 0,
-            activityXP: metadata.activityXP || 0,
-            badgeXPMap: metadata.badgeXPMap || {},
+            total_xp,
+            activity_xp,
+            badge_xp_map,
           },
         };
         
@@ -249,7 +254,7 @@ const Header = () => {
                         key={notification.id}
                         type="button"
                         className={`w-full text-left px-4 py-3 text-sm hover:bg-background-hover dark:hover:bg-background-hover transition-all duration-200 flex items-start gap-3 ${
-                          !notification.readAt ? 'bg-background-hover dark:bg-background-hover' : ''
+                          !notification.read_at ? 'bg-background-hover dark:bg-background-hover' : ''
                         }`}
                         onClick={() => handleNotificationClick(notification)}
                       >
@@ -264,8 +269,8 @@ const Header = () => {
                               {notification.title || 'Notification'}
                             </p>
                             <span className="text-[11px] text-text-tertiary dark:text-text-tertiary shrink-0">
-                              {notification.createdAt
-                                ? getRelativeTime(notification.createdAt)
+                              {notification.created_at
+                                ? getRelativeTime(notification.created_at)
                                 : ''}
                             </span>
                           </div>
@@ -275,7 +280,7 @@ const Header = () => {
                             </p>
                           )}
                         </div>
-                        {!notification.readAt && (
+                        {!notification.read_at && (
                           <span className="ml-2 mt-1 h-2 w-2 rounded-full bg-primary-500 dark:bg-primary-400 animate-pulse-warm" />
                         )}
                       </button>

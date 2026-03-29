@@ -26,14 +26,14 @@ export function useMemberProfile(userId) {
 
       // Default values for all fields
       const defaultValues = {
-        displayName: '',
+        display_name: '',
         email: '',
         bio: '',
         country: '',
         languages: [],
         skills: [],
-        profilePicture: '',
-        timeCommitment: {
+        profile_picture: '',
+        time_commitment: {
           daily: false,
           weekly: false,
           biweekly: false,
@@ -52,7 +52,7 @@ export function useMemberProfile(userId) {
         xp: 0,
         badges: [],
         code: '',
-        referredBy: '',
+        referred_by: '',
         cause: '',
         hobbies: '',
         website: '',
@@ -66,9 +66,9 @@ export function useMemberProfile(userId) {
         ...defaultValues,
         ...memberData,
         // Ensure we don't override with undefined/null values, use defaults
-        displayName: memberData.displayName ?? defaultValues.displayName,
+        display_name: memberData.display_name ?? defaultValues.display_name,
         email: memberData.email ?? defaultValues.email,
-        profilePicture: memberData.profilePicture ?? defaultValues.profilePicture,
+        profile_picture: memberData.profile_picture ?? defaultValues.profile_picture,
         bio: memberData.bio ?? defaultValues.bio,
         country: memberData.country ?? defaultValues.country,
         languages: Array.isArray(memberData.languages)
@@ -78,16 +78,16 @@ export function useMemberProfile(userId) {
         xp: memberData.xp ?? defaultValues.xp,
         badges: Array.isArray(memberData.badges) ? memberData.badges : defaultValues.badges,
         code: memberData.code ?? defaultValues.code,
-        referredBy: memberData.referredBy ?? defaultValues.referredBy,
+        referred_by: memberData.referred_by ?? defaultValues.referred_by,
         cause: memberData.cause ?? defaultValues.cause,
         hobbies: memberData.hobbies ?? defaultValues.hobbies,
         website: memberData.website ?? defaultValues.website,
         linkedin: memberData.linkedin ?? defaultValues.linkedin,
         facebook: memberData.facebook ?? defaultValues.facebook,
         instagram: memberData.instagram ?? defaultValues.instagram,
-        timeCommitment: {
-          ...defaultValues.timeCommitment,
-          ...(memberData.timeCommitment || {}),
+        time_commitment: {
+          ...defaultValues.time_commitment,
+          ...(memberData.time_commitment || {}),
         },
         availabilities: {
           ...defaultValues.availabilities,

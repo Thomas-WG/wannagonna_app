@@ -108,9 +108,9 @@ export async function runComputeLeaderboard() {
     const alltimeEntries = alltimeSnap.docs.map((doc, i) => {
       const d = doc.data();
       return {
-        userId: doc.id,
+        user_id: doc.id,
         xp: Number(d.xp) || 0,
-        lastValidatedAt: null,
+        last_validated_at: null,
       };
     });
 
@@ -123,41 +123,41 @@ export async function runComputeLeaderboard() {
     const meetsThreshold = alltimeEntries.length >= THRESHOLD;
 
     for (let i = 0; i < alltimeEntries.length; i++) {
-      const {userId, xp} = alltimeEntries[i];
+      const {user_id: uid, xp} = alltimeEntries[i];
       if (i === 0 || xp < alltimeEntries[i - 1].xp) {
         currentRank = i + 1;
       }
       const rank = meetsThreshold ? currentRank : 0;
       const isCurrentChampion = meetsThreshold && rank === 1;
-      const docId = `${userId}_alltime`;
+      const docId = `${uid}_alltime`;
       const scoresCol = db.collection("leaderboard_scores");
       const existing = await scoresCol.doc(docId).get();
       const prev = existing.data();
 
-      const member = alltimeMemberCache[userId] || {};
+      const member = alltimeMemberCache[uid] || {};
 
       if (prev) {
-        if (prev.isCurrentChampion && !isCurrentChampion) {
-          const newChampion = alltimeMemberCache[alltimeEntries[0].userId];
+        if (prev.is_current_champion && !isCurrentChampion) {
+          const newChampion = alltimeMemberCache[alltimeEntries[0].user_id];
           notifications.push({
-            userId,
+            user_id: uid,
             type: "LEADERBOARD_CHAMPION_LOST",
             title: "Your All Time Champion status was taken!",
             body:
-                  `${newChampion?.displayName || "Someone"} is now ` +
+                  `${newChampion?.display_name || "Someone"} is now ` +
                   `leading All Time. You're ${alltimeEntries[0].xp - xp} ` +
                   "Activity Score behind — jump back in!",
             link: "/leaderboard",
             metadata: {
               dimension: "alltime",
-              dimensionLabel: "All Time",
-              xpGap: alltimeEntries[0].xp - xp,
-              newChampionName: newChampion?.displayName || null,
+              dimension_label: "All Time",
+              xp_gap: alltimeEntries[0].xp - xp,
+              new_champion_name: newChampion?.display_name || null,
             },
           });
-        } else if (!prev.isCurrentChampion && isCurrentChampion) {
+        } else if (!prev.is_current_champion && isCurrentChampion) {
           notifications.push({
-            userId,
+            user_id: uid,
             type: "LEADERBOARD_CHAMPION_GAINED",
             title: "You're the All Time Champion! 🏆",
             body:
@@ -166,36 +166,36 @@ export async function runComputeLeaderboard() {
             link: "/leaderboard",
             metadata: {
               dimension: "alltime",
-              dimensionLabel: "All Time",
-              xpGap: null,
-              newChampionName: null,
+              dimension_label: "All Time",
+              xp_gap: null,
+              new_champion_name: null,
             },
           });
         }
       }
 
       const justGainedChampion =
-          isCurrentChampion && (!prev || !prev.isCurrentChampion);
+          isCurrentChampion && (!prev || !prev.is_current_champion);
 
       const docData = {
-        userId,
-        displayName: member.displayName || "",
-        profilePicture: member.profilePicture || null,
+        user_id: uid,
+        display_name: member.display_name || "",
+        profile_picture: member.profile_picture || null,
         country: member.country || null,
         dimension: "alltime",
-        dimensionType: "alltime",
-        dimensionLabel: "All Time",
-        activityScore: xp,
-        currentRank,
-        isCurrentChampion,
-        championSince: isCurrentChampion ?
-          prev?.championSince || FieldValue.serverTimestamp() :
+        dimension_type: "alltime",
+        dimension_label: "All Time",
+        activity_score: xp,
+        current_rank: rank,
+        is_current_champion: isCurrentChampion,
+        champion_since: isCurrentChampion ?
+          prev?.champion_since || FieldValue.serverTimestamp() :
           null,
-        totalChampionships: justGainedChampion ?
+        total_championships: justGainedChampion ?
           FieldValue.increment(1) :
-          prev?.totalChampionships || 0,
-        lastValidatedAt: null,
-        updatedAt: FieldValue.serverTimestamp(),
+          prev?.total_championships || 0,
+        last_validated_at: null,
+        updated_at: FieldValue.serverTimestamp(),
       };
       batch.set(stagingCol.doc(docId), docData, {merge: true});
       stagingDataMap[docId] = docData;
@@ -215,32 +215,32 @@ export async function runComputeLeaderboard() {
   const validationsSnap = await db
       .collectionGroup("validations")
       .where("status", "==", "validated")
-      .where("rewardsProcessed", "==", true)
-      .where("validatedAt", ">=", cutoff)
+      .where("rewards_processed", "==", true)
+      .where("validated_at", ">=", cutoff)
       .get();
 
   if (validationsSnap.empty) {
     if (batchCount > 0) await batch.commit();
     await swapStagingToScores(stagingDataMap);
     await db.doc("leaderboard_meta/dimensions").set(
-        {sdg: [], continent: [], updatedAt: FieldValue.serverTimestamp()},
+        {sdg: [], continent: [], updated_at: FieldValue.serverTimestamp()},
         {merge: true},
     );
     for (const notif of notifications) {
-      const member = alltimeMemberCache[notif.userId] || {};
-      const prefs = member?.notificationPreferences?.GAMIFICATION;
+      const member = alltimeMemberCache[notif.user_id] || {};
+      const prefs = member?.notification_preferences?.GAMIFICATION;
       const inAppEnabled = prefs?.inApp !== false;
       if (!inAppEnabled) continue;
-      await db.collection("notifications").add({
-        userId: notif.userId,
-        type: notif.type,
-        title: notif.title,
-        body: notif.body,
-        link: notif.link,
-        createdAt: FieldValue.serverTimestamp(),
-        readAt: null,
-        metadata: notif.metadata,
-      });
+      await db.collection("members").doc(notif.user_id)
+          .collection("notifications").add({
+            type: notif.type,
+            title: notif.title,
+            body: notif.body,
+            link: notif.link,
+            created_at: FieldValue.serverTimestamp(),
+            read_at: null,
+            metadata: notif.metadata,
+          });
     }
     console.log(
         "No validated validations in window. All Time written.",
@@ -271,7 +271,7 @@ export async function runComputeLeaderboard() {
 
   const orgIds = new Set();
   Object.values(activityCache).forEach((activity) => {
-    if (activity.organizationId) orgIds.add(activity.organizationId);
+    if (activity.organization_id) orgIds.add(activity.organization_id);
   });
 
   const orgCache = {};
@@ -288,7 +288,7 @@ export async function runComputeLeaderboard() {
   const userIds = new Set();
   validationsSnap.forEach((doc) => {
     const data = doc.data();
-    userIds.add(data.userId);
+    userIds.add(data.user_id);
   });
 
   const memberCache = {};
@@ -306,10 +306,10 @@ export async function runComputeLeaderboard() {
 
   validationsSnap.forEach((doc) => {
     const v = doc.data();
-    const userId = v.userId;
-    const rewardsResult = v.rewardsResult || {};
-    const xp = Number(rewardsResult.totalXP) || 0;
-    const validatedAt = v.validatedAt || null;
+    const userId = v.user_id;
+    const rewardsResult = v.rewards_result ?? {};
+    const xp = Number(rewardsResult.total_xp) || 0;
+    const validatedAt = v.validated_at || null;
     const activityId = doc.ref.parent.parent.id;
     const activity = activityCache[activityId];
 
@@ -318,15 +318,15 @@ export async function runComputeLeaderboard() {
 
     const addScore = (dimensionId) => {
       if (!scores[userId][dimensionId]) {
-        scores[userId][dimensionId] = {xp: 0, lastValidatedAt: null};
+        scores[userId][dimensionId] = {xp: 0, last_validated_at: null};
       }
       scores[userId][dimensionId].xp += xp;
-      const prev = scores[userId][dimensionId].lastValidatedAt;
+      const prev = scores[userId][dimensionId].last_validated_at;
       if (
         !prev ||
           (validatedAt && validatedAt.toMillis?.() > prev.toMillis?.())
       ) {
-        scores[userId][dimensionId].lastValidatedAt = validatedAt;
+        scores[userId][dimensionId].last_validated_at = validatedAt;
       }
     };
 
@@ -335,7 +335,7 @@ export async function runComputeLeaderboard() {
     const sdgNum = normalizeSdgId(activity.sdg);
     if (sdgNum) addScore(sdgDimensionId(sdgNum));
 
-    const org = orgCache[activity.organizationId];
+    const org = orgCache[activity.organization_id];
     if (org?.country) {
       const continent = getContinent(org.country);
       if (continent) addScore(continent.id);
@@ -364,48 +364,48 @@ export async function runComputeLeaderboard() {
 
     const entries = Object.entries(scores)
         .filter(([, dims]) => dims[dimensionId] !== undefined)
-        .map(([userId, dims]) => ({userId, ...dims[dimensionId]}))
+        .map(([uid, dims]) => ({user_id: uid, ...dims[dimensionId]}))
         .sort((a, b) => b.xp - a.xp);
 
     const meetsThreshold = entries.length >= THRESHOLD;
 
     let currentRank = 0;
     for (let i = 0; i < entries.length; i++) {
-      const {userId, xp, lastValidatedAt} = entries[i];
+      const {user_id: uid, xp, last_validated_at: lastValidatedAt} = entries[i];
       if (i === 0 || xp < entries[i - 1].xp) {
         currentRank = i + 1;
       }
       const rank = meetsThreshold ? currentRank : 0;
       const isCurrentChampion = meetsThreshold && rank === 1;
-      const docId = `${userId}_${dimensionId}`;
+      const docId = `${uid}_${dimensionId}`;
       const scoresCol = db.collection("leaderboard_scores");
       const existing = await scoresCol.doc(docId).get();
       const prev = existing.data();
 
-      const member = memberCache[userId] || {};
+      const member = memberCache[uid] || {};
 
       if (prev) {
-        if (prev.isCurrentChampion && !isCurrentChampion) {
-          const newChampion = memberCache[entries[0].userId];
+        if (prev.is_current_champion && !isCurrentChampion) {
+          const newChampion = memberCache[entries[0].user_id];
           notifications.push({
-            userId,
+            user_id: uid,
             type: "LEADERBOARD_CHAMPION_LOST",
             title: `Your ${meta.label} Champion status was taken!`,
             body:
-                  `${newChampion?.displayName || "Someone"} is now ` +
+                  `${newChampion?.display_name || "Someone"} is now ` +
                   `leading ${meta.label}. You're ${entries[0].xp - xp} ` +
                   "Activity Score behind — jump back in!",
             link: "/leaderboard",
             metadata: {
               dimension: dimensionId,
-              dimensionLabel: meta.label,
-              xpGap: entries[0].xp - xp,
-              newChampionName: newChampion?.displayName || null,
+              dimension_label: meta.label,
+              xp_gap: entries[0].xp - xp,
+              new_champion_name: newChampion?.display_name || null,
             },
           });
-        } else if (!prev.isCurrentChampion && isCurrentChampion) {
+        } else if (!prev.is_current_champion && isCurrentChampion) {
           notifications.push({
-            userId,
+            user_id: uid,
             type: "LEADERBOARD_CHAMPION_GAINED",
             title: `You're the ${meta.label} Champion! 🏆`,
             body:
@@ -414,36 +414,36 @@ export async function runComputeLeaderboard() {
             link: "/leaderboard",
             metadata: {
               dimension: dimensionId,
-              dimensionLabel: meta.label,
-              xpGap: null,
-              newChampionName: null,
+              dimension_label: meta.label,
+              xp_gap: null,
+              new_champion_name: null,
             },
           });
         }
       }
 
       const justGainedChampion =
-          isCurrentChampion && (!prev || !prev.isCurrentChampion);
+          isCurrentChampion && (!prev || !prev.is_current_champion);
 
       const docData = {
-        userId,
-        displayName: member.displayName || "",
-        profilePicture: member.profilePicture || null,
+        user_id: uid,
+        display_name: member.display_name || "",
+        profile_picture: member.profile_picture || null,
         country: member.country || null,
         dimension: dimensionId,
-        dimensionType: meta.type,
-        dimensionLabel: meta.label,
-        activityScore: xp,
-        currentRank: rank,
-        isCurrentChampion,
-        championSince: isCurrentChampion ?
-          prev?.championSince || FieldValue.serverTimestamp() :
+        dimension_type: meta.type,
+        dimension_label: meta.label,
+        activity_score: xp,
+        current_rank: rank,
+        is_current_champion: isCurrentChampion,
+        champion_since: isCurrentChampion ?
+          prev?.champion_since || FieldValue.serverTimestamp() :
           null,
-        totalChampionships: justGainedChampion ?
+        total_championships: justGainedChampion ?
           FieldValue.increment(1) :
-          prev?.totalChampionships || 0,
-        lastValidatedAt: lastValidatedAt || null,
-        updatedAt: FieldValue.serverTimestamp(),
+          prev?.total_championships || 0,
+        last_validated_at: lastValidatedAt || null,
+        updated_at: FieldValue.serverTimestamp(),
       };
       batch.set(stagingCol.doc(docId), docData, {merge: true});
       stagingDataMap[docId] = docData;
@@ -464,42 +464,50 @@ export async function runComputeLeaderboard() {
       {
         sdg: sdgIds,
         continent: continentIds,
-        updatedAt: FieldValue.serverTimestamp(),
+        updated_at: FieldValue.serverTimestamp(),
       },
       {merge: true},
   );
 
   for (const notif of notifications) {
     const member =
-      memberCache[notif.userId] || alltimeMemberCache[notif.userId];
-    const prefs = member?.notificationPreferences?.GAMIFICATION;
+      memberCache[notif.user_id] || alltimeMemberCache[notif.user_id];
+    const prefs = member?.notification_preferences?.GAMIFICATION;
 
     const inAppEnabled = prefs?.inApp !== false;
     if (!inAppEnabled) continue;
 
-    await db.collection("notifications").add({
-      userId: notif.userId,
-      type: notif.type,
-      title: notif.title,
-      body: notif.body,
-      link: notif.link,
-      createdAt: FieldValue.serverTimestamp(),
-      readAt: null,
-      metadata: notif.metadata,
-    });
+    await db.collection("members").doc(notif.user_id)
+        .collection("notifications").add({
+          type: notif.type,
+          title: notif.title,
+          body: notif.body,
+          link: notif.link,
+          created_at: FieldValue.serverTimestamp(),
+          read_at: null,
+          metadata: notif.metadata,
+        });
   }
 
   totalDimensions += allDimensions.size;
 
+  // Match early-return semantics: include all-time users plus
+  // validation-only users
+  const alltimeUserIds = new Set(Object.keys(alltimeMemberCache));
+  let reportedUsers = totalUsers;
+  for (const uid of Object.keys(scores)) {
+    if (!alltimeUserIds.has(uid)) reportedUsers++;
+  }
+
   console.log(
       `✅ Leaderboard computed. Dimensions: ${totalDimensions}. ` +
-      `Users: ${Object.keys(scores).length}. ` +
+      `Users: ${reportedUsers}. ` +
       `Notifications: ${notifications.length}.`,
   );
 
   return {
     dimensions: totalDimensions,
-    users: Object.keys(scores).length,
+    users: reportedUsers,
     notifications: notifications.length,
   };
 }

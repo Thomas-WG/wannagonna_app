@@ -19,8 +19,8 @@ export default function ProfileInformation({
   const { isDark } = useTheme();
   const handleInputFocus = useInputFocusScroll();
   
-  // Watch profilePicture for ProfilePicture component
-  const profilePicture = watch('profilePicture');
+  // Watch profile_picture for ProfilePicture component
+  const profilePicture = watch('profile_picture');
 
   // Custom styles for react-select with dark mode support
   const selectStyles = {
@@ -91,7 +91,7 @@ export default function ProfileInformation({
     <Card className="w-full h-fit bg-background-card dark:bg-background-card border-border-light dark:border-border-dark">
       <div className="p-4 md:p-6">
         <ProfilePicture 
-          profileData={{ profilePicture }} 
+          profileData={{ profile_picture: profilePicture }} 
           handleProfilePictureChange={handleProfilePictureChange} 
         />
         <h5 className="text-2xl font-bold tracking-tight text-text-primary dark:text-text-primary mb-4">
@@ -129,7 +129,7 @@ export default function ProfileInformation({
               </Label>
             </div>
             <Controller
-              name="displayName"
+              name="display_name"
               control={control}
               render={({ field }) => (
                 <TextInput 
@@ -141,7 +141,7 @@ export default function ProfileInformation({
                 />
               )}
             />
-            <FormError message={errors.displayName?.message} />
+            <FormError message={errors.display_name?.message} />
           </div>
           
           <div>

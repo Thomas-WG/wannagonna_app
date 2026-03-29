@@ -45,31 +45,32 @@ export default function ParticipantListModal({ isOpen, onClose, activity, activi
 
       const participantsData = await Promise.all(
         validations.map(async (validation) => {
-          const part = participationByUser[validation.userId];
+          const userId = validation.user_id;
+          const part = participationByUser[userId];
           const reported = part?.hours?.reported != null ? Number(part.hours.reported) : null;
           const validated = part?.hours?.validated != null ? Number(part.hours.validated) : null;
           const base = {
-            userId: validation.userId,
-            displayName: 'Unknown User',
-            profilePicture: null,
+            user_id: userId,
+            display_name: 'Unknown User',
+            profile_picture: null,
             email: null,
-            status: validation.status || 'validated',
-            validatedAt: validation.validatedAt,
-            rejectedAt: validation.rejectedAt,
+            status: validation.status ?? null,
+            validated_at: validation.validated_at,
+            rejected_at: validation.rejected_at,
             reportedHours: reported,
             validatedHours: validated,
           };
           try {
-            const userRef = doc(db, 'members', validation.userId);
+            const userRef = doc(db, 'members', userId);
             const userDoc = await getDoc(userRef);
             if (userDoc.exists()) {
               const userData = userDoc.data();
-              base.displayName = userData.displayName || userData.name || 'Unknown User';
-              base.profilePicture = userData.profilePicture || userData.photoURL || null;
+              base.display_name = userData.display_name || userData.name || 'Unknown User';
+              base.profile_picture = userData.profile_picture || userData.photoURL || null;
               base.email = userData.email || null;
             }
           } catch (error) {
-            console.error(`Error fetching user ${validation.userId}:`, error);
+            console.error(`Error fetching user ${userId}:`, error);
           }
           return base;
         })
@@ -281,25 +282,26 @@ export default function ParticipantListModal({ isOpen, onClose, activity, activi
             <div className="space-y-3 sm:space-y-4">
               {/* Global impact summary (for activities with impact parameters, exclude Events) */}
               {fullActivity?.type !== 'event' &&
-                (fullActivity?.impactParameters?.length > 0 ||
-                  (fullActivity?.impactResults && Object.keys(fullActivity.impactResults.parameters || {}).length > 0)) && (
+                (fullActivity?.impact_parameters?.length > 0 ||
+                  (fullActivity?.impact_results && Object.keys(fullActivity.impact_results.parameters || {}).length > 0)) && (
                 <div className="mb-4 p-4 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
                   <p className="text-sm font-medium text-green-800 dark:text-green-200 mb-2">
                     {t('impactResults') || 'Impact results'}
                   </p>
                   <div className="flex flex-wrap gap-4">
                     <span className="text-sm text-green-700 dark:text-green-300">
-                      {t('totalHours') || 'Total hours'}: {(fullActivity?.impactResults?.totalHours ?? 0).toFixed(1)}
+                      {t('totalHours') || 'Total hours'}: {(fullActivity?.impact_results?.total_hours ?? 0).toFixed(1)}
                     </span>
                     {(() => {
-                      const params = fullActivity?.impactParameters || [];
-                      const results = fullActivity?.impactResults?.parameters || {};
+                      const params = fullActivity?.impact_parameters || [];
+                      const results = fullActivity?.impact_results?.parameters || {};
                       const allParamIds = new Set([
-                        ...params.map((p) => p?.parameterId).filter(Boolean),
+                        ...params.map((p) => p?.parameter_id).filter(Boolean),
                         ...Object.keys(results),
                       ]);
                       const paramById = params.reduce((acc, p) => {
-                        if (p?.parameterId) acc[p.parameterId] = p;
+                        const pid = p?.parameter_id;
+                        if (pid) acc[pid] = p;
                         return acc;
                       }, {});
                       return [...allParamIds].map((paramId) => {
@@ -328,13 +330,13 @@ export default function ParticipantListModal({ isOpen, onClose, activity, activi
               )}
 
               {participants.map((participant) => {
-                const isProcessing = processing[participant.userId] || false;
+                const isProcessing = processing[participant.user_id] || false;
                 const isPending = participant.status === 'pending';
                 const showButtons = isPending;
                 
                 return (
                 <div
-                  key={participant.userId}
+                  key={participant.user_id}
                     className="border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                   >
                     <div className="flex flex-col sm:flex-row sm:items-center gap-3">
@@ -344,15 +346,15 @@ export default function ParticipantListModal({ isOpen, onClose, activity, activi
                       >
                         <div 
                           className="flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
-                          onClick={() => handleParticipantClick(participant.userId)}
+                          onClick={() => handleParticipantClick(participant.user_id)}
                           title={t('viewProfile') || 'View profile'}
                         >
                           <ProfilePicture
-                            src={participant.profilePicture}
-                            alt={participant.displayName}
+                            src={participant.profile_picture}
+                            alt={participant.display_name}
                             size={48}
                             showInitials={true}
-                            name={participant.displayName}
+                            name={participant.display_name}
                             loading="lazy"
                             className="w-10 h-10 sm:w-12 sm:h-12"
                           />
@@ -361,20 +363,20 @@ export default function ParticipantListModal({ isOpen, onClose, activity, activi
                         {/* Name, Status, and Date */}
                         <div 
                           className="flex-1 min-w-0 cursor-pointer"
-                          onClick={() => handleParticipantClick(participant.userId)}
+                          onClick={() => handleParticipantClick(participant.user_id)}
                         >
                           <p className="text-sm sm:text-base font-medium text-gray-900 dark:text-white truncate hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                      {participant.displayName}
-                    </p>
+                            {participant.display_name}
+                          </p>
                           <div className="flex items-center gap-2 mt-1">
                             {getStatusBadge(participant.status)}
                           </div>
-                          {(participant.validatedAt || participant.rejectedAt) && (
+                          {(participant.validated_at || participant.rejected_at) && (
                             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                              {participant.validatedAt 
-                                ? `${t('validatedAt') || 'Validated at'}: ${formatDate(participant.validatedAt)}`
-                                : participant.rejectedAt 
-                                  ? `${t('rejectedAt') || 'Rejected at'}: ${formatDate(participant.rejectedAt)}`
+                              {participant.validated_at
+                                ? `${t('validatedAt') || 'Validated at'}: ${formatDate(participant.validated_at)}`
+                                : participant.rejected_at
+                                  ? `${t('rejectedAt') || 'Rejected at'}: ${formatDate(participant.rejected_at)}`
                                   : ''}
                             </p>
                           )}
@@ -398,7 +400,7 @@ export default function ParticipantListModal({ isOpen, onClose, activity, activi
                             color="success"
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleValidate(participant.userId);
+                              handleValidate(participant.user_id);
                             }}
                             disabled={isProcessing}
                             className="flex-1 sm:flex-initial min-h-[44px] sm:min-h-0 flex items-center justify-center whitespace-nowrap"
@@ -417,7 +419,7 @@ export default function ParticipantListModal({ isOpen, onClose, activity, activi
                             color="failure"
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleReject(participant.userId);
+                              handleReject(participant.user_id);
                             }}
                             disabled={isProcessing}
                             className="flex-1 sm:flex-initial min-h-[44px] sm:min-h-0 flex items-center justify-center whitespace-nowrap"

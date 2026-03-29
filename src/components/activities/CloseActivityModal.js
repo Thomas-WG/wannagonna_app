@@ -76,7 +76,7 @@ export default function CloseActivityModal({ isOpen, onClose, activity, onSucces
 
   const isEvent = fullActivity?.type === 'event';
   const isLocalOrEvent = fullActivity?.type === 'local' || fullActivity?.type === 'event';
-  const impactParameters = fullActivity?.impactParameters || [];
+  const impactParameters = fullActivity?.impact_parameters || [];
   const durationHours = getActivityDurationHours(fullActivity);
   const hasAutoCalc = isLocalOrEvent && durationHours != null && durationHours > 0;
 
@@ -99,16 +99,16 @@ export default function CloseActivityModal({ isOpen, onClose, activity, onSucces
 
       const list = await Promise.all(
         validated.map(async (v) => {
-          const part = partByUser[v.userId] || {};
-          let displayName = 'Participant';
+          const part = partByUser[v.user_id] || {};
+          let display_name = 'Participant';
           try {
-            const userDoc = await getDoc(doc(db, 'members', v.userId));
+            const userDoc = await getDoc(doc(db, 'members', v.user_id));
             if (userDoc.exists()) {
               const d = userDoc.data();
-              displayName = d.displayName || d.name || d.email || displayName;
+              display_name = d.display_name || d.name || d.email || display_name;
             }
           } catch (_) {}
-          return { userId: v.userId, displayName, ...part };
+          return { user_id: v.user_id, display_name, ...part };
         })
       );
 
@@ -123,11 +123,11 @@ export default function CloseActivityModal({ isOpen, onClose, activity, onSucces
       list.forEach((p) => {
         const existing = Number(p.hours?.validated) || Number(p.hours?.reported) || 0;
         if (existing > 0) {
-          initialHours[p.userId] = String(existing);
+          initialHours[p.user_id] = String(existing);
         } else if (canAutoFill) {
-          initialHours[p.userId] = String(Number(dur.toFixed(1)));
+          initialHours[p.user_id] = String(Number(dur.toFixed(1)));
         } else {
-          initialHours[p.userId] = '';
+          initialHours[p.user_id] = '';
         }
       });
       setHoursPerParticipant(initialHours);
@@ -150,7 +150,9 @@ export default function CloseActivityModal({ isOpen, onClose, activity, onSucces
     if (!impactParameters.length || Object.keys(parameterValues).length > 0) return;
     const initial = {};
     impactParameters.forEach((p) => {
-      initial[p.parameterId] = p.targetValue != null ? String(p.targetValue) : '';
+      const paramId = p.parameter_id;
+      const targetVal = p.target_value;
+      if (paramId) initial[paramId] = targetVal != null ? String(targetVal) : '';
     });
     setParameterValues((prev) => ({ ...initial, ...prev }));
   }, [impactParameters]);
@@ -177,18 +179,19 @@ export default function CloseActivityModal({ isOpen, onClose, activity, onSucces
       if (!isEvent) {
         const participantHours = {};
         for (const p of validatedParticipations) {
-          const raw = hoursPerParticipant[p.userId];
+          const raw = hoursPerParticipant[p.user_id];
           const num = raw === '' || raw == null ? 0 : Number(raw);
-          participantHours[p.userId] = Number.isFinite(num) && num >= 0 ? num : 0;
+          participantHours[p.user_id] = Number.isFinite(num) && num >= 0 ? num : 0;
         }
 
         totalHoursToReport = Object.values(participantHours).reduce((s, h) => s + h, 0);
 
         if (isLocalOrEvent) {
           impactParameters.forEach((p) => {
-            const v = parameterValues[p.parameterId];
+            const paramId = p.parameter_id;
+            const v = paramId ? parameterValues[paramId] : undefined;
             const num = v === '' || v == null ? 0 : Number(v);
-            parameters[p.parameterId] = Number.isFinite(num) ? num : 0;
+            if (paramId) parameters[paramId] = Number.isFinite(num) ? num : 0;
           });
         }
 
@@ -199,7 +202,7 @@ export default function CloseActivityModal({ isOpen, onClose, activity, onSucces
 
       await closeActivityWithResults(
         fullActivity?.id || activity.id,
-        { totalHours: totalHoursToReport, parameters },
+        { total_hours: totalHoursToReport, parameters },
         user.uid
       );
       onSuccess?.(fullActivity?.id || activity.id);
@@ -216,7 +219,7 @@ export default function CloseActivityModal({ isOpen, onClose, activity, onSucces
     if (!durationHours) return;
     const next = {};
     validatedParticipations.forEach((p) => {
-      next[p.userId] = String(Number(durationHours.toFixed(1)));
+      next[p.user_id] = String(Number(durationHours.toFixed(1)));
     });
     setHoursPerParticipant(next);
   };
@@ -285,11 +288,11 @@ export default function CloseActivityModal({ isOpen, onClose, activity, onSucces
                     <div className="space-y-2 max-h-40 overflow-y-auto">
                       {validatedParticipations.map((p) => (
                         <div
-                          key={p.userId}
+                          key={p.user_id}
                           className="flex items-center gap-2 flex-wrap"
                         >
                           <span className="text-sm text-text-secondary dark:text-text-secondary truncate flex-1 min-w-0">
-                            {p.displayName || p.userId}
+                            {p.display_name || p.user_id}
                           </span>
                           <TextInput
                             type="number"
@@ -297,11 +300,11 @@ export default function CloseActivityModal({ isOpen, onClose, activity, onSucces
                             max={24}
                             step={0.5}
                             placeholder="0"
-                            value={hoursPerParticipant[p.userId] ?? ''}
+                            value={hoursPerParticipant[p.user_id] ?? ''}
                             onChange={(e) =>
                               setHoursPerParticipant((prev) => ({
                                 ...prev,
-                                [p.userId]: e.target.value,
+                                [p.user_id]: e.target.value,
                               }))
                             }
                             className="w-20 min-w-[72px]"
@@ -325,30 +328,33 @@ export default function CloseActivityModal({ isOpen, onClose, activity, onSucces
                       <Label className="text-sm text-text-primary dark:text-text-primary">
                         {t('impactResults') || 'Impact results'}
                       </Label>
-                      {impactParameters.map((p) => (
-                        <div key={p.parameterId} className="flex flex-col sm:flex-row sm:items-center gap-2">
-                          <Label
-                            htmlFor={`close-${p.parameterId}`}
-                            className="sm:w-36 text-sm text-text-secondary dark:text-text-secondary"
-                          >
-                            {p.label} ({p.unit})
-                          </Label>
-                          <TextInput
-                            id={`close-${p.parameterId}`}
-                            type="number"
-                            min={0}
-                            step="any"
-                            value={parameterValues[p.parameterId] ?? ''}
-                            onChange={(e) =>
-                              setParameterValues((prev) => ({
-                                ...prev,
-                                [p.parameterId]: e.target.value,
-                              }))
-                            }
-                            className="flex-1 min-w-0"
-                          />
-                        </div>
-                      ))}
+                      {impactParameters.map((p) => {
+                        const paramId = p.parameter_id;
+                        return (
+                          <div key={paramId} className="flex flex-col sm:flex-row sm:items-center gap-2">
+                            <Label
+                              htmlFor={`close-${paramId}`}
+                              className="sm:w-36 text-sm text-text-secondary dark:text-text-secondary"
+                            >
+                              {p.label} ({p.unit})
+                            </Label>
+                            <TextInput
+                              id={`close-${paramId}`}
+                              type="number"
+                              min={0}
+                              step="any"
+                              value={parameterValues[paramId] ?? ''}
+                              onChange={(e) =>
+                                setParameterValues((prev) => ({
+                                  ...prev,
+                                  [paramId]: e.target.value,
+                                }))
+                              }
+                              className="flex-1 min-w-0"
+                            />
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                 </>

@@ -7,10 +7,19 @@ import {updateApplicantsCountOnAdd} from
   "./src/activity-mgt/onAddApplication.js";
 import {updateApplicantsCountOnRemove} from
   "./src/activity-mgt/onRemoveApplication.js";
+import {syncActivityAggregateCounts} from
+  "./src/activity-mgt/syncActivityAggregateCounts.js";
+import {
+  upsertApplicationMirrors,
+  deleteApplicationMirrors,
+  maybeDecrementOrgPendingApplications,
+} from "./src/activity-mgt/syncApplicationMirrors.js";
 import {updateActivityCountOnAdd} from
   "./src/activity-mgt/onAddActivity.js";
 import {updateActivityCountOnRemove} from
   "./src/activity-mgt/onRemoveActivity.js";
+import {cleanupActivitySubcollectionsAfterDelete} from
+  "./src/activity-mgt/cleanupActivityOnDelete.js";
 import {onCall} from "firebase-functions/v2/https";
 import {setUserCustomClaims} from "./src/user-mgt/setCustomClaims.js";
 import {
@@ -23,17 +32,18 @@ import {sendMailgunEmail} from "./src/notifications/emailService.js";
 import {generateApplicationApprovalEmail} from
   "./src/notifications/emailTemplates.js";
 import {db, auth} from "./src/init.js";
-import {FieldValue, Timestamp} from "firebase-admin/firestore";
-import {
-  onValidationCreated,
-  onValidationUpdated,
-} from "./src/rewards/onValidationCreated.js";
+import {FieldValue} from "firebase-admin/firestore";
 import {onActivityClosed} from "./src/impact/onActivityClosed.js";
 import {exportImpactReport} from "./src/impact/exportImpactReport.js";
 import {
   computeLeaderboard,
   runComputeLeaderboard,
 } from "./src/leaderboard/computeLeaderboard.js";
+import {grantBadgeToMemberAdmin} from "./src/rewards/memberBadgeHelpers.js";
+import {runProcessReferralRewardOnSignup} from
+  "./src/rewards/processReferralRewardOnSignup.js";
+import {runAdminRemoveBadgeFromUser} from
+  "./src/rewards/adminRemoveBadgeFromUser.js";
 
 export const onActivityCreatedUpdateActivityCount = onDocumentCreated(
     "activities/{activityId}",
@@ -45,13 +55,27 @@ export const onActivityCreatedUpdateActivityCount = onDocumentCreated(
 );
 
 export const onActivityDeletedUpdateActivityCount = onDocumentDeleted(
-    "activities/{activityId}",
+    {
+      document: "activities/{activityId}",
+      timeoutSeconds: 540,
+      memory: "512MiB",
+    },
     async (event) => {
       const activityId = event.params.activityId;
       const activityData = event.data?.data();
       console.log("Activity ID:", activityId);
       console.log("Activity data:", activityData);
       await updateActivityCountOnRemove(activityId, activityData);
+      try {
+        await cleanupActivitySubcollectionsAfterDelete(activityId);
+      } catch (cleanupErr) {
+        console.error(
+            "[onActivityDeletedUpdateActivityCount] " +
+            "cleanupActivitySubcollectionsAfterDelete failed:",
+            cleanupErr,
+        );
+        throw cleanupErr;
+      }
     },
 );
 
@@ -59,10 +83,35 @@ export const onApplicationCreatedUpdateApplicantsCount = onDocumentCreated(
     "activities/{activityId}/applications/{applicationId}",
     async (event) => {
       const activityId = event.params.activityId;
+      const applicationId = event.params.applicationId;
       console.log("Activity ID:", activityId);
 
-      // Call the imported function to update applicants count
       await updateApplicantsCountOnAdd(activityId);
+      try {
+        await syncActivityAggregateCounts(activityId);
+      } catch (syncErr) {
+        console.error(
+            "[onApplicationCreatedUpdateApplicantsCount] " +
+            "syncActivityAggregateCounts failed:",
+            syncErr,
+        );
+      }
+      const createdData = event.data?.data();
+      if (createdData) {
+        try {
+          await upsertApplicationMirrors(
+              activityId,
+              applicationId,
+              createdData,
+          );
+        } catch (mirrorErr) {
+          console.error(
+              "[onApplicationCreatedUpdateApplicantsCount] " +
+              "upsertApplicationMirrors failed:",
+              mirrorErr,
+          );
+        }
+      }
     },
 );
 
@@ -70,11 +119,74 @@ export const onApplicationDeletedUpdateApplicantsCount = onDocumentDeleted(
     "activities/{activityId}/applications/{applicationId}",
     async (event) => {
       const activityId = event.params.activityId;
+      const applicationId = event.params.applicationId;
       const applicationData = event.data?.data();
       console.log("Activity ID:", activityId);
 
-      // Call the imported function to update applicants count
       await updateApplicantsCountOnRemove(activityId, applicationData);
+      try {
+        await syncActivityAggregateCounts(activityId);
+      } catch (syncErr) {
+        console.error(
+            "[onApplicationDeletedUpdateApplicantsCount] " +
+            "syncActivityAggregateCounts failed:",
+            syncErr,
+        );
+      }
+      try {
+        await deleteApplicationMirrors(applicationId, applicationData);
+      } catch (mirrorErr) {
+        console.error(
+            "[onApplicationDeletedUpdateApplicantsCount] " +
+            "deleteApplicationMirrors failed:",
+            mirrorErr,
+        );
+      }
+    },
+);
+
+export const onParticipationCreatedSyncAggregates = onDocumentCreated(
+    "activities/{activityId}/participations/{userId}",
+    async (event) => {
+      try {
+        await syncActivityAggregateCounts(event.params.activityId);
+      } catch (syncErr) {
+        console.error(
+            "[onParticipationCreatedSyncAggregates] " +
+            "syncActivityAggregateCounts failed:",
+            syncErr,
+        );
+      }
+    },
+);
+
+export const onParticipationUpdatedSyncAggregates = onDocumentUpdated(
+    "activities/{activityId}/participations/{userId}",
+    async (event) => {
+      try {
+        await syncActivityAggregateCounts(event.params.activityId);
+      } catch (syncErr) {
+        console.error(
+            "[onParticipationUpdatedSyncAggregates] " +
+            "syncActivityAggregateCounts failed:",
+            syncErr,
+        );
+      }
+    },
+);
+
+export const onParticipationDeletedSyncAggregates = onDocumentDeleted(
+    "activities/{activityId}/participations/{userId}",
+    async (event) => {
+      try {
+        await syncActivityAggregateCounts(event.params.activityId);
+      } catch (syncErr) {
+        console.error(
+            "[onParticipationDeletedSyncAggregates] " +
+            "syncActivityAggregateCounts failed:",
+            syncErr,
+        );
+      }
     },
 );
 
@@ -88,23 +200,7 @@ export const onApplicationStatusChangedNotifyUser = onDocumentUpdated(
       const before = event.data?.before?.data();
       const after = event.data?.after?.data();
 
-      if (!before || !after) {
-        return;
-      }
-
-      const beforeStatus = before.status;
-      const afterStatus = after.status;
-
-      // Only act when status actually changes
-      if (beforeStatus === afterStatus) {
-        return;
-      }
-
-      const userId = after.userId;
-      if (!userId) {
-        console.error(
-            "onApplicationStatusChangedNotifyUser: missing userId",
-        );
+      if (!after) {
         return;
       }
 
@@ -112,41 +208,67 @@ export const onApplicationStatusChangedNotifyUser = onDocumentUpdated(
       const applicationId = event.params.applicationId;
 
       try {
+        await upsertApplicationMirrors(
+            activityId,
+            applicationId,
+            after,
+        );
+      } catch (mirrorErr) {
+        console.error(
+            "[onApplicationStatusChangedNotifyUser] " +
+            "upsertApplicationMirrors failed:",
+            mirrorErr,
+        );
+      }
+
+      if (before) {
+        try {
+          await maybeDecrementOrgPendingApplications(before, after);
+        } catch (decErr) {
+          console.error(
+              "[onApplicationStatusChangedNotifyUser] " +
+              "maybeDecrementOrgPendingApplications failed:",
+              decErr,
+          );
+        }
+      }
+
+      try {
+        await syncActivityAggregateCounts(activityId);
+      } catch (syncErr) {
+        console.error(
+            "[onApplicationStatusChangedNotifyUser] " +
+            "syncActivityAggregateCounts failed:",
+            syncErr,
+        );
+      }
+
+      if (!before) {
+        return;
+      }
+
+      const beforeStatus = before.status;
+      const afterStatus = after.status;
+
+      if (beforeStatus === afterStatus) {
+        return;
+      }
+
+      const userId = after.user_id;
+      if (!userId) {
+        console.error(
+            "onApplicationStatusChangedNotifyUser: missing userId",
+        );
+        return;
+      }
+
+      try {
         // Handle cancelled status separately - notify NPO members
-        if (afterStatus === "cancelled" && after.organizationId) {
-          const organizationId = after.organizationId;
-
-          // Decrement applicants count if previous status was NOT cancelled
-          if (beforeStatus !== "cancelled") {
-            try {
-              await db.runTransaction(async (transaction) => {
-                const activityRef = db.collection("activities").doc(activityId);
-                const activitySnap = await transaction.get(activityRef);
-
-                if (activitySnap.exists) {
-                  const activity = activitySnap.data();
-                  const newApplicantCount =
-                    Math.max((activity.applicants || 0) - 1, 0);
-                  transaction.update(activityRef, {
-                    applicants: newApplicantCount,
-                  });
-                  console.log(
-                      "Decremented applicants count to:",
-                      newApplicantCount,
-                  );
-                }
-              });
-            } catch (countError) {
-              console.error(
-                  "Failed to decrement applicants count:",
-                  countError,
-              );
-              // Don't fail the entire function if count update fails
-            }
-          }
+        if (afterStatus === "cancelled" && after.organization_id) {
+          const organizationId = after.organization_id;
 
           const membersSnap = await db.collection("members")
-              .where("npoId", "==", organizationId)
+              .where("npo_id", "==", organizationId)
               .get();
 
           console.log(
@@ -170,11 +292,11 @@ export const onApplicationStatusChangedNotifyUser = onDocumentUpdated(
                     "Review updates in your applications list.",
                   link: "/mynonprofit/activities/applications",
                   metadata: {
-                    activityId,
-                    applicationId,
-                    organizationId,
+                    activity_id: activityId,
+                    application_id: applicationId,
+                    organization_id: organizationId,
                     status: "cancelled",
-                    cancelledByUserId: userId,
+                    cancelled_by_user_id: userId,
                   },
                 });
                 console.log(
@@ -240,8 +362,8 @@ export const onApplicationStatusChangedNotifyUser = onDocumentUpdated(
             body,
             link: "/dashboard",
             metadata: {
-              activityId,
-              applicationId,
+              activity_id: activityId,
+              application_id: applicationId,
               status: afterStatus,
             },
           });
@@ -272,16 +394,17 @@ export const onApplicationStatusChangedNotifyUser = onDocumentUpdated(
         }
 
         // Send Mailgun emails for approved online activities
+        const lastStatusUpdatedBy = after.last_status_updated_by;
         console.log("Checking email conditions:", {
           afterStatus,
-          hasLastStatusUpdatedBy: !!after.lastStatusUpdatedBy,
-          lastStatusUpdatedBy: after.lastStatusUpdatedBy,
+          hasLastStatusUpdatedBy: !!lastStatusUpdatedBy,
+          lastStatusUpdatedBy,
           activityId,
           applicationId,
-          updatedAt: after.updatedAt,
+          updated_at: after.updated_at,
         });
 
-        if (afterStatus === "accepted" && after.lastStatusUpdatedBy) {
+        if (afterStatus === "accepted" && lastStatusUpdatedBy) {
           console.log("Email conditions met, fetching activity...");
           try {
             // Fetch activity to check if it's online
@@ -324,7 +447,7 @@ export const onApplicationStatusChangedNotifyUser = onDocumentUpdated(
                 let validatorName = null;
                 try {
                   const validatorUser = await auth.getUser(
-                      after.lastStatusUpdatedBy,
+                      lastStatusUpdatedBy,
                   );
                   validatorEmail = validatorUser.email;
                   validatorName = validatorUser.displayName ||
@@ -341,10 +464,10 @@ export const onApplicationStatusChangedNotifyUser = onDocumentUpdated(
                 // Build recipient list: users who have ACTIVITY.email enabled
                 const participantPrefs = (await db.collection("members")
                     .doc(userId).get())
-                    .data()?.notificationPreferences?.ACTIVITY;
+                    .data()?.notification_preferences?.ACTIVITY;
                 const validatorPrefs = (await db.collection("members")
-                    .doc(after.lastStatusUpdatedBy).get())
-                    .data()?.notificationPreferences?.ACTIVITY;
+                    .doc(lastStatusUpdatedBy).get())
+                    .data()?.notification_preferences?.ACTIVITY;
                 const recipientList = [];
                 if (participantEmail && participantPrefs?.email === true) {
                   recipientList.push(participantEmail);
@@ -366,7 +489,8 @@ export const onApplicationStatusChangedNotifyUser = onDocumentUpdated(
                     participantEmail,
                     validatorName,
                     validatorEmail,
-                    npoResponse: after.npoResponse || null,
+                    npoResponse:
+                      after.npo_response ?? null,
                     locale: "en", // TODO: Get from user preferences for i18n
                   });
 
@@ -416,8 +540,8 @@ export const onApplicationStatusChangedNotifyUser = onDocumentUpdated(
         } else {
           console.log("Email conditions not met:", {
             isAccepted: afterStatus === "accepted",
-            hasLastStatusUpdatedBy: !!after.lastStatusUpdatedBy,
-            lastStatusUpdatedBy: after.lastStatusUpdatedBy,
+            hasLastStatusUpdatedBy: !!lastStatusUpdatedBy,
+            lastStatusUpdatedBy,
           });
         }
       } catch (error) {
@@ -559,11 +683,11 @@ export const sendContactEmail = onCall(
       });
 
       try {
-        await db.collection("contactSubmissions").add({
+        await db.collection("contact_submissions").add({
           name: n,
           email: e,
           message: m,
-          createdAt: FieldValue.serverTimestamp(),
+          created_at: FieldValue.serverTimestamp(),
         });
       } catch (firestoreErr) {
         console.warn(
@@ -619,9 +743,9 @@ export const notifyReferralReward = onCall(
         body,
         link: "/xp-history",
         metadata: {
-          referralCode,
+          referral_code: referralCode,
           mode,
-          badgeXP: Number(badgeXP) || 0,
+          badge_xp: Number(badgeXP) || 0,
         },
       });
 
@@ -657,8 +781,8 @@ export const notifyBadgeEarned = onCall(
         body,
         link: "/badges",
         metadata: {
-          badgeId: badgeId || null,
-          badgeXP: Number(badgeXP) || 0,
+          badge_id: badgeId || null,
+          badge_xp: Number(badgeXP) || 0,
         },
       });
 
@@ -841,144 +965,97 @@ export const grantBadgeToUser = onCall(
       }
 
       try {
-        // Find badge by searching through all categories
-        const categoriesSnapshot = await db.collection("badges").get();
-        let badgeData = null;
-        let badgeCategoryId = null;
-
-        for (const categoryDoc of categoriesSnapshot.docs) {
-          const badgeDoc = await db.collection("badges")
-              .doc(categoryDoc.id)
-              .collection("badges")
-              .doc(badgeId)
-              .get();
-
-          if (badgeDoc.exists) {
-            badgeData = badgeDoc.data();
-            badgeCategoryId = categoryDoc.id;
-            break;
-          }
+        const result = await grantBadgeToMemberAdmin(db, userId, badgeId, {
+          sendRewardNotification: true,
+        });
+        if (!result.ok) {
+          return {success: false, error: result.error};
         }
-
-        if (!badgeData) {
-          console.error(`[grantBadgeToUser] Badge ${badgeId} not found`);
-          return {success: false, error: "Badge not found"};
-        }
-
-        const badgeXP = badgeData.xp || 0;
-        console.log(
-            `[grantBadgeToUser] Granting badge ${badgeId} to user ${userId} ` +
-            `with ${badgeXP} XP`,
-        );
-
-        // Check if user exists
-        const memberDoc = await db.collection("members").doc(userId).get();
-        if (!memberDoc.exists) {
-          console.error(`[grantBadgeToUser] User ${userId} not found`);
-          return {success: false, error: "User not found"};
-        }
-
-        // Check if user already has this badge
-        const memberData = memberDoc.data();
-        const existingBadges = memberData.badges || [];
-        const badgeExists = existingBadges.some((b) => b.id === badgeId);
-
-        if (badgeExists) {
-          console.log(
-              `[grantBadgeToUser] User ${userId} already has badge ${badgeId}`,
-          );
-          return {success: false, error: "User already has this badge"};
-        }
-
-        // Grant badge using Admin SDK (bypasses Firestore rules)
-        const updateData = {
-          badges: FieldValue.arrayUnion({
-            id: badgeId,
-            earnedDate: Timestamp.now(),
-          }),
-        };
-
-        if (badgeXP > 0) {
-          updateData.xp = FieldValue.increment(badgeXP);
-        }
-
-        await db.collection("members").doc(userId).update(updateData);
-        console.log(
-            `[grantBadgeToUser] Badge ${badgeId} granted to user ${userId}`,
-        );
-
-        // Log XP history (always log badge earning, even if XP is 0)
-        const historyTitle = `Badge Earned: ${badgeData.title}`;
-        await db.collection("members").doc(userId)
-            .collection("xpHistory")
-            .add({
-              title: historyTitle,
-              points: badgeXP,
-              type: "badge",
-              badgeId: badgeId,
-              timestamp: Timestamp.now(),
-            });
-
-        // Send notification (wrapped in try-catch so badge grant succeeds
-        // even if notification fails)
-        try {
-          console.log(
-              `[grantBadgeToUser] Attempting to send notification for ` +
-              `badge ${badgeId} to user ${userId}`,
-          );
-          await sendUserNotification({
-            userId,
-            type: "REWARD",
-            title: "Badge earned",
-            body: `You earned the "${badgeData.title}" badge` +
-              `${badgeXP > 0 ? ` and ${badgeXP} XP` : ""}!`,
-            link: "/badges",
-            metadata: {
-              badgeId,
-              badgeXP,
-            },
-          });
-          console.log(
-              `[grantBadgeToUser] Notification sent successfully for ` +
-              `badge ${badgeId} to user ${userId}`,
-          );
-        } catch (notifError) {
-          // Log error but don't fail badge grant
-          console.error(
-              `[grantBadgeToUser] Failed to send notification for ` +
-              `badge ${badgeId} to user ${userId}:`,
-              notifError,
-          );
-          console.error(
-              `[grantBadgeToUser] Notification error details:`,
-              {
-                message: notifError.message,
-                stack: notifError.stack,
-                code: notifError.code,
-                userId,
-                badgeId,
-              },
-          );
-        }
-
-        return {
-          success: true,
-          badge: {
-            id: badgeId,
-            title: badgeData.title,
-            description: badgeData.description || "",
-            xp: badgeXP,
-            categoryId: badgeCategoryId,
-          },
-        };
+        return {success: true, badge: result.badge};
       } catch (error) {
         console.error("[grantBadgeToUser] Error granting badge:", error);
         return {success: false, error: error.message};
       }
     });
 
-// Export validation reward triggers
-export {onValidationCreated, onValidationUpdated};
+/**
+ * Process referral reward from the new member doc (referred_by + idempotency).
+ * Caller must be the new member (auth uid).
+ */
+export const processReferralRewardOnSignup = onCall(
+    {invoker: "public"},
+    async (request) => {
+      if (!request.auth) {
+        throw new Error("Unauthorized");
+      }
+      const referralCode = request.data?.referral_code;
+      return runProcessReferralRewardOnSignup(
+          request.auth.uid,
+          referralCode,
+      );
+    });
+
+/**
+ * Admin only: remove a badge from a member (and subtract badge XP).
+ */
+export const adminRemoveBadgeFromUser = onCall(
+    {invoker: "public"},
+    async (request) => {
+      if (!request.auth) {
+        throw new Error("Unauthorized");
+      }
+      const userRole = request.auth.token?.role;
+      if (userRole !== "admin") {
+        throw new Error(
+            "Forbidden: Only admins can remove badges from members",
+        );
+      }
+      const {userId, badgeId} = request.data || {};
+      if (!userId || !badgeId) {
+        throw new Error("userId and badgeId are required");
+      }
+      try {
+        return await runAdminRemoveBadgeFromUser(userId, badgeId);
+      } catch (error) {
+        console.error("[adminRemoveBadgeFromUser] Error:", error);
+        return {success: false, error: error.message};
+      }
+    });
+
+/**
+ * Admin only: recompute activity aggregate counters (optional activity_id).
+ */
+export const adminBackfillActivityAggregateCounts = onCall(
+    {invoker: "public"},
+    async (request) => {
+      if (!request.auth) {
+        throw new Error("Unauthorized");
+      }
+      if (request.auth.token?.role !== "admin") {
+        throw new Error(
+            "Forbidden: Only admins can backfill activity aggregate counts",
+        );
+      }
+      const activityId = request.data?.activity_id;
+      if (activityId) {
+        await syncActivityAggregateCounts(activityId);
+        return {success: true, updated: 1};
+      }
+      const snap = await db.collection("activities").get();
+      let updated = 0;
+      for (const doc of snap.docs) {
+        await syncActivityAggregateCounts(doc.id);
+        updated++;
+      }
+      return {success: true, updated};
+    });
+
+// Validation rewards + aggregate sync (including on delete)
+export {
+  onValidationCreated,
+  onValidationDeleted,
+  onValidationUpdated,
+} from "./src/rewards/onValidationCreated.js";
 
 // Impact: run when activity status changes to Closed
 export {onActivityClosed};

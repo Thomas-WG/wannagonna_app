@@ -31,27 +31,30 @@ export function useValidationResult(onToastMessage) {
   // Poll for notification with complete reward data after QR validation
   useEffect(() => {
     // If we have a pending validation (activityId stored) but no complete data yet
-    if (currentActivityIdRef.current && validationResult && !validationResult.badgeIds?.length) {
+    if (currentActivityIdRef.current && validationResult && !validationResult.badge_ids?.length) {
       // Look for a REWARD notification with matching activityId
       const rewardNotification = notifications.find(
         (n) =>
           n.type === 'REWARD' &&
-          n.metadata?.activityId === currentActivityIdRef.current &&
-          n.metadata?.badgesGranted?.length > 0
+          n.metadata?.activity_id === currentActivityIdRef.current &&
+          (n.metadata?.badges_granted?.length ?? 0) > 0
       );
       
       if (rewardNotification && rewardNotification.metadata) {
         const metadata = rewardNotification.metadata;
-        // Update validation result with complete data
+        const badgesGranted = metadata.badges_granted;
+        const total_xp = metadata.total_xp ?? validationResult.total_xp ?? 0;
+        const activity_xp = metadata.activity_xp ?? 0;
+        const badge_xp_map = metadata.badge_xp_map ?? {};
         setValidationResult({
           ...validationResult,
-          badgeIds: Array.isArray(metadata.badgesGranted) ? metadata.badgesGranted : [],
+          badge_ids: Array.isArray(badgesGranted) ? badgesGranted : [],
           xpBreakdown: {
-            totalXP: metadata.totalXP || validationResult.xpReward || 0,
-            activityXP: metadata.activityXP || 0,
-            badgeXPMap: metadata.badgeXPMap || {},
+            total_xp,
+            activity_xp,
+            badge_xp_map,
           },
-          xpReward: metadata.totalXP || validationResult.xpReward || 0,
+          total_xp,
         });
         
         // Clear the polling
@@ -85,22 +88,11 @@ export function useValidationResult(onToastMessage) {
       const activityTitle = searchParams.get('activityTitle') || '';
       const activityId = searchParams.get('activityId') || null;
 
-      // Parse badges from URL (if any)
-      const badges = [];
-      let idx = 0;
-      while (searchParams.get(`badge${idx}`)) {
-        const badgeId = searchParams.get(`badge${idx}`);
-        badges.push({ id: badgeId, title: badgeId });
-        idx++;
-      }
-
-      // Set initial validation result (may be updated when notification arrives)
       setValidationResult({
-        xpReward: xp,
-        badges: badges,
-        badgeIds: badges.map(b => b.id),
+        total_xp: xp,
+        badge_ids: [],
         activityTitle: activityTitle,
-        activityId: activityId,
+        activity_id: activityId,
       });
       setShowValidationModal(true);
       

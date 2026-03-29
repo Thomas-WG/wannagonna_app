@@ -39,7 +39,7 @@ const skillOptionSchema = z.object({
 });
 
 // Time commitment schema
-const timeCommitmentSchema = z
+const time_commitment_schema = z
   .object({
     daily: z.boolean(),
     weekly: z.boolean(),
@@ -78,7 +78,7 @@ const availabilitiesSchema = z
 
 // Main profile schema
 export const profileSchema = z.object({
-  displayName: z
+  display_name: z
     .string()
     .min(1, 'Display name is required')
     .min(2, 'Display name must be at least 2 characters')
@@ -108,8 +108,8 @@ export const profileSchema = z.object({
     .array(languageOptionSchema)
     .min(1, 'Please select at least one language'),
   skills: z.array(skillOptionSchema).optional().default([]),
-  profilePicture: z.string().min(1, 'Profile picture is required'),
-  timeCommitment: timeCommitmentSchema,
+  profile_picture: z.string().min(1, 'Profile picture is required'),
+  time_commitment: time_commitment_schema,
   availabilities: availabilitiesSchema,
 });
 

@@ -19,7 +19,7 @@ import { db } from 'firebaseConfig';
  * XpHistoryShareButton Component
  * Handles sharing for XP history entries with automatic type detection and data fetching
  * @param {Object} props
- * @param {Object} props.entry - XP history entry object with title, type, points, timestamp
+ * @param {Object} props.entry - XP history entry with title, type, points, created_at, badge_id, etc.
  * @param {string} props.variant - Button variant: 'default', 'icon', 'text'
  * @param {string} props.size - Button size: 'xs', 'sm', 'md', 'lg'
  * @param {string} props.className - Additional CSS classes
@@ -50,14 +50,14 @@ export default function XpHistoryShareButton({ entry, variant = 'icon', size = '
       // Determine entry type
       const entryType = entry.type || 'unknown';
 
-      if (entryType === 'badge' && entry.badgeId) {
+      if (entryType === 'badge' && entry.badge_id) {
         // Use badgeId from entry
         try {
-          const badgeDetails = await findBadgeById(entry.badgeId);
+          const badgeDetails = await findBadgeById(entry.badge_id);
           let badgeImageUrl = '';
 
-          if (badgeDetails && badgeDetails.categoryId) {
-            badgeImageUrl = await getBadgeImageUrl(badgeDetails.categoryId, entry.badgeId);
+          if (badgeDetails && badgeDetails.category_id) {
+            badgeImageUrl = await getBadgeImageUrl(badgeDetails.category_id, entry.badge_id);
           }
 
           // Fallback: create basic badge object
@@ -73,24 +73,24 @@ export default function XpHistoryShareButton({ entry, variant = 'icon', size = '
           setError('Failed to load badge details');
         }
 
-      } else if (entryType === 'activity' && entry.activityId) {
-        // Use activityId from entry
+      } else if (entryType === 'activity' && entry.activity_id) {
+        const activityIdToUse = entry.activity_id;
         try {
-          const activity = await fetchActivityById(entry.activityId);
+          const activity = await fetchActivityById(activityIdToUse);
           let organization = null;
 
-          if (activity?.organizationId) {
-            organization = await fetchOrganizationById(activity.organizationId);
+          if (activity?.organization_id) {
+            organization = await fetchOrganizationById(activity.organization_id);
           }
 
           if (activity) {
-            // Use entry.activityId directly to ensure URL always contains the correct activityId
+            // Use activity_id from entry to ensure URL always contains the correct activityId
             // Pass it as override parameter to ensure it's used even if activity.id is missing
             const shareDataResult = prepareActivityCompletionShareData(
               activity, 
               organization, 
               translations,
-              entry.activityId // Pass activityId from entry as override
+              activityIdToUse
             );
             setShareData(shareDataResult);
           } else {
@@ -101,10 +101,10 @@ export default function XpHistoryShareButton({ entry, variant = 'icon', size = '
           setError('Failed to load activity details');
         }
 
-      } else if (entryType === 'referral' && entry.memberId) {
-        // Use memberId from entry to get the referrer's code
+      } else if (entryType === 'referral' && entry.referrer_id) {
+        // Use referrer_id from entry to get the referrer's code
         try {
-          const memberDoc = doc(db, 'members', entry.memberId);
+          const memberDoc = doc(db, 'members', entry.referrer_id);
           const memberSnap = await getDoc(memberDoc);
           
           if (!memberSnap.exists()) {
@@ -146,9 +146,9 @@ export default function XpHistoryShareButton({ entry, variant = 'icon', size = '
     
     // Only load for shareable types that have the required ID
     const isShareable = 
-      (entryType === 'badge' && entry.badgeId) ||
-      (entryType === 'activity' && entry.activityId) ||
-      (entryType === 'referral' && entry.memberId);
+      (entryType === 'badge' && entry.badge_id) ||
+      (entryType === 'activity' && entry.activity_id) ||
+      (entryType === 'referral' && entry.referrer_id);
     
     if (isShareable) {
       loadShareData();
