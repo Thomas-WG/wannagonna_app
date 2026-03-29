@@ -182,13 +182,14 @@ const ActivityManager = memo(function ActivityManager({
 
     try {
       setShowActionOverlay(false);
-      const newActivityId = await duplicateActivity(selectedActivity.id);
-      router.push(`/mynonprofit/activities/manage?activityId=${newActivityId}`);
+      await duplicateActivity(selectedActivity.id);
+      await refetch();
+      showToast('success', t('successDuplicating'));
     } catch (error) {
       console.error('Error duplicating activity:', error);
       showToast('error', t('errorDuplicating') || 'Error duplicating activity');
     }
-  }, [selectedActivity, router, showToast, t]);
+  }, [selectedActivity, refetch, showToast, t]);
 
   // Render action overlay
   const renderActionOverlay = useCallback(

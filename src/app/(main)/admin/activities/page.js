@@ -8,7 +8,7 @@ import ActivityCardActionsOverlay from "@/components/activities/ActivityCardActi
 import { MdOutlineSocialDistance } from "react-icons/md";
 import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { fetchActivities, deleteActivity, updateActivityStatus } from "@/utils/crudActivities";
+import { fetchActivities, deleteActivity, updateActivityStatus, duplicateActivity } from "@/utils/crudActivities";
 import { fetchOrganizations } from "@/utils/crudOrganizations";
 import { useTranslations } from "next-intl";
 import { useTheme } from '@/utils/theme/ThemeContext';
@@ -307,13 +307,14 @@ export default function AdminActivitiesPage() {
 
   const handleDuplicateActivity = async () => {
     if (!selectedActivity) return;
-    
+
     try {
       setShowActionModal(false);
-      // Duplicate the activity
-      const newActivityId = await duplicateActivity(selectedActivity.id);
-      // Navigate to edit page for the new activity
-      router.push(`/mynonprofit/activities/manage?activityId=${newActivityId}`);
+      await duplicateActivity(selectedActivity.id);
+      const results = await fetchActivities();
+      setAllActivities(results || []);
+      setToastMessage({ type: 'success', message: t('successDuplicating') });
+      setShowToast(true);
     } catch (error) {
       console.error('Error duplicating activity:', error);
       setToastMessage({ type: 'error', message: t('errorDuplicating') || 'Error duplicating activity' });

@@ -2,7 +2,8 @@
 // Page Component: CreateUpdateActivityPage
 // Description: This Next.js page component is used for creating or updating an activity. It has a form divided into three steps, allowing users to select the activity type, input activity details, and select relevant SDGs (Sustainable Development Goals). The page can handle both creation and editing of activities, depending on the presence of an activity ID. The data is managed via the useState hook and includes support for categories based on activity type, form validation, and step-by-step navigation.
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useSearchParams, useRouter } from 'next/navigation';
 import categories from '@/constant/categories';
 import {
@@ -77,7 +78,17 @@ export default function CreateUpdateActivityPage() {
   const prefillType = searchParams.get('type'); // Prefill type when coming from NPO radial menu
   const isEditMode = Boolean(activityId); // Determine if the page is in edit mode
   const { user, claims, loading } = useAuth(); // Get authenticated user information and loading status
+  const queryClient = useQueryClient();
   const t = useTranslations('ManageActivities'); // Internationalization function for translations
+
+  /** Keeps NPO dashboard activity list and KPIs in sync after create/update/publish (cache is refetched because refetchOnMount is off). */
+  const refreshNpoActivityListAndRelated = useCallback(async () => {
+    const orgId = claims?.npo_id;
+    if (!orgId) return;
+    await queryClient.refetchQueries({ queryKey: ['npoDashboardActivities', orgId] });
+    await queryClient.invalidateQueries({ queryKey: ['npoOrganization', orgId] });
+    await queryClient.invalidateQueries({ queryKey: ['npoPendingApplications', orgId] });
+  }, [claims?.npo_id, queryClient]);
 
   // State to manage form data
   const [formData, setFormData] = useState({
@@ -347,12 +358,14 @@ export default function CreateUpdateActivityPage() {
           if (hasImpactStep) {
             await setActivityImpactParameters(activityId, selectedImpactParameters ?? []);
           }
+          await refreshNpoActivityListAndRelated();
           router.back();
     } else {
           const newActivityId = await createActivity(baseDataToSave);
           if (hasImpactStep) {
             await setActivityImpactParameters(newActivityId, selectedImpactParameters ?? []);
           }
+          await refreshNpoActivityListAndRelated();
           setSavedActivityId(newActivityId);
           setShowStatusModal(true);
         }
@@ -376,6 +389,7 @@ export default function CreateUpdateActivityPage() {
       await updateActivityStatus(savedActivityId, 'Open');
       console.log('Activity status updated successfully');
       setShowStatusModal(false);
+      await refreshNpoActivityListAndRelated();
       // Redirect to NPO dashboard after successful status update
       router.push('/mynonprofit');
     } catch (error) {
@@ -400,6 +414,7 @@ export default function CreateUpdateActivityPage() {
       await updateActivityStatus(savedActivityId, 'Draft');
       console.log('Activity status updated successfully');
       setShowStatusModal(false);
+      await refreshNpoActivityListAndRelated();
       // Navigate back after successful status update
       router.back();
     } catch (error) {
@@ -417,6 +432,7 @@ export default function CreateUpdateActivityPage() {
       try {
         await deleteActivity(savedActivityId);
         console.log('Activity deleted after cancel');
+        await refreshNpoActivityListAndRelated();
       } catch (error) {
         console.error('Error deleting activity:', error);
         // Still close the modal even if deletion fails
