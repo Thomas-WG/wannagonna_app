@@ -18,6 +18,8 @@ import {updateActivityCountOnAdd} from
   "./src/activity-mgt/onAddActivity.js";
 import {updateActivityCountOnRemove} from
   "./src/activity-mgt/onRemoveActivity.js";
+import {cleanupActivitySubcollectionsAfterDelete} from
+  "./src/activity-mgt/cleanupActivityOnDelete.js";
 import {onCall} from "firebase-functions/v2/https";
 import {setUserCustomClaims} from "./src/user-mgt/setCustomClaims.js";
 import {
@@ -53,13 +55,27 @@ export const onActivityCreatedUpdateActivityCount = onDocumentCreated(
 );
 
 export const onActivityDeletedUpdateActivityCount = onDocumentDeleted(
-    "activities/{activityId}",
+    {
+      document: "activities/{activityId}",
+      timeoutSeconds: 540,
+      memory: "512MiB",
+    },
     async (event) => {
       const activityId = event.params.activityId;
       const activityData = event.data?.data();
       console.log("Activity ID:", activityId);
       console.log("Activity data:", activityData);
       await updateActivityCountOnRemove(activityId, activityData);
+      try {
+        await cleanupActivitySubcollectionsAfterDelete(activityId);
+      } catch (cleanupErr) {
+        console.error(
+            "[onActivityDeletedUpdateActivityCount] " +
+            "cleanupActivitySubcollectionsAfterDelete failed:",
+            cleanupErr,
+        );
+        throw cleanupErr;
+      }
     },
 );
 

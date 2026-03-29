@@ -1,3 +1,4 @@
+import {FieldValue} from "firebase-admin/firestore";
 import {db} from "../init.js";
 import {sendUserNotification} from "../notifications/notificationService.js";
 
@@ -5,10 +6,30 @@ export const updateApplicantsCountOnRemove = async (
     activityId,
     applicationData,
 ) => {
+  const activityRef = db.collection("activities").doc(activityId);
+  const activitySnapPre = await activityRef.get();
+
+  // Activity was already removed (e.g. cascade delete). Adjust org counters
+  // without sending cancellation notifications.
+  if (!activitySnapPre.exists) {
+    const organizationId = applicationData?.organization_id;
+    if (organizationId) {
+      try {
+        await db.collection("organizations").doc(organizationId).update({
+          total_new_applications: FieldValue.increment(-1),
+        });
+      } catch (err) {
+        console.error(
+            "[updateApplicantsCountOnRemove] org decrement (activity gone):",
+            err,
+        );
+      }
+    }
+    return null;
+  }
+
   // First, run the transaction to update counts and gather data
   const result = await db.runTransaction(async (transaction) => {
-    // Get activity document
-    const activityRef = db.collection("activities").doc(activityId);
     const activitySnap = await transaction.get(activityRef);
 
     if (!activitySnap.exists) {

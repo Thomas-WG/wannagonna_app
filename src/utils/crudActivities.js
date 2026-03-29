@@ -1,4 +1,4 @@
-import { collection, getDocs, addDoc, getDoc, updateDoc, doc, onSnapshot, query, where, deleteDoc, writeBatch, increment } from 'firebase/firestore';
+import { collection, getDocs, addDoc, getDoc, updateDoc, doc, onSnapshot, query, where, deleteDoc, writeBatch } from 'firebase/firestore';
 import { db } from 'firebaseConfig';
 import { fetchApplicationsForActivity } from './crudApplications';
 import { v4 as uuidv4 } from 'uuid';
@@ -367,58 +367,21 @@ export async function updateActivityStatus(id, status) {
   }
 }
 
-// Delete an activity from the Firestore database
+// Delete an activity from the Firestore database.
+// Subcollections (applications, validations, participations) and member/org
+// application mirrors are removed by Cloud Functions (cleanupActivityOnDelete).
 export async function deleteActivity(id) {
   try {
-    // First, get the activity data to access organizationId
     const activityDoc = doc(db, 'activities', id);
     const activitySnapshot = await getDoc(activityDoc);
-    
+
     if (!activitySnapshot.exists()) {
       throw new Error('Activity not found');
     }
-    
-    const activityData = activitySnapshot.data();
-    const organizationId = activityData.organization_id;
-    
-    // Get all applications for this activity
-    const applicationsRef = collection(activityDoc, 'applications');
-    const applicationsSnapshot = await getDocs(applicationsRef);
-    
-    // Count pending applications to update organization's totalNewApplications
-    let pendingApplicationsCount = 0;
-    applicationsSnapshot.docs.forEach((applicationDoc) => {
-      const applicationData = applicationDoc.data();
-      if (applicationData.status === 'pending') {
-        pendingApplicationsCount++;
-      }
-    });
 
-    // Pre-read and gather all references to delete, then commit in a single batch
-    const batch = writeBatch(db);
+    await deleteDoc(activityDoc);
 
-    // Delete canonical applications; Cloud Functions remove member/org mirrors per delete
-    applicationsSnapshot.docs.forEach((applicationDoc) => {
-      batch.delete(applicationDoc.ref);
-    });
-
-    if (organizationId) {
-      const orgRef = doc(db, 'organizations', organizationId);
-      const orgSnap = await getDoc(orgRef);
-
-      if (orgSnap.exists() && pendingApplicationsCount > 0) {
-        batch.update(orgRef, {
-          total_new_applications: increment(-pendingApplicationsCount),
-        });
-      }
-    }
-
-    // Finally, delete the activity document itself
-    batch.delete(activityDoc);
-
-    await batch.commit();
-    
-    console.log('Activity and all related applications deleted:', id);
+    console.log('Activity deleted; backend cascade cleanup scheduled:', id);
   } catch (error) {
     console.error('Error deleting activity:', error);
     throw error;
