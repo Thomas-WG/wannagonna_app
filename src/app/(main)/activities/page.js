@@ -980,6 +980,7 @@ export default function ActivitiesPage() {
                   end_time={activity.end_time}
                   sdg={activity.sdg}
                   applicants={activity.applicants}
+                  effective_participants_count={activity.effective_participants_count}
                   xp_reward={activity.xp_reward}
                   description={activity.description}
                   updated_at={activity.updated_at}

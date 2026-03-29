@@ -7,6 +7,8 @@ import {updateApplicantsCountOnAdd} from
   "./src/activity-mgt/onAddApplication.js";
 import {updateApplicantsCountOnRemove} from
   "./src/activity-mgt/onRemoveApplication.js";
+import {syncActivityAggregateCounts} from
+  "./src/activity-mgt/syncActivityAggregateCounts.js";
 import {updateActivityCountOnAdd} from
   "./src/activity-mgt/onAddActivity.js";
 import {updateActivityCountOnRemove} from
@@ -24,10 +26,6 @@ import {generateApplicationApprovalEmail} from
   "./src/notifications/emailTemplates.js";
 import {db, auth} from "./src/init.js";
 import {FieldValue} from "firebase-admin/firestore";
-import {
-  onValidationCreated,
-  onValidationUpdated,
-} from "./src/rewards/onValidationCreated.js";
 import {onActivityClosed} from "./src/impact/onActivityClosed.js";
 import {exportImpactReport} from "./src/impact/exportImpactReport.js";
 import {
@@ -66,8 +64,16 @@ export const onApplicationCreatedUpdateApplicantsCount = onDocumentCreated(
       const activityId = event.params.activityId;
       console.log("Activity ID:", activityId);
 
-      // Call the imported function to update applicants count
       await updateApplicantsCountOnAdd(activityId);
+      try {
+        await syncActivityAggregateCounts(activityId);
+      } catch (syncErr) {
+        console.error(
+            "[onApplicationCreatedUpdateApplicantsCount] " +
+            "syncActivityAggregateCounts failed:",
+            syncErr,
+        );
+      }
     },
 );
 
@@ -78,8 +84,61 @@ export const onApplicationDeletedUpdateApplicantsCount = onDocumentDeleted(
       const applicationData = event.data?.data();
       console.log("Activity ID:", activityId);
 
-      // Call the imported function to update applicants count
       await updateApplicantsCountOnRemove(activityId, applicationData);
+      try {
+        await syncActivityAggregateCounts(activityId);
+      } catch (syncErr) {
+        console.error(
+            "[onApplicationDeletedUpdateApplicantsCount] " +
+            "syncActivityAggregateCounts failed:",
+            syncErr,
+        );
+      }
+    },
+);
+
+export const onParticipationCreatedSyncAggregates = onDocumentCreated(
+    "activities/{activityId}/participations/{userId}",
+    async (event) => {
+      try {
+        await syncActivityAggregateCounts(event.params.activityId);
+      } catch (syncErr) {
+        console.error(
+            "[onParticipationCreatedSyncAggregates] " +
+            "syncActivityAggregateCounts failed:",
+            syncErr,
+        );
+      }
+    },
+);
+
+export const onParticipationUpdatedSyncAggregates = onDocumentUpdated(
+    "activities/{activityId}/participations/{userId}",
+    async (event) => {
+      try {
+        await syncActivityAggregateCounts(event.params.activityId);
+      } catch (syncErr) {
+        console.error(
+            "[onParticipationUpdatedSyncAggregates] " +
+            "syncActivityAggregateCounts failed:",
+            syncErr,
+        );
+      }
+    },
+);
+
+export const onParticipationDeletedSyncAggregates = onDocumentDeleted(
+    "activities/{activityId}/participations/{userId}",
+    async (event) => {
+      try {
+        await syncActivityAggregateCounts(event.params.activityId);
+      } catch (syncErr) {
+        console.error(
+            "[onParticipationDeletedSyncAggregates] " +
+            "syncActivityAggregateCounts failed:",
+            syncErr,
+        );
+      }
     },
 );
 
@@ -97,10 +156,20 @@ export const onApplicationStatusChangedNotifyUser = onDocumentUpdated(
         return;
       }
 
+      const activityId = event.params.activityId;
+      try {
+        await syncActivityAggregateCounts(activityId);
+      } catch (syncErr) {
+        console.error(
+            "[onApplicationStatusChangedNotifyUser] " +
+            "syncActivityAggregateCounts failed:",
+            syncErr,
+        );
+      }
+
       const beforeStatus = before.status;
       const afterStatus = after.status;
 
-      // Only act when status actually changes
       if (beforeStatus === afterStatus) {
         return;
       }
@@ -113,42 +182,12 @@ export const onApplicationStatusChangedNotifyUser = onDocumentUpdated(
         return;
       }
 
-      const activityId = event.params.activityId;
       const applicationId = event.params.applicationId;
 
       try {
         // Handle cancelled status separately - notify NPO members
         if (afterStatus === "cancelled" && after.organization_id) {
           const organizationId = after.organization_id;
-
-          // Decrement applicants count if previous status was NOT cancelled
-          if (beforeStatus !== "cancelled") {
-            try {
-              await db.runTransaction(async (transaction) => {
-                const activityRef = db.collection("activities").doc(activityId);
-                const activitySnap = await transaction.get(activityRef);
-
-                if (activitySnap.exists) {
-                  const activity = activitySnap.data();
-                  const newApplicantCount =
-                    Math.max((activity.applicants || 0) - 1, 0);
-                  transaction.update(activityRef, {
-                    applicants: newApplicantCount,
-                  });
-                  console.log(
-                      "Decremented applicants count to:",
-                      newApplicantCount,
-                  );
-                }
-              });
-            } catch (countError) {
-              console.error(
-                  "Failed to decrement applicants count:",
-                  countError,
-              );
-              // Don't fail the entire function if count update fails
-            }
-          }
 
           const membersSnap = await db.collection("members")
               .where("npo_id", "==", organizationId)
@@ -905,8 +944,40 @@ export const adminRemoveBadgeFromUser = onCall(
       }
     });
 
-// Export validation reward triggers
-export {onValidationCreated, onValidationUpdated};
+/**
+ * Admin only: recompute activity aggregate counters (optional activity_id).
+ */
+export const adminBackfillActivityAggregateCounts = onCall(
+    {invoker: "public"},
+    async (request) => {
+      if (!request.auth) {
+        throw new Error("Unauthorized");
+      }
+      if (request.auth.token?.role !== "admin") {
+        throw new Error(
+            "Forbidden: Only admins can backfill activity aggregate counts",
+        );
+      }
+      const activityId = request.data?.activity_id;
+      if (activityId) {
+        await syncActivityAggregateCounts(activityId);
+        return {success: true, updated: 1};
+      }
+      const snap = await db.collection("activities").get();
+      let updated = 0;
+      for (const doc of snap.docs) {
+        await syncActivityAggregateCounts(doc.id);
+        updated++;
+      }
+      return {success: true, updated};
+    });
+
+// Validation rewards + aggregate sync (including on delete)
+export {
+  onValidationCreated,
+  onValidationDeleted,
+  onValidationUpdated,
+} from "./src/rewards/onValidationCreated.js";
 
 // Impact: run when activity status changes to Closed
 export {onActivityClosed};

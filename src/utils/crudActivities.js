@@ -476,10 +476,14 @@ export async function getValidatedParticipantsCount(activityId) {
 
 /**
  * Get count of effective participants for an activity
- * 
+ *
  * This starts from all accepted applications, then subtracts
  * participants who have a validation with status 'rejected'
  * (they were accepted but ultimately did not do the job).
+ *
+ * Prefer reading `effective_participants_count` from the activity document
+ * (maintained by Cloud Functions) when the client must not list applications.
+ *
  * @param {string} activityId - Activity ID
  * @returns {Promise<number>} Count of effective participants
  */

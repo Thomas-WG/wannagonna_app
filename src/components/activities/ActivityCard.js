@@ -1,7 +1,7 @@
 import { Tooltip, Button } from 'flowbite-react';
 import Image from 'next/image';
 import { useTranslations, useLocale } from 'next-intl';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   HiLocationMarker, HiUserGroup, HiStar,
   HiQuestionMarkCircle,
@@ -13,7 +13,7 @@ import { FaRegCircle } from 'react-icons/fa';
 import StatusUpdateModal from './StatusUpdateModal';
 import QRCodeModal from './QRCodeModal';
 import ActivityValidationModal from './ActivityValidationModal';
-import { updateActivityStatus, getAcceptedApplicationsCount } from '@/utils/crudActivities';
+import { updateActivityStatus } from '@/utils/crudActivities';
 import { categoryIcons } from '@/constant/categoryIcons';
 import { getSkillsForSelect } from '@/utils/crudSkills';
 
@@ -27,6 +27,7 @@ export default function ActivityCard({
   category,
   skills,
   applicants,
+  effective_participants_count,
   type,
   xp_reward,
   city,
@@ -58,31 +59,17 @@ export default function ActivityCard({
   const [localStatus, setLocalStatus] = useState(status);
   const [showQRModal, setShowQRModal] = useState(false);
   const [showValidationModal, setShowValidationModal] = useState(false);
-  const [validatedCount, setValidatedCount] = useState(null);
   const [skillLabelsMap, setSkillLabelsMap] = useState({});
 
-  // Fetch accepted applications count for local/online activities (not for events)
-  useEffect(() => {
-    const shouldShowCounter = 
-      (type === 'local' && accept_applications_wg !== false) || 
-      type === 'online';
-    
-    if (shouldShowCounter && id) {
-      const fetchCount = async () => {
-        try {
-          const count = await getAcceptedApplicationsCount(id);
-          setValidatedCount(count);
-        } catch (error) {
-          console.error('Error fetching accepted applications count:', error);
-          setValidatedCount(0);
-        }
-      };
-      fetchCount();
-    } else if (type !== 'event') {
-      // Reset count for local/online activities when not needed
-      setValidatedCount(null);
+  const participantStatCount = useMemo(() => {
+    if (effective_participants_count != null) {
+      return effective_participants_count;
     }
-  }, [id, type, accept_applications_wg]);
+    if (applicants != null) {
+      return applicants;
+    }
+    return null;
+  }, [effective_participants_count, applicants]);
 
   // Sync local status with prop changes
   useEffect(() => {
@@ -475,14 +462,14 @@ export default function ActivityCard({
               <HiStar className='w-4 h-4 flex-shrink-0' />
               {xp_reward} <span className='text-xs font-normal text-[#6b7280] dark:text-text-tertiary'>pts</span>
             </span>
-            {((type === 'local' && accept_applications_wg !== false) || type === 'online') && validatedCount !== null && (
+            {((type === 'local' && accept_applications_wg !== false) || type === 'online') && participantStatCount != null && (
               <>
                 <span className='w-px h-4 bg-[#e5e7eb] dark:bg-border-light flex-shrink-0' />
                 <span className='flex items-center gap-1.5 text-sm font-semibold text-[#3F3F3F] dark:text-text-primary'>
                   <HiUserGroup className='w-4 h-4 flex-shrink-0' />
                   {participant_target != null && participant_target > 0
-                    ? `${validatedCount}/${participant_target}`
-                    : validatedCount}{' '}
+                    ? `${participantStatCount}/${participant_target}`
+                    : participantStatCount}{' '}
                   <span className='text-xs font-normal text-[#6b7280] dark:text-text-tertiary'>
                     {participant_target != null && participant_target > 0 ? t('participants') : t('validated')}
                   </span>
@@ -499,7 +486,7 @@ export default function ActivityCard({
               </>
             )}
             {((type === 'event' && (participant_target === null || participant_target === undefined)) ||
-              ((type === 'local' && accept_applications_wg === false) || (type === 'online' && validatedCount === null))) && (
+              ((type === 'local' && accept_applications_wg === false) || (type === 'online' && participantStatCount == null))) && (
               <>
                 <span className='w-px h-4 bg-[#e5e7eb] dark:bg-border-light flex-shrink-0' />
                 <span className='flex items-center gap-1.5 text-sm font-semibold text-[#3F3F3F] dark:text-text-primary'>

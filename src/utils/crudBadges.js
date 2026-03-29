@@ -1,9 +1,12 @@
 import { collection, getDocs, getDoc, doc, updateDoc, arrayUnion, Timestamp, setDoc, deleteDoc, addDoc } from 'firebase/firestore';
-import { db, functions } from 'firebaseConfig';
+import { auth, db, functions } from 'firebaseConfig';
 import { ref, getDownloadURL, deleteObject } from 'firebase/storage';
 import { storage } from 'firebaseConfig';
 import { httpsCallable } from 'firebase/functions';
 import { uploadFile } from './storage';
+
+/** One in-flight processReferralRewardOnSignup per uid (avoids duplicate callables). */
+let referralRewardInflight = /** @type {{ uid: string, promise: Promise<unknown> } | null} */ (null);
 
 /**
  * Fetch all badge categories (sdg, geography, general, etc.)
@@ -540,27 +543,58 @@ export async function fetchUserBadges(userId) {
  * @returns {Promise<Object|undefined>}
  */
 export async function handleReferralReward(referralCodeFromSignup) {
-  try {
-    if (!functions) {
-      console.error('[handleReferralReward] Firebase functions not initialized');
+  const uid = auth.currentUser?.uid ?? '';
+  if (uid && referralRewardInflight?.uid === uid) {
+    return /** @type {Promise<Object|undefined>} */ (referralRewardInflight.promise);
+  }
+
+  const run = (async () => {
+    try {
+      if (!functions) {
+        console.error('[handleReferralReward] Firebase functions not initialized');
+        return undefined;
+      }
+      let normalized = referralCodeFromSignup
+        ? String(referralCodeFromSignup).toUpperCase().trim()
+        : '';
+      if (!normalized && auth.currentUser) {
+        try {
+          const memberSnap = await getDoc(doc(db, 'members', auth.currentUser.uid));
+          const referredBy = memberSnap.data()?.referred_by;
+          if (referredBy != null && String(referredBy).trim() !== '') {
+            normalized = String(referredBy).toUpperCase().trim();
+          }
+        } catch (_) {
+          // non-blocking: server callable still reads referred_by from doc
+        }
+      }
+      const processFn = httpsCallable(functions, 'processReferralRewardOnSignup');
+      const result = await processFn(
+        normalized ? { referral_code: normalized } : {},
+      );
+      const data = result?.data || {};
+      if (data.success === false && data.error) {
+        console.warn('[handleReferralReward]', data.error);
+      }
+      return data;
+    } catch (error) {
+      console.error('[handleReferralReward] Error:', error);
       return undefined;
     }
-    const normalized = referralCodeFromSignup
-      ? String(referralCodeFromSignup).toUpperCase().trim()
-      : '';
-    const processFn = httpsCallable(functions, 'processReferralRewardOnSignup');
-    const result = await processFn(
-      normalized ? { referral_code: normalized } : {},
-    );
-    const data = result?.data || {};
-    if (data.success === false && data.error) {
-      console.warn('[handleReferralReward]', data.error);
+  })();
+
+  if (uid) {
+    referralRewardInflight = { uid, promise: run };
+    try {
+      return await run;
+    } finally {
+      if (referralRewardInflight?.promise === run) {
+        referralRewardInflight = null;
+      }
     }
-    return data;
-  } catch (error) {
-    console.error('[handleReferralReward] Error:', error);
-    return undefined;
   }
+
+  return run;
 }
 
 /**

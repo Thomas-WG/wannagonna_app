@@ -53,7 +53,21 @@ export async function runProcessReferralRewardOnSignup(
     newData = {...newData, referred_by: clientNorm};
   }
 
-  const referredByRaw = newData.referred_by;
+  let referredByRaw = newData.referred_by;
+  // Second read: avoids marking no_referral when a concurrent client write
+  // just landed (duplicate callables / race right after setDoc).
+  if (!referredByRaw || String(referredByRaw).trim() === "") {
+    const freshSnap = await newMemberRef.get();
+    if (freshSnap.exists) {
+      const fresh = freshSnap.data();
+      const fr = fresh?.referred_by;
+      if (fr != null && String(fr).trim() !== "") {
+        referredByRaw = fr;
+        newData = {...newData, ...fresh, referred_by: fr};
+      }
+    }
+  }
+
   if (!referredByRaw || String(referredByRaw).trim() === "") {
     await newMemberRef.update({
       [PROCESSED_FIELD]: FieldValue.serverTimestamp(),

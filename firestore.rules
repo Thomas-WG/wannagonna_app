@@ -25,10 +25,6 @@ service cloud.firestore {
       return role() == 'ambassador';
     }
 
-    function isSystem() {
-      return request.auth.token.system == true;
-    }
-
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
     }
@@ -37,6 +33,20 @@ service cloud.firestore {
       return isAuthenticated() && 
         'npo_id' in request.auth.token && 
         request.auth.token.npo_id == organizationId;
+    }
+
+    function activityOrganizationId(activityDocId) {
+      return get(/databases/$(database)/documents/activities/$(activityDocId)).data.organization_id;
+    }
+
+    // NPO staff or ambassador whose token npo_id matches an organization id (use when org is on resource or path)
+    function staffOrAmbassadorForOrganization(organizationId) {
+      return (isNpoStaff() || isAmbassador()) && belongsToUserOrg(organizationId);
+    }
+
+    // Same check using parent activity doc (subcollections under activities/{activityId}/...)
+    function staffOrAmbassadorForActivity(activityId) {
+      return staffOrAmbassadorForOrganization(activityOrganizationId(activityId));
     }
 
     // ============================================
@@ -65,7 +75,7 @@ service cloud.firestore {
       // Applications subcollection
       match /applications/{applicationId} {
         // All authenticated users can read applications
-        allow read: if isOwner(userId) || isAdmin () || (isNpoStaff() && belongsToUserOrg(resource.data.organization_id))|| (isAmbassador() && belongsToUserOrg(resource.data.organization_id));
+        allow read: if isOwner(userId) || isAdmin() || belongsToUserOrg(resource.data.get('organization_id', ''));
 
         // Only owner can create an application under their member doc
         allow create: if isOwner(userId) &&
@@ -73,15 +83,7 @@ service cloud.firestore {
 
         // Owner can update their app but not impersonate/change critical fields
         // Admin and NPO staff can update applications for their organization
-        allow update: if isAuthenticated() && (
-          isAdmin() ||
-          (isOwner(userId) &&
-            resource.data.user_id == request.auth.uid &&
-            request.resource.data.user_id == request.auth.uid 
-          ) ||
-          (isNpoStaff() && resource.data.organization_id == request.auth.token.npo_id) ||
-          (isAmbassador() && resource.data.organization_id == request.auth.token.npo_id)
-        );
+        allow update: if isOwner(userId) || isAdmin() || belongsToUserOrg(resource.data.get('organization_id', ''));
 
         // Only admins can delete applications
         allow delete: if isAdmin();
@@ -89,11 +91,11 @@ service cloud.firestore {
 
       // History subcollection (activity history)
       match /history/{historyId} {
-        // Read: All authenticated users can read history
+        // Read: All authenticated users can read history (for public display)
         allow read: if isAuthenticated();
 
         // Create: System-only (normally via Admin SDK which bypasses rules)
-        allow create: if isSystem();
+        allow create: if false;
 
         // Update/Delete: Only admins
         allow update, delete: if isAdmin();
@@ -125,13 +127,13 @@ service cloud.firestore {
       allow read: if resource.data.status == 'Open' || resource.data.status == 'Closed' || isAuthenticated();
       
       // Create: Any authenticated user can create activities
-      allow create: if isAuthenticated();
+      allow create: if isNpoStaff() || isAmbassador() || isAdmin();
       
-      // Update: Any authenticated user can update activities
-      allow update: if isAuthenticated();
+      // Update: NPO staff/ambassador for this org, admin, or system
+      allow update: if staffOrAmbassadorForOrganization(resource.data.organization_id) || isAdmin();
       
-      // Delete: Only admins can delete activities
-      allow delete: if isAuthenticated();
+      // Delete: NPO staff/ambassador for this org, admin, or system
+      allow delete: if staffOrAmbassadorForOrganization(resource.data.organization_id) || isAdmin();
       
       // ============================================
       // ACTIVITY SUBCOLLECTIONS
@@ -139,30 +141,47 @@ service cloud.firestore {
       
       // Applications subcollection - Keep protected (contains user data)
       match /applications/{applicationId} {
-        // Read: All authenticated users can read applications
-        allow read: if isAuthenticated();
+        // Read: Applicant, NPO staff/ambassador for activity org (via parent activity), admin
+        allow read: if ('user_id' in resource.data && resource.data.user_id == request.auth.uid) || staffOrAmbassadorForActivity(activityId) || isAdmin();
         
         // Create: Any authenticated user can create applications
         allow create: if isAuthenticated();
         
-        // Update: Any authenticated user can update applications
-        allow update: if isAuthenticated();
+        // Update: Applicant (user_id unchanged), NPO staff/ambassador for activity org, admin
+        allow update: if staffOrAmbassadorForActivity(activityId) || isAdmin() ||
+          ('user_id' in resource.data && resource.data.user_id == request.auth.uid && request.resource.data.user_id == request.auth.uid);
         
         // Delete: Only admins can delete applications
         allow delete: if isAdmin();
       }
       
-      // Validations subcollection - Keep protected (contains user data)
+      // Validations subcollection - org comes from parent activity, not the validation doc
       match /validations/{validationId} {
-        // Read: All authenticated users can read validations
-        allow read: if isAuthenticated();
-        
-        // Create: Any authenticated user can create validations
-        allow create: if isAuthenticated();
-        
-        // Update: Any authenticated user can update validations
-        allow update: if isAuthenticated();
-        
+        // Read: Participant, NPO staff/ambassador for activity org, admin, or system
+        allow read: if isAuthenticated() && (
+          resource.data.user_id == request.auth.uid ||
+          staffOrAmbassadorForActivity(activityId) ||
+          isAdmin()
+        );
+
+        // Create: Self (e.g. QR), org staff/ambassador for parent activity's org, or admin
+        allow create: if isAuthenticated() &&
+          request.resource.data.keys().hasAll(['user_id']) &&
+          (
+            isAdmin() ||
+            request.resource.data.user_id == request.auth.uid ||
+            staffOrAmbassadorForActivity(activityId)
+          );
+
+        // Update: user_id immutable; participant, org staff/ambassador, admin, or system
+        allow update: if isAuthenticated() &&
+          request.resource.data.user_id == resource.data.user_id &&
+          (
+            resource.data.user_id == request.auth.uid ||
+            staffOrAmbassadorForActivity(activityId) ||
+            isAdmin()
+          );
+
         // Delete: Only admins can delete validations
         allow delete: if isAdmin();
       }
@@ -177,7 +196,7 @@ service cloud.firestore {
         allow create: if isAuthenticated() && (
           isOwner(userId) ||
           isAdmin() ||
-          ((isNpoStaff() || isAmbassador()) && get(/databases/$(database)/documents/activities/$(activityId)).data.organization_id == request.auth.token.npo_id)
+          staffOrAmbassadorForActivity(activityId)
         ) && (
           !('hours' in request.resource.data) ||
           !('validated' in request.resource.data.hours) ||
@@ -189,7 +208,7 @@ service cloud.firestore {
           (isOwner(userId) &&
             request.resource.data.get('hours', {}).get('validated', 0) == resource.data.get('hours', {}).get('validated', 0)) ||
           isAdmin() ||
-          ((isNpoStaff() || isAmbassador()) && get(/databases/$(database)/documents/activities/$(activityId)).data.organization_id == request.auth.token.npo_id)
+          staffOrAmbassadorForActivity(activityId)
         );
 
         allow delete: if isAdmin();
@@ -206,24 +225,22 @@ service cloud.firestore {
       // Create: Only admins can create organizations
       allow create: if isAdmin();
       
-      // Update: Any authenticated user can update organizations
-      allow update: if isAuthenticated();
+      // Update: Admin, NPO staff, or ambassador for this organization
+      allow update: if isAdmin() || staffOrAmbassadorForOrganization(organizationId);
       
       // Delete: Only admins can delete organizations
       allow delete: if isAdmin();
       
-      // Applications subcollection - Keep protected (contains user data)
+      // Applications subcollection - mirror of member/activity application rows (same fields)
       match /applications/{applicationId} {
-        // Read: All authenticated users can read applications
-        allow read: if isAuthenticated();
-        
-        // Create: Any authenticated user can create applications
+        allow read: if true;
+
+        // Authenticated users can create applications
         allow create: if isAuthenticated();
-        
-        // Update: Any authenticated user can update applications
-        allow update: if isAuthenticated();
-        
-        // Delete: Only admins can delete applications
+
+        allow update: if staffOrAmbassadorForOrganization(request.resource.data.get('organization_id', '')) || isAdmin() ||
+          ('user_id' in resource.data && resource.data.user_id == request.auth.uid);
+
         allow delete: if isAdmin();
       }
       
@@ -235,13 +252,13 @@ service cloud.firestore {
         // Create/Update: NPO staff for this organization or admin
         allow create, update: if isAuthenticated() && (
           isAdmin() || 
-          (isNpoStaff() && request.auth.token.npo_id == organizationId)
+          staffOrAmbassadorForOrganization(organizationId)
         );
         
         // Delete: NPO staff for this organization or admin
         allow delete: if isAuthenticated() && (
           isAdmin() || 
-          (isNpoStaff() && request.auth.token.npo_id == organizationId)
+          staffOrAmbassadorForOrganization(organizationId)
         );
       }
 
@@ -249,14 +266,14 @@ service cloud.firestore {
       match /customParameters/{parameterId} {
         allow read: if isAuthenticated();
         allow create, update, delete: if isAuthenticated() && (
-          isAdmin() || (isNpoStaff() && request.auth.token.npo_id == organizationId)
+          isAdmin() || staffOrAmbassadorForOrganization(organizationId)
         );
       }
 
       // Participant records subcollection - written by Cloud Functions only
       match /participant_records/{userId} {
         // Read: NPO staff for this organization, or admin
-        allow read: if isAuthenticated() && (isAdmin() || (isNpoStaff() && request.auth.token.npo_id == organizationId));
+        allow read: if isAuthenticated() && (isAdmin() || staffOrAmbassadorForOrganization(organizationId));
         // Create/Update/Delete: Cloud Functions (Admin SDK) only; no client writes
         allow create, update, delete: if false;
       }
@@ -270,7 +287,7 @@ service cloud.firestore {
       allow read: if true;
       
       // Create/Update: Any authenticated user can manage badge categories
-      allow create, update: if isAuthenticated();
+      allow create, update: if isAdmin();
       
       // Delete: Only admins can delete badge categories
       allow delete: if isAdmin();
@@ -281,7 +298,7 @@ service cloud.firestore {
         allow read: if true;
         
         // Create/Update: Any authenticated user can manage badges
-        allow create, update: if isAuthenticated();
+        allow create, update: if isAdmin();
         
         // Delete: Only admins can delete badges
         allow delete: if isAdmin();
@@ -293,16 +310,16 @@ service cloud.firestore {
     // ============================================
     match /notifications/{notificationId} {
       // Read: All authenticated users can read notifications
-      allow read: if isAuthenticated();
+      allow read: if isOwner(resource.data.user_id);
       
       // Create: Any authenticated user can create notifications
       allow create: if isAuthenticated();
       
       // Update: Any authenticated user can update notifications
-      allow update: if isAuthenticated();
+      allow update: if isOwner(resource.data.user_id);
       
       // Delete: Any authenticated user can delete notifications
-      allow delete: if isAuthenticated();
+      allow delete: if isOwner(resource.data.user_id);
     }
     
     // ============================================
@@ -313,7 +330,7 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       
       // Create/Update: Any authenticated user can manage FAQs
-      allow create, update: if isAuthenticated();
+      allow create, update: if isAdmin();
       
       // Delete: Only admins can delete FAQs
       allow delete: if isAdmin();
@@ -324,7 +341,7 @@ service cloud.firestore {
     // ============================================
     match /idea_box/{ideaId} {
       // Read: All authenticated users can read idea box submissions
-      allow read: if isAuthenticated();
+      allow read: if isAdmin();
       
       // Create: Any authenticated user can submit ideas
       allow create: if isAuthenticated();

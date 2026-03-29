@@ -1,7 +1,9 @@
-import {onDocumentCreated, onDocumentUpdated} from
+import {onDocumentCreated, onDocumentDeleted, onDocumentUpdated} from
   "firebase-functions/v2/firestore";
 import {processActivityValidationRewards} from
   "./processActivityValidationRewards.js";
+import {syncActivityAggregateCounts} from
+  "../activity-mgt/syncActivityAggregateCounts.js";
 import {db} from "../init.js";
 import {FieldValue} from "firebase-admin/firestore";
 
@@ -116,7 +118,19 @@ export const onValidationCreated = onDocumentCreated(
       timeoutSeconds: 540,
     },
     async (event) => {
-      await processValidationRewards(event, false);
+      const activityId = event.params.activityId;
+      try {
+        await processValidationRewards(event, false);
+      } finally {
+        try {
+          await syncActivityAggregateCounts(activityId);
+        } catch (syncErr) {
+          console.error(
+              "[onValidationCreated] syncActivityAggregateCounts failed:",
+              syncErr,
+          );
+        }
+      }
     },
 );
 
@@ -131,21 +145,53 @@ export const onValidationUpdated = onDocumentUpdated(
       timeoutSeconds: 540,
     },
     async (event) => {
-      // Only process if status changed to 'validated'
-      const beforeData = event.data?.before?.data();
-      const afterData = event.data?.after?.data();
+      const activityId = event.params.activityId;
+      try {
+        const beforeData = event.data?.before?.data();
+        const afterData = event.data?.after?.data();
 
-      const beforeStatus = beforeData?.status;
-      const afterStatus = afterData?.status;
+        const beforeStatus = beforeData?.status;
+        const afterStatus = afterData?.status;
 
-      // Only process if status changed to 'validated' (wasn't validated before)
-      if (afterStatus === "validated" && beforeStatus !== "validated") {
-        await processValidationRewards(event, true);
-      } else {
-        console.log(
-            `Skipping reward processing - status change from ` +
-            `'${beforeStatus}' to '${afterStatus}' doesn't require ` +
-            `reward processing`,
+        if (afterStatus === "validated" && beforeStatus !== "validated") {
+          await processValidationRewards(event, true);
+        } else {
+          console.log(
+              `Skipping reward processing - status change from ` +
+              `'${beforeStatus}' to '${afterStatus}' doesn't require ` +
+              `reward processing`,
+          );
+        }
+      } finally {
+        try {
+          await syncActivityAggregateCounts(activityId);
+        } catch (syncErr) {
+          console.error(
+              "[onValidationUpdated] syncActivityAggregateCounts failed:",
+              syncErr,
+          );
+        }
+      }
+    },
+);
+
+/**
+ * Keep activity aggregate counters in sync when a validation is removed.
+ */
+export const onValidationDeleted = onDocumentDeleted(
+    {
+      document: "activities/{activityId}/validations/{validationId}",
+      memory: "256MiB",
+      timeoutSeconds: 120,
+    },
+    async (event) => {
+      const activityId = event.params.activityId;
+      try {
+        await syncActivityAggregateCounts(activityId);
+      } catch (syncErr) {
+        console.error(
+            "[onValidationDeleted] syncActivityAggregateCounts failed:",
+            syncErr,
         );
       }
     },

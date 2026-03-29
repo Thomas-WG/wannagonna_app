@@ -54,6 +54,7 @@ export default function LoginPage() {
   const [createPassword, setCreatePassword] = useState('');
   const [createConfirmPassword, setCreateConfirmPassword] = useState('');
   const [createReferralCode, setCreateReferralCode] = useState('');
+  const [createSubmitting, setCreateSubmitting] = useState(false);
 
   // Lost password state
   const [showResetPassword, setShowResetPassword] = useState(false);
@@ -217,6 +218,9 @@ export default function LoginPage() {
 
   // Function to handle account creation - Updated to validate referral code
   const handleCreateAccount = async ({ email, password, confirmPassword, referralCode }) => {
+    if (createSubmitting) {
+      return;
+    }
     setCreateErrorMessage('');
 
     // Check if passwords match
@@ -232,6 +236,7 @@ export default function LoginPage() {
       return;
     }
 
+    setCreateSubmitting(true);
     try {
       // Create a new user with Firebase
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -323,6 +328,8 @@ export default function LoginPage() {
       } else {
         setCreateErrorMessage(error.message || 'An error occurred while creating your account. Please try again.');
       }
+    } finally {
+      setCreateSubmitting(false);
     }
   };
 
@@ -474,6 +481,9 @@ export default function LoginPage() {
               className="flex flex-col gap-4 w-full max-w-sm mx-auto"
               onSubmit={(event) => {
                 event.preventDefault();
+                if (createSubmitting) {
+                  return;
+                }
                 setHasInteracted(true);
                 handleCreateAccount({
                   email: createEmail,
@@ -550,7 +560,8 @@ export default function LoginPage() {
               )}
               <button
                 type="submit"
-                className="mt-2 bg-primary-500 hover:bg-primary-600 dark:bg-primary-600 dark:hover:bg-primary-700 text-white py-2 px-4 rounded-md text-sm font-medium"
+                disabled={createSubmitting}
+                className="mt-2 bg-primary-500 hover:bg-primary-600 dark:bg-primary-600 dark:hover:bg-primary-700 text-white py-2 px-4 rounded-md text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {t('create')}
               </button>
@@ -564,10 +575,13 @@ export default function LoginPage() {
             {/* Google sign-up with mandatory referral code */}
             <button
               onClick={() => {
+                if (createSubmitting || googleIsLoading) {
+                  return;
+                }
                 setHasInteracted(true);
                 signInWithGoogle(createReferralCode);
               }}
-              disabled={googleIsLoading || !createReferralCode.trim()}
+              disabled={createSubmitting || googleIsLoading || !createReferralCode.trim()}
               className="w-full max-w-xs mx-auto py-3 px-6 bg-background-card dark:bg-background-card border border-border-light dark:border-border-dark rounded-lg flex items-center justify-center gap-3 hover:bg-background-hover dark:hover:bg-background-hover transition-colors duration-200 text-text-primary dark:text-text-primary text-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <FcGoogle className="text-2xl" />

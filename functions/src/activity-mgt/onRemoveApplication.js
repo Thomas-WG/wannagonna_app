@@ -16,7 +16,6 @@ export const updateApplicantsCountOnRemove = async (
     }
 
     const activity = activitySnap.data();
-    const newApplicantCount = (activity.applicants || 0) - 1;
 
     // Get organization document
     const organizationId = activity.organization_id;
@@ -34,15 +33,12 @@ export const updateApplicantsCountOnRemove = async (
     const organization = orgSnap.data();
     const newApplicationCount = (organization.total_new_applications || 0) - 1;
 
-    // Update both documents
-    transaction.update(activityRef, {applicants: newApplicantCount});
+    // Activity applicant counters are maintained by syncActivityAggregateCounts
     transaction.update(organizationRef,
         {total_new_applications: newApplicationCount});
 
-    console.log("Updated applicants count:", newApplicantCount);
-
     return {
-      activityApplicants: newApplicantCount,
+      activityApplicants: Math.max((activity.applicants || 0) - 1, 0),
       orgApplications: newApplicationCount,
       organizationId,
       activityTitle: activity.title || "an activity",
