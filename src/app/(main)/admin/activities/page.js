@@ -2,7 +2,7 @@
 
 import { Card, Toast } from "flowbite-react";
 import SortBySelect from '@/components/common/SortBySelect';
-import { HiUsers, HiOfficeBuilding, HiCalendar, HiDocumentText, HiViewGrid, HiLockClosed } from "react-icons/hi";
+import { HiUsers, HiOfficeBuilding, HiCalendar, HiViewGrid, HiLockClosed } from "react-icons/hi";
 import { HiDocumentText } from "react-icons/hi2";
 import ActivityCardActionsOverlay from "@/components/activities/ActivityCardActionsOverlay";
 import { MdOutlineSocialDistance } from "react-icons/md";
