@@ -934,6 +934,7 @@
         "confirmCancel": "Oui, Annuler la Candidature",
         "noKeepIt": "Non, Garder",
         "errorCancellingApplication": "Échec de l'annulation de la candidature. Veuillez réessayer.",
+        "applicationCancelled": "Candidature annulée avec succès.",
         "noMessageProvided": "Aucun message fourni",
         "statusAccepted": "Acceptée",
         "statusRejected": "Rejetée",

@@ -9,6 +9,11 @@ import {updateApplicantsCountOnRemove} from
   "./src/activity-mgt/onRemoveApplication.js";
 import {syncActivityAggregateCounts} from
   "./src/activity-mgt/syncActivityAggregateCounts.js";
+import {
+  upsertApplicationMirrors,
+  deleteApplicationMirrors,
+  maybeDecrementOrgPendingApplications,
+} from "./src/activity-mgt/syncApplicationMirrors.js";
 import {updateActivityCountOnAdd} from
   "./src/activity-mgt/onAddActivity.js";
 import {updateActivityCountOnRemove} from
@@ -62,6 +67,7 @@ export const onApplicationCreatedUpdateApplicantsCount = onDocumentCreated(
     "activities/{activityId}/applications/{applicationId}",
     async (event) => {
       const activityId = event.params.activityId;
+      const applicationId = event.params.applicationId;
       console.log("Activity ID:", activityId);
 
       await updateApplicantsCountOnAdd(activityId);
@@ -74,6 +80,22 @@ export const onApplicationCreatedUpdateApplicantsCount = onDocumentCreated(
             syncErr,
         );
       }
+      const createdData = event.data?.data();
+      if (createdData) {
+        try {
+          await upsertApplicationMirrors(
+              activityId,
+              applicationId,
+              createdData,
+          );
+        } catch (mirrorErr) {
+          console.error(
+              "[onApplicationCreatedUpdateApplicantsCount] " +
+              "upsertApplicationMirrors failed:",
+              mirrorErr,
+          );
+        }
+      }
     },
 );
 
@@ -81,6 +103,7 @@ export const onApplicationDeletedUpdateApplicantsCount = onDocumentDeleted(
     "activities/{activityId}/applications/{applicationId}",
     async (event) => {
       const activityId = event.params.activityId;
+      const applicationId = event.params.applicationId;
       const applicationData = event.data?.data();
       console.log("Activity ID:", activityId);
 
@@ -92,6 +115,15 @@ export const onApplicationDeletedUpdateApplicantsCount = onDocumentDeleted(
             "[onApplicationDeletedUpdateApplicantsCount] " +
             "syncActivityAggregateCounts failed:",
             syncErr,
+        );
+      }
+      try {
+        await deleteApplicationMirrors(applicationId, applicationData);
+      } catch (mirrorErr) {
+        console.error(
+            "[onApplicationDeletedUpdateApplicantsCount] " +
+            "deleteApplicationMirrors failed:",
+            mirrorErr,
         );
       }
     },
@@ -152,11 +184,39 @@ export const onApplicationStatusChangedNotifyUser = onDocumentUpdated(
       const before = event.data?.before?.data();
       const after = event.data?.after?.data();
 
-      if (!before || !after) {
+      if (!after) {
         return;
       }
 
       const activityId = event.params.activityId;
+      const applicationId = event.params.applicationId;
+
+      try {
+        await upsertApplicationMirrors(
+            activityId,
+            applicationId,
+            after,
+        );
+      } catch (mirrorErr) {
+        console.error(
+            "[onApplicationStatusChangedNotifyUser] " +
+            "upsertApplicationMirrors failed:",
+            mirrorErr,
+        );
+      }
+
+      if (before) {
+        try {
+          await maybeDecrementOrgPendingApplications(before, after);
+        } catch (decErr) {
+          console.error(
+              "[onApplicationStatusChangedNotifyUser] " +
+              "maybeDecrementOrgPendingApplications failed:",
+              decErr,
+          );
+        }
+      }
+
       try {
         await syncActivityAggregateCounts(activityId);
       } catch (syncErr) {
@@ -165,6 +225,10 @@ export const onApplicationStatusChangedNotifyUser = onDocumentUpdated(
             "syncActivityAggregateCounts failed:",
             syncErr,
         );
+      }
+
+      if (!before) {
+        return;
       }
 
       const beforeStatus = before.status;
@@ -181,8 +245,6 @@ export const onApplicationStatusChangedNotifyUser = onDocumentUpdated(
         );
         return;
       }
-
-      const applicationId = event.params.applicationId;
 
       try {
         // Handle cancelled status separately - notify NPO members

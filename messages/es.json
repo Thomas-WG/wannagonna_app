@@ -934,6 +934,7 @@
         "confirmCancel": "Sí, Cancelar Solicitud",
         "noKeepIt": "No, Mantenerla",
         "errorCancellingApplication": "Error al cancelar la solicitud. Por favor, inténtalo de nuevo.",
+        "applicationCancelled": "Solicitud cancelada correctamente.",
         "noMessageProvided": "No se proporcionó mensaje",
         "statusAccepted": "Aceptada",
         "statusRejected": "Rechazada",

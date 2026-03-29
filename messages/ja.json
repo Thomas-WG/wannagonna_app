@@ -934,6 +934,7 @@
         "confirmCancel": "はい、申請をキャンセルします",
         "noKeepIt": "いいえ、保持します",
         "errorCancellingApplication": "申請のキャンセルに失敗しました。もう一度お試しください。",
+        "applicationCancelled": "申請をキャンセルしました。",
         "noMessageProvided": "メッセージが提供されていません",
         "statusAccepted": "承認済み",
         "statusRejected": "拒否済み",

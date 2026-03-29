@@ -1,4 +1,4 @@
-import { collection, addDoc, getDoc, doc, query, where, getDocs, updateDoc, runTransaction, increment, Timestamp } from 'firebase/firestore';
+import { collection, getDoc, doc, query, where, getDocs, updateDoc, runTransaction, Timestamp, setDoc } from 'firebase/firestore';
 import { db } from 'firebaseConfig';
 import { fetchActivityById } from './crudActivities';
 import { grantBadgeToUser } from './crudBadges';
@@ -63,35 +63,12 @@ export const createApplication = async ({ activityId, userId, userEmail, message
       ...(shouldAutoAccept && { npo_response: defaultNpoResponse }),
     };
 
-    // Use transaction to ensure all operations succeed or all fail
+    // Canonical write only; Cloud Functions upsert member/org mirrors
     const result = await runTransaction(db, async (transaction) => {
-      // Add application to activity's applications collection
       const applicationsRef = collection(activityRef, 'applications');
-      const docRef = await addDoc(applicationsRef, applicationData);
-      
-      // Add application to user's applications collection
-      const userApplicationsRef = collection(userRef, 'applications');
-      transaction.set(doc(userApplicationsRef), {
-        ...applicationData,
-        application_id: docRef.id,
-      });
-
-      // Add application to organization's applications collection
-      const orgRef = doc(db, 'organizations', organizationId);
-      const orgApplicationsRef = collection(orgRef, 'applications');
-      transaction.set(doc(orgApplicationsRef), {
-        ...applicationData,
-        application_id: docRef.id,
-      });
-
-      // If auto-accept is enabled, update organization's totalNewApplications count
-      // (since it's already accepted, we don't increment the pending count)
-      if (shouldAutoAccept) {
-        // No need to increment totalNewApplications for auto-accepted applications
-        // They bypass the pending queue
-      }
-
-      return docRef.id;
+      const appRef = doc(applicationsRef);
+      transaction.set(appRef, applicationData);
+      return appRef.id;
     });
 
     // Grant badge if this is the first application (after transaction succeeds)
@@ -194,9 +171,6 @@ export const updateApplicationStatus = async (
       throw new Error('Application not found');
     }
 
-    // Check if we need to update the organization's totalNewApplications count
-    const shouldDecrementCount = applicationData.status === 'pending' && (status === 'accepted' || status === 'rejected' || status === 'cancelled');
-
     // Prepare update data - snake_case for Firestore
     const updateData = {
       status,
@@ -217,7 +191,7 @@ export const updateApplicationStatus = async (
       updateData.cancellation_message = cancellationMessage || '';
     }
 
-    // Update in activity's applications collection
+    // Canonical update only; mirrors and org pending decrement run in Cloud Functions
     await updateDoc(applicationRef, updateData);
     
     // If status is being changed to "accepted", initialize validation document and participation
@@ -238,37 +212,6 @@ export const updateApplicationStatus = async (
         console.log(`Participation created for user ${applicationData.user_id} on activity ${activityId}`);
       } catch (participationError) {
         console.error('Error creating participation:', participationError);
-      }
-    }
-    
-    if (applicationData) {
-      // Update in user's applications collection
-      const userRef = doc(db, 'members', applicationData.user_id);
-      const userApplicationsRef = collection(userRef, 'applications');
-        const userQuery = query(userApplicationsRef, where('application_id', '==', applicationId));
-      const userQuerySnapshot = await getDocs(userQuery);
-      
-      userQuerySnapshot.forEach(async (userDoc) => {
-        await updateDoc(userDoc.ref, updateData);
-      });
-
-      // Update in organization's applications collection
-      if (applicationData.organization_id) {
-        const orgRef = doc(db, 'organizations', applicationData.organization_id);
-        const orgApplicationsRef = collection(orgRef, 'applications');
-        const orgQuery = query(orgApplicationsRef, where('application_id', '==', applicationId));
-        const orgQuerySnapshot = await getDocs(orgQuery);
-        
-        orgQuerySnapshot.forEach(async (orgDoc) => {
-          await updateDoc(orgDoc.ref, updateData);
-        });
-
-        // Update organization's totalNewApplications count when status changes from pending
-        if (shouldDecrementCount) {
-          await updateDoc(orgRef, {
-            total_new_applications: increment(-1)
-          });
-        }
       }
     }
 
@@ -440,22 +383,9 @@ export const createOrUpdateApplicationAsAccepted = async (activityId, userId) =>
         organization_id: organizationId
       };
       
-      // Create application in activity's applications collection first
-      const docRef = await addDoc(applicationsRef, applicationData);
-      const applicationId = docRef.id;
-      
-      // Then add to user's and organization's collections
-      await addDoc(userApplicationsRef, {
-        ...applicationData,
-        application_id: applicationId,
-      });
-
-      const orgRef = doc(db, 'organizations', organizationId);
-      const orgApplicationsRef = collection(orgRef, 'applications');
-      await addDoc(orgApplicationsRef, {
-        ...applicationData,
-        application_id: applicationId,
-      });
+      const appRef = doc(applicationsRef);
+      await setDoc(appRef, applicationData);
+      const applicationId = appRef.id;
       
       // Grant firstApplication badge if this is the first application
       if (isFirstApplication) {

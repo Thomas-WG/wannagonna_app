@@ -934,6 +934,7 @@
         "confirmCancel": "Yes, Cancel Application",
         "noKeepIt": "No, Keep It",
         "errorCancellingApplication": "Failed to cancel application. Please try again.",
+        "applicationCancelled": "Application cancelled successfully.",
         "noMessageProvided": "No message provided",
         "statusAccepted": "Accepted",
         "statusRejected": "Rejected",
