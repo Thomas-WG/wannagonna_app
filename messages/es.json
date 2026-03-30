@@ -178,7 +178,10 @@
         "confirmDisableAllNotifications": "¿Desactivar todas las notificaciones?",
         "confirmDisableAllNotificationsMessage": "¿Estás seguro de que quieres desactivar todas las notificaciones? No recibirás ninguna notificación en la aplicación, push ni por correo para gamificación o actividades.",
         "confirm": "Confirmar",
-        "cancel": "Cancelar"
+        "cancel": "Cancelar",
+        "cookieSettings": "Cookies",
+        "cookieSettingsDescription": "Consulta y actualiza tus preferencias de cookies en cualquier momento.",
+        "manageCookies": "Gestionar cookies"
     },
     "Leaderboard": {
         "title": "Clasificación",
@@ -1134,6 +1137,23 @@
         "copyLink": "Copiar enlace",
         "copied": "¡Copiado!",
         "close": "Cerrar"
+    },
+    "CookieConsent": {
+        "bannerTitle": "Tus opciones de privacidad",
+        "bannerDescription": "Usamos cookies necesarias para el funcionamiento de la plataforma y cookies opcionales para preferencias y analíticas. Puedes aceptar todo, rechazar las no esenciales o personalizar tus opciones.",
+        "policyLinkLabel": "Leer la política de cookies",
+        "acceptAll": "Aceptar todo",
+        "refuse": "Rechazar no esenciales",
+        "customize": "Personalizar",
+        "modalTitle": "Preferencias de cookies",
+        "modalDescription": "Elige qué categorías opcionales permites. Las cookies necesarias siempre están activas porque son imprescindibles.",
+        "necessaryTitle": "Cookies necesarias (siempre activas)",
+        "necessaryDescription": "Necesarias para autenticación, seguridad, idioma y funciones principales de la plataforma.",
+        "preferencesTitle": "Cookies de preferencias",
+        "preferencesDescription": "Recuerdan tus elecciones para mejorar tu experiencia.",
+        "analyticsTitle": "Cookies analíticas",
+        "analyticsDescription": "Nos ayudan a entender el uso para mejorar el producto.",
+        "saveChoices": "Guardar mis opciones"
     },
     "impact_export": {
         "measurementType": {

@@ -20,7 +20,7 @@
 
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { auth, db } from 'firebaseConfig';
-import { doc, setDoc, Timestamp } from 'firebase/firestore';
+import { doc, setDoc, Timestamp, serverTimestamp } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { FcGoogle } from "react-icons/fc";
@@ -54,7 +54,11 @@ export default function LoginPage() {
   const [createPassword, setCreatePassword] = useState('');
   const [createConfirmPassword, setCreateConfirmPassword] = useState('');
   const [createReferralCode, setCreateReferralCode] = useState('');
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [guidelinesAccepted, setGuidelinesAccepted] = useState(false);
   const [createSubmitting, setCreateSubmitting] = useState(false);
+  const hasReferralCode = createReferralCode.trim().length > 0;
+  const canCreateAccount = termsAccepted && guidelinesAccepted && hasReferralCode;
 
   // Lost password state
   const [showResetPassword, setShowResetPassword] = useState(false);
@@ -291,6 +295,9 @@ export default function LoginPage() {
           flexible: false
         },
         created_at: Timestamp.now(),
+        terms_accepted: true,
+        guidelines_accepted: true,
+        terms_accepted_at: serverTimestamp(),
       };
       
       console.log('Creating member document with data:', { ...memberData, profile_picture: memberData.profile_picture ? 'URL set' : 'empty' });
@@ -510,6 +517,16 @@ export default function LoginPage() {
                 <p className="text-xs text-text-tertiary dark:text-text-tertiary mt-1">
                   {t('referralCodeHelper')} {t('referralCodeMandatoryNote')}
                 </p>
+                <p className="text-xs text-text-tertiary dark:text-text-tertiary mt-1">
+                  Don't have a referral code? Contact us at{' '}
+                  <a
+                    href="mailto:hello@wannagonna.org"
+                    className="text-[#009AA2] hover:underline"
+                  >
+                    hello@wannagonna.org
+                  </a>{' '}
+                  to request one.
+                </p>
               </div>
               <div>
                 <Label htmlFor="createEmail" className="text-text-primary dark:text-text-primary text-sm font-medium">
@@ -552,6 +569,58 @@ export default function LoginPage() {
                   className="mt-1 bg-background-card dark:bg-background-card !text-text-primary dark:!text-text-primary border-border-light dark:border-border-dark"
                 />
               </div>
+              {/* Legal PDFs should be placed manually at:
+                  /public/legal/terms-of-service.pdf and /public/legal/community-guidelines.pdf
+                  (served at /legal/terms-of-service.pdf and /legal/community-guidelines.pdf). */}
+              <div className="space-y-3">
+                <label className="flex items-start gap-2 text-sm text-text-primary dark:text-text-primary cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={termsAccepted}
+                    onChange={(e) => setTermsAccepted(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 rounded border-border-light dark:border-border-dark text-primary-600 focus:ring-primary-500 focus:ring-2"
+                  />
+                  <span>
+                    I have read and agree to the{' '}
+                    <a
+                      href="/legal/terms-of-service.pdf"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[#009AA2] hover:underline"
+                    >
+                      Terms of Service
+                    </a>{' '}
+                    and{' '}
+                    <a
+                      href="/legal/privacy-policy.pdf"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[#009AA2] hover:underline"
+                    >
+                      Privacy Policy
+                    </a>
+                  </span>
+                </label>
+                <label className="flex items-start gap-2 text-sm text-text-primary dark:text-text-primary cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={guidelinesAccepted}
+                    onChange={(e) => setGuidelinesAccepted(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 rounded border-border-light dark:border-border-dark text-primary-600 focus:ring-primary-500 focus:ring-2"
+                  />
+                  <span>
+                    I agree to the{' '}
+                    <a
+                      href="/legal/community-guidelines.pdf"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[#009AA2] hover:underline"
+                    >
+                      Community Guidelines
+                    </a>
+                  </span>
+                </label>
+              </div>
               {/* Display creation error message if exists */}
               {createErrorMessage && (
                 <div className="text-semantic-error-600 dark:text-semantic-error-400 text-center mb-2 text-sm">
@@ -560,8 +629,10 @@ export default function LoginPage() {
               )}
               <button
                 type="submit"
-                disabled={createSubmitting}
-                className="mt-2 bg-primary-500 hover:bg-primary-600 dark:bg-primary-600 dark:hover:bg-primary-700 text-white py-2 px-4 rounded-md text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={createSubmitting || !canCreateAccount}
+                className={`mt-2 bg-primary-500 dark:bg-primary-600 text-white py-2 px-4 rounded-md text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed ${
+                  createSubmitting || !canCreateAccount ? '' : 'hover:bg-primary-600 dark:hover:bg-primary-700'
+                }`}
               >
                 {t('create')}
               </button>
@@ -581,8 +652,10 @@ export default function LoginPage() {
                 setHasInteracted(true);
                 signInWithGoogle(createReferralCode);
               }}
-              disabled={createSubmitting || googleIsLoading || !createReferralCode.trim()}
-              className="w-full max-w-xs mx-auto py-3 px-6 bg-background-card dark:bg-background-card border border-border-light dark:border-border-dark rounded-lg flex items-center justify-center gap-3 hover:bg-background-hover dark:hover:bg-background-hover transition-colors duration-200 text-text-primary dark:text-text-primary text-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={createSubmitting || googleIsLoading || !canCreateAccount}
+              className={`w-full max-w-xs mx-auto py-3 px-6 bg-background-card dark:bg-background-card border border-border-light dark:border-border-dark rounded-lg flex items-center justify-center gap-3 transition-colors duration-200 text-text-primary dark:text-text-primary text-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed ${
+                createSubmitting || googleIsLoading || !canCreateAccount ? '' : 'hover:bg-background-hover dark:hover:bg-background-hover'
+              }`}
             >
               <FcGoogle className="text-2xl" />
               <span>{googleIsLoading ? 'Signing in...' : t('google')}</span>
