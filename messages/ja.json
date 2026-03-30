@@ -178,7 +178,10 @@
         "confirmDisableAllNotifications": "すべての通知を無効にしますか？",
         "confirmDisableAllNotificationsMessage": "すべての通知を無効にしてもよろしいですか？ゲーミフィケーションやアクティビティに関するアプリ内・プッシュ・メール通知は一切受け取れなくなります。",
         "confirm": "確認",
-        "cancel": "キャンセル"
+        "cancel": "キャンセル",
+        "cookieSettings": "Cookie設定",
+        "cookieSettingsDescription": "Cookieの設定はいつでも確認・変更できます。",
+        "manageCookies": "Cookieを管理"
     },
     "Leaderboard": {
         "title": "リーダーボード",
@@ -1134,6 +1137,23 @@
         "copyLink": "リンクをコピー",
         "copied": "コピーしました！",
         "close": "閉じる"
+    },
+    "CookieConsent": {
+        "bannerTitle": "プライバシー設定",
+        "bannerDescription": "当サービスでは、動作に必要なCookieと、設定保存・分析のための任意Cookieを使用します。すべて許可、必須以外を拒否、または個別に設定できます。",
+        "policyLinkLabel": "Cookieポリシーを確認",
+        "acceptAll": "すべて許可",
+        "refuse": "必須以外を拒否",
+        "customize": "カスタマイズ",
+        "modalTitle": "Cookie設定",
+        "modalDescription": "許可する任意カテゴリを選択してください。必須Cookieはサービス提供に必要なため常に有効です。",
+        "necessaryTitle": "必須Cookie（常に有効）",
+        "necessaryDescription": "認証、セキュリティ、言語設定、主要機能に必要です。",
+        "preferencesTitle": "設定Cookie",
+        "preferencesDescription": "ユーザー設定を保持し、体験を向上します。",
+        "analyticsTitle": "分析Cookie",
+        "analyticsDescription": "利用状況を把握し、サービス改善に役立てます。",
+        "saveChoices": "選択を保存"
     },
     "impact_export": {
         "measurementType": {

@@ -177,7 +177,10 @@
         "confirmDisableAllNotifications": "Disable All Notifications?",
         "confirmDisableAllNotificationsMessage": "Are you sure you want to disable all notifications? You will not receive any in-app, push, or email notifications for gamification or activities.",
         "confirm": "Confirm",
-        "cancel": "Cancel"
+        "cancel": "Cancel",
+        "cookieSettings": "Cookies",
+        "cookieSettingsDescription": "Review and update your cookie preferences at any time.",
+        "manageCookies": "Manage cookies"
     },
     "Leaderboard": {
         "title": "Leaderboard",
@@ -1134,6 +1137,23 @@
         "copyLink": "Copy Link",
         "copied": "Copied!",
         "close": "Close"
+    },
+    "CookieConsent": {
+        "bannerTitle": "Your privacy choices",
+        "bannerDescription": "We use necessary cookies to run the platform and optional cookies for preferences and analytics. You can accept all, refuse non-essential cookies, or customize your choices.",
+        "policyLinkLabel": "Read the cookie policy",
+        "acceptAll": "Accept all",
+        "refuse": "Refuse non-essential",
+        "customize": "Customize",
+        "modalTitle": "Cookie preferences",
+        "modalDescription": "Choose which optional cookie categories you allow. Necessary cookies are always enabled because they are required for core functionality.",
+        "necessaryTitle": "Necessary cookies (always active)",
+        "necessaryDescription": "Required for authentication, security, language selection, and core platform features.",
+        "preferencesTitle": "Preference cookies",
+        "preferencesDescription": "Remember your choices to improve your experience.",
+        "analyticsTitle": "Analytics cookies",
+        "analyticsDescription": "Help us understand usage to improve the product.",
+        "saveChoices": "Save my choices"
     },
     "impact_export": {
         "measurementType": {
