@@ -178,7 +178,10 @@
         "confirmDisableAllNotifications": "Désactiver toutes les notifications ?",
         "confirmDisableAllNotificationsMessage": "Êtes-vous sûr de vouloir désactiver toutes les notifications ? Vous ne recevrez aucune notification dans l'application, par push ou par e-mail pour la gamification ou les activités.",
         "confirm": "Confirmer",
-        "cancel": "Annuler"
+        "cancel": "Annuler",
+        "cookieSettings": "Cookies",
+        "cookieSettingsDescription": "Consultez et modifiez vos préférences cookies à tout moment.",
+        "manageCookies": "Gérer les cookies"
     },
     "Leaderboard": {
         "title": "Classement",
@@ -1134,6 +1137,23 @@
         "copyLink": "Copier le lien",
         "copied": "Copié !",
         "close": "Fermer"
+    },
+    "CookieConsent": {
+        "bannerTitle": "Vos choix de confidentialité",
+        "bannerDescription": "Nous utilisons des cookies nécessaires au fonctionnement de la plateforme et des cookies optionnels pour les préférences et la mesure d'audience. Vous pouvez tout accepter, refuser les cookies non essentiels ou personnaliser vos choix.",
+        "policyLinkLabel": "Lire la politique cookies",
+        "acceptAll": "Tout accepter",
+        "refuse": "Refuser les non essentiels",
+        "customize": "Personnaliser",
+        "modalTitle": "Préférences cookies",
+        "modalDescription": "Choisissez les catégories optionnelles que vous autorisez. Les cookies nécessaires sont toujours actifs car indispensables au service.",
+        "necessaryTitle": "Cookies nécessaires (toujours actifs)",
+        "necessaryDescription": "Indispensables à l'authentification, à la sécurité, au choix de langue et aux fonctionnalités principales.",
+        "preferencesTitle": "Cookies de préférence",
+        "preferencesDescription": "Mémorisent vos choix pour améliorer votre expérience.",
+        "analyticsTitle": "Cookies de mesure d'audience",
+        "analyticsDescription": "Nous aident à comprendre l'utilisation afin d'améliorer le service.",
+        "saveChoices": "Enregistrer mes choix"
     },
     "impact_export": {
         "measurementType": {

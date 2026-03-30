@@ -8,7 +8,7 @@
 import { useState } from 'react';
 import { signInWithPopup } from 'firebase/auth';
 import { auth, googleProvider, db } from 'firebaseConfig';
-import { doc, getDoc, setDoc, Timestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, Timestamp, serverTimestamp } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'use-intl';
 import { validateReferralCode, generateUserCode } from '@/utils/referralCode';
@@ -109,6 +109,9 @@ export function useGoogleSignIn() {
             flexible: false
           },
           created_at: Timestamp.now(),
+          terms_accepted: true,
+          guidelines_accepted: true,
+          terms_accepted_at: serverTimestamp(),
         };
 
         await setDoc(userDocRef, userData, { merge: true });

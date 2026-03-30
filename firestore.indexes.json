@@ -29,13 +29,6 @@
       "collectionGroup": "members",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "xp", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "members",
-      "queryScope": "COLLECTION",
-      "fields": [
         { "fieldPath": "country", "order": "ASCENDING" },
         { "fieldPath": "display_name", "order": "ASCENDING" }
       ]
