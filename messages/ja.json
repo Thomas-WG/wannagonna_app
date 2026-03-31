@@ -371,7 +371,8 @@
         "complexity-tooltip-complex": "複雑（例：建築設計、専門的なコンサルティング、高度な動画編集）",
         "impactParametersStepDescription": "この活動で追跡するインパクト指標を選択してください。それぞれにオプションの目標を設定できます。",
         "noImpactParametersAvailable": "利用可能なパラメータがありません。インパクトパラメータ設定からグローバルまたはカスタムパラメータを追加してください。",
-        "targetOptional": "目標（任意）"
+        "targetOptional": "目標（任意）",
+        "impactedSdgs": "関連するSDGs"
     },
     "DeleteActivity": {
         "delete-activity": "活動を削除",

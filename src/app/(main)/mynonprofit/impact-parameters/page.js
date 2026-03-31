@@ -32,6 +32,7 @@ const IMPACT_CATEGORIES = [
 ];
 
 const UNITS = ['kg', 'count', 'hours', 'm²', 'liters', 'meters', 'm2'];
+const SDG_NUMBERS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17];
 
 export default function ImpactParametersPage() {
   const t = useTranslations('MyNonProfit');
@@ -44,7 +45,7 @@ export default function ImpactParametersPage() {
   const [customParams, setCustomParams] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [addForm, setAddForm] = useState({ label: '', unit: 'count', category: 'people', measurement_type: 'output' });
+  const [addForm, setAddForm] = useState({ label: '', unit: 'count', category: 'people', measurement_type: 'output', sdg: [] });
   const [submitting, setSubmitting] = useState(false);
   const [toast, setToast] = useState({ show: false, type: '', message: '' });
 
@@ -89,10 +90,11 @@ export default function ImpactParametersPage() {
         unit: addForm.unit,
         category: addForm.category,
         measurement_type: addForm.measurement_type,
+        sdg: addForm.sdg || [],
       });
       queryClient.invalidateQueries({ queryKey: ['impactCustomParameters', orgId] });
       setShowAddModal(false);
-      setAddForm({ label: '', unit: 'count', category: 'people', measurement_type: 'output' });
+      setAddForm({ label: '', unit: 'count', category: 'people', measurement_type: 'output', sdg: [] });
       showToast('success', t('impactParameterCreated') || 'Parameter created');
     } catch (err) {
       console.error(err);
@@ -112,6 +114,17 @@ export default function ImpactParametersPage() {
       console.error(err);
       showToast('error', t('impactParameterError') || 'Failed to update');
     }
+  };
+
+  const toggleSdg = (num) => {
+    setAddForm((prev) => {
+      const next = [...(prev.sdg || [])];
+      const idx = next.indexOf(num);
+      if (idx >= 0) next.splice(idx, 1);
+      else next.push(num);
+      next.sort((a, b) => a - b);
+      return { ...prev, sdg: next };
+    });
   };
 
   return (
@@ -201,6 +214,9 @@ export default function ImpactParametersPage() {
                           {p.measurement_type && (
                             <span className="ml-1 text-xs"> · {tExport(`measurementType.${p.measurement_type}`)}</span>
                           )}
+                          {Array.isArray(p.sdg) && p.sdg.length > 0 && (
+                            <span className="ml-1 text-xs"> · {(t('sdgs') || 'SDGs')} {p.sdg.join(', ')}</span>
+                          )}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
@@ -281,6 +297,28 @@ export default function ImpactParametersPage() {
                   <option key={c} value={c}>{c}</option>
                 ))}
               </Select>
+            </div>
+            <div>
+              <Label>{t('sdgs') || 'SDGs'}</Label>
+              <div className="flex flex-wrap gap-2 mt-1">
+                {SDG_NUMBERS.map((num) => {
+                  const checked = (addForm.sdg || []).includes(num);
+                  return (
+                    <label
+                      key={num}
+                      className="inline-flex items-center gap-1.5 cursor-pointer text-sm"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => toggleSdg(num)}
+                        className="rounded border-gray-300"
+                      />
+                      <span>SDG {num}</span>
+                    </label>
+                  );
+                })}
+              </div>
             </div>
             <div>
               <div className="flex items-center gap-2">

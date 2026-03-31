@@ -371,7 +371,8 @@
         "complexity-tooltip-complex": "Complejo (ej.: diseño arquitectónico, consultoría especializada, edición avanzada de video)",
         "impactParametersStepDescription": "Selecciona métricas de impacto para esta actividad. Puedes establecer un objetivo opcional para cada una.",
         "noImpactParametersAvailable": "No hay parámetros disponibles. Añade parámetros globales o personalizados en la configuración de Parámetros de Impacto.",
-        "targetOptional": "Objetivo (opcional)"
+        "targetOptional": "Objetivo (opcional)",
+        "impactedSdgs": "ODS impactados"
     },
     "DeleteActivity": {
         "delete-activity": "Eliminar actividad",

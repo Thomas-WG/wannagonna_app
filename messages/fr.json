@@ -371,7 +371,8 @@
         "complexity-tooltip-complex": "Complexe (ex. : conception architecturale, conseil spécialisé, montage vidéo avancé)",
         "impactParametersStepDescription": "Sélectionnez les indicateurs d'impact à suivre pour cette activité. Vous pouvez définir un objectif optionnel pour chacun.",
         "noImpactParametersAvailable": "Aucun paramètre disponible. Ajoutez des paramètres globaux ou personnalisés dans les paramètres d'Impact.",
-        "targetOptional": "Objectif (optionnel)"
+        "targetOptional": "Objectif (optionnel)",
+        "impactedSdgs": "ODD impactés"
     },
     "DeleteActivity": {
         "delete-activity": "Supprimer l'activité",

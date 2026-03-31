@@ -370,7 +370,8 @@
         "complexity-tooltip-complex": "Complex (e.g., architectural design, specialized consulting, advanced video editing)",
         "impactParametersStepDescription": "Select impact metrics to track for this activity. You can set an optional target for each.",
         "noImpactParametersAvailable": "No parameters available. Add global or custom parameters from Impact Parameters settings.",
-        "targetOptional": "Target (optional)"
+        "targetOptional": "Target (optional)",
+        "impactedSdgs": "Impacted SDGs"
     },
     "DeleteActivity": {
         "delete-activity": "Delete Activity",
