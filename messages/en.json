@@ -7,8 +7,8 @@
         "heroEyebrow": "Launching soon",
         "heroSubtitle": "WannaGonna connects volunteers with NPOs who need them based on skills — online, locally, at events. Free. Measurable. Built to actually motivate people.",
         "heroCtaVolunteer": "For Volunteers",
-        "heroCtaNpo": "For NPOs — always free",
-        "whatsComingLabel": "What's coming",
+        "heroCtaNpo": "For NPOs",
+        "whatsComingLabel": "Our Platform",
         "featureOnlineTitle": "Online Volunteering",
         "featureOnlineDesc": "Contribute your skills remotely to NPOs worldwide. No commute, no borders — just impact from wherever you are.",
         "featureLocalTitle": "Local & Event Activities",
@@ -370,7 +370,8 @@
         "complexity-tooltip-complex": "Complex (e.g., architectural design, specialized consulting, advanced video editing)",
         "impactParametersStepDescription": "Select impact metrics to track for this activity. You can set an optional target for each.",
         "noImpactParametersAvailable": "No parameters available. Add global or custom parameters from Impact Parameters settings.",
-        "targetOptional": "Target (optional)"
+        "targetOptional": "Target (optional)",
+        "impactedSdgs": "Impacted SDGs"
     },
     "DeleteActivity": {
         "delete-activity": "Delete Activity",
