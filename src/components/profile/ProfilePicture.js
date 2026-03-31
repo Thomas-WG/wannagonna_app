@@ -22,7 +22,7 @@ export default function ProfilePicture({profileData, handleProfilePictureChange}
     // htmlFor attribute automatically triggers the input click - no manual trigger needed
   };
 
-  const profilePictureValue = profileData?.profilePicture || null;
+  const profilePictureValue = profileData?.profile_picture || null;
   const profilePicture = profilePictureValue && profilePictureValue.trim() !== '' ? profilePictureValue : null;
 
   return (
@@ -34,7 +34,7 @@ export default function ProfilePicture({profileData, handleProfilePictureChange}
         }
       }}>
         <ProfilePictureDisplay
-          src={profileData.profilePicture}
+          src={profileData.profile_picture}
           alt='Profile picture'
           size={96}
           className='cursor-pointer'

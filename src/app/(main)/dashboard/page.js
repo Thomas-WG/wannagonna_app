@@ -80,7 +80,7 @@ export default function DashboardPage() {
     refetchAll,
   } = useDashboardData(user?.uid);
 
-  const impactSummary = profileData?.impactSummary;
+  const impact_summary = profileData?.impact_summary;
 
   // Fetch badges once for both ProfileSection and BadgeList
   const { data: userBadges = [], isLoading: badgesLoading } = usePublicProfileBadges(user?.uid);
@@ -173,20 +173,20 @@ export default function DashboardPage() {
     if (!cancelApplication) return;
     const { application, activity } = cancelApplication;
 
-    if (!application.activityId || !application.applicationId || !application.id) return;
+    if (!application.activity_id || !application.application_id) return;
 
     setIsCancelling(true);
     try {
       await updateApplicationStatus(
-        application.activityId,
-        application.applicationId,
+        application.activity_id,
+        application.application_id,
         'cancelled',
-        application.npoResponse || '',
-        application.userId || null,
+        application.npo_response || '',
+        application.user_id || null,
         cancelMessage.trim() || ''
       );
 
-      handleApplicationUpdated(application.id, 'cancelled');
+      handleApplicationUpdated(application.application_id, 'cancelled');
       closeCancelModal();
       setCancelMessage('');
       setStoreCancelMessage('');
@@ -270,7 +270,7 @@ export default function DashboardPage() {
       </DashboardErrorBoundary>
 
       {/* Impact summary for member (total hours + activities + parameters) */}
-      {impactSummary && (
+      {impact_summary && (
         <div className="mb-6 sm:mb-8">
           <h2 className="section-title text-lg sm:text-xl font-semibold mb-3 sm:mb-4 px-1 text-text-primary dark:text-text-primary">
             {tProfile('impact') || 'Impact'}
@@ -282,7 +282,7 @@ export default function DashboardPage() {
                   {tProfile('totalHours') || 'Hours contributed'}
                 </p>
                 <p className="text-xl font-bold text-text-primary dark:text-text-primary">
-                  {(impactSummary.totalHours ?? 0).toFixed(1)}
+                  {(impact_summary.total_hours ?? 0).toFixed(1)}
                 </p>
               </div>
               <div>
@@ -290,14 +290,15 @@ export default function DashboardPage() {
                   {tProfile('activitiesCompleted') || 'Activities completed'}
                 </p>
                 <p className="text-xl font-bold text-text-primary dark:text-text-primary">
-                  {impactSummary.totalActivities ?? 0}
+                  {impact_summary.total_activities ?? 0}
                 </p>
               </div>
             </div>
-            {impactSummary.parameters && Object.keys(impactSummary.parameters).length > 0 && (
+            {impact_summary.parameters && Object.keys(impact_summary.parameters).length > 0 && (
               <ul className="space-y-1 text-sm border-t border-gray-200 dark:border-gray-700 pt-3">
-                {Object.entries(impactSummary.parameters).map(([paramId, value]) => {
-                  const metaFromSummary = impactSummary.parameterMeta?.[paramId] || {};
+                {Object.entries(impact_summary.parameters).map(([paramId, value]) => {
+                  const pm = impact_summary.parameter_meta ?? {};
+                  const metaFromSummary = pm[paramId] || {};
                   const meta = { ...globalParamMeta[paramId], ...metaFromSummary };
                   const label = meta.label || paramId;
                   const unit = meta.unit ? ` ${meta.unit}` : '';
@@ -340,10 +341,10 @@ export default function DashboardPage() {
             applicationsWithActivities={applicationsWithActivities}
             user={user}
             displayName={
-              profileData?.displayName || user?.displayName || user?.email || 'Volunteer'
+              profileData?.display_name || user?.displayName || user?.email || 'Volunteer'
             }
             profilePicture={(() => {
-              const profilePictureValue = profileData?.profilePicture || user?.photoURL || null;
+              const profilePictureValue = profileData?.profile_picture || user?.photoURL || null;
               return profilePictureValue && profilePictureValue.trim() !== '' ? profilePictureValue : null;
             })()}
             onApplicationUpdated={handleApplicationUpdated}

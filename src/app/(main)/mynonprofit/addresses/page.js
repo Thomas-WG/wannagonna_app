@@ -24,7 +24,7 @@ export default function AddressesPage() {
   const t = useTranslations('MyNonProfit');
   const { claims } = useAuth();
   const queryClient = useQueryClient();
-  const organizationId = claims?.npoId;
+  const organizationId = claims?.npo_id;
 
   const [showModal, setShowModal] = useState(false);
   const [editingAddress, setEditingAddress] = useState(null);

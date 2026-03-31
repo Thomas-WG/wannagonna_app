@@ -21,7 +21,7 @@ import { db } from 'firebaseConfig';
  * @property {boolean} isActive
  * @property {boolean} [isEstimated]
  * @property {"global"|"npo"} scope
- * @property {import('firebase/firestore').Timestamp} [createdAt]
+ * @property {import('firebase/firestore').Timestamp} [created_at]
  */
 
 /**
@@ -44,8 +44,8 @@ export function groupImpactParametersByCategory(list) {
  * @returns {Promise<ImpactParameter[]>}
  */
 export async function getGlobalParameters() {
-  const col = collection(db, 'impactParameters');
-  const q = query(col, where('scope', '==', 'global'), where('isActive', '==', true));
+  const col = collection(db, 'impact_parameters');
+  const q = query(col, where('scope', '==', 'global'), where('is_active', '==', true));
   const snapshot = await getDocs(q);
   return snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
@@ -55,7 +55,7 @@ export async function getGlobalParameters() {
  * @returns {Promise<ImpactParameter[]>}
  */
 export async function getAllGlobalParameters() {
-  const col = collection(db, 'impactParameters');
+  const col = collection(db, 'impact_parameters');
   const q = query(col, where('scope', '==', 'global'));
   const snapshot = await getDocs(q);
   return snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
@@ -85,7 +85,7 @@ export async function getAllParametersForNpo(orgId) {
   const byId = new Map();
   global.forEach((p) => byId.set(p.id, { ...p, scope: 'global' }));
   custom
-    .filter((p) => p.isActive !== false)
+    .filter((p) => p.is_active !== false)
     .forEach((p) => byId.set(p.id, { ...p, scope: 'npo' }));
   return Array.from(byId.values());
 }
@@ -102,11 +102,11 @@ export async function createCustomParameter(orgId, data) {
     label: data.label,
     unit: data.unit,
     category: data.category,
-    isActive: true,
+    is_active: true,
     scope: 'npo',
-    createdAt: Timestamp.now()
+    created_at: Timestamp.now()
   };
-  if (data.measurementType) docData.measurementType = data.measurementType;
+  if (data.measurement_type != null) docData.measurement_type = data.measurement_type;
   if (Array.isArray(data.sdg)) docData.sdg = data.sdg;
   const docRef = await addDoc(col, docData);
   return docRef.id;
@@ -120,7 +120,7 @@ export async function createCustomParameter(orgId, data) {
  */
 export async function toggleCustomParameter(orgId, parameterId, isActive) {
   const ref = doc(db, 'organizations', orgId, 'customParameters', parameterId);
-  await updateDoc(ref, { isActive });
+  await updateDoc(ref, { is_active: isActive });
 }
 
 /**
@@ -129,8 +129,16 @@ export async function toggleCustomParameter(orgId, parameterId, isActive) {
  * @param {Partial<Pick<ImpactParameter, 'label'|'unit'|'category'|'measurementType'|'isActive'|'isEstimated'|'sdg'>>} data
  */
 export async function updateGlobalParameter(parameterId, data) {
-  const ref = doc(db, 'impactParameters', parameterId);
-  await updateDoc(ref, data);
+  const ref = doc(db, 'impact_parameters', parameterId);
+  const mapped = {};
+  if (data.label != null) mapped.label = data.label;
+  if (data.unit != null) mapped.unit = data.unit;
+  if (data.category != null) mapped.category = data.category;
+  if (data.measurement_type != null) mapped.measurement_type = data.measurement_type;
+  if (data.is_active != null) mapped.is_active = data.is_active;
+  if (data.is_estimated != null) mapped.is_estimated = data.is_estimated;
+  if (data.sdg != null) mapped.sdg = data.sdg;
+  await updateDoc(ref, mapped);
 }
 
 /**
@@ -139,18 +147,18 @@ export async function updateGlobalParameter(parameterId, data) {
  * @returns {Promise<string>}
  */
 export async function createGlobalParameter(data) {
-  const col = collection(db, 'impactParameters');
+  const col = collection(db, 'impact_parameters');
   const docData = {
     label: data.label,
     unit: data.unit,
     category: data.category,
     sdg: data.sdg || [],
-    isActive: data.isActive !== false,
-    isEstimated: data.isEstimated === true,
+    is_active: data.is_active !== false,
+    is_estimated: data.is_estimated === true,
     scope: 'global',
-    createdAt: Timestamp.now()
+    created_at: Timestamp.now()
   };
-  if (data.measurementType) docData.measurementType = data.measurementType;
+  if (data.measurement_type != null) docData.measurement_type = data.measurement_type;
   const docRef = await addDoc(col, docData);
   return docRef.id;
 }
@@ -163,7 +171,14 @@ export async function createGlobalParameter(data) {
  */
 export async function updateCustomParameter(orgId, parameterId, data) {
   const ref = doc(db, 'organizations', orgId, 'customParameters', parameterId);
-  await updateDoc(ref, data);
+  const mapped = {};
+  if (data.label != null) mapped.label = data.label;
+  if (data.unit != null) mapped.unit = data.unit;
+  if (data.category != null) mapped.category = data.category;
+  if (data.measurement_type != null) mapped.measurement_type = data.measurement_type;
+  if (data.is_active != null) mapped.is_active = data.is_active;
+  if (data.sdg != null) mapped.sdg = data.sdg;
+  await updateDoc(ref, mapped);
 }
 
 /**
@@ -184,27 +199,27 @@ export async function seedGlobalParameters() {
 
   let created = 0;
   let updated = 0;
-  const col = collection(db, 'impactParameters');
+  const col = collection(db, 'impact_parameters');
 
   for (const item of GLOBAL_PARAMETERS_SEED) {
     const data = {
       label: item.label,
       unit: item.unit,
       category: item.category,
-      measurementType: item.measurementType,
+      measurement_type: item.measurement_type,
       sdg: item.sdg || [],
       seedKey: item.seedKey,
-      isActive: true,
+      is_active: true,
       scope: 'global',
     };
 
     let existingParam = bySeedKey.get(item.seedKey) || byLabel.get(item.label.trim().toLowerCase());
     if (existingParam) {
-      await updateDoc(doc(db, 'impactParameters', existingParam.id), {
+      await updateDoc(doc(db, 'impact_parameters', existingParam.id), {
         label: data.label,
         unit: data.unit,
         category: data.category,
-        measurementType: data.measurementType,
+        measurement_type: data.measurement_type,
         sdg: data.sdg,
         seedKey: item.seedKey,
       });
@@ -212,7 +227,7 @@ export async function seedGlobalParameters() {
     } else {
       await addDoc(col, {
         ...data,
-        createdAt: Timestamp.now(),
+        created_at: Timestamp.now(),
       });
       created++;
     }

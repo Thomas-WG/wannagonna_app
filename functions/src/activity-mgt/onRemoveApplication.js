@@ -1,3 +1,4 @@
+import {FieldValue} from "firebase-admin/firestore";
 import {db} from "../init.js";
 import {sendUserNotification} from "../notifications/notificationService.js";
 
@@ -5,10 +6,30 @@ export const updateApplicantsCountOnRemove = async (
     activityId,
     applicationData,
 ) => {
+  const activityRef = db.collection("activities").doc(activityId);
+  const activitySnapPre = await activityRef.get();
+
+  // Activity was already removed (e.g. cascade delete). Adjust org counters
+  // without sending cancellation notifications.
+  if (!activitySnapPre.exists) {
+    const organizationId = applicationData?.organization_id;
+    if (organizationId) {
+      try {
+        await db.collection("organizations").doc(organizationId).update({
+          total_new_applications: FieldValue.increment(-1),
+        });
+      } catch (err) {
+        console.error(
+            "[updateApplicantsCountOnRemove] org decrement (activity gone):",
+            err,
+        );
+      }
+    }
+    return null;
+  }
+
   // First, run the transaction to update counts and gather data
   const result = await db.runTransaction(async (transaction) => {
-    // Get activity document
-    const activityRef = db.collection("activities").doc(activityId);
     const activitySnap = await transaction.get(activityRef);
 
     if (!activitySnap.exists) {
@@ -16,10 +37,9 @@ export const updateApplicantsCountOnRemove = async (
     }
 
     const activity = activitySnap.data();
-    const newApplicantCount = (activity.applicants || 0) - 1;
 
     // Get organization document
-    const organizationId = activity.organizationId;
+    const organizationId = activity.organization_id;
     if (!organizationId) {
       throw new Error("Activity is missing organizationId!");
     }
@@ -32,21 +52,18 @@ export const updateApplicantsCountOnRemove = async (
     }
 
     const organization = orgSnap.data();
-    const newApplicationCount = (organization.totalNewApplications || 0) - 1;
+    const newApplicationCount = (organization.total_new_applications || 0) - 1;
 
-    // Update both documents
-    transaction.update(activityRef, {applicants: newApplicantCount});
+    // Activity applicant counters are maintained by syncActivityAggregateCounts
     transaction.update(organizationRef,
-        {totalNewApplications: newApplicationCount});
-
-    console.log("Updated applicants count:", newApplicantCount);
+        {total_new_applications: newApplicationCount});
 
     return {
-      activityApplicants: newApplicantCount,
+      activityApplicants: Math.max((activity.applicants || 0) - 1, 0),
       orgApplications: newApplicationCount,
       organizationId,
       activityTitle: activity.title || "an activity",
-      userId: applicationData?.userId || null,
+      userId: applicationData?.user_id || null,
     };
   });
 
@@ -62,8 +79,8 @@ export const updateApplicantsCountOnRemove = async (
         body: `You cancelled your application for "${activityTitle}".`,
         link: "/dashboard",
         metadata: {
-          activityId,
-          organizationId,
+          activity_id: activityId,
+          organization_id: organizationId,
           status: "cancelled",
         },
       });
@@ -76,7 +93,7 @@ export const updateApplicantsCountOnRemove = async (
   if (organizationId) {
     try {
       const membersSnap = await db.collection("members")
-          .where("npoId", "==", organizationId)
+          .where("npo_id", "==", organizationId)
           .get();
 
       if (!membersSnap.empty) {
@@ -89,10 +106,10 @@ export const updateApplicantsCountOnRemove = async (
               `for "${activityTitle}".`,
             link: "/mynonprofit/activities/applications",
             metadata: {
-              activityId,
-              organizationId,
+              activity_id: activityId,
+              organization_id: organizationId,
               status: "cancelled",
-              cancelledByUserId: userId || null,
+              cancelled_by_user_id: userId || null,
             },
           }),
         );

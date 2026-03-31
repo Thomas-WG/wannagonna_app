@@ -1,6 +1,5 @@
 'use client';
 
-import { Badge } from 'flowbite-react';
 import { useTranslations } from 'next-intl';
 
 /**
@@ -13,63 +12,47 @@ export default function AboutSection({ profileData, translatedSkills, isMobile =
 
   if (!profileData) return null;
 
-  const hasContent = profileData.bio || profileData.cause || profileData.hobbies || 
-                     (profileData.languages && profileData.languages.length > 0) ||
-                     (translatedSkills && translatedSkills.length > 0);
+  const hasContent = profileData.bio || profileData.cause || profileData.hobbies ||
+                     (profileData.languages && profileData.languages.length > 0);
 
   if (!hasContent) return null;
 
+  const languages = profileData.languages || [];
+  const languagesText = languages
+    .map((lang) => (typeof lang === 'object' ? lang.label : lang))
+    .filter(Boolean)
+    .join(', ');
+
+  const subsections = [
+    { title: tProfile('bioLabel'), content: profileData.bio },
+    { title: tProfile('causeLabel'), content: profileData.cause },
+    { title: tProfile('hobbiesLabel'), content: profileData.hobbies },
+    { title: t('languages'), content: languagesText ? <p className="text-sm text-[#3F3F3F] dark:text-text-secondary font-light">{languagesText}</p> : null },
+  ].filter((s) => s.content);
+
   return (
-    <div className="space-y-4">
+    <div className="rounded-xl p-4 border border-gray-100 dark:border-gray-700 shadow-sm space-y-4">
       <h3 className="text-xl font-semibold text-text-primary dark:text-text-primary">{tProfile('about')}</h3>
-      
-      {profileData.bio && (
-        <div>
-          <p className="text-sm font-medium text-text-primary dark:text-text-primary mb-1">{tProfile('bioLabel')}</p>
-          <p className="text-text-secondary dark:text-text-secondary whitespace-pre-wrap break-words">{profileData.bio}</p>
-        </div>
-      )}
-      
-      {profileData.cause && (
-        <div>
-          <p className="text-sm font-medium text-text-primary dark:text-text-primary mb-1">{tProfile('causeLabel')}</p>
-          <p className="text-text-secondary dark:text-text-secondary whitespace-pre-wrap break-words">{profileData.cause}</p>
-        </div>
-      )}
-      
-      {profileData.hobbies && (
-        <div>
-          <p className="text-sm font-medium text-text-primary dark:text-text-primary mb-1">{tProfile('hobbiesLabel')}</p>
-          <p className="text-text-secondary dark:text-text-secondary whitespace-pre-wrap break-words">{profileData.hobbies}</p>
-        </div>
-      )}
-      
-      {profileData.languages && profileData.languages.length > 0 && (
-        <div>
-          <p className="text-sm font-medium text-text-primary dark:text-text-primary mb-2">{t('languages')}</p>
-          <div className="flex flex-wrap gap-2">
-            {profileData.languages.map((lang, idx) => (
-              <Badge key={idx} color="gray" className="text-xs">
-                {typeof lang === 'object' ? lang.label : lang}
-              </Badge>
-            ))}
+
+      <div className="space-y-0">
+        {subsections.map((subsection, idx) => (
+          <div
+            key={idx}
+            className="pb-4 border-b border-[#f0f0f0] dark:border-border-light last:border-b-0 last:pb-0"
+          >
+            <h4 className="text-xs font-bold uppercase tracking-widest text-[#9ca3af] dark:text-text-tertiary mb-2">
+              {subsection.title}
+            </h4>
+            <div className="text-sm text-[#3F3F3F] dark:text-text-secondary font-light leading-relaxed">
+              {typeof subsection.content === 'string' ? (
+                <p className="whitespace-pre-wrap break-words">{subsection.content}</p>
+              ) : (
+                subsection.content
+              )}
+            </div>
           </div>
-        </div>
-      )}
-      
-      {/* Skills shown in About section for desktop only (mobile shows them in SkillsAvailabilitySection) */}
-      {!isMobile && translatedSkills && translatedSkills.length > 0 && (
-        <div>
-          <p className="text-sm font-medium text-text-primary dark:text-text-primary mb-2">{t('skills')}</p>
-          <div className="flex flex-wrap gap-2">
-            {translatedSkills.map((skill, idx) => (
-              <Badge key={idx} color="info" className="text-xs">
-                {skill.label || skill.value || skill}
-              </Badge>
-            ))}
-          </div>
-        </div>
-      )}
+        ))}
+      </div>
     </div>
   );
 }

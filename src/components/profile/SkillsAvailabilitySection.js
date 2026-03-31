@@ -7,15 +7,16 @@ import { useTranslations } from 'next-intl';
 /**
  * Helper function to get selected time commitment options
  */
-function getSelectedTimeCommitments(profileData, t) {
-  if (!profileData?.timeCommitment) return [];
+function get_selected_time_commitments(profileData, t) {
+  const tc = profileData?.time_commitment;
+  if (!tc) return [];
   const commitments = [];
-  if (profileData.timeCommitment.daily) commitments.push(t('daily') || 'Daily');
-  if (profileData.timeCommitment.weekly) commitments.push(t('weekly') || 'Weekly');
-  if (profileData.timeCommitment.biweekly) commitments.push(t('biweekly') || 'Every two weeks');
-  if (profileData.timeCommitment.monthly) commitments.push(t('monthly') || 'Monthly');
-  if (profileData.timeCommitment.occasional) commitments.push(t('occasionally') || 'Occasionally');
-  if (profileData.timeCommitment.flexible) commitments.push(t('flexible') || 'Flexible');
+  if (tc.daily) commitments.push(t('daily') || 'Daily');
+  if (tc.weekly) commitments.push(t('weekly') || 'Weekly');
+  if (tc.biweekly) commitments.push(t('biweekly') || 'Every two weeks');
+  if (tc.monthly) commitments.push(t('monthly') || 'Monthly');
+  if (tc.occasional) commitments.push(t('occasionally') || 'Occasionally');
+  if (tc.flexible) commitments.push(t('flexible') || 'Flexible');
   return commitments;
 }
 
@@ -43,65 +44,75 @@ export default function SkillsAvailabilitySection({ profileData, translatedSkill
 
   if (!profileData) return null;
 
-  const timeCommitments = getSelectedTimeCommitments(profileData, t);
+  const selected_time_commitments = get_selected_time_commitments(profileData, t);
   const availabilities = getSelectedAvailabilities(profileData, t);
   const hasSkills = translatedSkills && translatedSkills.length > 0;
   // On mobile, show skills here. On desktop, skills are shown in AboutSection
-  const hasContent = timeCommitments.length > 0 || availabilities.length > 0 || hasSkills;
+  const hasContent = selected_time_commitments.length > 0 || availabilities.length > 0 || hasSkills;
 
   if (!hasContent) return null;
 
   return (
-    <div className="space-y-4">
+    <div className="rounded-xl p-4 border border-gray-100 dark:border-gray-700 shadow-sm space-y-4">
       <h3 className="text-xl font-semibold text-text-primary dark:text-text-primary">{t('skillsAvailable') || 'Skills & Availability'}</h3>
-      
-      {/* Skills shown here for mobile, in AboutSection for desktop */}
-      {hasSkills && (
-        <div>
-          <p className="text-sm font-medium text-text-primary dark:text-text-primary mb-2">{t('skills')}</p>
-          <div className="flex flex-wrap gap-2">
-            {translatedSkills.map((skill, idx) => (
-              <Badge key={idx} color="info" className="text-xs">
-                {skill.label || skill.value || skill}
-              </Badge>
-            ))}
+
+      <div className="space-y-5">
+        {/* Skills block — keep teal style, prominent for NPOs */}
+        {hasSkills && (
+          <div>
+            <h4 className="text-xs font-bold uppercase tracking-widest text-[#9ca3af] dark:text-text-tertiary mb-2.5">
+              {t('skills')}
+            </h4>
+            <div className="flex flex-wrap gap-2">
+              {translatedSkills.map((skill, idx) => (
+                <Badge key={idx} color="info" className="text-xs">
+                  {skill.label || skill.value || skill}
+                </Badge>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
-      
-      {/* Time Commitment */}
-      {timeCommitments.length > 0 && (
-        <div>
-          <p className="text-sm font-medium text-text-primary dark:text-text-primary mb-2 flex items-center gap-2">
-            <HiClock className="w-4 h-4 text-text-tertiary dark:text-text-tertiary" />
-            {t('frequency') || 'How often can you help?'}
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {timeCommitments.map((commitment, idx) => (
-              <Badge key={idx} color="gray" className="text-xs">
-                {commitment}
-              </Badge>
-            ))}
+        )}
+
+        {/* Time Commitment — softened read-only style */}
+        {selected_time_commitments.length > 0 && (
+          <div>
+            <h4 className="text-xs font-bold uppercase tracking-widest text-[#9ca3af] dark:text-text-tertiary mb-2.5 flex items-center gap-2">
+              <HiClock className="w-4 h-4" />
+              {t('frequency') || 'How often can you help?'}
+            </h4>
+            <div className="flex flex-wrap gap-2">
+              {selected_time_commitments.map((commitment, idx) => (
+                <span
+                  key={idx}
+                  className="px-2.5 py-0.5 rounded-full bg-[#f5f5f5] dark:bg-background-hover text-xs text-[#6b7280] dark:text-text-tertiary font-normal"
+                >
+                  {commitment}
+                </span>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
-      
-      {/* Availability */}
-      {availabilities.length > 0 && (
-        <div>
-          <p className="text-sm font-medium text-text-primary dark:text-text-primary mb-2 flex items-center gap-2">
-            <HiCalendar className="w-4 h-4 text-text-tertiary dark:text-text-tertiary" />
-            {t('availabilities') || 'When are you usually available?'}
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {availabilities.map((availability, idx) => (
-              <Badge key={idx} color="info" className="text-xs">
-                {availability}
-              </Badge>
-            ))}
+        )}
+
+        {/* Availability — softened read-only style */}
+        {availabilities.length > 0 && (
+          <div>
+            <h4 className="text-xs font-bold uppercase tracking-widest text-[#9ca3af] dark:text-text-tertiary mb-2.5 flex items-center gap-2">
+              <HiCalendar className="w-4 h-4" />
+              {t('availabilities') || 'When are you usually available?'}
+            </h4>
+            <div className="flex flex-wrap gap-2">
+              {availabilities.map((availability, idx) => (
+                <span
+                  key={idx}
+                  className="px-2.5 py-0.5 rounded-full bg-[#f5f5f5] dark:bg-background-hover text-xs text-[#6b7280] dark:text-text-tertiary font-normal"
+                >
+                  {availability}
+                </span>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

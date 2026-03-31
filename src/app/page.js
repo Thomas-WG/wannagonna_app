@@ -15,7 +15,7 @@ import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { setUserLocaleClient } from '@/utils/localeClient';
 import { useLocale } from 'next-intl';
-import { addWaitlistEntry, addContactSubmission } from '@/utils/crudContact';
+import { addContactSubmission } from '@/utils/crudContact';
 
 const LANGUAGE_OPTIONS = [
   { label: 'English', value: 'en' },
@@ -67,11 +67,7 @@ export default function Home() {
   const t = useTranslations('Landing');
   const locale = useLocale();
 
-  const [waitlistEmail, setWaitlistEmail] = useState('');
   const [audienceType, setAudienceType] = useState('volunteer');
-  const [waitlistSubmitting, setWaitlistSubmitting] = useState(false);
-  const [waitlistToast, setWaitlistToast] = useState({ show: false, type: 'success', message: '' });
-  const [waitlistError, setWaitlistError] = useState('');
   const [contactName, setContactName] = useState('');
   const [contactEmail, setContactEmail] = useState('');
   const [contactMessage, setContactMessage] = useState('');
@@ -80,9 +76,6 @@ export default function Home() {
   const [contactError, setContactError] = useState('');
   const sectionRefs = useRef([]);
 
-  useEffect(() => {
-    if (!loading && user) router.push('/dashboard');
-  }, [user, loading, router]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -101,27 +94,6 @@ export default function Home() {
   const handleLanguageChange = (locale) => {
     setUserLocaleClient(locale);
     router.refresh();
-  };
-
-  const handleWaitlistSubmit = async (e) => {
-    e.preventDefault();
-    setWaitlistError('');
-    if (!waitlistEmail.trim()) {
-      setWaitlistError(t('stayInTouchEmailRequired'));
-      return;
-    }
-    setWaitlistSubmitting(true);
-    try {
-      await addWaitlistEntry({ email: waitlistEmail.trim(), audienceType });
-      setWaitlistToast({ show: true, type: 'success', message: t('stayInTouchSuccess') });
-      setWaitlistEmail('');
-      setTimeout(() => setWaitlistToast((prev) => ({ ...prev, show: false })), 5000);
-    } catch (err) {
-      console.error('Waitlist submit error:', err);
-      setWaitlistToast({ show: true, type: 'error', message: t('stayInTouchError') });
-    } finally {
-      setWaitlistSubmitting(false);
-    }
   };
 
   const handleContactSubmit = async (e) => {
@@ -162,7 +134,6 @@ export default function Home() {
       </div>
     );
   }
-  if (user) return null;
 
   return (
     <div className="relative min-h-dvh bg-[#fafaf9] text-[#1A1A1A] overflow-x-hidden">
@@ -190,10 +161,13 @@ export default function Home() {
             />
           </a>
           <div className="flex items-center gap-3">
-            <span className="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[#009AA2]/30 bg-[#009AA2]/8 text-[#009AA2] text-xs font-semibold font-montserrat-alt tracking-wide">
-              <span className="landing-pulse-dot" />
-              {t('heroEyebrow')}
-            </span>
+            <button
+              type="button"
+              onClick={() => router.push('/login')}
+              className="inline-flex items-center px-4 py-2 rounded-full bg-[#009AA2] text-white text-xs sm:text-sm font-bold font-montserrat-alt hover:bg-[#007a81] transition-colors whitespace-nowrap"
+            >
+              Get Started
+            </button>
             <Dropdown
               label={LANGUAGE_OPTIONS.find((o) => o.value === locale)?.label ?? t('selectLanguage')}
               inline
@@ -217,10 +191,7 @@ export default function Home() {
           {/* HERO */}
           <section className="flex flex-col items-center justify-center text-center px-4 pt-20 pb-16 sm:pt-28 sm:pb-20 min-h-[65vh]">
             <div className="max-w-3xl mx-auto">
-              <div className="sm:hidden inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[#009AA2]/30 bg-[#009AA2]/8 text-[#009AA2] text-xs font-semibold font-montserrat-alt tracking-wide mb-6">
-                <span className="landing-pulse-dot" />
-                {t('heroEyebrow')}
-              </div>
+
 
               <h1
                 className="font-montserrat-alt font-black tracking-tight leading-[0.95] mb-6"
@@ -239,57 +210,14 @@ export default function Home() {
                 {t('heroSubtitle')}
               </p>
 
-              <div className="flex justify-center gap-3 flex-wrap mb-10">
-                <button
-                  type="button"
-                  onClick={() => setAudienceType('volunteer')}
-                  className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full border-[1.5px] text-sm font-semibold font-montserrat-alt transition-transform hover:-translate-y-0.5 ${
-                    audienceType === 'volunteer'
-                      ? 'border-[#009AA2]/50 bg-[#009AA2]/12 text-[#009AA2]'
-                      : 'border-[#009AA2]/35 bg-[#009AA2]/7 text-[#009AA2]'
-                  }`}
-                >
-                  🙋 {t('heroCtaVolunteer')}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setAudienceType('npo')}
-                  className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full border-[1.5px] text-sm font-semibold font-montserrat-alt transition-transform hover:-translate-y-0.5 ${
-                    audienceType === 'npo'
-                      ? 'border-[#51AC31]/50 bg-[#51AC31]/12 text-[#3F7818]'
-                      : 'border-[#51AC31]/35 bg-[#51AC31]/7 text-[#3F7818]'
-                  }`}
-                >
-                  🏛️ {t('heroCtaNpo')}
-                </button>
-              </div>
 
-              <div className="max-w-md mx-auto">
-                <p className="text-[#9ca3af] text-xs font-semibold tracking-widest uppercase font-montserrat-alt mb-3">
-                  {t('waitlistLabel')}
-                </p>
-                <form
-                  onSubmit={handleWaitlistSubmit}
-                  className="flex rounded-full border-[1.5px] border-[#e5e7eb] bg-white overflow-hidden shadow-sm focus-within:border-[#009AA2] focus-within:shadow-[0_2px_20px_rgba(0,154,162,0.12)] transition-all"
+              <div className="bg-[#009AA2] hover:bg-[#007a81] inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[#009AA2]/30 text-white text-xs font-semibold font-montserrat-alt tracking-wide mb-6">
+                <button
+                  type="button"
+                  onClick={() => router.push('/login')}
                 >
-                  <input
-                    type="email"
-                    value={waitlistEmail}
-                    onChange={(e) => setWaitlistEmail(e.target.value)}
-                    placeholder={t('stayInTouchPlaceholder')}
-                    required
-                    className="flex-1 px-5 py-3.5 bg-transparent border-none outline-none text-[#1A1A1A] text-sm placeholder-[#9ca3af] font-light"
-                  />
-                  <button
-                    type="submit"
-                    disabled={waitlistSubmitting}
-                    className="m-1 px-5 py-2.5 rounded-full bg-[#009AA2] text-white text-sm font-bold font-montserrat-alt hover:bg-[#007a81] transition-colors disabled:opacity-60 whitespace-nowrap"
-                  >
-                    {waitlistSubmitting ? '...' : t('stayInTouchSubmit')}
-                  </button>
-                </form>
-                {waitlistError && <p className="mt-2 text-xs text-red-500">{waitlistError}</p>}
-                <p className="mt-3 text-xs text-[#9ca3af]">{t('stayInTouchNoSpam')}</p>
+                  Get Started
+                </button>
               </div>
             </div>
           </section>
@@ -502,35 +430,34 @@ export default function Home() {
                 </a>
               </div>
             </div>
+            <p className="max-w-5xl mx-auto mt-6 pt-4 border-t border-[#e5e7eb] text-xs text-[#9ca3af] text-center">
+              {t('footerCopyright', { year: new Date().getFullYear() })}
+            </p>
           </footer>
         </main>
       </div>
 
       {/* Toast */}
-      {(waitlistToast.show || contactToast.show) && (
+      {contactToast.show && (
         <div className="fixed bottom-4 right-4 left-4 sm:left-auto sm:max-w-sm z-50">
           <Toast
             onClose={() => {
-              setWaitlistToast((p) => ({ ...p, show: false }));
               setContactToast((p) => ({ ...p, show: false }));
             }}
             className="bg-white border border-[#e5e7eb] shadow-lg"
           >
             <div
               className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
-                (contactToast.show ? contactToast.type : waitlistToast.type) === 'success'
+                contactToast.type === 'success'
                   ? 'bg-green-100 text-green-600'
                   : 'bg-red-100 text-red-600'
               }`}
             >
-              {(contactToast.show ? contactToast.type : waitlistToast.type) === 'success' ? '✓' : '!'}
+              {contactToast.type === 'success' ? '✓' : '!'}
             </div>
-            <div className="ml-3 text-[#1A1A1A] text-sm">
-              {contactToast.show ? contactToast.message : waitlistToast.message}
-            </div>
+            <div className="ml-3 text-[#1A1A1A] text-sm">{contactToast.message}</div>
             <Toast.Toggle
               onClose={() => {
-                setWaitlistToast((p) => ({ ...p, show: false }));
                 setContactToast((p) => ({ ...p, show: false }));
               }}
             />

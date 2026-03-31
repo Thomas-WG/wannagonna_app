@@ -1,15 +1,17 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, Spinner } from "flowbite-react";
+import { Card, Spinner, Button } from "flowbite-react";
 import Link from "next/link";
 import { HiUsers, HiOfficeBuilding, HiAcademicCap, HiBadgeCheck, HiCalendar, HiQuestionMarkCircle } from "react-icons/hi";
+import { HiTrophy } from "react-icons/hi2";
 import { fetchMembers } from "@/utils/crudMemberProfile";
 import { fetchOrganizations } from "@/utils/crudOrganizations";
 import { fetchSkills } from "@/utils/crudSkills";
 import { fetchBadgeCategories, fetchAllBadges } from "@/utils/crudBadges";
 import { fetchActivities } from "@/utils/crudActivities";
 import { fetchFaqs } from "@/utils/crudFaq";
+import { triggerComputeLeaderboard } from "@/utils/leaderboardService";
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
@@ -21,6 +23,7 @@ export default function AdminDashboard() {
     faqs: 0
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [leaderboardRecalcStatus, setLeaderboardRecalcStatus] = useState(null); // null | "running" | { success, dimensions, users, notifications } | { error }
 
   useEffect(() => {
     const loadStats = async () => {
@@ -177,6 +180,54 @@ export default function AdminDashboard() {
             </div>
           </Card>
         </Link>
+
+        {/* Leaderboard - Manual Recalculate */}
+        <Card className="h-full bg-background-card dark:bg-background-card border-border-light dark:border-border-dark">
+          <div className="flex flex-col items-center p-4 sm:p-6">
+            <div className="bg-amber-100 dark:bg-amber-900 p-3 rounded-full mb-4">
+              <HiTrophy className="h-6 w-6 sm:h-8 sm:w-8 text-amber-600 dark:text-amber-400" />
+            </div>
+            <h2 className="text-lg sm:text-xl font-semibold mb-2 text-text-primary dark:text-text-primary">Leaderboard</h2>
+            <p className="text-xs sm:text-sm text-text-secondary dark:text-text-secondary text-center mb-4">
+              Recalculate rankings (normally runs nightly). For testing.
+            </p>
+            <Button
+              color="primary"
+              size="sm"
+              disabled={leaderboardRecalcStatus === "running"}
+              onClick={async () => {
+                setLeaderboardRecalcStatus("running");
+                try {
+                  const result = await triggerComputeLeaderboard();
+                  setLeaderboardRecalcStatus({ success: true, ...result });
+                  setTimeout(() => setLeaderboardRecalcStatus(null), 5000);
+                } catch (err) {
+                  setLeaderboardRecalcStatus({ error: err.message || "Failed" });
+                  setTimeout(() => setLeaderboardRecalcStatus(null), 5000);
+                }
+              }}
+            >
+              {leaderboardRecalcStatus === "running" ? (
+                <>
+                  <Spinner size="sm" className="mr-2" />
+                  Running...
+                </>
+              ) : (
+                "Recalculate now"
+              )}
+            </Button>
+            {leaderboardRecalcStatus?.success && (
+              <p className="text-xs text-green-600 dark:text-green-400 mt-2">
+                Done: {leaderboardRecalcStatus.dimensions} dimensions, {leaderboardRecalcStatus.users} users
+              </p>
+            )}
+            {leaderboardRecalcStatus?.error && (
+              <p className="text-xs text-red-600 dark:text-red-400 mt-2">
+                {leaderboardRecalcStatus.error}
+              </p>
+            )}
+          </div>
+        </Card>
       </div>
     </div>
   );

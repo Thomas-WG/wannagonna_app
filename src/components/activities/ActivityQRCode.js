@@ -17,14 +17,14 @@ const QRCode = dynamic(
  * Displays a QR code for activity validation
  * @param {Object} props
  * @param {string} props.activityId - Activity ID
- * @param {string} props.qrCodeToken - QR code token
+ * @param {string} props.qr_code_token - QR code token
  * @param {string} props.title - Activity title
  * @param {Date} props.startDate - Activity start date
  * @param {string} props.size - QR code size (default: 256)
  */
 export default function ActivityQRCode({ 
   activityId, 
-  qrCodeToken, 
+  qr_code_token, 
   title, 
   startDate,
   size = 256 
@@ -32,7 +32,7 @@ export default function ActivityQRCode({
   const { isDark } = useTheme();
   const [isDownloading, setIsDownloading] = useState(false);
 
-  if (!activityId || !qrCodeToken) {
+  if (!activityId || !qr_code_token) {
     return (
       <div className="p-4 text-center text-gray-500">
         QR code not available for this activity
@@ -42,7 +42,7 @@ export default function ActivityQRCode({
 
   // Generate validation URL
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
-  const validationUrl = `${baseUrl}/validate-activity?activityId=${activityId}&token=${qrCodeToken}`;
+  const validationUrl = `${baseUrl}/validate-activity?activityId=${activityId}&token=${qr_code_token}`;
 
   // Format date - handles Firestore Timestamps, Date objects, and date strings
   const formatDate = (date) => {

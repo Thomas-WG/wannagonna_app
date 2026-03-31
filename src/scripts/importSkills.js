@@ -3,50 +3,6 @@ const { initializeApp } = require('firebase/app');
 const { getFirestore, collection, addDoc, writeBatch, doc, connectFirestoreEmulator } = require('firebase/firestore');
 const skillsData = require('../data/skills.json');
 
-// Import categories data
-const categories = {
-  online: [
-    { id: 'website' },
-    { id: 'logo' },
-    { id: 'translation' },
-    { id: 'flyer' },
-    { id: 'consulting' },
-    { id: 'architecture' },
-    { id: 'dataentry' },
-    { id: 'photovideo' },
-    { id: 'sns' },
-    { id: 'onlinesupport' },
-    { id: 'education' },
-    { id: 'fundraising' },
-    { id: 'longtermrole' },
-    { id: 'explainer' },
-    { id: 'other-online' },
-  ],
-  local: [
-    { id: 'cleaning' },
-    { id: 'teaching' },
-    { id: 'food_distribution' },
-    { id: 'elderly_support' },
-    { id: 'animal_care' },
-    { id: 'environment' },
-    { id: 'community_events' },
-    { id: 'childcare' },
-    { id: 'manual_labor' },
-    { id: 'administrative' },
-    { id: 'other-local' },
-  ],
-  event: [
-    { id: 'fundraising_event' },
-    { id: 'awareness_campaign' },
-    { id: 'workshop' },
-    { id: 'seminar_conference' },
-    { id: 'charity_walk' },
-    { id: 'networking' },
-    { id: 'arts_and_crafts' },
-    { id: 'food_fair' },
-    { id: 'other-event' },
-  ],
-};
 
 // Your Firebase configuration
 const firebaseConfig = {
@@ -75,7 +31,7 @@ async function importSkills() {
     
     // Import categories
     const categoryMap = new Map();
-    const categoriesCollection = collection(db, 'skillCategories');
+    const categoriesCollection = collection(db, 'skill_categories');
     
     console.log('Importing categories...');
     for (const category of skillsData.categories) {
@@ -97,10 +53,10 @@ async function importSkills() {
     for (const skill of skillsData.skills) {
       const skillRef = doc(skillsCollection);
       
-      console.log(`Adding skill: ${skill.name.en} (categoryId: ${skill.categoryId})`);
+      console.log(`Adding skill: ${skill.name.en} (category_id: ${skill.categoryId})`);
       batch.set(skillRef, {
         name: skill.name,
-        categoryId: skill.categoryId,
+        category_id: skill.categoryId,
         order: skill.order
       });
     }

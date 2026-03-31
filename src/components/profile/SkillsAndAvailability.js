@@ -137,8 +137,6 @@ export default function SkillsAndAvailability({ control, errors, watch }) {
     }),
   };
 
-  // Watch timeCommitment and availabilities for validation
-  const timeCommitment = watch('timeCommitment') || {};
   const availabilities = watch('availabilities') || {};
 
   return (
@@ -199,7 +197,7 @@ export default function SkillsAndAvailability({ control, errors, watch }) {
                   {['daily', 'weekly', 'biweekly', 'monthly', 'occasional', 'flexible'].map((key) => (
                     <Controller
                       key={key}
-                      name={`timeCommitment.${key}`}
+                      name={`time_commitment.${key}`}
                       control={control}
                       render={({ field: { value, onChange, name } }) => {
                         // Map 'occasional' to 'occasionally' for translation
@@ -222,7 +220,7 @@ export default function SkillsAndAvailability({ control, errors, watch }) {
                     />
                   ))}
                 </div>
-                <FormError message={errors.timeCommitment?.message} />
+                <FormError message={errors.time_commitment?.message} />
               </div>
               
               <div>

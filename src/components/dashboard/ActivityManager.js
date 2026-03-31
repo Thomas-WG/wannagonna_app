@@ -5,16 +5,7 @@ import { useRouter } from 'next/navigation';
 import SortBySelect from '@/components/common/SortBySelect';
 import { useTranslations } from 'next-intl';
 import dynamic from 'next/dynamic';
-import {
-  HiPencil,
-  HiTrash,
-  HiEye,
-  HiUserGroup,
-  HiQrcode,
-  HiDuplicate,
-  HiDocumentText,
-  HiUsers,
-} from 'react-icons/hi';
+import ActivityCardActionsOverlay from '@/components/activities/ActivityCardActionsOverlay';
 // Lazy load heavy components
 const ActivityFilters = dynamic(() => import('@/components/activities/ActivityFilters'), {
   loading: () => <div className="h-20 animate-pulse bg-gray-200 dark:bg-gray-700 rounded" />,
@@ -172,7 +163,7 @@ const ActivityManager = memo(function ActivityManager({
       onOpenModal('activity-qr-code', {
         activity: selectedActivity,
         activityId: selectedActivity.id,
-        qrCodeToken: selectedActivity.qrCodeToken,
+        qr_code_token: selectedActivity.qr_code_token,
         title: selectedActivity.title,
         startDate: selectedActivity.start_date,
       });
@@ -191,156 +182,44 @@ const ActivityManager = memo(function ActivityManager({
 
     try {
       setShowActionOverlay(false);
-      const newActivityId = await duplicateActivity(selectedActivity.id);
-      router.push(`/mynonprofit/activities/manage?activityId=${newActivityId}`);
+      await duplicateActivity(selectedActivity.id);
+      await refetch();
+      showToast('success', t('successDuplicating'));
     } catch (error) {
       console.error('Error duplicating activity:', error);
       showToast('error', t('errorDuplicating') || 'Error duplicating activity');
     }
-  }, [selectedActivity, router, showToast, t]);
+  }, [selectedActivity, refetch, showToast, t]);
 
   // Render action overlay
   const renderActionOverlay = useCallback(
-    (activity) => {
-      const hasQRCode = activity.qrCodeToken && (activity.type === 'local' || activity.type === 'event');
-      const isEvent = activity.type === 'event';
-
-      return (
-        <div className="absolute inset-0 bg-black bg-opacity-60 rounded-lg flex items-center justify-center z-10 p-3 sm:p-3">
-          <div className="grid grid-cols-3 gap-3 sm:gap-2.5 md:gap-3 w-full max-w-xs sm:max-w-sm">
-            {/* Change Status Button */}
-            <div className="flex flex-col items-center">
-              <button
-                onClick={handleChangeStatus}
-                className="w-16 h-16 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-orange-500 text-white flex items-center justify-center shadow-lg hover:bg-orange-600 active:bg-orange-700 transition-colors touch-manipulation"
-                aria-label="Change Status"
-              >
-                <HiDocumentText className="h-7 w-7 sm:h-6 sm:w-6 md:h-7 md:w-7" />
-              </button>
-              <span className="mt-1.5 text-xs sm:text-[11px] md:text-xs text-white font-medium text-center leading-tight px-0.5">
-                {t('changeStatus')}
-              </span>
-            </div>
-
-            {/* Edit Button - hidden for closed activities (view only) */}
-            {activity.status !== 'Closed' && (
-              <div className="flex flex-col items-center">
-                <button
-                  onClick={handleEditActivity}
-                  className="w-16 h-16 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-blue-500 text-white flex items-center justify-center shadow-lg hover:bg-blue-600 active:bg-blue-700 transition-colors touch-manipulation"
-                  aria-label="Edit Activity"
-                >
-                  <HiPencil className="h-7 w-7 sm:h-6 sm:w-6 md:h-7 md:w-7" />
-                </button>
-                <span className="mt-1.5 text-xs sm:text-[11px] md:text-xs text-white font-medium text-center leading-tight px-0.5">
-                  {t('edit')}
-                </span>
-              </div>
-            )}
-
-            {/* Duplicate Button */}
-            <div className="flex flex-col items-center">
-              <button
-                onClick={handleDuplicateActivity}
-                className="w-16 h-16 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-yellow-500 text-white flex items-center justify-center shadow-lg hover:bg-yellow-600 active:bg-yellow-700 transition-colors touch-manipulation"
-                aria-label="Duplicate Activity"
-              >
-                <HiDuplicate className="h-7 w-7 sm:h-6 sm:w-6 md:h-7 md:w-7" />
-              </button>
-              <span className="mt-1.5 text-xs sm:text-[11px] md:text-xs text-white font-medium text-center leading-tight px-0.5">
-                {t('duplicate')}
-              </span>
-            </div>
-
-            {/* Delete Button */}
-            <div className="flex flex-col items-center">
-              <button
-                onClick={handleDeleteActivity}
-                className="w-16 h-16 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-red-500 text-white flex items-center justify-center shadow-lg hover:bg-red-600 active:bg-red-700 transition-colors touch-manipulation"
-                aria-label="Delete Activity"
-              >
-                <HiTrash className="h-7 w-7 sm:h-6 sm:w-6 md:h-7 md:w-7" />
-              </button>
-              <span className="mt-1.5 text-xs sm:text-[11px] md:text-xs text-white font-medium text-center leading-tight px-0.5">
-                {t('delete')}
-              </span>
-            </div>
-
-            {/* View Activity Button */}
-            <div className="flex flex-col items-center">
-              <button
-                onClick={handleViewActivity}
-                className="w-16 h-16 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-purple-500 text-white flex items-center justify-center shadow-lg hover:bg-purple-600 active:bg-purple-700 transition-colors touch-manipulation"
-                aria-label="View Activity"
-              >
-                <HiEye className="h-7 w-7 sm:h-6 sm:w-6 md:h-7 md:w-7" />
-              </button>
-              <span className="mt-1.5 text-xs sm:text-[11px] md:text-xs text-white font-medium text-center leading-tight px-0.5">
-                {t('view')}
-              </span>
-            </div>
-
-            {/* Review Applications Button - Hidden for events */}
-            {!isEvent && (
-              <div className="flex flex-col items-center">
-                <button
-                  onClick={handleReviewApplications}
-                  className="w-16 h-16 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-green-500 text-white flex items-center justify-center shadow-lg hover:bg-green-600 active:bg-green-700 transition-colors touch-manipulation"
-                  aria-label="Review Applications"
-                >
-                  <HiUserGroup className="h-7 w-7 sm:h-6 sm:w-6 md:h-7 md:w-7" />
-                </button>
-                <span className="mt-1.5 text-xs sm:text-[11px] md:text-xs text-white font-medium text-center leading-tight px-0.5">
-                  {t('applications')}
-                </span>
-              </div>
-            )}
-
-            {/* View Participants Button */}
-            <div className="flex flex-col items-center">
-              <button
-                onClick={handleViewParticipants}
-                className="w-16 h-16 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-teal-500 text-white flex items-center justify-center shadow-lg hover:bg-teal-600 active:bg-teal-700 transition-colors touch-manipulation"
-                aria-label="View Participants"
-              >
-                <HiUsers className="h-7 w-7 sm:h-6 sm:w-6 md:h-7 md:w-7" />
-              </button>
-              <span className="mt-1.5 text-xs sm:text-[11px] md:text-xs text-white font-medium text-center leading-tight px-0.5">
-                {t('viewParticipants') || 'Participants'}
-              </span>
-            </div>
-
-            {/* Show QR Code Button - Conditional */}
-            {hasQRCode && (
-              <div className="flex flex-col items-center">
-                <button
-                  onClick={handleShowQRCode}
-                  className="w-16 h-16 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-indigo-500 text-white flex items-center justify-center shadow-lg hover:bg-indigo-600 active:bg-indigo-700 transition-colors touch-manipulation"
-                  aria-label="Show QR Code"
-                >
-                  <HiQrcode className="h-7 w-7 sm:h-6 sm:w-6 md:h-7 md:w-7" />
-                </button>
-                <span className="mt-1.5 text-xs sm:text-[11px] md:text-xs text-white font-medium text-center leading-tight px-0.5">
-                  {t('showQRCode')}
-                </span>
-              </div>
-            )}
-          </div>
-
-          {/* Close button */}
-          <button
-            onClick={() => {
-              setShowActionOverlay(false);
-              setSelectedActivity(null);
-            }}
-            className="absolute top-2 right-2 sm:top-2 sm:right-2 w-9 h-9 sm:w-8 sm:h-8 md:w-9 md:h-9 lg:w-10 lg:h-10 rounded-full bg-gray-600 text-white flex items-center justify-center hover:bg-gray-700 active:bg-gray-800 transition-colors text-xl sm:text-lg md:text-xl lg:text-2xl touch-manipulation"
-            aria-label="Close"
-          >
-            ×
-          </button>
-        </div>
-      );
-    },
+    (activity) => (
+      <ActivityCardActionsOverlay
+        activity={activity}
+        onClose={() => {
+          setShowActionOverlay(false);
+          setSelectedActivity(null);
+        }}
+        onChangeStatus={handleChangeStatus}
+        onEdit={handleEditActivity}
+        onDuplicate={handleDuplicateActivity}
+        onDelete={handleDeleteActivity}
+        onView={handleViewActivity}
+        onApplications={handleReviewApplications}
+        onParticipants={handleViewParticipants}
+        onQRCode={handleShowQRCode}
+        labels={{
+          changeStatus: t('changeStatus'),
+          edit: t('edit'),
+          duplicate: t('duplicate'),
+          delete: t('delete'),
+          view: t('view'),
+          applications: t('applications'),
+          viewParticipants: t('viewParticipants') || 'Participants',
+          showQRCode: t('showQRCode'),
+        }}
+      />
+    ),
     [
       handleChangeStatus,
       handleEditActivity,

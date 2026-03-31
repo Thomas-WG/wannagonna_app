@@ -15,6 +15,7 @@ import {enablePushForUser, updateNotificationPreferences} from '@/utils/notifica
 import {HiMoon, HiSun, HiTranslate} from 'react-icons/hi';
 import { HiExclamationTriangle } from "react-icons/hi2";
 import {useModal} from '@/utils/modal/useModal';
+import { openCookieSettings } from '@/components/cookies/CookieConsentManager';
 
 // Main component for the Settings Page
 export default function SettingsPage() {
@@ -89,7 +90,7 @@ export default function SettingsPage() {
         const snap = await getDoc(userRef);
         if (snap.exists()) {
           const data = snap.data();
-          const storedPrefs = data.notificationPreferences || {};
+          const storedPrefs = data.notification_preferences || {};
           setPrefs({
             GAMIFICATION: {
               inApp: storedPrefs.GAMIFICATION?.inApp !== false,
@@ -526,6 +527,23 @@ export default function SettingsPage() {
               {t('saving')}
             </p>
           )}
+        </div>
+
+        {/* Cookie settings */}
+        <div className="w-full bg-background-card dark:bg-background-card rounded-lg shadow-md p-4 sm:p-6 border border-border-light dark:border-border-dark">
+          <h2 className="text-base sm:text-lg font-semibold mb-1 sm:mb-2 text-text-primary dark:text-text-primary">
+            {t('cookieSettings')}
+          </h2>
+          <p className="text-xs sm:text-sm text-text-secondary dark:text-text-secondary mb-3 sm:mb-4">
+            {t('cookieSettingsDescription')}
+          </p>
+          <Button
+            color="light"
+            onClick={openCookieSettings}
+            className="min-h-[44px] w-full sm:w-auto"
+          >
+            {t('manageCookies')}
+          </Button>
         </div>
 
         {/* Toast Notification */}

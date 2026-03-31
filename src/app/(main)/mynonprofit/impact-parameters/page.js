@@ -32,19 +32,20 @@ const IMPACT_CATEGORIES = [
 ];
 
 const UNITS = ['kg', 'count', 'hours', 'm²', 'liters', 'meters', 'm2'];
+const SDG_NUMBERS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17];
 
 export default function ImpactParametersPage() {
   const t = useTranslations('MyNonProfit');
   const tExport = useTranslations('impact_export');
   const { claims } = useAuth();
   const queryClient = useQueryClient();
-  const orgId = claims?.npoId;
+  const orgId = claims?.npo_id;
 
   const [globalParams, setGlobalParams] = useState([]);
   const [customParams, setCustomParams] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [addForm, setAddForm] = useState({ label: '', unit: 'count', category: 'people', measurementType: 'output' });
+  const [addForm, setAddForm] = useState({ label: '', unit: 'count', category: 'people', measurement_type: 'output', sdg: [] });
   const [submitting, setSubmitting] = useState(false);
   const [toast, setToast] = useState({ show: false, type: '', message: '' });
 
@@ -88,11 +89,12 @@ export default function ImpactParametersPage() {
         label: addForm.label.trim(),
         unit: addForm.unit,
         category: addForm.category,
-        measurementType: addForm.measurementType,
+        measurement_type: addForm.measurement_type,
+        sdg: addForm.sdg || [],
       });
       queryClient.invalidateQueries({ queryKey: ['impactCustomParameters', orgId] });
       setShowAddModal(false);
-      setAddForm({ label: '', unit: 'count', category: 'people', measurementType: 'output' });
+      setAddForm({ label: '', unit: 'count', category: 'people', measurement_type: 'output', sdg: [] });
       showToast('success', t('impactParameterCreated') || 'Parameter created');
     } catch (err) {
       console.error(err);
@@ -112,6 +114,17 @@ export default function ImpactParametersPage() {
       console.error(err);
       showToast('error', t('impactParameterError') || 'Failed to update');
     }
+  };
+
+  const toggleSdg = (num) => {
+    setAddForm((prev) => {
+      const next = [...(prev.sdg || [])];
+      const idx = next.indexOf(num);
+      if (idx >= 0) next.splice(idx, 1);
+      else next.push(num);
+      next.sort((a, b) => a - b);
+      return { ...prev, sdg: next };
+    });
   };
 
   return (
@@ -198,22 +211,25 @@ export default function ImpactParametersPage() {
                         </span>
                         <span className="text-text-tertiary dark:text-text-tertiary text-sm ml-2">
                           {p.unit} · {p.category}
-                          {p.measurementType && (
-                            <span className="ml-1 text-xs"> · {tExport(`measurementType.${p.measurementType}`)}</span>
+                          {p.measurement_type && (
+                            <span className="ml-1 text-xs"> · {tExport(`measurementType.${p.measurement_type}`)}</span>
+                          )}
+                          {Array.isArray(p.sdg) && p.sdg.length > 0 && (
+                            <span className="ml-1 text-xs"> · {(t('sdgs') || 'SDGs')} {p.sdg.join(', ')}</span>
                           )}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className={`text-xs px-2 py-1 rounded ${p.isActive ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400'}`}>
-                          {p.isActive ? (t('active') || 'Active') : (t('inactive') || 'Inactive')}
+                        <span className={`text-xs px-2 py-1 rounded ${p.is_active ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400'}`}>
+                          {p.is_active ? (t('active') || 'Active') : (t('inactive') || 'Inactive')}
                         </span>
                         <Button
                           size="xs"
-                          color={p.isActive ? 'failure' : 'success'}
+                          color={p.is_active ? 'failure' : 'success'}
                           className="min-h-[40px] touch-manipulation"
-                          onClick={() => handleToggle(p.id, p.isActive)}
+                          onClick={() => handleToggle(p.id, p.is_active)}
                         >
-                          {p.isActive ? (t('deactivate') || 'Deactivate') : (t('activate') || 'Activate')}
+                          {p.is_active ? (t('deactivate') || 'Deactivate') : (t('activate') || 'Activate')}
                         </Button>
                       </div>
                     </Card>
@@ -261,7 +277,7 @@ export default function ImpactParametersPage() {
                   setAddForm((prev) => ({
                     ...prev,
                     unit,
-                    measurementType: suggestMeasurementTypeFromUnit(unit),
+                    measurement_type: suggestMeasurementTypeFromUnit(unit),
                   }));
                 }}
               >
@@ -283,6 +299,28 @@ export default function ImpactParametersPage() {
               </Select>
             </div>
             <div>
+              <Label>{t('sdgs') || 'SDGs'}</Label>
+              <div className="flex flex-wrap gap-2 mt-1">
+                {SDG_NUMBERS.map((num) => {
+                  const checked = (addForm.sdg || []).includes(num);
+                  return (
+                    <label
+                      key={num}
+                      className="inline-flex items-center gap-1.5 cursor-pointer text-sm"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => toggleSdg(num)}
+                        className="rounded border-gray-300"
+                      />
+                      <span>SDG {num}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+            <div>
               <div className="flex items-center gap-2">
                 <Label htmlFor="impact-measurementType">{tExport('measurementType.label')}</Label>
                 <Tooltip content={tExport('measurementType.tooltip')}>
@@ -291,8 +329,8 @@ export default function ImpactParametersPage() {
               </div>
               <Select
                 id="impact-measurementType"
-                value={addForm.measurementType}
-                onChange={(e) => setAddForm((prev) => ({ ...prev, measurementType: e.target.value }))}
+                value={addForm.measurement_type}
+                onChange={(e) => setAddForm((prev) => ({ ...prev, measurement_type: e.target.value }))}
               >
                 {MEASUREMENT_TYPES.map((mt) => (
                   <option key={mt.id} value={mt.id}>

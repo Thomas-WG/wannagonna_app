@@ -65,9 +65,9 @@ const DashboardModals = memo(function DashboardModals({
           onClose={closeApplicationModal}
           application={
             selectedApplicationActivity.applicationData ||
-            (selectedApplicationActivity.applicationId
+            (selectedApplicationActivity.application_id
               ? applicationsWithActivities.find(
-                  (app) => app.id === selectedApplicationActivity.applicationId
+                  (app) => app.application_id === selectedApplicationActivity.application_id
                 )
               : null)
           }
@@ -87,12 +87,11 @@ const DashboardModals = memo(function DashboardModals({
       <ActivityValidationSuccessModal
         show={showValidationModal}
         onClose={closeValidationModal}
-        xpReward={validationResult?.xpReward || validationResult?.xpBreakdown?.totalXP || 0}
-        badgeIds={validationResult?.badgeIds || []}
-        badges={validationResult?.badges || []}
+        xpReward={validationResult?.total_xp ?? validationResult?.xpBreakdown?.total_xp ?? 0}
+        badgeIds={validationResult?.badge_ids ?? []}
         activityTitle={validationResult?.activityTitle || ''}
         xpBreakdown={validationResult?.xpBreakdown || null}
-        activityId={validationResult?.activityId || ''}
+        activityId={validationResult?.activity_id ?? ''}
       />
 
       {/* Public Profile Modal */}

@@ -7,25 +7,34 @@ export default function FormNavigation({ currentStep, prevStep, nextStep, formDa
   const maxStep = maxStepProp != null ? maxStepProp : 3;
 
   // Check if external link is required but missing
-  const externalLink = formData.externalPlatformLink || formData.activity_url || '';
-  const isExternalLinkRequired = formData.type === 'local' && formData.acceptApplicationsWG === false;
+  const externalLink = formData.external_platform_link || '';
+  const isExternalLinkRequired =
+    formData.type === 'local' && formData.accept_applications_wg === false;
   const hasRequiredExternalLink = !isExternalLinkRequired || (isExternalLinkRequired && externalLink.trim() !== '');
 
-  // Step 2 date/time: required for events and local once/regular; validate end >= start when set
+  // Step 2 date/time: required for events and local once/regular; multi-day compares end_date to start_date; single-day uses start only
   const isEvent = formData.type === 'event';
   const isLocalOnceOrRegular = formData.type === 'local' && formData.frequency !== 'role';
   const hasEventDateTime = formData.start_date && formData.start_time && formData.end_time;
   const hasLocalStartDate = formData.start_date;
   const endNotBeforeStart = (() => {
     if (!formData.start_date) return true;
-    const end = formData.end_date || formData.start_date;
     const startD = formData.start_date instanceof Date ? formData.start_date : new Date(formData.start_date);
-    const endD = end instanceof Date ? end : new Date(end);
-    if (endD.getTime() < startD.getTime()) return false;
-    const sameDay = startD.toDateString() === endD.toDateString();
-    if (sameDay && formData.start_time && formData.end_time) {
-      return formData.start_time <= formData.end_time;
+    const dayStart = new Date(startD.getFullYear(), startD.getMonth(), startD.getDate()).getTime();
+
+    if (!formData.spansSeveralDays) {
+      const endD = startD;
+      if (endD.getTime() < startD.getTime()) return false;
+      if (formData.start_time && formData.end_time) {
+        return formData.start_time <= formData.end_time;
+      }
+      return true;
     }
+
+    if (!formData.end_date) return false;
+    const endD = formData.end_date instanceof Date ? formData.end_date : new Date(formData.end_date);
+    const dayEnd = new Date(endD.getFullYear(), endD.getMonth(), endD.getDate()).getTime();
+    if (dayEnd <= dayStart) return false;
     return true;
   })();
 

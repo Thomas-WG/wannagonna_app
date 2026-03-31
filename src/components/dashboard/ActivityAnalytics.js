@@ -86,7 +86,7 @@ const ActivityAnalytics = memo(function ActivityAnalytics({ organizationId }) {
                 {t('totalXP') || 'Total XP'}
               </p>
               <p className="text-2xl font-bold text-text-primary dark:text-text-primary">
-                {metrics.totalXP}
+                {metrics.total_xp}
               </p>
             </div>
           </div>

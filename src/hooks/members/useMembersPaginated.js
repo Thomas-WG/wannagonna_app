@@ -1,15 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
-import { fetchMembersPaginated, getMembersCount } from '@/utils/crudMemberProfile';
+import { getMembersListViaFunction } from '@/utils/membersService';
+import { getMembersCount } from '@/utils/crudMemberProfile';
 import { useMemo } from 'react';
 
 /**
  * React Query hook for fetching and caching paginated members
- * Uses server-side filtering and sorting, with client-side pagination for page numbers
- * 
- * Note: For traditional pagination with page numbers, we fetch all matching members
- * (with server-side filters/sort) then paginate client-side. This is more efficient
- * than fetching ALL members, and allows jumping to arbitrary pages.
- * 
+ * Uses Cloud Function getMembersList (sanitized, no PII) with server-side filtering
+ * and sorting, then paginate client-side for page numbers.
+ *
  * @param {number} page - Current page number (1-indexed)
  * @param {number} pageSize - Number of items per page
  * @param {Object} filters - Filter object with country (optional)
@@ -17,8 +15,6 @@ import { useMemo } from 'react';
  * @returns {Object} Query result with members, totalCount, pagination info, loading, and error states
  */
 export function useMembersPaginated(page = 1, pageSize = 20, filters = {}, sortBy = 'name_az') {
-  // Fetch all members matching filters/sort (server-side)
-  // Then paginate client-side for page numbers
   const {
     data: membersData,
     isLoading: isLoadingMembers,
@@ -26,33 +22,24 @@ export function useMembersPaginated(page = 1, pageSize = 20, filters = {}, sortB
   } = useQuery({
     queryKey: ['members', 'paginated', filters, sortBy],
     queryFn: async () => {
-      // Fetch all matching members with server-side filter/sort
-      // Fetch in batches until we have all members
       const allMembers = [];
-      let lastDoc = null;
+      let lastDocId = null;
       let hasMore = true;
-      const batchSize = 100; // Fetch in batches of 100
-      const maxMembers = 5000; // Safety limit to prevent infinite loops
-      
+      const batchSize = 100;
+      const maxMembers = 5000;
+
       while (hasMore && allMembers.length < maxMembers) {
-        const result = await fetchMembersPaginated(
-          1, // Always fetch first page of batch
-          batchSize,
-          filters,
-          sortBy,
-          lastDoc
-        );
-        
+        const result = await getMembersListViaFunction(filters, sortBy, batchSize, lastDocId);
+
         allMembers.push(...result.members);
         hasMore = result.hasNextPage;
-        lastDoc = result.lastDoc;
-        
-        // If we got fewer than batchSize, we've reached the end
+        lastDocId = result.lastDocId;
+
         if (result.members.length < batchSize) {
           hasMore = false;
         }
       }
-      
+
       return allMembers;
     },
     staleTime: 30 * 1000, // Consider data fresh for 30 seconds

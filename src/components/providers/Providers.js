@@ -31,6 +31,7 @@ import { ThemeProvider } from '@/utils/theme/ThemeContext';
 import ModalProviderWrapper from '@/components/modal/ModalProviderWrapper';
 import QueryProvider from '@/components/providers/QueryProvider';
 import ThemeColorMeta from '@/components/layout/ThemeColorMeta';
+import CookieConsentManager from '@/components/cookies/CookieConsentManager';
 
 /**
  * Providers - Consolidated provider component with error boundaries
@@ -50,6 +51,7 @@ export default function Providers({ children }) {
                 <ErrorBoundary>
                   <ModalProviderWrapper>
                     {children}
+                    <CookieConsentManager />
                   </ModalProviderWrapper>
                 </ErrorBoundary>
               </ThemeProvider>

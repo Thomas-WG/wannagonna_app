@@ -1,23 +1,42 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { useQuery } from '@tanstack/react-query';
 import { getAllParametersForNpo, groupImpactParametersByCategory } from '@/utils/impactParameterService';
 import { Card, Label, TextInput, Spinner, Checkbox } from 'flowbite-react';
 import { useTranslations } from 'next-intl';
 import { suggestMeasurementTypeFromUnit } from '@/constant/measurementTypes';
+import { getSDGLabel, getSDGNumber } from '@/constant/sdgs';
+
+function normalizeSdgList(sdgs = []) {
+  if (!Array.isArray(sdgs)) return [];
+  const normalized = sdgs
+    .map((s) => getSDGNumber(s))
+    .map((s) => Number(s))
+    .filter((n) => Number.isInteger(n) && n >= 1 && n <= 17);
+  return Array.from(new Set(normalized)).sort((a, b) => a - b);
+}
 
 /**
  * Returns selected impact parameters with optional target values.
  * @param {string} orgId
- * @param {Array<{ parameterId: string, scope: string, label: string, unit: string, category?: string, measurementType?: string, targetValue?: number|null }>} initialSelected
- * @param {(params: Array<{ parameterId: string, scope: string, label: string, unit: string, category: string, measurementType?: string, targetValue?: number|null }>) => void} onChange
+ * @param {Array<{ parameter_id: string, scope: string, label: string, unit: string, category?: string, measurement_type?: string, target_value?: number|null, sdg?: number[] }>} initialSelected
+ * @param {(params: Array<{ parameter_id: string, scope: string, label: string, unit: string, category: string, measurement_type?: string, target_value?: number|null, sdg?: number[] }>) => void} onChange
  */
 export default function ActivityImpactParametersStep({ orgId, initialSelected = [], onChange }) {
   const t = useTranslations('ManageActivities');
   const [selected, setSelected] = useState(() => {
     const map = new Map();
-    (initialSelected || []).forEach((p) => map.set(p.parameterId, { ...p, targetValue: p.targetValue ?? null }));
+    (initialSelected || []).forEach((p) => {
+      const paramId = p.parameter_id ?? p.id;
+      map.set(paramId, {
+        ...p,
+        parameter_id: paramId,
+        sdg: normalizeSdgList(p.sdg),
+        target_value: p.target_value ?? null,
+      });
+    });
     return map;
   });
 
@@ -30,13 +49,14 @@ export default function ActivityImpactParametersStep({ orgId, initialSelected = 
 
   useEffect(() => {
     const arr = Array.from(selected.values()).map((p) => ({
-      parameterId: p.parameterId || p.id,
+      parameter_id: p.parameter_id ?? p.id,
       scope: p.scope,
       label: p.label,
       unit: p.unit,
       category: p.category ?? '',
-      measurementType: p.measurementType || null,
-      targetValue: p.targetValue ?? null,
+      measurement_type: p.measurement_type ?? null,
+      sdg: normalizeSdgList(p.sdg),
+      target_value: p.target_value ?? null,
     }));
     onChange?.(arr);
   }, [selected, onChange]);
@@ -45,16 +65,17 @@ export default function ActivityImpactParametersStep({ orgId, initialSelected = 
     setSelected((prev) => {
       const next = new Map(prev);
       if (checked) {
-        const measurementType = p.measurementType || suggestMeasurementTypeFromUnit(p.unit);
+        const measurement_type = p.measurement_type ?? suggestMeasurementTypeFromUnit(p.unit);
         next.set(p.id, {
           id: p.id,
-          parameterId: p.id,
+          parameter_id: p.id,
           scope: p.scope,
           label: p.label,
           unit: p.unit,
           category: p.category ?? '',
-          measurementType: measurementType || null,
-          targetValue: null,
+          measurement_type: measurement_type || null,
+          sdg: normalizeSdgList(p.sdg),
+          target_value: null,
         });
       } else {
         next.delete(p.id);
@@ -68,7 +89,7 @@ export default function ActivityImpactParametersStep({ orgId, initialSelected = 
     setSelected((prev) => {
       const next = new Map(prev);
       const entry = next.get(paramId);
-      if (entry) next.set(paramId, { ...entry, targetValue: v });
+      if (entry) next.set(paramId, { ...entry, target_value: v });
       return next;
     });
   };
@@ -82,12 +103,40 @@ export default function ActivityImpactParametersStep({ orgId, initialSelected = 
   }
 
   const grouped = groupImpactParametersByCategory(parameters);
+  const selectedSdgs = Array.from(selected.values())
+    .flatMap((p) => normalizeSdgList(p.sdg))
+    .filter((n, idx, arr) => arr.indexOf(n) === idx)
+    .sort((a, b) => a - b);
 
   return (
     <div className="space-y-6">
       <p className="text-sm text-text-secondary dark:text-text-secondary">
         {t('impactParametersStepDescription') || 'Select impact metrics to track for this activity. You can set an optional target for each.'}
       </p>
+      {selectedSdgs.length > 0 && (
+        <Card className="p-4">
+          <div className="text-xs font-medium text-text-tertiary dark:text-text-tertiary uppercase mb-2">
+            {t('impactedSdgs') || 'Impacted SDGs'}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {selectedSdgs.map((sdgNumber) => (
+              <div
+                key={`selected-sdg-${sdgNumber}`}
+                className="rounded-md border border-gray-200 dark:border-gray-700 overflow-hidden"
+                title={getSDGLabel(sdgNumber)}
+                aria-label={getSDGLabel(sdgNumber)}
+              >
+                <Image
+                  src={`/icons/sdgs/c-${sdgNumber}.png`}
+                  alt={getSDGLabel(sdgNumber)}
+                  width={42}
+                  height={42}
+                />
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
       {Object.keys(grouped).length === 0 ? (
         <Card className="p-4 text-text-secondary dark:text-text-secondary text-sm">
           {t('noImpactParametersAvailable') || 'No parameters available. Add global or custom parameters from Impact Parameters settings.'}
@@ -102,6 +151,7 @@ export default function ActivityImpactParametersStep({ orgId, initialSelected = 
               <ul className="space-y-3">
                 {params.map((p) => {
                   const isChecked = selected.has(p.id);
+                  const sdgs = normalizeSdgList(p.sdg);
                   return (
                     <li key={p.id} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
                       <div className="flex items-center gap-2 min-h-[44px]">
@@ -113,6 +163,25 @@ export default function ActivityImpactParametersStep({ orgId, initialSelected = 
                         <Label htmlFor={`impact-${p.id}`} className="cursor-pointer font-medium text-text-primary dark:text-text-primary">
                           {p.label} ({p.unit})
                         </Label>
+                        {sdgs.length > 0 && (
+                          <div className="flex flex-wrap gap-1 ml-1">
+                            {sdgs.map((sdgNumber) => (
+                              <div
+                                key={`${p.id}-sdg-${sdgNumber}`}
+                                className="rounded overflow-hidden border border-gray-200 dark:border-gray-700"
+                                title={getSDGLabel(sdgNumber)}
+                                aria-label={getSDGLabel(sdgNumber)}
+                              >
+                                <Image
+                                  src={isChecked ? `/icons/sdgs/c-${sdgNumber}.png` : `/icons/sdgs/w-${sdgNumber}.png`}
+                                  alt={getSDGLabel(sdgNumber)}
+                                  width={28}
+                                  height={28}
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                       {isChecked && (
                         <div className="sm:ml-4 flex items-center gap-2 w-full sm:w-auto">
@@ -125,7 +194,7 @@ export default function ActivityImpactParametersStep({ orgId, initialSelected = 
                             min={0}
                             step="any"
                             placeholder="—"
-                            value={selected.get(p.id)?.targetValue ?? ''}
+                            value={selected.get(p.id)?.target_value ?? ''}
                             onChange={(e) => setTarget(p.id, e.target.value)}
                             className="max-w-[120px]"
                           />

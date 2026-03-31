@@ -43,23 +43,23 @@ const ProfileSection = memo(function ProfileSection({
     }
   }, [profileData?.code, onCopyCodeSuccess, onCopyCodeError]);
 
-  // Explicitly check if profileData.profilePicture is a valid non-empty string
-  const profilePictureFromData = profileData?.profilePicture;
+  // Explicitly check if profileData.profile_picture is a valid non-empty string
+  const profilePictureFromData = profileData?.profile_picture;
   const hasValidProfilePicture = profilePictureFromData && profilePictureFromData.trim() !== '';
   const profilePicture = hasValidProfilePicture ? profilePictureFromData : (user?.photoURL || null);
 
   const displayName =
-    profileData?.displayName || user?.displayName || user?.email || 'Volunteer';
+    profileData?.display_name || user?.displayName || user?.email || 'Volunteer';
   const userCode = profileData?.code || null;
 
   const level = gamificationData?.level ?? 1;
-  const currentXP = gamificationData?.currentXP ?? 0;
-  const totalXP = gamificationData?.totalXP ?? 0;
+  const currentXP = gamificationData?.current_xp ?? 0;
+  const totalXP = gamificationData?.total_xp ?? 0;
   const xpForNextLevel = 100;
   const xpRemaining = xpForNextLevel - currentXP;
   const progressPercent = Math.min(Math.round((currentXP / xpForNextLevel) * 100), 100);
   const isCloseToLevelUp = xpRemaining <= Math.ceil(xpForNextLevel * 0.2);
-  const activitiesCompleted = profileData?.impactSummary?.totalActivities ?? 0;
+  const activitiesCompleted = profileData?.impact_summary?.total_activities ?? 0;
 
   // Use enriched badges from parent when provided, else fall back to profileData.badges
   const displayBadges = badgesProp?.length

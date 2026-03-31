@@ -16,7 +16,7 @@ export default function NPOImpactPage() {
   const tExport = useTranslations('impact_export');
   const locale = useLocale();
   const { claims } = useAuth();
-  const orgId = claims?.npoId;
+  const orgId = claims?.npo_id;
 
   const { data: org, isLoading } = useQuery({
     queryKey: ['npoOrganization', orgId],
@@ -32,9 +32,9 @@ export default function NPOImpactPage() {
     staleTime: 5 * 60 * 1000,
   });
 
-  const summary = org?.impactSummary || {};
-  const totalHours = summary.totalHours ?? 0;
-  const totalActivities = summary.totalActivities ?? 0;
+  const summary = org?.impact_summary ?? {};
+  const totalHours = summary.total_hours ?? 0;
+  const totalActivities = summary.total_activities ?? 0;
   const parameters = summary.parameters || {};
   const paramEntries = Object.entries(parameters).filter(([, v]) => v != null && Number(v) !== 0);
 

@@ -52,20 +52,20 @@ export default function ActivityValidationModal({
       // When no applications but we have validated users (QR-only flow), fetch their display names
       const validated = validationsData.filter(v => v.status === 'validated');
       const validatedNotInApps = validated.filter(v =>
-        !acceptedApps.some(a => a.userId === v.userId)
+        !acceptedApps.some(a => a.user_id === v.user_id)
       );
       if (validatedNotInApps.length > 0) {
         const withNames = await Promise.all(
           validatedNotInApps.map(async (v) => {
-            let displayName = 'Participant';
+            let display_name = 'Participant';
             try {
-              const userDoc = await getDoc(doc(db, 'members', v.userId));
+              const userDoc = await getDoc(doc(db, 'members', v.user_id));
               if (userDoc.exists()) {
                 const d = userDoc.data();
-                displayName = d.displayName || d.name || d.email || displayName;
+                display_name = d.display_name || d.name || d.email || display_name;
               }
             } catch (_) {}
-            return { userId: v.userId, displayName, status: 'validated' };
+            return { user_id: v.user_id, display_name, status: 'validated' };
           })
         );
         setQrValidatedParticipants(withNames);
@@ -94,7 +94,7 @@ export default function ActivityValidationModal({
 
   // Get validation status for a user
   const getValidationStatus = (userId) => {
-    const validation = validations.find(v => v.userId === userId);
+    const validation = validations.find(v => v.user_id === userId);
     if (!validation) return null;
     return validation.status; // 'validated' or 'rejected'
   };
@@ -104,7 +104,7 @@ export default function ActivityValidationModal({
     // If there are no applicants, consider it as "processed" (can close activity)
     if (applications.length === 0) return true;
     return applications.every(app => {
-      const status = getValidationStatus(app.userId);
+      const status = getValidationStatus(app.user_id);
       return status === 'validated' || status === 'rejected';
     });
   };
@@ -169,10 +169,10 @@ export default function ActivityValidationModal({
     
     const unprocessedUserIds = applications
       .filter(app => {
-        const status = getValidationStatus(app.userId);
+        const status = getValidationStatus(app.user_id);
         return status !== 'validated' && status !== 'rejected';
       })
-      .map(app => app.userId);
+      .map(app => app.user_id);
     
     if (unprocessedUserIds.length === 0) return;
     
@@ -200,10 +200,10 @@ export default function ActivityValidationModal({
     
     const unprocessedUserIds = applications
       .filter(app => {
-        const status = getValidationStatus(app.userId);
+        const status = getValidationStatus(app.user_id);
         return status !== 'validated' && status !== 'rejected';
       })
-      .map(app => app.userId);
+      .map(app => app.user_id);
     
     if (unprocessedUserIds.length === 0) return;
     
@@ -228,7 +228,7 @@ export default function ActivityValidationModal({
   // Handle close - if all processed, tell parent to open CloseActivityModal (parent will not call updateActivityStatus here)
   const handleClose = useCallback(() => {
     const allProcessed = applications.length === 0 || applications.every(app => {
-      const status = validations.find(v => v.userId === app.userId)?.status;
+      const status = validations.find(v => v.user_id === app.user_id)?.status;
       return status === 'validated' || status === 'rejected';
     });
     const shouldCloseActivity = allProcessed && activity?.status !== 'Closed';
@@ -242,7 +242,7 @@ export default function ActivityValidationModal({
 
   // Count unprocessed applicants
   const unprocessedCount = applications.filter(app => {
-    const status = getValidationStatus(app.userId);
+    const status = getValidationStatus(app.user_id);
     return status !== 'validated' && status !== 'rejected';
   }).length;
 
@@ -281,18 +281,18 @@ export default function ActivityValidationModal({
                 <div className="space-y-2 max-h-48 overflow-y-auto mb-4 text-left">
                   {qrValidatedParticipants.map((p) => (
                     <div
-                      key={p.userId}
+                      key={p.user_id}
                       className="flex items-center gap-3 border border-gray-200 dark:border-gray-600 rounded-lg p-3 bg-gray-50 dark:bg-gray-800/50"
                     >
                       <ProfilePicture
                         src={null}
-                        alt={p.displayName}
+                        alt={p.display_name}
                         size={36}
                         showInitials={true}
-                        name={p.displayName}
+                        name={p.display_name}
                         className="flex-shrink-0"
                       />
-                      <span className="text-sm font-medium truncate">{p.displayName}</span>
+                      <span className="text-sm font-medium truncate">{p.display_name}</span>
                       <Badge color="success" className="ml-auto flex-shrink-0 text-xs">
                         {t('validated') || 'Validated'}
                       </Badge>
@@ -364,8 +364,8 @@ export default function ActivityValidationModal({
             {/* Applicants List */}
             <div className="space-y-2 sm:space-y-3 max-h-[50vh] sm:max-h-96 overflow-y-auto -mx-1 px-1">
               {applications.map((application) => {
-                const validationStatus = getValidationStatus(application.userId);
-                const isProcessingUser = processing[application.userId] || false;
+                const validationStatus = getValidationStatus(application.user_id);
+                const isProcessingUser = processing[application.user_id] || false;
                 const isProcessed = validationStatus === 'validated' || validationStatus === 'rejected';
 
                 return (
@@ -376,17 +376,17 @@ export default function ActivityValidationModal({
                     <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                       <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0 pr-2">
                         <ProfilePicture
-                          src={application.profilePicture}
-                          alt={application.displayName}
+                          src={application.profile_picture}
+                          alt={application.display_name}
                           size={40}
                           showInitials={true}
-                          name={application.displayName}
+                          name={application.display_name}
                           loading="lazy"
                           className="sm:!w-10 sm:!h-10 flex-shrink-0"
                         />
                         <div className="min-w-0 flex-1 overflow-hidden">
-                          <p className="text-sm sm:text-base font-medium text-gray-900 truncate" title={application.displayName}>
-                            {application.displayName}
+                          <p className="text-sm sm:text-base font-medium text-gray-900 truncate" title={application.display_name}>
+                            {application.display_name}
                           </p>
                           {(validationStatus === 'validated' || validationStatus === 'rejected') && (
                             <Badge
@@ -407,7 +407,7 @@ export default function ActivityValidationModal({
                           <Button
                             size="sm"
                             color="success"
-                            onClick={() => handleValidate(application.userId)}
+                            onClick={() => handleValidate(application.user_id)}
                             disabled={isProcessingUser || isProcessingAll}
                             className="flex-1 sm:flex-initial min-h-[44px] sm:min-h-0 flex items-center justify-center whitespace-nowrap"
                           >
@@ -423,7 +423,7 @@ export default function ActivityValidationModal({
                           <Button
                             size="sm"
                             color="failure"
-                            onClick={() => handleReject(application.userId)}
+                            onClick={() => handleReject(application.user_id)}
                             disabled={isProcessingUser || isProcessingAll}
                             className="flex-1 sm:flex-initial min-h-[44px] sm:min-h-0 flex items-center justify-center whitespace-nowrap"
                           >
@@ -453,18 +453,18 @@ export default function ActivityValidationModal({
                 <div className="space-y-2 max-h-32 overflow-y-auto">
                   {qrValidatedParticipants.map((p) => (
                     <div
-                      key={p.userId}
+                      key={p.user_id}
                       className="flex items-center gap-3 border border-gray-200 dark:border-gray-600 rounded-lg p-2 bg-gray-50 dark:bg-gray-800/50"
                     >
                       <ProfilePicture
                         src={null}
-                        alt={p.displayName}
+                        alt={p.display_name}
                         size={32}
                         showInitials={true}
-                        name={p.displayName}
+                        name={p.display_name}
                         className="flex-shrink-0"
                       />
-                      <span className="text-sm truncate">{p.displayName}</span>
+                      <span className="text-sm truncate">{p.display_name}</span>
                       <Badge color="success" className="ml-auto flex-shrink-0 text-xs">
                         {t('validated') || 'Validated'}
                       </Badge>

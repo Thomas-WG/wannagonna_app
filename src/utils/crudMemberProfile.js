@@ -1,4 +1,4 @@
-import { collection, getDocs, addDoc, getDoc, updateDoc, doc, onSnapshot, query, where, orderBy, limit, startAfter, getCountFromServer} from 'firebase/firestore';
+import { collection, getDocs, getDoc, updateDoc, doc, query, where, getCountFromServer} from 'firebase/firestore';
 import { db } from 'firebaseConfig';
 
 // Fetch all members from the Firestore database
@@ -50,14 +50,14 @@ export async function fetchMemberById(userId, setProfileData) {
       
       // Default values for all fields
       const defaultValues = {
-        displayName: '',
+        display_name: '',
         email: '',
         bio: '',
         country: '',
         languages: [],
         skills: [],
-        profilePicture: '',
-        timeCommitment: {
+        profile_picture: '',
+        time_commitment: {
           daily: false,
           weekly: false,
           biweekly: false,
@@ -76,7 +76,7 @@ export async function fetchMemberById(userId, setProfileData) {
         xp: 0,
         badges:[],
         code: '',
-        referredBy: '',
+        referred_by: '',
         cause: '',
         hobbies: '',
         website: '',
@@ -90,9 +90,9 @@ export async function fetchMemberById(userId, setProfileData) {
         ...defaultValues,
         ...memberData,
         // Ensure we don't override with undefined/null values, use defaults
-        displayName: memberData.displayName ?? defaultValues.displayName,
+        display_name: memberData.display_name ?? defaultValues.display_name,
         email: memberData.email ?? defaultValues.email,
-        profilePicture: memberData.profilePicture ?? defaultValues.profilePicture,
+        profile_picture: memberData.profile_picture ?? defaultValues.profile_picture,
         bio: memberData.bio ?? defaultValues.bio,
         country: memberData.country ?? defaultValues.country,
         languages: Array.isArray(memberData.languages) ? memberData.languages : defaultValues.languages,
@@ -100,16 +100,16 @@ export async function fetchMemberById(userId, setProfileData) {
         xp: memberData.xp ?? defaultValues.xp,
         badges: Array.isArray(memberData.badges) ? memberData.badges : defaultValues.badges,
         code: memberData.code ?? defaultValues.code,
-        referredBy: memberData.referredBy ?? defaultValues.referredBy,
+        referred_by: memberData.referred_by ?? defaultValues.referred_by,
         cause: memberData.cause ?? defaultValues.cause,
         hobbies: memberData.hobbies ?? defaultValues.hobbies,
         website: memberData.website ?? defaultValues.website,
         linkedin: memberData.linkedin ?? defaultValues.linkedin,
         facebook: memberData.facebook ?? defaultValues.facebook,
         instagram: memberData.instagram ?? defaultValues.instagram,
-        timeCommitment: {
-          ...defaultValues.timeCommitment,
-          ...(memberData.timeCommitment || {})
+        time_commitment: {
+          ...defaultValues.time_commitment,
+          ...(memberData.time_commitment || {})
         },
         availabilities: {
           ...defaultValues.availabilities,
@@ -148,15 +148,15 @@ export async function fetchPublicMemberProfile(userId) {
     
     const memberData = docSnap.data();
     
-    // Convert createdAt timestamp if it exists
-    let createdAt = null;
-    if (memberData.createdAt) {
-      if (memberData.createdAt.toDate && typeof memberData.createdAt.toDate === 'function') {
-        createdAt = memberData.createdAt.toDate();
-      } else if (memberData.createdAt.seconds) {
-        createdAt = new Date(memberData.createdAt.seconds * 1000);
-      } else if (memberData.createdAt instanceof Date) {
-        createdAt = memberData.createdAt;
+    // Convert created_at timestamp if it exists
+    let created_at = null;
+    if (memberData.created_at) {
+      if (memberData.created_at.toDate && typeof memberData.created_at.toDate === 'function') {
+        created_at = memberData.created_at.toDate();
+      } else if (memberData.created_at.seconds) {
+        created_at = new Date(memberData.created_at.seconds * 1000);
+      } else if (memberData.created_at instanceof Date) {
+        created_at = memberData.created_at;
       }
     }
     
@@ -164,14 +164,14 @@ export async function fetchPublicMemberProfile(userId) {
     const xp = memberData.xp || 0;
     const level = Math.floor(xp / 100) + 1;
     
-    // Return only public fields (exclude email, referredBy, code)
+    // Return only public fields (exclude email, referred_by, code)
     return {
-      displayName: memberData.displayName || '',
+      display_name: memberData.display_name || '',
       bio: memberData.bio || '',
       country: memberData.country || '',
       languages: Array.isArray(memberData.languages) ? memberData.languages : [],
       skills: Array.isArray(memberData.skills) ? memberData.skills : [],
-      profilePicture: memberData.profilePicture || '',
+      profile_picture: memberData.profile_picture || '',
       xp: xp,
       level: level,
       badges: Array.isArray(memberData.badges) ? memberData.badges : [],
@@ -181,8 +181,8 @@ export async function fetchPublicMemberProfile(userId) {
       linkedin: memberData.linkedin || '',
       facebook: memberData.facebook || '',
       instagram: memberData.instagram || '',
-      createdAt: createdAt,
-      timeCommitment: memberData.timeCommitment || {
+      created_at: created_at,
+      time_commitment: memberData.time_commitment || {
         daily: false,
         weekly: false,
         biweekly: false,
@@ -252,89 +252,6 @@ export async function findUserByCode(referralCode) {
   } catch (error) {
     console.error('Error finding user by code:', error);
     return null;
-  }
-}
-
-/**
- * Fetch paginated members from Firestore with server-side filtering and sorting
- * @param {number} page - Page number (1-indexed)
- * @param {number} pageSize - Number of items per page
- * @param {Object} filters - Filter object with country (optional)
- * @param {string} sortBy - Sort option: 'name_az', 'name_za', 'joined_newest', 'joined_oldest'
- * @param {Object|null} lastDoc - Last document from previous page (for cursor-based pagination)
- * @returns {Promise<Object>} Object with members array, totalCount, hasNextPage, lastDoc
- */
-export async function fetchMembersPaginated(page = 1, pageSize = 20, filters = {}, sortBy = 'name_az', lastDoc = null) {
-  try {
-    const membersRef = collection(db, 'members');
-    let q = query(membersRef);
-
-    // Apply country filter if specified
-    if (filters.country && filters.country !== 'all') {
-      q = query(q, where('country', '==', filters.country));
-    }
-
-    // Apply sorting based on sortBy parameter
-    // Note: Firestore requires an index for composite queries (filter + orderBy)
-    switch (sortBy) {
-      case 'name_az':
-        q = query(q, orderBy('displayName', 'asc'));
-        break;
-      case 'name_za':
-        q = query(q, orderBy('displayName', 'desc'));
-        break;
-      case 'joined_newest':
-        q = query(q, orderBy('createdAt', 'desc'));
-        break;
-      case 'joined_oldest':
-        q = query(q, orderBy('createdAt', 'asc'));
-        break;
-      default:
-        q = query(q, orderBy('displayName', 'asc'));
-    }
-
-    // Apply pagination
-    // For first page, don't use startAfter
-    // For subsequent pages, use startAfter with lastDoc
-    if (lastDoc) {
-      q = query(q, startAfter(lastDoc));
-    }
-    
-    // Fetch one extra document to check if there's a next page
-    q = query(q, limit(pageSize + 1));
-
-    const snapshot = await getDocs(q);
-    const docs = snapshot.docs;
-    
-    // Check if there's a next page
-    const hasNextPage = docs.length > pageSize;
-    const membersToReturn = hasNextPage ? docs.slice(0, pageSize) : docs;
-    
-    // Map documents to member objects
-    const members = membersToReturn.map((doc) => {
-      const data = doc.data();
-      return { id: doc.id, ...data };
-    });
-
-    // Get the last document for next page pagination
-    const newLastDoc = membersToReturn.length > 0 ? membersToReturn[membersToReturn.length - 1] : null;
-
-    return {
-      members,
-      hasNextPage,
-      lastDoc: newLastDoc,
-    };
-  } catch (error) {
-    console.error('Error fetching paginated members:', error);
-    // If error is due to missing index, provide helpful message
-    if (error.code === 'failed-precondition') {
-      console.error('Firestore index required. Please create a composite index for the query.');
-    }
-    return {
-      members: [],
-      hasNextPage: false,
-      lastDoc: null,
-    };
   }
 }
 

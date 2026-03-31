@@ -1,7 +1,7 @@
 import { Tooltip, Button } from 'flowbite-react';
 import Image from 'next/image';
 import { useTranslations, useLocale } from 'next-intl';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   HiLocationMarker, HiUserGroup, HiStar,
   HiQuestionMarkCircle,
@@ -13,7 +13,7 @@ import { FaRegCircle } from 'react-icons/fa';
 import StatusUpdateModal from './StatusUpdateModal';
 import QRCodeModal from './QRCodeModal';
 import ActivityValidationModal from './ActivityValidationModal';
-import { updateActivityStatus, getAcceptedApplicationsCount } from '@/utils/crudActivities';
+import { updateActivityStatus } from '@/utils/crudActivities';
 import { categoryIcons } from '@/constant/categoryIcons';
 import { getSkillsForSelect } from '@/utils/crudSkills';
 
@@ -27,6 +27,7 @@ export default function ActivityCard({
   category,
   skills,
   applicants,
+  effective_participants_count,
   type,
   xp_reward,
   city,
@@ -37,15 +38,15 @@ export default function ActivityCard({
   end_time,
   sdg,
   status,
-  qrCodeToken,
+  qr_code_token,
   frequency,
   onClick,
   onStatusChange,
   canEditStatus = false,
   showQRButton = false,
-  participantTarget,
-  acceptApplicationsWG,
-  last_updated,
+  participant_target,
+  accept_applications_wg,
+  updated_at,
   distance, // Distance in km when "Around Me" filter is active
 }) {
   const t = useTranslations('ActivityCard');
@@ -58,31 +59,17 @@ export default function ActivityCard({
   const [localStatus, setLocalStatus] = useState(status);
   const [showQRModal, setShowQRModal] = useState(false);
   const [showValidationModal, setShowValidationModal] = useState(false);
-  const [validatedCount, setValidatedCount] = useState(null);
   const [skillLabelsMap, setSkillLabelsMap] = useState({});
 
-  // Fetch accepted applications count for local/online activities (not for events)
-  useEffect(() => {
-    const shouldShowCounter = 
-      (type === 'local' && acceptApplicationsWG !== false) || 
-      type === 'online';
-    
-    if (shouldShowCounter && id) {
-      const fetchCount = async () => {
-        try {
-          const count = await getAcceptedApplicationsCount(id);
-          setValidatedCount(count);
-        } catch (error) {
-          console.error('Error fetching accepted applications count:', error);
-          setValidatedCount(0);
-        }
-      };
-      fetchCount();
-    } else if (type !== 'event') {
-      // Reset count for local/online activities when not needed
-      setValidatedCount(null);
+  const participantStatCount = useMemo(() => {
+    if (effective_participants_count != null) {
+      return effective_participants_count;
     }
-  }, [id, type, acceptApplicationsWG]);
+    if (applicants != null) {
+      return applicants;
+    }
+    return null;
+  }, [effective_participants_count, applicants]);
 
   // Sync local status with prop changes
   useEffect(() => {
@@ -195,7 +182,7 @@ export default function ActivityCard({
    * Rules:
    * - If end_date exists: "startDate - endDate"
    * - If no end_date and today is after start_date: "startDate - present"
-   * - If status is Closed: "startDate - last_updated (or end_date, or today)"
+   * - If status is Closed: "startDate - updated_at (or end_date, or today)"
    * - Otherwise: "startDate"
    */
   const formatActivityDateRange = (start, end, activityStatus, lastUpdated) => {
@@ -254,8 +241,8 @@ export default function ActivityCard({
     return description.substring(0, maxLength).trim() + '...';
   };
 
-  // Format time commitment based on frequency
-  const getTimeCommitment = () => {
+  // Frequency label (once / regular / role) for the stats row
+  const get_frequency_label = () => {
     if (!frequency) return null;
     const frequencyMap = {
       'once': 'One-time',
@@ -283,8 +270,8 @@ export default function ActivityCard({
     : 0;
 
   const descriptionPreview = getDescriptionPreview();
-  const timeCommitment = getTimeCommitment();
-  const activityDateLine = formatActivityDateRange(start_date, end_date, localStatus, last_updated);
+  const frequency_label = get_frequency_label();
+  const activityDateLine = formatActivityDateRange(start_date, end_date, localStatus, updated_at);
   const typeColorClass = getTypeColorClasses();
 
   // Handle status update
@@ -416,7 +403,7 @@ export default function ActivityCard({
               <span className='sr-only'>{category}</span>
               
               {/* QR Code Button — subtle container */}
-              {showQRButton && (type === 'local' || type === 'event') && qrCodeToken && (
+              {showQRButton && (type === 'local' || type === 'event') && qr_code_token && (
                 <Tooltip content="Show QR Code" placement="top">
                   <button
                     type="button"
@@ -475,36 +462,36 @@ export default function ActivityCard({
               <HiStar className='w-4 h-4 flex-shrink-0' />
               {xp_reward} <span className='text-xs font-normal text-[#6b7280] dark:text-text-tertiary'>pts</span>
             </span>
-            {((type === 'local' && acceptApplicationsWG !== false) || type === 'online') && validatedCount !== null && (
+            {((type === 'local' && accept_applications_wg !== false) || type === 'online') && participantStatCount != null && (
               <>
                 <span className='w-px h-4 bg-[#e5e7eb] dark:bg-border-light flex-shrink-0' />
                 <span className='flex items-center gap-1.5 text-sm font-semibold text-[#3F3F3F] dark:text-text-primary'>
                   <HiUserGroup className='w-4 h-4 flex-shrink-0' />
-                  {participantTarget != null && participantTarget > 0
-                    ? `${validatedCount}/${participantTarget}`
-                    : validatedCount}{' '}
+                  {participant_target != null && participant_target > 0
+                    ? `${participantStatCount}/${participant_target}`
+                    : participantStatCount}{' '}
                   <span className='text-xs font-normal text-[#6b7280] dark:text-text-tertiary'>
-                    {participantTarget != null && participantTarget > 0 ? t('participants') : t('validated')}
+                    {participant_target != null && participant_target > 0 ? t('participants') : t('validated')}
                   </span>
                 </span>
               </>
             )}
-            {type === 'event' && participantTarget !== null && participantTarget !== undefined && (
+            {type === 'event' && participant_target !== null && participant_target !== undefined && (
               <>
                 <span className='w-px h-4 bg-[#e5e7eb] dark:bg-border-light flex-shrink-0' />
                 <span className='flex items-center gap-1.5 text-sm font-semibold text-[#3F3F3F] dark:text-text-primary'>
                   <HiUserGroup className='w-4 h-4 flex-shrink-0' />
-                  {participantTarget} <span className='text-xs font-normal text-[#6b7280] dark:text-text-tertiary'>{t('peopleMax')}</span>
+                  {participant_target} <span className='text-xs font-normal text-[#6b7280] dark:text-text-tertiary'>{t('peopleMax')}</span>
                 </span>
               </>
             )}
-            {((type === 'event' && (participantTarget === null || participantTarget === undefined)) ||
-              ((type === 'local' && acceptApplicationsWG === false) || (type === 'online' && validatedCount === null))) && (
+            {((type === 'event' && (participant_target === null || participant_target === undefined)) ||
+              ((type === 'local' && accept_applications_wg === false) || (type === 'online' && participantStatCount == null))) && (
               <>
                 <span className='w-px h-4 bg-[#e5e7eb] dark:bg-border-light flex-shrink-0' />
                 <span className='flex items-center gap-1.5 text-sm font-semibold text-[#3F3F3F] dark:text-text-primary'>
                   <HiClock className='w-4 h-4 flex-shrink-0' />
-                  {timeCommitment || 'N/A'}
+                  {frequency_label || 'N/A'}
                 </span>
               </>
             )}
@@ -579,12 +566,12 @@ export default function ActivityCard({
       />
 
       {/* QR Code Modal */}
-      {(type === 'local' || type === 'event') && qrCodeToken && (
+      {(type === 'local' || type === 'event') && qr_code_token && (
         <QRCodeModal
           isOpen={showQRModal}
           onClose={() => setShowQRModal(false)}
           activityId={id}
-          qrCodeToken={qrCodeToken}
+          qr_code_token={qr_code_token}
           title={title}
           startDate={start_date}
         />

@@ -73,13 +73,13 @@ export default function OrganizationEditPage() {
   // Load organization data
   useEffect(() => {
     const loadOrganizationData = async () => {
-      if (!claims?.npoId) {
+      if (!claims?.npo_id) {
         setIsLoading(false);
         return;
       }
 
       try {
-        const orgData = await fetchOrganizationById(claims.npoId);
+        const orgData = await fetchOrganizationById(claims.npo_id);
         if (orgData) {
           setOrganizationForm({
             name: orgData.name || '',
@@ -123,7 +123,7 @@ export default function OrganizationEditPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!claims?.npoId) {
+    if (!claims?.npo_id) {
       showToast(t('noOrganization'), 'error');
       return;
     }
@@ -140,15 +140,15 @@ export default function OrganizationEditPage() {
       };
 
       // First, upload logo if a new logo file was selected
-      if (logoFile && claims.npoId) {
+      if (logoFile && claims.npo_id) {
         try {
-          const url = await uploadOrgPicture(logoFile, claims.npoId);
-          await updateOrganization(claims.npoId, { ...normalizedForm, logo: url });
+          const url = await uploadOrgPicture(logoFile, claims.npo_id);
+          await updateOrganization(claims.npo_id, { ...normalizedForm, logo: url });
           
           // Update all activities for this organization with the new logo
           try {
             const updatedCount = await updateActivitiesForOrganization(
-              claims.npoId, 
+              claims.npo_id, 
               url, 
               normalizedForm.name
             );
@@ -166,7 +166,7 @@ export default function OrganizationEditPage() {
         }
       } else {
         // Update organization without logo change
-        await updateOrganization(claims.npoId, normalizedForm);
+        await updateOrganization(claims.npo_id, normalizedForm);
         showToast(t('organizationUpdated'), 'success');
       }
 

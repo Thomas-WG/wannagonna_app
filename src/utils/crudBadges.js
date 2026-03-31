@@ -1,10 +1,12 @@
-import { collection, getDocs, getDoc, doc, updateDoc, arrayUnion, arrayRemove, Timestamp, increment, setDoc, deleteDoc, addDoc } from 'firebase/firestore';
-import { db, functions } from 'firebaseConfig';
+import { collection, getDocs, getDoc, doc, updateDoc, arrayUnion, Timestamp, setDoc, deleteDoc, addDoc } from 'firebase/firestore';
+import { auth, db, functions } from 'firebaseConfig';
 import { ref, getDownloadURL, deleteObject } from 'firebase/storage';
 import { storage } from 'firebaseConfig';
-import { logXpHistory } from './crudXpHistory';
 import { httpsCallable } from 'firebase/functions';
 import { uploadFile } from './storage';
+
+/** One in-flight processReferralRewardOnSignup per uid (avoids duplicate callables). */
+let referralRewardInflight = /** @type {{ uid: string, promise: Promise<unknown> } | null} */ (null);
 
 /**
  * Fetch all badge categories (sdg, geography, general, etc.)
@@ -48,7 +50,7 @@ export async function fetchBadgesByCategory(categoryId) {
     
     const badges = snapshot.docs.map((doc) => ({
       id: doc.id,
-      categoryId,
+      category_id: categoryId,
       ...doc.data()
     }));
     
@@ -95,7 +97,7 @@ export async function fetchBadgeById(categoryId, badgeId) {
     if (badgeSnap.exists()) {
       return {
         id: badgeSnap.id,
-        categoryId,
+        category_id: categoryId,
         ...badgeSnap.data()
       };
     }
@@ -145,14 +147,13 @@ export async function fetchBadgeDetailsByIds(badgeIds) {
     // Fetch all badge details in parallel
     const badgePromises = badgeIds.map(async (badgeId) => {
       const badgeDetails = await findBadgeById(badgeId);
-      if (badgeDetails && badgeDetails.categoryId) {
-        // Fetch image URL (will check cache first)
-        const imageUrl = await getBadgeImageUrl(badgeDetails.categoryId, badgeId);
+      if (badgeDetails && badgeDetails.category_id) {
+        const imageUrl = await getBadgeImageUrl(badgeDetails.category_id, badgeId);
         return {
           id: badgeId,
           title: badgeDetails.title || badgeId,
           description: badgeDetails.description || '',
-          categoryId: badgeDetails.categoryId,
+          category_id: badgeDetails.category_id,
           imageUrl: imageUrl || null,
         };
       }
@@ -164,8 +165,8 @@ export async function fetchBadgeDetailsByIds(badgeIds) {
     // Update cache with newly fetched URLs
     const urlMap = {};
     results.forEach(badge => {
-      if (badge && badge.imageUrl) {
-        urlMap[badge.id] = badge.imageUrl;
+      if (badge && (badge.image_url)) {
+        urlMap[badge.id] = badge.image_url;
       }
     });
     if (Object.keys(urlMap).length > 0) {
@@ -302,10 +303,10 @@ export async function batchLoadBadgeImageUrls(badges, batchSize = 10) {
     const batch = badges.slice(i, i + batchSize);
     const promises = batch.map(async (badge) => {
       try {
-        if (!badge.categoryId) {
+        if (!badge.category_id) {
           return { badgeId: badge.id, url: null };
         }
-        const url = await getBadgeImageUrl(badge.categoryId, badge.id);
+        const url = await getBadgeImageUrl(badge.category_id, badge.id);
         return { badgeId: badge.id, url };
       } catch (error) {
         return { badgeId: badge.id, url: null };
@@ -384,59 +385,32 @@ export async function grantBadgeToUser(userId, badgeId) {
 }
 
 /**
- * Remove a badge from a user
- * @param {string} userId - The user's ID
- * @param {string} badgeId - The badge ID to remove
- * @returns {Promise<Object|null>} Badge details object if successful, null otherwise
+ * Admin only: remove a badge via Cloud Function (Admin SDK).
+ * @param {string} userId - Target member uid
+ * @param {string} badgeId - Badge ID to remove
+ * @returns {Promise<Object|null>} Badge details if successful
  */
-export async function removeBadgeFromUser(userId, badgeId) {
+export async function adminRemoveBadgeFromUser(userId, badgeId) {
   try {
-    const memberDoc = doc(db, 'members', userId);
-    
-    // Get current member data to find the badge object
-    const memberSnap = await getDoc(memberDoc);
-    if (!memberSnap.exists()) {
-      console.error(`Member document ${userId} does not exist`);
+    if (!functions) {
+      console.error('Firebase functions not initialized');
       return null;
     }
-    
-    const memberData = memberSnap.data();
-    const existingBadges = memberData.badges || [];
-    
-    // Find the badge object to remove (need exact object for arrayRemove)
-    const badgeToRemove = existingBadges.find(badge => badge.id === badgeId);
-    if (!badgeToRemove) {
-      console.log(`User ${userId} does not have badge ${badgeId}`);
-      return null;
+    const fn = httpsCallable(functions, 'adminRemoveBadgeFromUser');
+    const result = await fn({ userId, badgeId });
+    const data = result.data;
+    if (data?.success && data.badge) {
+      return {
+        id: data.badge.id,
+        title: data.badge.title,
+        description: data.badge.description || '',
+        xp: data.badge.xp || 0,
+      };
     }
-    
-    // Get badge details to check XP value
-    const badgeDetails = await findBadgeById(badgeId);
-    const badgeXP = badgeDetails?.xp || 0;
-    
-    // Remove the badge from the array
-    await updateDoc(memberDoc, {
-      badges: arrayRemove(badgeToRemove)
-    });
-    
-    // Decrement XP if badge had XP value
-    if (badgeXP > 0) {
-      await updateDoc(memberDoc, {
-        xp: increment(-badgeXP)
-      });
-      console.log(`Removed ${badgeXP} XP for badge ${badgeId}`);
-    }
-    
-    console.log(`Badge ${badgeId} removed from user ${userId}`);
-    
-    return {
-      id: badgeId,
-      title: badgeDetails?.title || badgeId,
-      description: badgeDetails?.description || '',
-      xp: badgeXP
-    };
+    console.warn('[adminRemoveBadgeFromUser]', data?.error || 'failed');
+    return null;
   } catch (error) {
-    console.error(`Error removing badge ${badgeId} from user ${userId}:`, error);
+    console.error('[adminRemoveBadgeFromUser]', error);
     return null;
   }
 }
@@ -563,278 +537,64 @@ export async function fetchUserBadges(userId) {
 }
 
 /**
- * Award XP points to a user without granting a badge
- * @param {string} userId - The user's ID
- * @param {number} points - The number of XP points to award
- * @param {string} title - The title/description of the XP earning event
- * @param {string} type - The type of XP earning (e.g., "referral", "activity")
- * @param {Object} metadata - Optional metadata (badgeId, activityId, memberId)
- * @returns {Promise<boolean>} True if successful, false otherwise
+ * Post-signup referral reward (server reads `referred_by`, optional code hint).
+ * Does not throw; logs on failure.
+ * @param {string} [referralCodeFromSignup] Validated signup code; fills doc if missing
+ * @returns {Promise<Object|undefined>}
  */
-export async function awardXpToUser(userId, points, title, type = 'unknown', metadata = {}) {
-  try {
-    if (!userId || !points || points <= 0) {
-      console.error('Invalid parameters for awardXpToUser:', { userId, points, title, type });
-      return false;
-    }
-
-    const memberDoc = doc(db, 'members', userId);
-    
-    // Check if user exists
-    const memberSnap = await getDoc(memberDoc);
-    if (!memberSnap.exists()) {
-      console.error(`Member document ${userId} does not exist`);
-      return false;
-    }
-
-    // Increment XP using Firestore increment for atomic operation
-    await updateDoc(memberDoc, {
-      xp: increment(points)
-    });
-
-    console.log(`Awarded ${points} XP to user ${userId} for: ${title}`);
-
-    // Log to XP history with metadata
-    await logXpHistory(userId, title, points, type, metadata);
-
-    return true;
-  } catch (error) {
-    console.error(`Error awarding XP to user ${userId}:`, error);
-    return false;
+export async function handleReferralReward(referralCodeFromSignup) {
+  const uid = auth.currentUser?.uid ?? '';
+  if (uid && referralRewardInflight?.uid === uid) {
+    return /** @type {Promise<Object|undefined>} */ (referralRewardInflight.promise);
   }
-}
 
-/**
- * Handle referral reward when a new user signs up with a referral code
- * Grants "buddyBuilder" badge on first referral, awards XP on subsequent referrals
- * @param {string} referralCode - The referral code used by the new user
- * @returns {Promise<void>}
- */
-export async function handleReferralReward(referralCode) {
-  console.log(`[handleReferralReward] Called with referral code: ${referralCode}`);
-  try {
-    if (!referralCode || referralCode.trim().length === 0) {
-      console.log('No referral code provided, skipping referral reward');
-      return;
-    }
-
-    // Find the referrer user by their code using Cloud Function
-    console.log(`[handleReferralReward] Looking up referrer with code: ${referralCode}`);
-    
-    // Use Cloud Function to find user by code (secure backend lookup)
-    let referrerId = null;
+  const run = (async () => {
     try {
       if (!functions) {
-        throw new Error('Firebase functions not initialized');
+        console.error('[handleReferralReward] Firebase functions not initialized');
+        return undefined;
       }
-      
-      const findUserByCodeFn = httpsCallable(functions, 'findUserByCode');
-      console.log(`[handleReferralReward] Calling Cloud Function findUserByCode with code: ${referralCode}`);
-      
-      const result = await findUserByCodeFn({ code: referralCode });
-      console.log(`[handleReferralReward] Cloud Function response:`, result);
-      
-      const { user } = result.data || {};
-      
-      if (user && user.id) {
-        referrerId = user.id;
-        console.log(`[handleReferralReward] Found referrer: ${referrerId}`);
-      } else {
-        console.warn(`[handleReferralReward] Referrer not found for code: ${referralCode} - user data:`, user);
-        return;
-      }
-    } catch (error) {
-      console.error(`[handleReferralReward] Error finding referrer:`, error);
-      console.error(`[handleReferralReward] Error details:`, {
-        message: error?.message || String(error),
-        code: error?.code || 'NO_CODE',
-        details: error?.details || error?.toString() || 'No details',
-        stack: error?.stack || 'No stack trace',
-        errorType: error?.constructor?.name || typeof error,
-        errorString: String(error),
-        fullError: error
-      });
-      // Don't throw - referral reward failure shouldn't block account creation
-      return;
-    }
-    const badgeId = 'buddyBuilder';
-    console.log(`[handleReferralReward] Found referrer: ${referrerId}, checking for badge: ${badgeId}`);
-
-    // Check if referrer already has the buddyBuilder badge
-    const hasBadge = await userHasBadge(referrerId, badgeId);
-    console.log(`[handleReferralReward] Referrer ${referrerId} has badge ${badgeId}: ${hasBadge}`);
-
-    if (!hasBadge) {
-      // First referral - grant the badge (which will award XP automatically)
-      // grantBadgeToUser now uses Cloud Function internally (bypasses Firestore rules)
-      console.log(`Granting ${badgeId} badge to referrer ${referrerId} for first referral`);
-      const badgeDetails = await grantBadgeToUser(referrerId, badgeId);
-      if (badgeDetails) {
-        // Notify referrer via Cloud Function (in-app + push)
+      let normalized = referralCodeFromSignup
+        ? String(referralCodeFromSignup).toUpperCase().trim()
+        : '';
+      if (!normalized && auth.currentUser) {
         try {
-          const notifyFn = httpsCallable(functions, 'notifyReferralReward');
-          await notifyFn({
-            referrerId,
-            mode: 'first',
-            badgeXP: badgeDetails.xp || 0,
-            referralCode: referralCode.toUpperCase().trim(),
-          });
-        } catch (notifyError) {
-          console.error('Failed to send referral notification (first):', notifyError);
-        }
-        console.log(`Badge ${badgeId} granted successfully to ${referrerId}`);
-      } else {
-        console.error(`Failed to grant badge ${badgeId} to ${referrerId}`);
-      }
-    } else {
-      // Subsequent referral - award XP points from badge value without granting badge again
-      console.log(`Referrer ${referrerId} already has ${badgeId} badge, awarding XP only`);
-      
-      // Get badge details to retrieve XP value
-      console.log(`Searching for badge ${badgeId} to get XP value...`);
-      const badgeDetails = await findBadgeById(badgeId);
-      if (!badgeDetails) {
-        console.error(`Badge ${badgeId} not found in Firestore - cannot award XP`);
-        return;
-      }
-
-      console.log(`Found badge ${badgeId} with details:`, { 
-        id: badgeDetails.id, 
-        title: badgeDetails.title, 
-        xp: badgeDetails.xp,
-        categoryId: badgeDetails.categoryId 
-      });
-
-      const badgeXP = badgeDetails.xp || 0;
-      console.log(`Badge XP value: ${badgeXP}`);
-      
-      if (badgeXP > 0) {
-        const success = await awardXpToUser(
-          referrerId,
-          badgeXP,
-          'Referred member',
-          'referral',
-          { memberId: referrerId }
-        );
-        if (success) {
-          try {
-            const notifyFn = httpsCallable(functions, 'notifyReferralReward');
-            await notifyFn({
-              referrerId,
-              mode: 'xp',
-              badgeXP,
-              referralCode: referralCode.toUpperCase().trim(),
-            });
-          } catch (notifyError) {
-            console.error('Failed to send referral notification (XP):', notifyError);
+          const memberSnap = await getDoc(doc(db, 'members', auth.currentUser.uid));
+          const referredBy = memberSnap.data()?.referred_by;
+          if (referredBy != null && String(referredBy).trim() !== '') {
+            normalized = String(referredBy).toUpperCase().trim();
           }
+        } catch (_) {
+          // non-blocking: server callable still reads referred_by from doc
         }
-      } else {
-        console.warn(`Badge ${badgeId} has no XP value (xp=${badgeXP}), nothing to award`);
+      }
+      const processFn = httpsCallable(functions, 'processReferralRewardOnSignup');
+      const result = await processFn(
+        normalized ? { referral_code: normalized } : {},
+      );
+      const data = result?.data || {};
+      if (data.success === false && data.error) {
+        console.warn('[handleReferralReward]', data.error);
+      }
+      return data;
+    } catch (error) {
+      console.error('[handleReferralReward] Error:', error);
+      return undefined;
+    }
+  })();
+
+  if (uid) {
+    referralRewardInflight = { uid, promise: run };
+    try {
+      return await run;
+    } finally {
+      if (referralRewardInflight?.promise === run) {
+        referralRewardInflight = null;
       }
     }
-  } catch (error) {
-    // Log error but don't throw - account creation should succeed even if reward fails
-    console.error('[handleReferralReward] Error handling referral reward:', error);
-    console.error('[handleReferralReward] Error details:', {
-      message: error?.message || 'Unknown error',
-      code: error?.code || 'NO_CODE',
-      details: error?.details || 'No details',
-      stack: error?.stack || 'No stack trace',
-      errorType: error?.constructor?.name || typeof error,
-      referralCode: referralCode,
-      fullError: error
-    });
   }
-}
 
-/**
- * Grant activity completion badges to a user
- * This function grants: SDG badge, continent badge, and activity type badge (firstLocal, firstOnline, firstEvent)
- * Should be called whenever an activity is completed/validated (via QR code or manually)
- * @param {string} userId - The user's ID
- * @param {Object} activity - The activity object with all activity details
- * @returns {Promise<Array>} Array of granted badge details
- */
-export async function grantActivityCompletionBadges(userId, activity) {
-  const grantedBadges = [];
-  
-  try {
-    if (!userId || !activity) {
-      console.error('Invalid parameters for grantActivityCompletionBadges:', { userId, activity });
-      return grantedBadges;
-    }
-
-    // Import dependencies dynamically to avoid circular dependencies
-    const { fetchOrganizationById } = await import('./crudOrganizations');
-    const { getContinentFromCountry } = await import('./continentMapping');
-
-    // Grant SDG badge if activity has SDG and user doesn't have it
-    if (activity.sdg) {
-      const sdgBadgeId = activity.sdg.toString();
-      const hasSdgBadge = await userHasBadge(userId, sdgBadgeId);
-      
-      if (!hasSdgBadge) {
-        const badgeResult = await grantBadgeToUser(userId, sdgBadgeId);
-        if (badgeResult) {
-          grantedBadges.push(badgeResult);
-          console.log(`SDG badge ${sdgBadgeId} granted to user ${userId}`);
-        }
-      }
-    }
-
-    // Grant continent badge if organization has country
-    if (activity.organizationId) {
-      try {
-        const organization = await fetchOrganizationById(activity.organizationId);
-        if (organization && organization.country) {
-          const continentId = getContinentFromCountry(organization.country);
-          
-          if (continentId) {
-            const hasContinentBadge = await userHasBadge(userId, continentId);
-            
-            if (!hasContinentBadge) {
-              const badgeResult = await grantBadgeToUser(userId, continentId);
-              if (badgeResult) {
-                grantedBadges.push(badgeResult);
-                console.log(`Continent badge ${continentId} granted to user ${userId}`);
-              }
-            }
-          }
-        }
-      } catch (orgError) {
-        console.error('Error fetching organization for continent badge:', orgError);
-        // Continue even if organization fetch fails
-      }
-    }
-
-    // Grant activity type badge (firstOnline, firstLocal, or firstEvent)
-    let activityTypeBadgeId = null;
-    if (activity.type === "online") {
-      activityTypeBadgeId = "firstOnline";
-    } else if (activity.type === "local") {
-      activityTypeBadgeId = "firstLocal";
-    } else if (activity.type === "event") {
-      activityTypeBadgeId = "firstEvent";
-    }
-
-    if (activityTypeBadgeId) {
-      const hasActivityTypeBadge = await userHasBadge(userId, activityTypeBadgeId);
-
-      if (!hasActivityTypeBadge) {
-        const badgeResult = await grantBadgeToUser(userId, activityTypeBadgeId);
-        if (badgeResult) {
-          grantedBadges.push(badgeResult);
-          console.log(`Activity type badge ${activityTypeBadgeId} granted to user ${userId}`);
-        }
-      }
-    }
-
-    return grantedBadges;
-  } catch (error) {
-    console.error(`Error granting activity completion badges to user ${userId}:`, error);
-    return grantedBadges; // Return what we've granted so far
-  }
+  return run;
 }
 
 /**
@@ -899,12 +659,16 @@ export async function createBadge(categoryId, badgeId, badgeData, imageFile = nu
     const badgeDoc = doc(badgesCollection, badgeId);
     
     // Create badge document
-    await setDoc(badgeDoc, {
+    const { imageUrl, measurementType, ...restBadgeData } = badgeData;
+    const firestorePayload = {
       title: badgeData.title || badgeId,
       description: badgeData.description || '',
       xp: badgeData.xp || 0,
-      ...badgeData
-    });
+      ...restBadgeData,
+    };
+    if (imageUrl != null) firestorePayload.image_url = imageUrl;
+    if (measurementType != null) firestorePayload.measurement_type = measurementType;
+    await setDoc(badgeDoc, firestorePayload);
     
     // Upload image if provided
     if (imageFile) {
@@ -938,8 +702,11 @@ export async function updateBadge(categoryId, badgeId, badgeData, imageFile = nu
     const categoryDoc = doc(db, 'badges', categoryId);
     const badgeDoc = doc(collection(categoryDoc, 'badges'), badgeId);
     
-    // Update badge document
-    await updateDoc(badgeDoc, badgeData);
+    const { imageUrl, measurementType, ...rest } = badgeData;
+    const payload = { ...rest };
+    if (imageUrl !== undefined) payload.image_url = imageUrl;
+    if (measurementType !== undefined) payload.measurement_type = measurementType;
+    await updateDoc(badgeDoc, payload);
     
     // Upload new image if provided
     if (imageFile) {

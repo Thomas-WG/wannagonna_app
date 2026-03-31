@@ -20,7 +20,7 @@
 
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { auth, db } from 'firebaseConfig';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, Timestamp, serverTimestamp } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { FcGoogle } from "react-icons/fc";
@@ -29,7 +29,6 @@ import { useTranslations } from "use-intl";
 import { Label, TextInput } from 'flowbite-react';
 import { setUserLocale } from '@/utils/locale';
 import { useAuth } from '@/utils/auth/AuthContext';
-import { handleReferralReward } from '@/utils/crudBadges';
 import { validateReferralCode, generateUserCode } from '@/utils/referralCode';
 import { useGoogleSignIn } from '@/hooks/useGoogleSignIn';
 import EmailPasswordLogin from '@/components/auth/EmailPasswordLogin';
@@ -54,6 +53,11 @@ export default function LoginPage() {
   const [createPassword, setCreatePassword] = useState('');
   const [createConfirmPassword, setCreateConfirmPassword] = useState('');
   const [createReferralCode, setCreateReferralCode] = useState('');
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [guidelinesAccepted, setGuidelinesAccepted] = useState(false);
+  const [createSubmitting, setCreateSubmitting] = useState(false);
+  const hasReferralCode = createReferralCode.trim().length > 0;
+  const canCreateAccount = termsAccepted && guidelinesAccepted && hasReferralCode;
 
   // Lost password state
   const [showResetPassword, setShowResetPassword] = useState(false);
@@ -217,6 +221,9 @@ export default function LoginPage() {
 
   // Function to handle account creation - Updated to validate referral code
   const handleCreateAccount = async ({ email, password, confirmPassword, referralCode }) => {
+    if (createSubmitting) {
+      return;
+    }
     setCreateErrorMessage('');
 
     // Check if passwords match
@@ -232,6 +239,7 @@ export default function LoginPage() {
       return;
     }
 
+    setCreateSubmitting(true);
     try {
       // Create a new user with Firebase
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -246,23 +254,30 @@ export default function LoginPage() {
       // New user - Save user data to Firestore with generated code BEFORE logging in
       // This ensures the document exists even if something goes wrong during login
       const memberData = {
-        displayName: emailPrefix,
+        display_name: emailPrefix,
         email: user.email,
         bio: '',
         country: '',
         languages: [],
         skills: [],
-        profilePicture: '', // Empty string by default for email/password accounts
+        badges: [],
+        cause: '',
+        hobbies: '',
+        website: '',
+        linkedin: '',
+        facebook: '',
+        instagram: '',
+        profile_picture: '', // Empty string by default for email/password accounts
         code: userCode, // Add generated code
-        referredBy: referralCode.toUpperCase().trim(), // Store who referred them
+        referred_by: referralCode.toUpperCase().trim(), // Store who referred them
         xp: 0, // Initialize XP to 0
-        impactSummary: {
-          totalHours: 0,
-          totalActivities: 0,
+        impact_summary: {
+          total_hours: 0,
+          total_activities: 0,
           parameters: {},
-          parameterMeta: {},
+          parameter_meta: {},
         },
-        timeCommitment: {
+        time_commitment: {
           daily: false,
           weekly: false,
           biweekly: false,
@@ -278,23 +293,17 @@ export default function LoginPage() {
           evenings: false,
           flexible: false
         },
-        createdAt: new Date().toISOString(),
+        created_at: Timestamp.now(),
+        terms_accepted: true,
+        guidelines_accepted: true,
+        terms_accepted_at: serverTimestamp(),
       };
       
-      console.log('Creating member document with data:', { ...memberData, profilePicture: memberData.profilePicture ? 'URL set' : 'empty' });
+      console.log('Creating member document with data:', { ...memberData, profile_picture: memberData.profile_picture ? 'URL set' : 'empty' });
       
       await setDoc(doc(db, 'members', user.uid), memberData);
       console.log('Member document created successfully for user:', user.uid);
-      
-      // Reward the referrer (non-blocking - account creation succeeds even if reward fails)
-      try {
-        await handleReferralReward(referralCode);
-      } catch (rewardError) {
-        console.error('Error rewarding referrer (non-blocking):', rewardError);
-      }
-      
-      // Log the user in with the newly created credentials
-      await signInWithEmailAndPassword(auth, email, password);
+
       setHasInteracted(false);
       
       router.push('/complete-profile');
@@ -316,6 +325,8 @@ export default function LoginPage() {
       } else {
         setCreateErrorMessage(error.message || 'An error occurred while creating your account. Please try again.');
       }
+    } finally {
+      setCreateSubmitting(false);
     }
   };
 
@@ -467,6 +478,9 @@ export default function LoginPage() {
               className="flex flex-col gap-4 w-full max-w-sm mx-auto"
               onSubmit={(event) => {
                 event.preventDefault();
+                if (createSubmitting) {
+                  return;
+                }
                 setHasInteracted(true);
                 handleCreateAccount({
                   email: createEmail,
@@ -492,6 +506,16 @@ export default function LoginPage() {
                 />
                 <p className="text-xs text-text-tertiary dark:text-text-tertiary mt-1">
                   {t('referralCodeHelper')} {t('referralCodeMandatoryNote')}
+                </p>
+                <p className="text-xs text-text-tertiary dark:text-text-tertiary mt-1">
+                  Don't have a referral code? Contact us at{' '}
+                  <a
+                    href="mailto:hello@wannagonna.org"
+                    className="text-[#009AA2] hover:underline"
+                  >
+                    hello@wannagonna.org
+                  </a>{' '}
+                  to request one.
                 </p>
               </div>
               <div>
@@ -535,6 +559,58 @@ export default function LoginPage() {
                   className="mt-1 bg-background-card dark:bg-background-card !text-text-primary dark:!text-text-primary border-border-light dark:border-border-dark"
                 />
               </div>
+              {/* Legal PDFs should be placed manually at:
+                  /public/legal/terms-of-service.pdf and /public/legal/community-guidelines.pdf
+                  (served at /legal/terms-of-service.pdf and /legal/community-guidelines.pdf). */}
+              <div className="space-y-3">
+                <label className="flex items-start gap-2 text-sm text-text-primary dark:text-text-primary cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={termsAccepted}
+                    onChange={(e) => setTermsAccepted(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 rounded border-border-light dark:border-border-dark text-primary-600 focus:ring-primary-500 focus:ring-2"
+                  />
+                  <span>
+                    I have read and agree to the{' '}
+                    <a
+                      href="/legal/terms-of-service.pdf"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[#009AA2] hover:underline"
+                    >
+                      Terms of Service
+                    </a>{' '}
+                    and{' '}
+                    <a
+                      href="/legal/privacy-policy.pdf"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[#009AA2] hover:underline"
+                    >
+                      Privacy Policy
+                    </a>
+                  </span>
+                </label>
+                <label className="flex items-start gap-2 text-sm text-text-primary dark:text-text-primary cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={guidelinesAccepted}
+                    onChange={(e) => setGuidelinesAccepted(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 rounded border-border-light dark:border-border-dark text-primary-600 focus:ring-primary-500 focus:ring-2"
+                  />
+                  <span>
+                    I agree to the{' '}
+                    <a
+                      href="/legal/community-guidelines.pdf"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[#009AA2] hover:underline"
+                    >
+                      Community Guidelines
+                    </a>
+                  </span>
+                </label>
+              </div>
               {/* Display creation error message if exists */}
               {createErrorMessage && (
                 <div className="text-semantic-error-600 dark:text-semantic-error-400 text-center mb-2 text-sm">
@@ -543,7 +619,10 @@ export default function LoginPage() {
               )}
               <button
                 type="submit"
-                className="mt-2 bg-primary-500 hover:bg-primary-600 dark:bg-primary-600 dark:hover:bg-primary-700 text-white py-2 px-4 rounded-md text-sm font-medium"
+                disabled={createSubmitting || !canCreateAccount}
+                className={`mt-2 bg-primary-500 dark:bg-primary-600 text-white py-2 px-4 rounded-md text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed ${
+                  createSubmitting || !canCreateAccount ? '' : 'hover:bg-primary-600 dark:hover:bg-primary-700'
+                }`}
               >
                 {t('create')}
               </button>
@@ -557,11 +636,16 @@ export default function LoginPage() {
             {/* Google sign-up with mandatory referral code */}
             <button
               onClick={() => {
+                if (createSubmitting || googleIsLoading) {
+                  return;
+                }
                 setHasInteracted(true);
                 signInWithGoogle(createReferralCode);
               }}
-              disabled={googleIsLoading || !createReferralCode.trim()}
-              className="w-full max-w-xs mx-auto py-3 px-6 bg-background-card dark:bg-background-card border border-border-light dark:border-border-dark rounded-lg flex items-center justify-center gap-3 hover:bg-background-hover dark:hover:bg-background-hover transition-colors duration-200 text-text-primary dark:text-text-primary text-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={createSubmitting || googleIsLoading || !canCreateAccount}
+              className={`w-full max-w-xs mx-auto py-3 px-6 bg-background-card dark:bg-background-card border border-border-light dark:border-border-dark rounded-lg flex items-center justify-center gap-3 transition-colors duration-200 text-text-primary dark:text-text-primary text-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed ${
+                createSubmitting || googleIsLoading || !canCreateAccount ? '' : 'hover:bg-background-hover dark:hover:bg-background-hover'
+              }`}
             >
               <FcGoogle className="text-2xl" />
               <span>{googleIsLoading ? 'Signing in...' : t('google')}</span>

@@ -7,45 +7,44 @@ import {upsertParticipantRecord} from "./upsertParticipantRecord.js";
  * Continent mapping - matches client-side logic
  */
 const countryToContinent = {
-  // North America
-  "US": "north-america",
-  "CA": "north-america",
-  "MX": "north-america",
-  "GT": "north-america",
-  "BZ": "north-america",
-  "SV": "north-america",
-  "HN": "north-america",
-  "NI": "north-america",
-  "CR": "north-america",
-  "PA": "north-america",
-  "CU": "north-america",
-  "JM": "north-america",
-  "HT": "north-america",
-  "DO": "north-america",
-  "BS": "north-america",
-  "BB": "north-america",
-  "TT": "north-america",
-  "GD": "north-america",
-  "LC": "north-america",
-  "VC": "north-america",
-  "AG": "north-america",
-  "KN": "north-america",
-  "DM": "north-america",
-  // South America
-  "BR": "south-america",
-  "AR": "south-america",
-  "CO": "south-america",
-  "PE": "south-america",
-  "VE": "south-america",
-  "CL": "south-america",
-  "EC": "south-america",
-  "BO": "south-america",
-  "PY": "south-america",
-  "UY": "south-america",
-  "GY": "south-america",
-  "SR": "south-america",
-  "GF": "south-america",
-  "FK": "south-america",
+  // Americas (North + South) - use "america" to match badge IDs
+  "US": "america",
+  "CA": "america",
+  "MX": "america",
+  "GT": "america",
+  "BZ": "america",
+  "SV": "america",
+  "HN": "america",
+  "NI": "america",
+  "CR": "america",
+  "PA": "america",
+  "CU": "america",
+  "JM": "america",
+  "HT": "america",
+  "DO": "america",
+  "BS": "america",
+  "BB": "america",
+  "TT": "america",
+  "GD": "america",
+  "LC": "america",
+  "VC": "america",
+  "AG": "america",
+  "KN": "america",
+  "DM": "america",
+  "BR": "america",
+  "AR": "america",
+  "CO": "america",
+  "PE": "america",
+  "VE": "america",
+  "CL": "america",
+  "EC": "america",
+  "BO": "america",
+  "PY": "america",
+  "UY": "america",
+  "GY": "america",
+  "SR": "america",
+  "GF": "america",
+  "FK": "america",
   // Europe
   "GB": "europe",
   "FR": "europe",
@@ -257,7 +256,7 @@ async function findBadgeDocument(badgeId) {
       if (badgeDoc.exists) {
         return {
           data: badgeDoc.data(),
-          categoryId: categoryDoc.id,
+          category_id: categoryDoc.id,
         };
       }
       return null;
@@ -407,11 +406,11 @@ export async function processActivityValidationRewards(
 
     // Continent badge - fetch organization if needed
     let continentBadgeId = null;
-    if (activity.organizationId) {
+    if (activity.organization_id) {
       try {
         const orgDoc = await db
             .collection("organizations")
-            .doc(activity.organizationId)
+            .doc(activity.organization_id)
             .get();
         if (orgDoc.exists) {
           const org = orgDoc.data();
@@ -548,22 +547,22 @@ export async function processActivityValidationRewards(
     // data inconsistency
     const historyRef = userRef.collection("history");
     const historyData = {
-      activityId: activityId,
-      addedToHistoryAt: FieldValue.serverTimestamp(),
-      validatedViaQR: validatedBy === null,
-      validatedViaManual: validatedBy !== null,
+      activity_id: activityId,
+      added_to_history_at: FieldValue.serverTimestamp(),
+      validated_via_qr: validatedBy === null,
+      validated_via_manual: validatedBy !== null,
     };
     batch.set(historyRef.doc(), historyData);
 
     // Log XP history entries
     if (activityXP > 0) {
-      const xpHistoryRef = userRef.collection("xpHistory");
+      const xpHistoryRef = userRef.collection("xp_history");
       batch.set(xpHistoryRef.doc(), {
         title: `Activity: ${activity.title || "Unknown Activity"}`,
         points: activityXP,
         type: "activity",
-        activityId: activityId,
-        timestamp: FieldValue.serverTimestamp(),
+        activity_id: activityId,
+        created_at: FieldValue.serverTimestamp(),
       });
     }
 
@@ -571,38 +570,38 @@ export async function processActivityValidationRewards(
     for (const badgeId of badgesToGrant) {
       const badgeDetail = badgeDetailsMap[badgeId];
       if (badgeDetail && badgeDetail.data?.xp > 0) {
-        const xpHistoryRef = userRef.collection("xpHistory");
+        const xpHistoryRef = userRef.collection("xp_history");
         const badgeTitle = badgeDetail.data?.title || badgeId;
         batch.set(xpHistoryRef.doc(), {
           title: `Badge Earned: ${badgeTitle}`,
           points: badgeDetail.data.xp,
           type: "badge",
-          badgeId: badgeId,
-          timestamp: FieldValue.serverTimestamp(),
+          badge_id: badgeId,
+          created_at: FieldValue.serverTimestamp(),
         });
       }
     }
 
     // Log XP history for completion badges
     if (worldBadgeEligible && worldBadgeEligible.xp > 0) {
-      const xpHistoryRef = userRef.collection("xpHistory");
+      const xpHistoryRef = userRef.collection("xp_history");
       batch.set(xpHistoryRef.doc(), {
         title: `Badge Earned: ${worldBadgeEligible.title}`,
         points: worldBadgeEligible.xp,
         type: "badge",
-        badgeId: "world",
-        timestamp: FieldValue.serverTimestamp(),
+        badge_id: "world",
+        created_at: FieldValue.serverTimestamp(),
       });
     }
 
     if (sdgBadgeEligible && sdgBadgeEligible.xp > 0) {
-      const xpHistoryRef = userRef.collection("xpHistory");
+      const xpHistoryRef = userRef.collection("xp_history");
       batch.set(xpHistoryRef.doc(), {
         title: `Badge Earned: ${sdgBadgeEligible.title}`,
         points: sdgBadgeEligible.xp,
         type: "badge",
-        badgeId: "sdg",
-        timestamp: FieldValue.serverTimestamp(),
+        badge_id: "sdg",
+        created_at: FieldValue.serverTimestamp(),
       });
     }
 
@@ -610,10 +609,10 @@ export async function processActivityValidationRewards(
     await batch.commit();
 
     // Upsert NPO participant record (one doc per volunteer per org)
-    if (activity.organizationId) {
+    if (activity.organization_id) {
       try {
         await upsertParticipantRecord(
-            activity.organizationId,
+            activity.organization_id,
             userId,
             activity.type,
         );
@@ -705,12 +704,12 @@ export async function processActivityValidationRewards(
         body,
         link: "/xp-history",
         metadata: {
-          activityId,
-          validatedBy,
-          badgesGranted: allBadgesGranted,
-          totalXP: finalTotalXP,
-          activityXP: activityXP,
-          badgeXPMap: badgeXPMap,
+          activity_id: activityId,
+          validated_by: validatedBy,
+          badges_granted: allBadgesGranted,
+          total_xp: finalTotalXP,
+          activity_xp: activityXP,
+          badge_xp_map: badgeXPMap,
         },
       });
       console.log(

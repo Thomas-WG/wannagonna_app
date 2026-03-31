@@ -74,26 +74,26 @@ export default function ReviewApplicationsModal({ isOpen, onClose, activity, onO
       if (!updatedByUserId) {
         console.warn("ReviewApplicationsModal: user.uid is not available, lastStatusUpdatedBy will not be set");
       }
-      await updateApplicationStatus(activity.id, application.id, status, npoResponse, updatedByUserId);
+      await updateApplicationStatus(activity.id, application.application_id ?? application.id, status, npoResponse, updatedByUserId);
       
       // Update local state
       setApplications(prev => 
         prev.map(app => 
           app.id === application.id 
-            ? { ...app, status: status, npoResponse: npoResponse }
+            ? { ...app, status: status, npo_response: npoResponse }
             : app
         )
       );
       
       // Refresh organization data to update the counter
-      if (claims && claims.npoId && onOrganizationDataUpdate) {
-        const orgData = await fetchOrganizationById(claims.npoId);
+      if (claims && claims.npo_id && onOrganizationDataUpdate) {
+        const orgData = await fetchOrganizationById(claims.npo_id);
         if (orgData) {
           // Count pending applications dynamically instead of using stored value
-          const pendingCount = await countPendingApplicationsForOrganization(claims.npoId);
+          const pendingCount = await countPendingApplicationsForOrganization(claims.npo_id);
           onOrganizationDataUpdate({
             ...orgData,
-            totalNewApplications: pendingCount
+            total_new_applications: pendingCount
           });
         }
       }
@@ -164,32 +164,32 @@ export default function ReviewApplicationsModal({ isOpen, onClose, activity, onO
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center space-x-3">
                       <div
-                        className={application.userId ? "cursor-pointer" : ""}
+                        className={application.user_id ? "cursor-pointer" : ""}
                         onClick={() => {
-                          if (application.userId) {
-                            setSelectedUserId(application.userId);
+                          if (application.user_id) {
+                            setSelectedUserId(application.user_id);
                             setProfileModalOpen(true);
                           }
                         }}
                       >
                         <ProfilePicture
-                          src={application.profilePicture}
-                          alt={application.displayName}
+                          src={application.profile_picture}
+                          alt={application.display_name}
                           size={40}
                           showInitials={true}
-                          name={application.displayName}
+                          name={application.display_name}
                           loading="lazy"
                         />
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium text-text-primary dark:text-text-primary truncate">
-                          {application.displayName}
+                          {application.display_name}
                         </p>
-                        {application.userId && (
+                        {application.user_id && (
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              setSelectedUserId(application.userId);
+                              setSelectedUserId(application.user_id);
                               setProfileModalOpen(true);
                             }}
                             className="text-xs text-semantic-info-600 dark:text-semantic-info-400 hover:text-semantic-info-700 dark:hover:text-semantic-info-300 hover:underline transition-colors"
@@ -198,7 +198,7 @@ export default function ReviewApplicationsModal({ isOpen, onClose, activity, onO
                           </button>
                         )}
                         <p className="text-xs text-text-tertiary dark:text-text-tertiary">
-                          {formatDate(application.createdAt)}
+                          {formatDate(application.created_at)}
                         </p>
                       </div>
                     </div>
@@ -215,11 +215,11 @@ export default function ReviewApplicationsModal({ isOpen, onClose, activity, onO
                     <p className="text-sm text-text-secondary dark:text-text-secondary bg-background-hover dark:bg-background-hover p-2 rounded">
                       {application.message || (t('noMessageProvided') || 'No message provided')}
                     </p>
-                    {application.npoResponse && (
+                    {application.npo_response && (
                       <div className="mt-2">
                         <p className="text-xs font-medium text-semantic-info-700 dark:text-semantic-info-300 mb-1">{t('npoResponse') || 'NPO Response'}:</p>
                         <p className="text-xs text-semantic-info-700 dark:text-semantic-info-300 bg-semantic-info-50 dark:bg-semantic-info-900 p-2 rounded">
-                          {application.npoResponse}
+                          {application.npo_response}
                         </p>
                       </div>
                     )}
@@ -287,14 +287,14 @@ export default function ReviewApplicationsModal({ isOpen, onClose, activity, onO
             </h3>
             <p className="text-sm text-text-secondary dark:text-text-secondary mb-4">
               {t('confirmActionMessage') || 'Are you sure you want to'} {confirmationData?.action === 'accept' ? (t('accept').toLowerCase() || 'accept') : (t('reject').toLowerCase() || 'reject')} {t('theApplicationFrom') || 'the application from'}{' '}
-              <span className="font-medium">{confirmationData?.application?.displayName}</span>?
+              <span className="font-medium">{confirmationData?.application?.display_name}</span>?
             </p>
             <div className="bg-background-hover dark:bg-background-hover p-3 rounded-lg text-left">
               <p className="text-xs text-text-secondary dark:text-text-secondary mb-1">
                 <strong className="text-text-primary dark:text-text-primary">{t('activity') || 'Activity'}:</strong> {activity?.title}
               </p>
               <p className="text-xs text-text-secondary dark:text-text-secondary mb-1">
-                <strong className="text-text-primary dark:text-text-primary">{t('applicant') || 'Applicant'}:</strong> {confirmationData?.application?.displayName}
+                <strong className="text-text-primary dark:text-text-primary">{t('applicant') || 'Applicant'}:</strong> {confirmationData?.application?.display_name}
               </p>
               <p className="text-xs text-text-secondary dark:text-text-secondary">
                 <strong className="text-text-primary dark:text-text-primary">{t('message') || 'Message'}:</strong> {confirmationData?.application?.message || (t('noMessageProvided') || 'No message provided')}
@@ -311,7 +311,7 @@ export default function ReviewApplicationsModal({ isOpen, onClose, activity, onO
                 rows={3}
                 value={npoResponse}
                 onChange={(e) => setNpoResponse(e.target.value)}
-                placeholder={t('addPersonalMessagePlaceholder', { name: confirmationData?.application?.displayName || t('theVolunteer') || 'the volunteer' }) || `Add a personal message for ${confirmationData?.application?.displayName}...`}
+                placeholder={t('addPersonalMessagePlaceholder', { name: confirmationData?.application?.display_name || t('theVolunteer') || 'the volunteer' }) || `Add a personal message for ${confirmationData?.application?.display_name || ''}...`}
                 className="w-full px-3 py-2 border border-border-light dark:border-border-dark rounded-md shadow-sm bg-background-card dark:bg-background-card text-text-primary dark:text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 focus:border-primary-500 dark:focus:border-primary-400 text-sm"
                 maxLength={500}
               />

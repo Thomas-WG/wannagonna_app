@@ -164,7 +164,7 @@ export default function XpHistoryPage() {
                       <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                         <HiClock className="h-4 w-4" />
                         <span>
-                          {getRelativeTime(entry.timestamp)} • {formatDate(entry.timestamp)}
+                          {getRelativeTime(entry.created_at)} • {formatDate(entry.created_at)}
                         </span>
                       </div>
                     </div>

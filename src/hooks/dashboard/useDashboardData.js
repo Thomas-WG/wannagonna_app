@@ -31,10 +31,10 @@ export function useDashboardData(userId) {
       closedFromActivities.length + (historyActivitiesQuery.data?.length || 0);
 
     return {
-      totalLocalActivities: localActivities.length,
-      totalOnlineActivities: onlineActivities.length,
-      totalEvents: eventActivities.length,
-      totalApplications: applicationsQuery.data?.length || 0,
+      total_local_activities: localActivities.length,
+      total_online_activities: onlineActivities.length,
+      total_events: eventActivities.length,
+      total_applications: applicationsQuery.data?.length || 0,
       closedActivities: closedActivitiesCount,
     };
   }, [
@@ -46,12 +46,12 @@ export function useDashboardData(userId) {
   // Calculate gamification data from profile
   const gamificationData = useMemo(() => {
     if (!profileQuery.data) {
-      return {
-        level: 1,
-        currentXP: 0,
-        totalXP: 0,
-        badgesCount: 0,
-      };
+    return {
+      level: 1,
+      current_xp: 0,
+      total_xp: 0,
+      badges_count: 0,
+    };
     }
 
     const totalXP = profileQuery.data.xp || 0;
@@ -63,9 +63,9 @@ export function useDashboardData(userId) {
 
     return {
       level,
-      currentXP,
-      totalXP,
-      badgesCount,
+      current_xp: currentXP,
+      total_xp: totalXP,
+      badges_count: badgesCount,
     };
   }, [profileQuery.data]);
 
@@ -92,7 +92,7 @@ export function useDashboardData(userId) {
     const combined = [...openActivities, ...historyActivities];
     const seenIds = new Set();
     return combined.filter((activity) => {
-      const activityId = activity.id || activity.activityId;
+      const activityId = activity.activity_id;
       if (seenIds.has(activityId)) {
         return false;
       }
@@ -110,9 +110,9 @@ export function useDashboardData(userId) {
       .map((app) => ({
         ...app.activity,
         applicationStatus: app.status,
-        applicationId: app.id,
+        application_id: app.application_id,
         applicationData: app,
-        appliedAt: app.createdAt,
+        appliedAt: app.created_at,
       }));
   }, [applicationsQuery.data]);
 
