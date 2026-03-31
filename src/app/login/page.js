@@ -29,7 +29,6 @@ import { useTranslations } from "use-intl";
 import { Label, TextInput } from 'flowbite-react';
 import { setUserLocale } from '@/utils/locale';
 import { useAuth } from '@/utils/auth/AuthContext';
-import { handleReferralReward } from '@/utils/crudBadges';
 import { validateReferralCode, generateUserCode } from '@/utils/referralCode';
 import { useGoogleSignIn } from '@/hooks/useGoogleSignIn';
 import EmailPasswordLogin from '@/components/auth/EmailPasswordLogin';
@@ -304,15 +303,6 @@ export default function LoginPage() {
       
       await setDoc(doc(db, 'members', user.uid), memberData);
       console.log('Member document created successfully for user:', user.uid);
-      
-      // Reward the referrer (non-blocking - account creation succeeds even if reward fails)
-      try {
-        await handleReferralReward(
-          referralCode.toUpperCase().trim(),
-        );
-      } catch (rewardError) {
-        console.error('Error rewarding referrer (non-blocking):', rewardError);
-      }
 
       setHasInteracted(false);
       
