@@ -7,8 +7,8 @@
         "heroEyebrow": "Bientôt disponible",
         "heroSubtitle": "WannaGonna met en relation les bénévoles et les associations qui en ont besoin selon les compétences — en ligne, localement, lors d'événements. Gratuit. Mesurable. Conçu pour vraiment motiver.",
         "heroCtaVolunteer": "Pour les bénévoles",
-        "heroCtaNpo": "Pour les associations — toujours gratuit",
-        "whatsComingLabel": "À venir",
+        "heroCtaNpo": "Pour les associations",
+        "whatsComingLabel": "Notre plateforme",
         "featureOnlineTitle": "Bénévolat en ligne",
         "featureOnlineDesc": "Contribuez à distance aux associations du monde entier. Pas de déplacement, pas de frontières — juste de l'impact, où que vous soyez.",
         "featureLocalTitle": "Activités locales et événements",
@@ -371,7 +371,8 @@
         "complexity-tooltip-complex": "Complexe (ex. : conception architecturale, conseil spécialisé, montage vidéo avancé)",
         "impactParametersStepDescription": "Sélectionnez les indicateurs d'impact à suivre pour cette activité. Vous pouvez définir un objectif optionnel pour chacun.",
         "noImpactParametersAvailable": "Aucun paramètre disponible. Ajoutez des paramètres globaux ou personnalisés dans les paramètres d'Impact.",
-        "targetOptional": "Objectif (optionnel)"
+        "targetOptional": "Objectif (optionnel)",
+        "impactedSdgs": "ODD impactés"
     },
     "DeleteActivity": {
         "delete-activity": "Supprimer l'activité",
