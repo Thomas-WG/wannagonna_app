@@ -12,7 +12,6 @@ import { doc, getDoc, setDoc, Timestamp, serverTimestamp } from 'firebase/firest
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'use-intl';
 import { validateReferralCode, generateUserCode } from '@/utils/referralCode';
-import { handleReferralReward } from '@/utils/crudBadges';
 
 /**
  * Custom hook for Google sign-in
@@ -115,15 +114,6 @@ export function useGoogleSignIn() {
         };
 
         await setDoc(userDocRef, userData, { merge: true });
-
-        // Reward the referrer (non-blocking - account creation succeeds even if reward fails)
-        try {
-          await handleReferralReward(
-            referralCode.toUpperCase().trim(),
-          );
-        } catch (rewardError) {
-          console.error('Error rewarding referrer (non-blocking):', rewardError);
-        }
 
         router.push('/complete-profile');
       }
