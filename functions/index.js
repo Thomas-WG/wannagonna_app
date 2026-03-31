@@ -44,6 +44,8 @@ import {runProcessReferralRewardOnSignup} from
   "./src/rewards/processReferralRewardOnSignup.js";
 import {runAdminRemoveBadgeFromUser} from
   "./src/rewards/adminRemoveBadgeFromUser.js";
+import {onMemberCreatedProcessReferralReward} from
+  "./src/rewards/onMemberCreatedProcessReferralReward.js";
 
 export const onActivityCreatedUpdateActivityCount = onDocumentCreated(
     "activities/{activityId}",
@@ -994,6 +996,8 @@ export const processReferralRewardOnSignup = onCall(
           referralCode,
       );
     });
+
+export {onMemberCreatedProcessReferralReward};
 
 /**
  * Admin only: remove a badge from a member (and subtract badge XP).
