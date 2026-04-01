@@ -79,6 +79,19 @@ const nextConfig = {
       },
     ];
   },
+  async rewrites() {
+    if (process.env.NODE_ENV === 'development') return [];
+    return [
+      {
+        source: '/__/auth/:path*',
+        destination: `https://${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.firebaseapp.com/__/auth/:path*`,
+      },
+      {
+        source: '/__/firebase/:path*',
+        destination: `https://${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.firebaseapp.com/__/firebase/:path*`,
+      },
+    ];
+  },
 };
 
 export default withNextIntl(nextConfig);
