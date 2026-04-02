@@ -31,10 +31,8 @@ export default function MyRankBanner({ entries, currentUserId }) {
   return (
     <div className="mt-2.5 py-2.5 px-3.5 bg-primary-50/40 dark:bg-primary-900/10 border border-primary-200/40 dark:border-primary-700/20 rounded-xl flex items-center gap-2.5">
       <Avatar
-        userId={me.user_id}
         displayName={me.display_name}
         profilePicture={me.profile_picture}
-        size={32}
       />
       <div className="flex-1 min-w-0">
         <div className="font-heading font-bold text-[13px] text-text-primary dark:text-text-primary">
