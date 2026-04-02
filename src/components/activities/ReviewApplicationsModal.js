@@ -176,6 +176,7 @@ export default function ReviewApplicationsModal({ isOpen, onClose, activity, onO
                           src={application.profile_picture}
                           alt={application.display_name}
                           size={40}
+                          variant="subtle"
                           showInitials={true}
                           name={application.display_name}
                           loading="lazy"

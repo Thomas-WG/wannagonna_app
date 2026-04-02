@@ -16,9 +16,7 @@ export default function Avatar({
       : undefined;
 
   const listSizing = 'h-10 w-10 sm:h-12 sm:w-12';
-  const championClass = isChampion
-    ? 'ring-2 ring-[#F08602] ring-offset-2 ring-offset-white dark:ring-offset-neutral-900'
-    : '';
+  const championClass = isChampion ? 'ring-2 ring-[#F08602]' : '';
 
   return (
     <div className="relative inline-flex flex-shrink-0">
@@ -26,6 +24,7 @@ export default function Avatar({
         src={src}
         alt={alt}
         size={size}
+        variant="subtle"
         showInitials={true}
         name={name}
         loading="lazy"

@@ -353,6 +353,7 @@ export default function ParticipantListModal({ isOpen, onClose, activity, activi
                             src={participant.profile_picture}
                             alt={participant.display_name}
                             size={48}
+                            variant="subtle"
                             showInitials={true}
                             name={participant.display_name}
                             loading="lazy"
