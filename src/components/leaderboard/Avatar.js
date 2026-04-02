@@ -1,65 +1,40 @@
 'use client';
 
-import { getInitials, getAvatarColor } from './leaderboardConstants';
+import ProfilePicture from '@/components/common/ProfilePicture';
 
 export default function Avatar({
-  userId,
   displayName,
   profilePicture,
-  size = 40,
+  size = 48,
   isChampion = false,
 }) {
-  const color = getAvatarColor(userId);
+  const name = displayName?.trim() || 'Member';
+  const alt = displayName?.trim() || 'Member';
+  const src =
+    typeof profilePicture === 'string' && profilePicture.trim()
+      ? profilePicture.trim()
+      : undefined;
 
-  if (profilePicture) {
-    return (
-      <div className="relative flex-shrink-0">
-        <img
-          src={profilePicture}
-          alt={displayName || 'User'}
-          width={size}
-          height={size}
-          className="rounded-full object-cover"
-          style={{
-            boxShadow: isChampion
-              ? '0 0 0 2.5px #F08602, 0 0 14px rgba(240,134,2,0.5)'
-              : '0 2px 8px rgba(0,0,0,0.1)',
-          }}
-        />
-        {isChampion && (
-          <span
-            className="absolute -top-2 -right-1 leading-none drop-shadow-md"
-            style={{ fontSize: Math.round(size * 0.32) }}
-          >
-            🏆
-          </span>
-        )}
-      </div>
-    );
-  }
+  const listSizing = 'h-10 w-10 sm:h-12 sm:w-12';
+  const championClass = isChampion ? 'ring-2 ring-[#F08602]' : '';
 
   return (
-    <div className="relative flex-shrink-0">
-      <div
-        className="flex items-center justify-center rounded-full font-extrabold text-white transition-shadow"
-        style={{
-          width: size,
-          height: size,
-          fontSize: size * 0.36,
-          background: `linear-gradient(135deg, ${color}, ${color}cc)`,
-          boxShadow: isChampion
-            ? '0 0 0 2.5px #F08602, 0 0 16px rgba(240,134,2,0.5)'
-            : '0 2px 10px rgba(0,0,0,0.12)',
-          fontFamily: "'Montserrat Alternates', sans-serif",
-          letterSpacing: '-0.01em',
-        }}
-      >
-        {getInitials(displayName)}
-      </div>
+    <div className="relative inline-flex flex-shrink-0">
+      <ProfilePicture
+        src={src}
+        alt={alt}
+        size={size}
+        variant="subtle"
+        showInitials={true}
+        name={name}
+        loading="lazy"
+        className={[listSizing, championClass].filter(Boolean).join(' ')}
+      />
       {isChampion && (
         <span
-          className="absolute -top-2 -right-1 leading-none drop-shadow-md"
+          className="pointer-events-none absolute -right-1 -top-2 leading-none drop-shadow-md"
           style={{ fontSize: Math.round(size * 0.32) }}
+          aria-hidden
         >
           🏆
         </span>

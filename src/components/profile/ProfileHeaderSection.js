@@ -63,7 +63,8 @@ export default function ProfileHeaderSection({ profileData, badges: badgesProp, 
                 alt={profileData.display_name || tProfile('anonymousUser')}
                 size={80}
                 priority={true}
-                className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-0 !bg-[#009AA2] shadow-md"
+                variant="subtle"
+                className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-0 !bg-[#009AA2]"
               />
               <div className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 bg-[#009AA2] text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full whitespace-nowrap shadow-sm">
                 Lvl {level}

@@ -396,6 +396,7 @@ export default function ParticipantsPage() {
                           src={p.profile_picture}
                           alt={p.display_name}
                           size={40}
+                          variant="subtle"
                           showInitials
                           name={p.display_name}
                           className="flex-shrink-0"
@@ -486,6 +487,7 @@ export default function ParticipantsPage() {
                   src={p.profile_picture}
                   alt={p.display_name}
                   size={48}
+                  variant="subtle"
                   showInitials
                   name={p.display_name}
                   className="flex-shrink-0"

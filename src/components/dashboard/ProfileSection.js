@@ -91,7 +91,8 @@ const ProfileSection = memo(function ProfileSection({
                 alt={displayName}
                 size={80}
                 priority={true}
-                className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-0 !bg-[#009AA2] shadow-md cursor-pointer hover:opacity-90 transition-opacity"
+                variant="subtle"
+                className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-0 !bg-[#009AA2] cursor-pointer hover:opacity-90 transition-opacity"
               />
               {/* Level pill — overlaps bottom center of avatar */}
               <div className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 bg-[#009AA2] text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full whitespace-nowrap shadow-sm">

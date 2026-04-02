@@ -485,6 +485,7 @@ export default function MembersPage() {
                       src={member.profile_picture}
                       alt={member.display_name || 'Member'}
                       size={48}
+                      variant="subtle"
                       showInitials={true}
                       name={member.display_name || 'Member'}
                       loading="lazy"
@@ -542,6 +543,7 @@ export default function MembersPage() {
                       src={member.profile_picture}
                       alt={member.display_name || 'Member'}
                       size={48}
+                      variant="subtle"
                       showInitials={true}
                       name={member.display_name || 'Member'}
                       loading="lazy"

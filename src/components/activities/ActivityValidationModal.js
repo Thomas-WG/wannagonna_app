@@ -288,6 +288,7 @@ export default function ActivityValidationModal({
                         src={null}
                         alt={p.display_name}
                         size={36}
+                        variant="subtle"
                         showInitials={true}
                         name={p.display_name}
                         className="flex-shrink-0"
@@ -379,6 +380,7 @@ export default function ActivityValidationModal({
                           src={application.profile_picture}
                           alt={application.display_name}
                           size={40}
+                          variant="subtle"
                           showInitials={true}
                           name={application.display_name}
                           loading="lazy"
@@ -460,6 +462,7 @@ export default function ActivityValidationModal({
                         src={null}
                         alt={p.display_name}
                         size={32}
+                        variant="subtle"
                         showInitials={true}
                         name={p.display_name}
                         className="flex-shrink-0"

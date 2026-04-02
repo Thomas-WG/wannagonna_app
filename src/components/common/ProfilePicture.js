@@ -11,6 +11,12 @@ import {
   isValidProfilePictureUrl,
 } from '@/utils/profilePictureUtils';
 
+const VARIANT_FRAME = {
+  default: 'border-2 border-white dark:border-neutral-800 shadow-md',
+  subtle:
+    'border border-border-light dark:border-border-dark shadow-none',
+};
+
 /**
  * ProfilePicture Component
  * 
@@ -26,6 +32,7 @@ import {
  * @param {boolean} showInitials - Show initials when no image (default: false)
  * @param {string} name - Name for initials fallback
  * @param {string} loading - Loading strategy: 'lazy' | 'eager' (default: 'lazy' if not priority)
+ * @param {'default'|'subtle'} variant - Visual weight: subtle fits dense lists (lighter border, no shadow)
  * @param {function} onClick - Click handler
  * @param {object} ...props - Additional props passed to Image component
  */
@@ -35,6 +42,7 @@ export default function ProfilePicture({
   size = 70,
   priority = false,
   className = '',
+  variant = 'default',
   fallbackIcon: FallbackIcon = HiUser,
   showInitials = false,
   name = '',
@@ -42,6 +50,8 @@ export default function ProfilePicture({
   onClick,
   ...props
 }) {
+  const frameClass =
+    variant === 'subtle' ? VARIANT_FRAME.subtle : VARIANT_FRAME.default;
   const [error, setError] = useState(false);
   const [loadingState, setLoadingState] = useState(true);
   const [retryCount, setRetryCount] = useState(0);
@@ -138,7 +148,7 @@ export default function ProfilePicture({
 
     return (
       <div
-        className={`rounded-full bg-semantic-info-500 dark:bg-semantic-info-600 flex items-center justify-center border-2 border-white dark:border-neutral-800 shadow-md ${className}`}
+        className={`rounded-full bg-semantic-info-500 dark:bg-semantic-info-600 flex items-center justify-center ${frameClass} ${className}`}
         style={{ width: size, height: size }}
         onClick={onClick}
         role={onClick ? 'button' : undefined}
@@ -193,7 +203,7 @@ export default function ProfilePicture({
         alt={alt}
         width={size}
         height={size}
-        className={`rounded-full border-2 border-white dark:border-neutral-800 shadow-md object-cover transition-opacity duration-300 w-full h-full ${
+        className={`rounded-full ${frameClass} object-cover transition-opacity duration-300 w-full h-full ${
           loadingState ? 'opacity-0' : 'opacity-100'
         } ${onClick ? 'cursor-pointer hover:opacity-80' : ''}`}
         style={imageStyle}
