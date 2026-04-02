@@ -1,54 +1,19 @@
 import { useMemo } from 'react';
 import { Card, Progress } from 'flowbite-react';
 import { useTheme } from '@/utils/theme/ThemeContext';
+import { getProfileCompletionState } from '@/utils/profileHelpers';
 
 /**
  * ProfileProgress component displays completion percentage and missing fields
- * Responsive design: compact on mobile, detailed on desktop
+ * Uses the same rules as isProfileComplete / complete-profile badge.
  */
 export default function ProfileProgress({ formData }) {
   const { isDark } = useTheme();
 
-  const { percentage, completedFields, totalFields, missingFields } = useMemo(() => {
-    // Match the requirements from isProfileComplete function
-    const fields = [
-      { key: 'display_name', label: 'Display Name', value: formData?.display_name },
-      { key: 'bio', label: 'Bio', value: formData?.bio },
-      { key: 'cause', label: 'Cause', value: formData?.cause },
-      { key: 'hobbies', label: 'Hobbies', value: formData?.hobbies },
-      { key: 'country', label: 'Country', value: formData?.country },
-      { key: 'languages', label: 'Languages', value: formData?.languages, isArray: true },
-      { key: 'profile_picture', label: 'Profile Picture', value: formData?.profile_picture },
-      { key: 'time_commitment', label: 'Time Commitment', value: formData?.time_commitment, isObject: true },
-      { key: 'availabilities', label: 'Availability', value: formData?.availabilities, isObject: true },
-    ];
-
-    let completed = 0;
-    const missing = [];
-
-    fields.forEach((field) => {
-      let isComplete = false;
-
-      if (field.isArray) {
-        isComplete = Array.isArray(field.value) && field.value.length > 0;
-      } else if (field.isObject) {
-        isComplete = field.value && typeof field.value === 'object' && Object.values(field.value).some((v) => v === true);
-      } else {
-        isComplete = field.value && String(field.value).trim() !== '';
-      }
-
-      if (isComplete) {
-        completed++;
-      } else {
-        missing.push(field.label);
-      }
-    });
-
-    const total = fields.length;
-    const percentage = Math.round((completed / total) * 100);
-
-    return { percentage, completedFields: completed, totalFields: total, missingFields: missing };
-  }, [formData]);
+  const { percentage, completedFields, totalFields, missingFields } = useMemo(
+    () => getProfileCompletionState(formData),
+    [formData]
+  );
 
   return (
     <Card className="w-full bg-white dark:bg-gray-800 border-border-light dark:border-border-dark sticky top-0 z-40 shadow-md backdrop-blur-sm">

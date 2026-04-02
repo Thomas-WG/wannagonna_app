@@ -117,6 +117,7 @@ export default function ApplicationCard({
               src={avatarSrc}
               alt={name}
               size={32}
+              variant="subtle"
               showInitials={true}
               name={name}
               onClick={onAvatarClick}
@@ -160,6 +161,7 @@ export default function ApplicationCard({
               src={avatarSrc}
               alt={name}
               size={32}
+              variant="subtle"
               showInitials={true}
               name={name}
               onClick={onAvatarClick}
