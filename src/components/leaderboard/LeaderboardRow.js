@@ -43,10 +43,8 @@ export default function LeaderboardRow({
       </div>
 
       <Avatar
-        userId={entry.user_id}
         displayName={entry.display_name}
         profilePicture={entry.profile_picture}
-        size={36}
         isChampion={entry.is_current_champion}
       />
 

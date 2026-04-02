@@ -5,29 +5,31 @@ import ProfilePicture from '@/components/common/ProfilePicture';
 export default function Avatar({
   displayName,
   profilePicture,
-  size = 40,
+  size = 48,
   isChampion = false,
 }) {
   const name = displayName?.trim() || 'Member';
+  const alt = displayName?.trim() || 'Member';
   const src =
     typeof profilePicture === 'string' && profilePicture.trim()
       ? profilePicture.trim()
       : undefined;
 
+  const listSizing = 'h-10 w-10 sm:h-12 sm:w-12';
+  const championClass = isChampion
+    ? 'ring-2 ring-[#F08602] ring-offset-2 ring-offset-white dark:ring-offset-neutral-900'
+    : '';
+
   return (
     <div className="relative inline-flex flex-shrink-0">
       <ProfilePicture
         src={src}
-        alt={name}
+        alt={alt}
         size={size}
-        showInitials
+        showInitials={true}
         name={name}
         loading="lazy"
-        className={
-          isChampion
-            ? 'shadow-[0_0_0_2.5px_#F08602,0_0_14px_rgba(240,134,2,0.5)]'
-            : 'shadow-[0_2px_8px_rgba(0,0,0,0.1)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.35)]'
-        }
+        className={[listSizing, championClass].filter(Boolean).join(' ')}
       />
       {isChampion && (
         <span
