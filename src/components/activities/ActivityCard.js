@@ -48,6 +48,9 @@ export default function ActivityCard({
   accept_applications_wg,
   updated_at,
   distance, // Distance in km when "Around Me" filter is active
+  showStatusBadge = true,
+  isClickable = true,
+  fallbackLogo = '/logo/1%20-%20Color%20on%20White%20-%20RGB.png',
 }) {
   const t = useTranslations('ActivityCard');
   const tManage = useTranslations('ManageActivities');
@@ -273,6 +276,7 @@ export default function ActivityCard({
   const frequency_label = get_frequency_label();
   const activityDateLine = formatActivityDateRange(start_date, end_date, localStatus, updated_at);
   const typeColorClass = getTypeColorClasses();
+  const logoSrc = organization_logo || fallbackLogo;
 
   // Handle status update
   const handleStatusUpdate = async (newStatus) => {
@@ -342,8 +346,10 @@ export default function ActivityCard({
   return (
     <>
       <div
-        onClick={onClick}
-        className={`cursor-pointer w-full p-3 sm:p-4 bg-background-card dark:bg-background-card border-l-4 ${typeColorClass} border border-border-light dark:border-border-dark rounded-xl shadow-md hover:shadow-lg hover:bg-background-hover dark:hover:bg-background-hover hover:-translate-y-1 transition-all duration-300 transform flex flex-col h-full min-h-[280px]`}
+        onClick={isClickable ? onClick : undefined}
+        className={`w-full p-3 sm:p-4 bg-background-card dark:bg-background-card border-l-4 ${typeColorClass} border border-border-light dark:border-border-dark rounded-xl shadow-md transition-all duration-300 transform flex flex-col h-full min-h-[280px] ${
+          isClickable ? 'cursor-pointer hover:shadow-lg hover:bg-background-hover dark:hover:bg-background-hover hover:-translate-y-1' : ''
+        }`}
         role="button"
         aria-label={title}
       >
@@ -352,7 +358,7 @@ export default function ActivityCard({
           <div className='flex items-start justify-between gap-2'>
             <div className='flex items-center gap-2 min-w-0 flex-1'>
               <Image
-                src={organization_logo}
+                src={logoSrc}
                 alt={`${organization_name} logo`}
                 width={44}
                 height={44}
@@ -362,7 +368,7 @@ export default function ActivityCard({
             </div>
             <div className='flex items-center gap-1.5 flex-shrink-0'>
               {/* Status Badge */}
-              {localStatus && (() => {
+              {showStatusBadge && localStatus && (() => {
                 const statusConfig = getStatusConfig(localStatus);
                 const StatusIcon = statusConfig.icon;
                 const tooltipContent = canEditStatus 
