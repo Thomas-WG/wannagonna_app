@@ -123,7 +123,7 @@ service cloud.firestore {
     match /activities/{activityId} {
       // Read: Public read for "Open" activities (for social media previews),
       // authenticated read for all activities
-      allow read: if resource.data.status == 'Open' || resource.data.status == 'Closed' || isAuthenticated();
+      allow read: if true;
       
       // Create: Any authenticated user can create activities
       allow create: if isNpoStaff() || isAmbassador() || isAdmin();
@@ -333,7 +333,7 @@ service cloud.firestore {
     // ============================================
     match /skills/{skillId} {
       // Read: All authenticated users can read skills
-      allow read: if isAuthenticated();
+      allow read: if true;
       
       // Create/Update: Any authenticated user can manage skills
       allow create, update: if isAdmin();
@@ -347,7 +347,7 @@ service cloud.firestore {
     // ============================================
     match /skill_categories/{categoryId} {
       // Read: All authenticated users can read skill categories
-      allow read: if isAuthenticated();
+      allow read: if true;
       
       // Create/Update: Any authenticated user can manage skill categories
       allow create, update: if isAdmin();
@@ -360,7 +360,7 @@ service cloud.firestore {
     // IMPACT PARAMETERS (global, admin-managed)
     // ============================================
     match /impact_parameters/{parameterId} {
-      allow read: if isAuthenticated();
+      allow read: if true;
       allow create, update, delete: if isAdmin();
     }
 
