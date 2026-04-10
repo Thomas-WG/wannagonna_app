@@ -25,6 +25,35 @@ export async function fetchActivities() {
   }
 }
 
+function shuffleArray(items) {
+  const arr = [...items];
+  for (let i = arr.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// Fetch a one-shot randomized public subset for landing carousel.
+export async function fetchPublicLandingActivities() {
+  try {
+    const activitiesCollection = collection(db, 'activities');
+    const snapshot = await getDocs(activitiesCollection);
+
+    const publicActivities = snapshot.docs
+      .map((docSnapshot) => ({ id: docSnapshot.id, ...docSnapshot.data() }))
+      .filter((activity) => activity.status === 'Open' || activity.status === 'Closed');
+
+    const randomized = shuffleArray(publicActivities);
+    const targetCount = Math.floor(Math.random() * 3) + 8; // 8-10
+
+    return randomized.slice(0, targetCount);
+  } catch (error) {
+    console.error('Error fetching public landing activities:', error);
+    throw error;
+  }
+}
+
 // Subscribe to real-time updates of activities
 export function subscribeToActivities(callback) {
   const activitiesCollection = collection(db, 'activities'); // Reference to the activities collection

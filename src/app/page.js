@@ -16,6 +16,7 @@ import { useTranslations } from 'next-intl';
 import { setUserLocaleClient } from '@/utils/localeClient';
 import { useLocale } from 'next-intl';
 import { addContactSubmission } from '@/utils/crudContact';
+import ActivityCarouselSection from '@/components/landing/ActivityCarouselSection';
 
 const LANGUAGE_OPTIONS = [
   { label: 'English', value: 'en' },
@@ -260,9 +261,11 @@ export default function Home() {
             </div>
           </section>
 
+          <ActivityCarouselSection sectionRef={(el) => (sectionRefs.current[1] = el)} />
+
           {/* SDG SECTION */}
           <section
-            ref={(el) => (sectionRefs.current[1] = el)}
+            ref={(el) => (sectionRefs.current[2] = el)}
             className="landing-animate-in is-visible px-4 py-16 sm:py-20"
           >
             <div className="max-w-5xl mx-auto text-center">
@@ -293,7 +296,7 @@ export default function Home() {
 
           {/* MISSION STRIP */}
           <section
-            ref={(el) => (sectionRefs.current[2] = el)}
+            ref={(el) => (sectionRefs.current[3] = el)}
             className="landing-animate-in is-visible px-4 py-16 sm:py-20"
           >
             <div className="max-w-5xl mx-auto landing-mission-strip flex flex-col lg:flex-row items-start lg:items-center gap-10 lg:gap-14">
@@ -334,7 +337,7 @@ export default function Home() {
 
           {/* CONTACT */}
           <section
-            ref={(el) => (sectionRefs.current[3] = el)}
+            ref={(el) => (sectionRefs.current[4] = el)}
             className="landing-animate-in is-visible px-4 py-16 sm:py-20"
           >
             <div className="max-w-2xl mx-auto">
