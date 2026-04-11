@@ -158,3 +158,97 @@ export function generateApplicationApprovalEmail({
   };
 }
 
+/**
+ * Build activity alert email content.
+ * @param {Object} params
+ * @param {string} params.displayName
+ * @param {Array<Object>} params.activities
+ * @param {"daily"|"weekly"} params.frequency
+ * @return {{subject: string, text: string, html: string}}
+ */
+export function buildActivityAlertEmail({displayName, activities, frequency}) {
+  const count = Array.isArray(activities) ? activities.length : 0;
+  const timeLabel = frequency === "daily" ? "today" : "this week";
+  const safeName = displayName || "there";
+  const subject = `Your WannaGonna activity alert — ${count} new ${timeLabel}`;
+
+  // Match src/constant/designTokens.js activityType.*.500 (Explore / ActivityCard)
+  const typeBadgeColor = (type) => {
+    if (type === "local") return "#10b981";
+    if (type === "event") return "#8b5cf6";
+    if (type === "online") return "#0ea5e9";
+    return "#64748b";
+  };
+
+  const textItems = (activities || []).map((activity) =>
+    `${activity.title || "Untitled activity"} — ` +
+    `${activity.organization_name || "Unknown organization"} ` +
+    `(${activity.type || "unknown"}, ${activity.country || "N/A"}) — ` +
+    `XP: ${activity.xp_reward || 0} — ` +
+    `Link: /explore?activityId=${activity.id}`,
+  );
+  const text = [
+    `Hi ${safeName}, here are ${count} new activities matching your alert criteria.`,
+    "",
+    ...textItems,
+    "",
+    "You can manage your alerts in your WannaGonna profile.",
+  ].join("\n");
+
+  const cardsHtml = (activities || []).map((activity) => {
+    const link = `/explore?activityId=${activity.id}`;
+    const badgeColor = typeBadgeColor(activity.type);
+    return `<div style="border: 1px solid #E5E7EB; border-radius: 10px;` +
+      ` padding: 16px; margin-bottom: 14px;">` +
+      `<a href="${link}" style="display: inline-block; margin-bottom: 10px;` +
+      ` color: #009AA2; font-family: 'Montserrat Alternates', Arial, sans-serif;` +
+      ` font-size: 18px; font-weight: 700; text-decoration: none;">` +
+      `${activity.title || "Untitled activity"}</a>` +
+      `<div style="font-family: 'DM Sans', Arial, sans-serif; color: #1A1A1A;` +
+      ` font-size: 14px; margin-bottom: 8px;">` +
+      `${activity.organization_name || "Unknown organization"}</div>` +
+      `<span style="display: inline-block; background: ${badgeColor};` +
+      ` color: #FFFFFF; border-radius: 999px; padding: 4px 10px;` +
+      ` font-family: 'DM Sans', Arial, sans-serif; font-size: 12px;` +
+      ` margin-right: 8px; text-transform: uppercase;">` +
+      `${activity.type || "online"}</span>` +
+      `<span style="font-family: 'DM Sans', Arial, sans-serif; color: #1A1A1A;` +
+      ` font-size: 13px; margin-right: 12px;">` +
+      `${activity.country || "N/A"}</span>` +
+      `<span style="font-family: 'DM Sans', Arial, sans-serif; color: #F08602;` +
+      ` font-size: 13px; font-weight: 700;">XP: ${activity.xp_reward || 0}</span>` +
+      `</div>`;
+  }).join("");
+
+  const html =
+    `<div style="background: #F6F9FB; padding: 20px;">` +
+    `<div style="max-width: 600px; margin: 0 auto; background: #FFFFFF;` +
+    ` border-radius: 12px; overflow: hidden; border: 1px solid #E5E7EB;">` +
+    `<div style="padding: 24px 24px 12px 24px; border-bottom: 1px solid #EEF2F7;">` +
+    `<div style="font-family: 'Montserrat Alternates', Arial, sans-serif;` +
+    ` color: #009AA2; font-size: 28px; font-weight: 700; letter-spacing: 0.2px;">` +
+    `WannaGonna</div>` +
+    `<div style="font-family: 'DM Sans', Arial, sans-serif; color: #1A1A1A;` +
+    ` font-size: 14px; margin-top: 4px;">Make a difference today.</div>` +
+    `</div>` +
+    `<div style="padding: 20px 24px;">` +
+    `<p style="margin: 0 0 16px 0; font-family: 'DM Sans', Arial, sans-serif;` +
+    ` color: #1A1A1A; font-size: 15px;">` +
+    `Hi ${safeName}, here are ${count} new activities matching your alert criteria.` +
+    `</p>` +
+    cardsHtml +
+    `</div>` +
+    `<div style="padding: 16px 24px 22px 24px; border-top: 1px solid #EEF2F7;">` +
+    `<p style="margin: 0 0 8px 0; font-family: 'DM Sans', Arial, sans-serif;` +
+    ` color: #CD1436; font-size: 12px;">` +
+    `You can manage your alerts in your WannaGonna profile.</p>` +
+    `<p style="margin: 0; font-family: 'DM Sans', Arial, sans-serif;` +
+    ` color: #1A1A1A; font-size: 12px;">` +
+    `© WannaGonna. All rights reserved.</p>` +
+    `</div>` +
+    `</div>` +
+    `</div>`;
+
+  return {subject, text, html};
+}
+

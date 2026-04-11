@@ -3,6 +3,7 @@ import {
   onDocumentDeleted,
   onDocumentUpdated,
 } from "firebase-functions/v2/firestore";
+import {onSchedule} from "firebase-functions/v2/scheduler";
 import {updateApplicantsCountOnAdd} from
   "./src/activity-mgt/onAddApplication.js";
 import {updateApplicantsCountOnRemove} from
@@ -46,6 +47,8 @@ import {runAdminRemoveBadgeFromUser} from
   "./src/rewards/adminRemoveBadgeFromUser.js";
 import {onMemberCreatedProcessReferralReward} from
   "./src/rewards/onMemberCreatedProcessReferralReward.js";
+import {processActivityAlerts} from
+  "./src/notifications/activityAlertService.js";
 
 export const onActivityCreatedUpdateActivityCount = onDocumentCreated(
     "activities/{activityId}",
@@ -1091,3 +1094,23 @@ export const triggerComputeLeaderboard = onCall(
       const result = await runComputeLeaderboard();
       return {success: true, ...result};
     });
+
+export const sendDailyActivityAlerts = onSchedule(
+    {
+      schedule: "0 8 * * *",
+      timeZone: "Asia/Tokyo",
+    },
+    async () => {
+      await processActivityAlerts("daily");
+    },
+);
+
+export const sendWeeklyActivityAlerts = onSchedule(
+    {
+      schedule: "0 8 * * 1",
+      timeZone: "Asia/Tokyo",
+    },
+    async () => {
+      await processActivityAlerts("weekly");
+    },
+);

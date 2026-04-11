@@ -115,6 +115,11 @@ service cloud.firestore {
         allow create: if false;
         allow update, delete: if isOwner(userId);
       }
+
+      // Activity alerts subcollection
+      match /alerts/{alertId} {
+        allow read, write: if isOwner(userId);
+      }
     }
     
     // ============================================
