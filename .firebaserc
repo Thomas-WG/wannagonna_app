@@ -1,5 +1,6 @@
 {
   "projects": {
-    "default": "wannagonna-cb8ef"
+    "default": "wg-preprod",
+    "prod": "wannagonna-cb8ef"
   }
 }
