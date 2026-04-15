@@ -57,6 +57,10 @@ export default function LoginPage() {
   const [guidelinesAccepted, setGuidelinesAccepted] = useState(false);
   const [createSubmitting, setCreateSubmitting] = useState(false);
   const createInFlightRef = useRef(false);
+
+  // Use Google sign-in hook
+  const { signInWithGoogle, isLoading: googleIsLoading, error: googleError, setError: setGoogleError } = useGoogleSignIn();
+
   const hasReferralCode = createReferralCode.trim().length > 0;
   const canCreateAccount = termsAccepted && guidelinesAccepted && hasReferralCode;
   const isCreateActionPending = createSubmitting || googleIsLoading || createInFlightRef.current;
@@ -67,9 +71,6 @@ export default function LoginPage() {
   const [resetMessage, setResetMessage] = useState('');
   const [resetError, setResetError] = useState('');
   const [resetLoading, setResetLoading] = useState(false);
-
-  // Use Google sign-in hook
-  const { signInWithGoogle, isLoading: googleIsLoading, error: googleError, setError: setGoogleError } = useGoogleSignIn();
 
   const t = useTranslations('Login');
 
