@@ -47,6 +47,8 @@ import {runAdminRemoveBadgeFromUser} from
   "./src/rewards/adminRemoveBadgeFromUser.js";
 import {onMemberCreatedProcessReferralReward} from
   "./src/rewards/onMemberCreatedProcessReferralReward.js";
+import {runOnAlertCreatedGrantFirstAlertBadge} from
+  "./src/rewards/onAlertCreatedGrantFirstAlertBadge.js";
 import {processActivityAlerts} from
   "./src/notifications/activityAlertService.js";
 
@@ -117,6 +119,13 @@ export const onApplicationCreatedUpdateApplicantsCount = onDocumentCreated(
           );
         }
       }
+    },
+);
+
+export const onAlertCreatedGrantFirstAlertBadge = onDocumentCreated(
+    "members/{userId}/alerts/{alertId}",
+    async (event) => {
+      await runOnAlertCreatedGrantFirstAlertBadge(event);
     },
 );
 

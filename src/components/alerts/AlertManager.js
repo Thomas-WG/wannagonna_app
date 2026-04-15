@@ -16,7 +16,9 @@ import {useAuth} from '@/utils/auth/AuthContext';
 import {useLocale, useTranslations} from 'next-intl';
 import {countries} from 'countries-list';
 import {getSkillsForSelect} from '@/utils/crudSkills';
+import {userHasBadge} from '@/utils/crudBadges';
 import {sdgNames} from '@/constant/sdgs';
+import BadgeAnimation from '@/components/badges/BadgeAnimation';
 
 /**
  * Alert manager for members/{userId}/alerts.
@@ -47,6 +49,8 @@ export default function AlertManager() {
   const [sdgDraft, setSdgDraft] = useState('');
 
   const [skillLabelMap, setSkillLabelMap] = useState({});
+  const [showBadgeAnimation, setShowBadgeAnimation] = useState(false);
+  const [earnedBadgeId, setEarnedBadgeId] = useState(null);
 
   const alertsCollectionRef = useMemo(() => {
     if (!user?.uid) return null;
@@ -183,6 +187,8 @@ export default function AlertManager() {
     setSaving(true);
     setError('');
     try {
+      const hadFirstAlertBadge = await userHasBadge(user.uid, 'firstAlert');
+
       await addDoc(alertsCollectionRef, {
         label: cleanLabel,
         frequency,
@@ -199,6 +205,21 @@ export default function AlertManager() {
       setSelectedSkills([]);
       setSelectedSdgs([]);
       await loadAlerts();
+
+      // Badge is granted asynchronously by backend trigger.
+      // Poll briefly so we can reuse the existing badge popup UX.
+      if (!hadFirstAlertBadge) {
+        let hasBadgeNow = false;
+        for (let attempt = 0; attempt < 6; attempt++) {
+          await new Promise((resolve) => setTimeout(resolve, 500));
+          hasBadgeNow = await userHasBadge(user.uid, 'firstAlert');
+          if (hasBadgeNow) break;
+        }
+        if (hasBadgeNow) {
+          setEarnedBadgeId('firstAlert');
+          setShowBadgeAnimation(true);
+        }
+      }
     } catch (err) {
       console.error('Failed to save alert:', err);
       setError(t('errorSave'));
@@ -487,6 +508,15 @@ export default function AlertManager() {
           ))
         )}
       </div>
+
+      <BadgeAnimation
+        badgeId={earnedBadgeId}
+        show={showBadgeAnimation}
+        onClose={() => {
+          setShowBadgeAnimation(false);
+          setEarnedBadgeId(null);
+        }}
+      />
     </div>
   );
 }
