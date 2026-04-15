@@ -484,7 +484,7 @@ export default function MembersPage() {
                     <ProfilePicture
                       src={member.profile_picture}
                       alt={member.display_name || 'Member'}
-                      size={48}
+                      size={70}
                       variant="subtle"
                       showInitials={true}
                       name={member.display_name || 'Member'}
@@ -542,7 +542,7 @@ export default function MembersPage() {
                     <ProfilePicture
                       src={member.profile_picture}
                       alt={member.display_name || 'Member'}
-                      size={48}
+                      size={70}
                       variant="subtle"
                       showInitials={true}
                       name={member.display_name || 'Member'}

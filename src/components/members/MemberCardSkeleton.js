@@ -13,7 +13,7 @@ export default function MemberCardSkeleton() {
       <div className="flex md:hidden items-center gap-3">
         {/* Profile Picture - Left */}
         <div className="flex-shrink-0">
-          <div className="w-16 h-16 rounded-full bg-gray-200 dark:bg-gray-700" />
+          <div className="w-14 h-14 rounded-full bg-gray-200 dark:bg-gray-700" />
         </div>
 
         {/* Middle: Name + Country */}
@@ -45,7 +45,7 @@ export default function MemberCardSkeleton() {
       <div className="hidden md:flex items-center gap-4">
         {/* Profile Picture - Left */}
         <div className="flex-shrink-0">
-          <div className="w-20 h-20 rounded-full bg-gray-200 dark:bg-gray-700" />
+          <div className="w-14 h-14 rounded-full bg-gray-200 dark:bg-gray-700" />
         </div>
 
         {/* Middle: Name + Country */}
