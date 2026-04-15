@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { HiChevronLeft, HiChevronRight } from 'react-icons/hi';
 import { useTranslations } from 'next-intl';
+import { useRouter } from 'next/navigation';
 import ActivityCard from '@/components/activities/ActivityCard';
 import { fetchPublicLandingActivities } from '@/utils/crudActivities';
 
@@ -14,6 +15,7 @@ function getCardsPerView(width) {
 
 export default function ActivityCarouselSection({ sectionRef }) {
   const t = useTranslations('Landing');
+  const router = useRouter();
   const [activities, setActivities] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isHidden, setIsHidden] = useState(false);
@@ -89,6 +91,11 @@ export default function ActivityCarouselSection({ sectionRef }) {
     setActivePage((prev) => (prev + 1) % totalPages);
   };
 
+  const handleActivityCardClick = (activityId) => {
+    if (!activityId) return;
+    router.push(`/activities?activityId=${encodeURIComponent(activityId)}`);
+  };
+
   if (!isLoading && (isHidden || activities.length < 3)) return null;
 
   return (
@@ -148,7 +155,7 @@ export default function ActivityCarouselSection({ sectionRef }) {
                               title={activity.title || 'Untitled activity'}
                               organization_name={activity.organization_name || 'WannaGonna'}
                               organization_logo={activity.organization_logo || ''}
-                              onClick={() => {}}
+                              onClick={() => handleActivityCardClick(activity.id)}
                               canEditStatus={false}
                               showQRButton={false}
                               showStatusBadge={false}
