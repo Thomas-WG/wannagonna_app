@@ -16,6 +16,7 @@ import {HiMoon, HiSun, HiTranslate} from 'react-icons/hi';
 import { HiExclamationTriangle } from "react-icons/hi2";
 import {useModal} from '@/utils/modal/useModal';
 import { openCookieSettings } from '@/components/cookies/CookieConsentManager';
+import AlertManager from '@/components/alerts/AlertManager';
 
 // Main component for the Settings Page
 export default function SettingsPage() {
@@ -544,6 +545,11 @@ export default function SettingsPage() {
           >
             {t('manageCookies')}
           </Button>
+        </div>
+
+        {/* Activity alert settings */}
+        <div className="w-full">
+          <AlertManager />
         </div>
 
         {/* Toast Notification */}
