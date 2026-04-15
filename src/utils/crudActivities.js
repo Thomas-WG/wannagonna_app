@@ -1,4 +1,4 @@
-import { collection, getDocs, addDoc, getDoc, updateDoc, doc, onSnapshot, query, where, deleteDoc, writeBatch } from 'firebase/firestore';
+import { collection, getDocs, addDoc, getDoc, updateDoc, doc, onSnapshot, query, where, orderBy, limit, deleteDoc, writeBatch } from 'firebase/firestore';
 import { db } from 'firebaseConfig';
 import { fetchApplicationsForActivity } from './crudApplications';
 import { v4 as uuidv4 } from 'uuid';
@@ -25,29 +25,20 @@ export async function fetchActivities() {
   }
 }
 
-function shuffleArray(items) {
-  const arr = [...items];
-  for (let i = arr.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr;
-}
-
-// Fetch a one-shot randomized public subset for landing carousel.
+// Fetch latest public activities for landing carousel.
 export async function fetchPublicLandingActivities() {
   try {
-    const activitiesCollection = collection(db, 'activities');
-    const snapshot = await getDocs(activitiesCollection);
-
-    const publicActivities = snapshot.docs
-      .map((docSnapshot) => ({ id: docSnapshot.id, ...docSnapshot.data() }))
-      .filter((activity) => activity.status === 'Open' || activity.status === 'Closed');
-
-    const randomized = shuffleArray(publicActivities);
     const targetCount = Math.floor(Math.random() * 3) + 8; // 8-10
+    const activitiesCollection = collection(db, 'activities');
+    const publicLandingQuery = query(
+      activitiesCollection,
+      where('status', 'in', ['Open', 'Closed']),
+      orderBy('created_at', 'desc'),
+      limit(targetCount),
+    );
+    const snapshot = await getDocs(publicLandingQuery);
 
-    return randomized.slice(0, targetCount);
+    return snapshot.docs.map((docSnapshot) => ({ id: docSnapshot.id, ...docSnapshot.data() }));
   } catch (error) {
     console.error('Error fetching public landing activities:', error);
     throw error;
