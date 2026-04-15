@@ -44,3 +44,5 @@ env:
     secret: NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
   - variable: NODE_ENV
     secret: NODE_ENV
+  - variable: WEB_APP_URL
+    secret: WEB_APP_URL

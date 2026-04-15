@@ -4,6 +4,24 @@
  */
 
 /**
+ * Build absolute app URL for email links.
+ * Prefers configured env var, with production fallback.
+ * @param {string} path
+ * @return {string}
+ */
+function toAbsoluteAppUrl(path) {
+  const baseUrl =
+    process.env.WEB_APP_URL ||
+    process.env.APP_BASE_URL ||
+    process.env.NEXT_PUBLIC_APP_URL ||
+    "https://wannagonna.org";
+
+  const normalizedBase = baseUrl.replace(/\/+$/, "");
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  return `${normalizedBase}${normalizedPath}`;
+}
+
+/**
  * Generate a generic notification email (title + body, optional link).
  * @param {Object} params
  * @param {string} params.title - Email subject and heading
@@ -181,11 +199,14 @@ export function buildActivityAlertEmail({displayName, activities, frequency}) {
   };
 
   const textItems = (activities || []).map((activity) =>
-    `${activity.title || "Untitled activity"} — ` +
-    `${activity.organization_name || "Unknown organization"} ` +
-    `(${activity.type || "unknown"}, ${activity.country || "N/A"}) — ` +
-    `XP: ${activity.xp_reward || 0} — ` +
-    `Link: /explore?activityId=${activity.id}`,
+    (() => {
+      const link = toAbsoluteAppUrl(`/activities?activityId=${activity.id}`);
+      return `${activity.title || "Untitled activity"} — ` +
+      `${activity.organization_name || "Unknown organization"} ` +
+      `(${activity.type || "unknown"}, ${activity.country || "N/A"}) — ` +
+      `XP: ${activity.xp_reward || 0} — ` +
+      `Link: ${link}`;
+    })(),
   );
   const text = [
     `Hi ${safeName}, here are ${count} new activities matching your alert criteria.`,
@@ -196,7 +217,7 @@ export function buildActivityAlertEmail({displayName, activities, frequency}) {
   ].join("\n");
 
   const cardsHtml = (activities || []).map((activity) => {
-    const link = `/explore?activityId=${activity.id}`;
+    const link = toAbsoluteAppUrl(`/activities?activityId=${activity.id}`);
     const badgeColor = typeBadgeColor(activity.type);
     return `<div style="border: 1px solid #E5E7EB; border-radius: 10px;` +
       ` padding: 16px; margin-bottom: 14px;">` +
