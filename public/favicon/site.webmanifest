@@ -1,7 +1,7 @@
 {
   "name": "WannaGonna",
   "short_name": "WannaGonna",
-  "start_url": "/",
+  "start_url": "/login",
   "scope": "/",
   "icons": [
     {

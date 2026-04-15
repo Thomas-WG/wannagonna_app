@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { fetchUserBadges } from '@/utils/crudBadges';
-import BadgeDisplay from './BadgeDisplay';
+import BadgeCard from './BadgeCard';
 import { HiBadgeCheck } from 'react-icons/hi';
 import { Card } from 'flowbite-react';
 
@@ -71,9 +71,14 @@ export default function BadgeList({ userId, badges: badgesProp, badgesLoading })
 
   return (
     <Card>
-      <div className="flex flex-wrap justify-center gap-4 sm:gap-6 py-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 md:gap-6">
         {badges.map((badge) => (
-          <BadgeDisplay key={badge.id} badge={badge} />
+          <BadgeCard
+            key={badge.id}
+            badge={badge}
+            imageUrl={badge.imageUrl}
+            isEarned={true}
+          />
         ))}
       </div>
     </Card>
