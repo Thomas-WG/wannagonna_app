@@ -436,7 +436,7 @@ select option,
 }
 
 /* ============================================
-   Landing page (light only)
+   Landing page
    ============================================ */
 .landing-hero-title {
   font-family: 'Plus Jakarta Sans', Roboto, sans-serif;
@@ -449,35 +449,9 @@ select option,
   background-image: radial-gradient(circle at 1px 1px, rgba(0, 154, 162, 0.05) 1px, transparent 0);
   background-size: 24px 24px;
 }
-
-/* Landing page only: force light inputs (overrides .dark rules so inputs stay readable) */
-.landing-page-bg input[type="text"],
-.landing-page-bg input[type="email"],
-.landing-page-bg textarea {
-  color: #1A1A1A !important;
-  background-color: #fafaf9 !important;
-}
-
-.landing-page-bg input[type="text"]::placeholder,
-.landing-page-bg input[type="email"]::placeholder,
-.landing-page-bg textarea::placeholder {
-  color: #94a3b8 !important;
-}
-
-.landing-page-bg .flowbite-textinput input,
-.landing-page-bg .flowbite-textarea textarea {
-  color: #0f172a !important;
-  background-color: #f8fafc !important;
-}
-
-.landing-page-bg .flowbite-textinput input::placeholder,
-.landing-page-bg .flowbite-textarea textarea::placeholder {
-  color: #94a3b8 !important;
-}
-
-/* Landing page only: force label text dark (overrides .dark so labels stay readable) */
-.landing-page-bg label {
-  color: #1A1A1A !important;
+.dark .landing-page-bg {
+  background-color: #0b1220;
+  background-image: radial-gradient(circle at 1px 1px, rgba(0, 154, 162, 0.08) 1px, transparent 0);
 }
 
 /* Hero: dots + gradient; slightly stronger dots so they read clearly */
@@ -745,6 +719,10 @@ select option,
 .landing-bg-blob:nth-child(2) { width: 600px; height: 600px; background: rgba(240,134,2,0.07);  bottom: -100px; right: -150px; animation-delay: -7s; }
 .landing-bg-blob:nth-child(3) { width: 500px; height: 500px; background: rgba(81,172,49,0.06);  top: 50%; left: 55%; animation-delay: -14s; }
 .landing-bg-blob:nth-child(4) { width: 350px; height: 350px; background: rgba(205,20,54,0.05);  top: 20%; right: 5%; animation-delay: -4s; }
+.dark .landing-bg-blob:nth-child(1) { background: rgba(0,154,162,0.16); }
+.dark .landing-bg-blob:nth-child(2) { background: rgba(240,134,2,0.12); }
+.dark .landing-bg-blob:nth-child(3) { background: rgba(81,172,49,0.11); }
+.dark .landing-bg-blob:nth-child(4) { background: rgba(205,20,54,0.1); }
 
 @keyframes landingDrift {
   0%   { transform: translate(0, 0) scale(1); }
@@ -759,6 +737,9 @@ select option,
   pointer-events: none;
   background-image: radial-gradient(circle, rgba(0,0,0,0.055) 1px, transparent 1px);
   background-size: 28px 28px;
+}
+.dark .landing-dot-grid {
+  background-image: radial-gradient(circle, rgba(255,255,255,0.07) 1px, transparent 1px);
 }
 
 /* Scroll reveal — start visible, animate up into place when scrolled into view */
@@ -814,6 +795,15 @@ select option,
   border-color: rgba(0,154,162,0.3);
   box-shadow: 0 8px 28px rgba(0,0,0,0.07);
 }
+.dark .landing-feature-card {
+  background: #111827;
+  border-color: #334155;
+  box-shadow: 0 8px 24px rgba(2, 6, 23, 0.35);
+}
+.dark .landing-feature-card:hover {
+  border-color: rgba(0,154,162,0.5);
+  box-shadow: 0 10px 32px rgba(2, 6, 23, 0.45);
+}
 
 /* Mission strip */
 .landing-mission-strip {
@@ -821,6 +811,10 @@ select option,
   border: 1.5px solid rgba(0,154,162,0.18);
   border-radius: 28px;
   padding: 52px 60px;
+}
+.dark .landing-mission-strip {
+  background: linear-gradient(135deg, rgba(0,154,162,0.16) 0%, rgba(15,23,42,0.92) 50%, rgba(81,172,49,0.14) 100%);
+  border-color: rgba(0,154,162,0.35);
 }
 @media (max-width: 640px) {
   .landing-mission-strip { padding: 36px 28px; }

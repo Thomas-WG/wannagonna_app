@@ -103,13 +103,13 @@ export default function ActivityCarouselSection({ sectionRef }) {
       onTouchCancel={() => setIsPaused(false)}
     >
       <div className="max-w-6xl mx-auto">
-        <p className="text-center text-[#9ca3af] text-xs font-bold tracking-[0.16em] uppercase font-montserrat-alt mb-3">
+        <p className="text-center text-text-tertiary dark:text-text-tertiary text-xs font-bold tracking-[0.16em] uppercase font-montserrat-alt mb-3">
           {t('activityCarouselLabel')}
         </p>
-        <h2 className="font-montserrat-alt font-bold text-2xl sm:text-3xl text-[#1A1A1A] mb-3 text-center">
+        <h2 className="font-montserrat-alt font-bold text-2xl sm:text-3xl text-text-primary dark:text-text-primary mb-3 text-center">
           {t('activityCarouselTitle')}
         </h2>
-        <p className="text-sm text-[#6b7280] font-light mb-8 text-center leading-relaxed">
+        <p className="text-sm text-text-secondary dark:text-text-secondary font-light mb-8 text-center leading-relaxed">
           {t('activityCarouselSubtitle')}
         </p>
 
@@ -117,12 +117,12 @@ export default function ActivityCarouselSection({ sectionRef }) {
           {isLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {[0, 1, 2].map((idx) => (
-                <div key={idx} className="rounded-xl border border-[#e5e7eb] bg-white p-4 shadow-sm animate-pulse min-h-[280px]">
-                  <div className="h-6 w-24 rounded bg-[#f1f5f9] mb-3" />
-                  <div className="h-5 w-2/3 rounded bg-[#f1f5f9] mb-3" />
-                  <div className="h-4 w-full rounded bg-[#f1f5f9] mb-2" />
-                  <div className="h-4 w-4/5 rounded bg-[#f1f5f9] mb-6" />
-                  <div className="h-20 w-full rounded bg-[#f8fafc]" />
+                <div key={idx} className="rounded-xl border border-border-light dark:border-border-dark bg-background-card dark:bg-background-card p-4 shadow-sm animate-pulse min-h-[280px]">
+                  <div className="h-6 w-24 rounded bg-background-hover dark:bg-background-hover mb-3" />
+                  <div className="h-5 w-2/3 rounded bg-background-hover dark:bg-background-hover mb-3" />
+                  <div className="h-4 w-full rounded bg-background-hover dark:bg-background-hover mb-2" />
+                  <div className="h-4 w-4/5 rounded bg-background-hover dark:bg-background-hover mb-6" />
+                  <div className="h-20 w-full rounded bg-background-page dark:bg-background-page" />
                 </div>
               ))}
             </div>
@@ -168,7 +168,7 @@ export default function ActivityCarouselSection({ sectionRef }) {
                     type="button"
                     onClick={goToPrev}
                     aria-label="Previous activities"
-                    className="hidden md:inline-flex items-center justify-center absolute left-[-14px] top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white border border-[#e5e7eb] text-[#1A1A1A] shadow-sm hover:border-[#009AA2] hover:text-[#009AA2] transition-colors"
+                    className="hidden md:inline-flex items-center justify-center absolute left-[-14px] top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-background-card dark:bg-background-card border border-border-light dark:border-border-dark text-text-primary dark:text-text-primary shadow-sm hover:border-[#009AA2] hover:text-[#009AA2] transition-colors"
                   >
                     <HiChevronLeft className="w-5 h-5" />
                   </button>
@@ -176,7 +176,7 @@ export default function ActivityCarouselSection({ sectionRef }) {
                     type="button"
                     onClick={goToNext}
                     aria-label="Next activities"
-                    className="hidden md:inline-flex items-center justify-center absolute right-[-14px] top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white border border-[#e5e7eb] text-[#1A1A1A] shadow-sm hover:border-[#009AA2] hover:text-[#009AA2] transition-colors"
+                    className="hidden md:inline-flex items-center justify-center absolute right-[-14px] top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-background-card dark:bg-background-card border border-border-light dark:border-border-dark text-text-primary dark:text-text-primary shadow-sm hover:border-[#009AA2] hover:text-[#009AA2] transition-colors"
                   >
                     <HiChevronRight className="w-5 h-5" />
                   </button>
