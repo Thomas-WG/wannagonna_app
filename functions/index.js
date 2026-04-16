@@ -364,6 +364,30 @@ export const onApplicationStatusChangedNotifyUser = onDocumentUpdated(
           "Your application has been rejected. " +
             "You can review the details on your dashboard.";
 
+        const lastStatusUpdatedBy = after.last_status_updated_by;
+        let isAcceptedOnline = false;
+        let onlineActivity = null;
+        if (afterStatus === "accepted" && lastStatusUpdatedBy) {
+          try {
+            const activityDoc = await db.collection("activities")
+                .doc(activityId)
+                .get();
+            if (activityDoc.exists) {
+              const activityData = activityDoc.data();
+              if (activityData?.type === "online") {
+                isAcceptedOnline = true;
+                onlineActivity = activityData;
+              }
+            }
+          } catch (activityLoadError) {
+            console.error(
+                "[onApplicationStatusChangedNotifyUser] Failed to load " +
+                "activity before notification send:",
+                activityLoadError,
+            );
+          }
+        }
+
         try {
           console.log(
               `[onApplicationStatusChangedNotifyUser] Sending ` +
@@ -375,6 +399,7 @@ export const onApplicationStatusChangedNotifyUser = onDocumentUpdated(
             title,
             body,
             link: "/dashboard",
+            skipEmail: isAcceptedOnline,
             metadata: {
               activity_id: activityId,
               application_id: applicationId,
@@ -408,36 +433,26 @@ export const onApplicationStatusChangedNotifyUser = onDocumentUpdated(
         }
 
         // Send Mailgun emails for approved online activities
-        const lastStatusUpdatedBy = after.last_status_updated_by;
         console.log("Checking email conditions:", {
           afterStatus,
           hasLastStatusUpdatedBy: !!lastStatusUpdatedBy,
           lastStatusUpdatedBy,
+          isAcceptedOnline,
           activityId,
           applicationId,
           updated_at: after.updated_at,
         });
 
-        if (afterStatus === "accepted" && lastStatusUpdatedBy) {
+        if (afterStatus === "accepted" && lastStatusUpdatedBy && isAcceptedOnline) {
           console.log("Email conditions met, fetching activity...");
           try {
-            // Fetch activity to check if it's online
-            const activityDoc = await db.collection("activities")
-                .doc(activityId)
-                .get();
-
-            console.log("Activity document exists:", activityDoc.exists);
-
-            if (activityDoc.exists) {
-              const activity = activityDoc.data();
+            if (onlineActivity) {
+              const activity = onlineActivity;
               console.log("Activity data:", {
                 type: activity.type,
                 title: activity.title,
               });
-
-              // Only send emails for online activities
-              if (activity.type === "online") {
-                console.log("Activity is online, fetching user emails...");
+              console.log("Activity is online, fetching user emails...");
 
                 // Get participant email and name
                 let participantEmail = null;
@@ -475,18 +490,13 @@ export const onApplicationStatusChangedNotifyUser = onDocumentUpdated(
                   );
                 }
 
-                // Build recipient list: users who have ACTIVITY.email enabled
-                const participantPrefs = (await db.collection("members")
-                    .doc(userId).get())
-                    .data()?.notification_preferences?.ACTIVITY;
-                const validatorPrefs = (await db.collection("members")
-                    .doc(lastStatusUpdatedBy).get())
-                    .data()?.notification_preferences?.ACTIVITY;
+                // For this special online acceptance flow, always email
+                // recipients regardless of user email notification settings.
                 const recipientList = [];
-                if (participantEmail && participantPrefs?.email === true) {
+                if (participantEmail) {
                   recipientList.push(participantEmail);
                 }
-                if (validatorEmail && validatorPrefs?.email === true) {
+                if (validatorEmail) {
                   recipientList.push(validatorEmail);
                 }
 
@@ -528,19 +538,13 @@ export const onApplicationStatusChangedNotifyUser = onDocumentUpdated(
                   if (recipientList.length === 0 && (participantEmail ||
                     validatorEmail)) {
                     console.log(
-                        "Skipping email - no recipient has ACTIVITY.email on",
+                        "Skipping email - no valid recipient email found",
                     );
                   }
                 }
-              } else {
-                console.log(
-                    "Activity is not online, skipping email. Type:",
-                    activity.type,
-                );
-              }
             } else {
               console.log(
-                  "Activity document does not exist for activityId:",
+                  "Expected online activity data was not available for activityId:",
                   activityId,
               );
             }
@@ -556,6 +560,7 @@ export const onApplicationStatusChangedNotifyUser = onDocumentUpdated(
             isAccepted: afterStatus === "accepted",
             hasLastStatusUpdatedBy: !!lastStatusUpdatedBy,
             lastStatusUpdatedBy,
+            isAcceptedOnline,
           });
         }
       } catch (error) {
