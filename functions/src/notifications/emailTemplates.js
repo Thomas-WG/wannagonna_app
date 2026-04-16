@@ -342,7 +342,9 @@ export function buildActivityAlertEmail({displayName, activities, frequency}) {
       `${escapeHtml(activity.title || "Untitled activity")}</a>` +
       `<div style="font-family: 'DM Sans', Arial, sans-serif;` +
       ` color: #1A1A1A; font-size: 14px; margin-bottom: 8px;">` +
-      `${escapeHtml(activity.organization_name || "Unknown organization")}</div>` +
+      `${escapeHtml(
+          activity.organization_name || "Unknown organization",
+      )}</div>` +
       `<span style="display: inline-block; background: ${badgeColor};` +
       ` color: #FFFFFF; border-radius: 999px; padding: 4px 10px;` +
       ` font-family: 'DM Sans', Arial, sans-serif; font-size: 12px;` +
@@ -354,10 +356,12 @@ export function buildActivityAlertEmail({displayName, activities, frequency}) {
       `<span style="font-family: 'DM Sans', Arial, sans-serif;` +
       ` color: #F08602; font-size: 13px; font-weight: 700;">` +
       `XP: ${escapeHtml(activity.xp_reward || 0)}</span>` +
-      `${dateTimeLine ? `<div style="font-family: 'DM Sans', Arial, sans-serif;` +
+      `${dateTimeLine ?
+        `<div style="font-family: 'DM Sans', Arial, sans-serif;` +
       ` color: #4B5563; font-size: 13px; margin-top: 8px;">` +
       `${escapeHtml(dateTimeLine)}</div>` : ""}` +
-      `${descriptionPreview ? `<p style="font-family: 'DM Sans', Arial, sans-serif;` +
+      `${descriptionPreview ?
+        `<p style="font-family: 'DM Sans', Arial, sans-serif;` +
       ` color: #6B7280; font-size: 13px; line-height: 1.45;` +
       ` margin: 8px 0 0 0;">${escapeHtml(descriptionPreview)}</p>` : ""}` +
       `</div>`;
