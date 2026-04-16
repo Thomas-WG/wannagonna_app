@@ -23,17 +23,37 @@ export function useGoogleSignIn() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const cleanupNewGoogleUser = async (user, reason) => {
+    if (!user) return;
+    try {
+      await user.delete();
+      console.warn('Cleaned up Google auth user:', { uid: user.uid, reason });
+    } catch (deleteError) {
+      console.error('Failed to delete Google auth user during cleanup:', deleteError);
+      try {
+        await auth.signOut();
+      } catch (signOutError) {
+        console.error('Failed to sign out after Google cleanup error:', signOutError);
+      }
+    }
+  };
+
   /**
    * Sign in with Google and handle new/returning user logic
    * @param {string} referralCode - Referral code (required for new users)
    */
-  const signInWithGoogle = async (referralCode = '') => {
+  const signInWithGoogle = async (referralCode = '', options = {}) => {
+    const { onRegistrationStart, onRegistrationEnd } = options;
+    let registrationLifecycleStarted = false;
+
     try {
       setIsLoading(true);
       setError('');
 
       // Proceed with Google sign-in first (referral code validation happens after, only for new users)
       const result = await signInWithPopup(auth, googleProvider);
+      onRegistrationStart?.();
+      registrationLifecycleStarted = true;
       const user = result.user;
 
       const userDocRef = doc(db, 'members', user.uid);
@@ -45,8 +65,7 @@ export function useGoogleSignIn() {
       } else {
         // New user - Validate referral code is required
         if (!referralCode || referralCode.trim().length === 0) {
-          // Sign out the user since referral code is missing
-          await auth.signOut();
+          await cleanupNewGoogleUser(user, 'missing_referral_code');
           const errorMsg = t('referralCodeRequired') || 'Referral code is required for new accounts.';
           setError(errorMsg);
           console.error('New user sign-in failed: Referral code required');
@@ -56,8 +75,7 @@ export function useGoogleSignIn() {
         // Validate the referral code exists in the database
         const codeValidation = await validateReferralCode(referralCode, t);
         if (!codeValidation.valid) {
-          // Sign out the user since validation failed
-          await auth.signOut();
+          await cleanupNewGoogleUser(user, 'invalid_referral_code');
           setError(codeValidation.error);
           console.error('New user sign-in failed: Invalid referral code', referralCode);
           return;
@@ -113,7 +131,14 @@ export function useGoogleSignIn() {
           terms_accepted_at: serverTimestamp(),
         };
 
-        await setDoc(userDocRef, userData, { merge: true });
+        try {
+          await setDoc(userDocRef, userData, { merge: true });
+        } catch (writeError) {
+          await cleanupNewGoogleUser(user, 'member_write_failed');
+          console.error('Failed to create member document for Google sign-up:', writeError);
+          setError('Failed to create your profile. Please try again.');
+          return;
+        }
 
         router.push('/complete-profile');
       }
@@ -138,6 +163,9 @@ export function useGoogleSignIn() {
 
       setError(errorMessage);
     } finally {
+      if (registrationLifecycleStarted) {
+        await onRegistrationEnd?.();
+      }
       setIsLoading(false);
     }
   };

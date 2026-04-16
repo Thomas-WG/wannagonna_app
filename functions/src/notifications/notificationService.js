@@ -197,6 +197,7 @@ function getCategoryFromType(type) {
  * @param {string} params.body
  * @param {string|null} [params.link]
  * @param {Object} [params.metadata]
+ * @param {boolean} [params.skipEmail=false]
  * @return {Promise<void>}
  */
 export async function sendUserNotification({
@@ -206,6 +207,7 @@ export async function sendUserNotification({
   body,
   link = null,
   metadata = {},
+  skipEmail = false,
 }) {
   if (!userId) {
     throw new Error("sendUserNotification: userId is required");
@@ -401,7 +403,7 @@ export async function sendUserNotification({
     }
   }
 
-  if (shouldEmail) {
+  if (shouldEmail && !skipEmail) {
     try {
       const userRecord = await auth.getUser(userId);
       const userEmail = userRecord.email;

@@ -24,7 +24,7 @@ import { doc, setDoc, Timestamp, serverTimestamp } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { FcGoogle } from "react-icons/fc";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslations } from "use-intl";
 import { Label, TextInput } from 'flowbite-react';
 import { setUserLocale } from '@/utils/locale';
@@ -33,6 +33,7 @@ import { validateReferralCode, generateUserCode } from '@/utils/referralCode';
 import { useGoogleSignIn } from '@/hooks/useGoogleSignIn';
 import EmailPasswordLogin from '@/components/auth/EmailPasswordLogin';
 import LanguageSelector from '@/components/auth/LanguageSelector';
+import RegistrationInitModal from '@/components/auth/RegistrationInitModal';
 
 /**
  * LoginPage - Renders the login UI, orchestrating authentication components.
@@ -56,8 +57,16 @@ export default function LoginPage() {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [guidelinesAccepted, setGuidelinesAccepted] = useState(false);
   const [createSubmitting, setCreateSubmitting] = useState(false);
+  const createInFlightRef = useRef(false);
+  const [showRegistrationInitModal, setShowRegistrationInitModal] = useState(false);
+  const registrationInitStartedAtRef = useRef(0);
+
+  // Use Google sign-in hook
+  const { signInWithGoogle, isLoading: googleIsLoading, error: googleError, setError: setGoogleError } = useGoogleSignIn();
+
   const hasReferralCode = createReferralCode.trim().length > 0;
   const canCreateAccount = termsAccepted && guidelinesAccepted && hasReferralCode;
+  const isCreateActionPending = createSubmitting || googleIsLoading || createInFlightRef.current;
 
   // Lost password state
   const [showResetPassword, setShowResetPassword] = useState(false);
@@ -65,9 +74,7 @@ export default function LoginPage() {
   const [resetMessage, setResetMessage] = useState('');
   const [resetError, setResetError] = useState('');
   const [resetLoading, setResetLoading] = useState(false);
-
-  // Use Google sign-in hook
-  const { signInWithGoogle, isLoading: googleIsLoading, error: googleError, setError: setGoogleError } = useGoogleSignIn();
+  const REGISTRATION_INIT_MIN_MS = 1500;
 
   const t = useTranslations('Login');
 
@@ -197,6 +204,24 @@ export default function LoginPage() {
     }
   };
 
+  const startRegistrationInitModal = () => {
+    registrationInitStartedAtRef.current = Date.now();
+    setShowRegistrationInitModal(true);
+  };
+
+  const stopRegistrationInitModal = async () => {
+    if (!registrationInitStartedAtRef.current) {
+      return;
+    }
+    const elapsed = Date.now() - registrationInitStartedAtRef.current;
+    const remaining = Math.max(0, REGISTRATION_INIT_MIN_MS - elapsed);
+    if (remaining > 0) {
+      await new Promise((resolve) => setTimeout(resolve, remaining));
+    }
+    setShowRegistrationInitModal(false);
+    registrationInitStartedAtRef.current = 0;
+  };
+
   // Function to handle email/password login
   const handleEmailLogin = async (email, password) => {
     setHasInteracted(true);
@@ -221,7 +246,7 @@ export default function LoginPage() {
 
   // Function to handle account creation - Updated to validate referral code
   const handleCreateAccount = async ({ email, password, confirmPassword, referralCode }) => {
-    if (createSubmitting) {
+    if (createInFlightRef.current) {
       return;
     }
     setCreateErrorMessage('');
@@ -232,18 +257,22 @@ export default function LoginPage() {
       return;
     }
 
-    // Validate referral code (required for new accounts)
-    const codeValidation = await validateReferralCode(referralCode, t);
-    if (!codeValidation.valid) {
-      setCreateErrorMessage(codeValidation.error);
-      return;
-    }
-
+    startRegistrationInitModal();
+    createInFlightRef.current = true;
     setCreateSubmitting(true);
+    let createdAuthUser = null;
     try {
+      // Validate referral code (required for new accounts)
+      const codeValidation = await validateReferralCode(referralCode, t);
+      if (!codeValidation.valid) {
+        setCreateErrorMessage(codeValidation.error);
+        return;
+      }
+
       // Create a new user with Firebase
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
+      createdAuthUser = user;
       
       // Extract display name from email (first part before @)
       const emailPrefix = email.split('@')[0];
@@ -315,47 +344,65 @@ export default function LoginPage() {
         message: error.message,
         stack: error.stack
       });
+
+      // Roll back newly created auth user when profile creation fails.
+      if (createdAuthUser) {
+        try {
+          await createdAuthUser.delete();
+          await auth.signOut();
+          console.warn('Rolled back auth user after profile creation failure:', createdAuthUser.uid);
+        } catch (cleanupError) {
+          console.error('Failed to roll back auth user after profile creation failure:', cleanupError);
+        }
+      }
       
       if (error.code === 'auth/email-already-in-use') {
         setCreateErrorMessage(t('emailused'));
       } else if (error.code === 'auth/weak-password') {
         setCreateErrorMessage(t('weakpwd'));
-      } else if (error.code?.startsWith('permission-denied') || error.message?.includes('Firestore')) {
+      } else if (createdAuthUser || error.code?.startsWith('permission-denied') || error.message?.includes('Firestore')) {
         setCreateErrorMessage('Failed to create user profile. Please check your permissions or try again.');
       } else {
         setCreateErrorMessage(error.message || 'An error occurred while creating your account. Please try again.');
       }
     } finally {
+      await stopRegistrationInitModal();
+      createInFlightRef.current = false;
       setCreateSubmitting(false);
     }
   };
 
   // Render the login UI
   return (
-    <div className="min-h-dvh flex flex-col items-center justify-center">
-      <LanguageSelector 
-        options={languageOptions} 
-        onChangeLocale={handleLanguageChange}
-        t={t}
-      />
-      
-      {/* Logo */}
-      {logoUrl && (
-        <div className="mb-8 flex justify-center">
-          <Image 
-            src={logoUrl} 
-            alt="Wannagonna Logo" 
-            width={120} 
-            height={120} 
-            className="object-contain"
-            priority
-            quality={75}
-            sizes="(max-width: 640px) 100px, 120px"
-          />
-        </div>
-      )}
-      
-      <div className="bg-background-card dark:bg-background-card p-6 rounded-lg shadow-lg max-w-md w-full border border-border-light dark:border-border-dark">
+    <div>
+      <div
+        className="min-h-dvh flex flex-col items-center justify-center"
+        aria-hidden={showRegistrationInitModal}
+        inert={showRegistrationInitModal}
+      >
+        <LanguageSelector 
+          options={languageOptions} 
+          onChangeLocale={handleLanguageChange}
+          t={t}
+        />
+        
+        {/* Logo */}
+        {logoUrl && (
+          <div className="mb-8 flex justify-center">
+            <Image 
+              src={logoUrl} 
+              alt="Wannagonna Logo" 
+              width={120} 
+              height={120} 
+              className="object-contain"
+              priority
+              quality={75}
+              sizes="(max-width: 640px) 100px, 120px"
+            />
+          </div>
+        )}
+        
+        <div className="bg-background-card dark:bg-background-card p-6 rounded-lg shadow-lg max-w-md w-full border border-border-light dark:border-border-dark">
         {/* Tabs */}
         <div className="flex mb-6 border-b border-border-light dark:border-border-dark">
           <button
@@ -478,7 +525,7 @@ export default function LoginPage() {
               className="flex flex-col gap-4 w-full max-w-sm mx-auto"
               onSubmit={(event) => {
                 event.preventDefault();
-                if (createSubmitting) {
+                if (createInFlightRef.current || createSubmitting) {
                   return;
                 }
                 setHasInteracted(true);
@@ -619,9 +666,9 @@ export default function LoginPage() {
               )}
               <button
                 type="submit"
-                disabled={createSubmitting || !canCreateAccount}
-                className={`mt-2 bg-primary-500 dark:bg-primary-600 text-white py-2 px-4 rounded-md text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed ${
-                  createSubmitting || !canCreateAccount ? '' : 'hover:bg-primary-600 dark:hover:bg-primary-700'
+                disabled={isCreateActionPending || !canCreateAccount}
+                className={`mt-2 bg-primary-500 dark:bg-primary-600 text-white py-2 px-4 rounded-md text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none ${
+                  isCreateActionPending || !canCreateAccount ? '' : 'hover:bg-primary-600 dark:hover:bg-primary-700'
                 }`}
               >
                 {t('create')}
@@ -636,15 +683,18 @@ export default function LoginPage() {
             {/* Google sign-up with mandatory referral code */}
             <button
               onClick={() => {
-                if (createSubmitting || googleIsLoading) {
+                if (isCreateActionPending) {
                   return;
                 }
                 setHasInteracted(true);
-                signInWithGoogle(createReferralCode);
+                signInWithGoogle(createReferralCode, {
+                  onRegistrationStart: startRegistrationInitModal,
+                  onRegistrationEnd: stopRegistrationInitModal,
+                });
               }}
-              disabled={createSubmitting || googleIsLoading || !canCreateAccount}
-              className={`w-full max-w-xs mx-auto py-3 px-6 bg-background-card dark:bg-background-card border border-border-light dark:border-border-dark rounded-lg flex items-center justify-center gap-3 transition-colors duration-200 text-text-primary dark:text-text-primary text-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed ${
-                createSubmitting || googleIsLoading || !canCreateAccount ? '' : 'hover:bg-background-hover dark:hover:bg-background-hover'
+              disabled={isCreateActionPending || !canCreateAccount}
+              className={`w-full max-w-xs mx-auto py-3 px-6 bg-background-card dark:bg-background-card border border-border-light dark:border-border-dark rounded-lg flex items-center justify-center gap-3 transition-colors duration-200 text-text-primary dark:text-text-primary text-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none ${
+                isCreateActionPending || !canCreateAccount ? '' : 'hover:bg-background-hover dark:hover:bg-background-hover'
               }`}
             >
               <FcGoogle className="text-2xl" />
@@ -657,7 +707,9 @@ export default function LoginPage() {
             )}
           </>
         )}
+        </div>
       </div>
+      {showRegistrationInitModal && <RegistrationInitModal t={t} />}
     </div>
   );
 }

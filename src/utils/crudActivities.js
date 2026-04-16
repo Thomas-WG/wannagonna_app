@@ -1,4 +1,4 @@
-import { collection, getDocs, addDoc, getDoc, updateDoc, doc, onSnapshot, query, where, deleteDoc, writeBatch } from 'firebase/firestore';
+import { collection, getDocs, addDoc, getDoc, updateDoc, doc, onSnapshot, query, where, orderBy, limit, deleteDoc, writeBatch } from 'firebase/firestore';
 import { db } from 'firebaseConfig';
 import { fetchApplicationsForActivity } from './crudApplications';
 import { v4 as uuidv4 } from 'uuid';
@@ -22,6 +22,26 @@ export async function fetchActivities() {
     return activities; // Return the array of activities
   } catch (error) {
     console.error('Error fetching activities:', error); // Log any errors
+  }
+}
+
+// Fetch latest public activities for landing carousel.
+export async function fetchPublicLandingActivities() {
+  try {
+    const targetCount = Math.floor(Math.random() * 3) + 8; // 8-10
+    const activitiesCollection = collection(db, 'activities');
+    const publicLandingQuery = query(
+      activitiesCollection,
+      where('status', 'in', ['Open', 'Closed']),
+      orderBy('created_at', 'desc'),
+      limit(targetCount),
+    );
+    const snapshot = await getDocs(publicLandingQuery);
+
+    return snapshot.docs.map((docSnapshot) => ({ id: docSnapshot.id, ...docSnapshot.data() }));
+  } catch (error) {
+    console.error('Error fetching public landing activities:', error);
+    throw error;
   }
 }
 

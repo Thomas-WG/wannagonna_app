@@ -1,5 +1,6 @@
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from 'firebaseConfig';
+import { resizeAvatarImageForUpload } from '@/utils/avatarImageResize';
 
 /**
  * Uploads a file to Firebase Storage and returns the download URL
@@ -48,9 +49,9 @@ export const uploadProfilePicture = async (file, userId) => {
     throw new Error('File and userId are required');
   }
 
-  // Create a path for the profile picture in the members folder
   const path = `members/${userId}`;
-  return uploadFile(file, path);
+  const toUpload = await resizeAvatarImageForUpload(file);
+  return uploadFile(toUpload, path);
 }; 
 
 /**

@@ -1,8 +1,8 @@
 /*
  * page.js
  *
- * Landing coming-soon page for WannaGonna — light, airy, warm.
- * Light mode only. Authenticated users are redirected to the dashboard.
+ * Landing page for WannaGonna.
+ * Supports light and dark mode via ThemeContext.
  */
 
 'use client';
@@ -13,9 +13,13 @@ import { useEffect, useState, useRef } from 'react';
 import { Dropdown, Toast } from 'flowbite-react';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
+import { HiMoon, HiSun } from 'react-icons/hi';
+import { FaInstagram, FaLinkedinIn } from 'react-icons/fa';
 import { setUserLocaleClient } from '@/utils/localeClient';
 import { useLocale } from 'next-intl';
 import { addContactSubmission } from '@/utils/crudContact';
+import ActivityCarouselSection from '@/components/landing/ActivityCarouselSection';
+import { useTheme } from '@/utils/theme/ThemeContext';
 
 const LANGUAGE_OPTIONS = [
   { label: 'English', value: 'en' },
@@ -63,11 +67,14 @@ const TAG_CLASSES = {
 
 export default function Home() {
   const router = useRouter();
-  const { user, loading } = useAuth();
+  const { loading } = useAuth();
+  const { theme, toggleTheme, isLoading: themeLoading } = useTheme();
   const t = useTranslations('Landing');
   const locale = useLocale();
+  const logoSrc = theme === 'dark'
+    ? '/logo/2%20-%20Color%20on%20Black%20-%20RGB.png'
+    : '/logo/1%20-%20Color%20on%20White%20-%20RGB.png';
 
-  const [audienceType, setAudienceType] = useState('volunteer');
   const [contactName, setContactName] = useState('');
   const [contactEmail, setContactEmail] = useState('');
   const [contactMessage, setContactMessage] = useState('');
@@ -129,14 +136,14 @@ export default function Home() {
 
   if (loading) {
     return (
-      <div className="min-h-dvh flex items-center justify-center bg-[#fafaf9]">
-        <div className="text-[#1A1A1A]">Loading...</div>
+      <div className="min-h-dvh flex items-center justify-center bg-background-page dark:bg-background-page">
+        <div className="text-text-primary dark:text-text-primary">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="relative min-h-dvh bg-[#fafaf9] text-[#1A1A1A] overflow-x-hidden">
+    <div className="landing-page-bg relative min-h-dvh bg-background-page dark:bg-background-page text-text-primary dark:text-text-primary overflow-x-hidden">
       {/* Fixed background blobs */}
       <div aria-hidden>
         <div className="landing-bg-blob" />
@@ -149,10 +156,10 @@ export default function Home() {
 
       <div className="relative z-10 flex flex-col">
         {/* HEADER */}
-        <header className="sticky top-0 z-50 flex items-center justify-between px-5 py-3 bg-white/95 border-b border-[#e5e7eb] backdrop-blur-sm">
+        <header className="sticky top-0 z-50 flex items-center justify-between px-5 py-3 bg-background-card/95 dark:bg-background-card/95 border-b border-border-light dark:border-border-dark backdrop-blur-sm">
           <a href="#" className="flex items-center flex-shrink-0" aria-label="Wanna Gonna home">
             <Image
-              src="/logo/1%20-%20Color%20on%20White%20-%20RGB.png"
+              src={logoSrc}
               alt="Wanna Gonna"
               width={120}
               height={44}
@@ -171,13 +178,13 @@ export default function Home() {
             <Dropdown
               label={LANGUAGE_OPTIONS.find((o) => o.value === locale)?.label ?? t('selectLanguage')}
               inline
-              className="bg-white border border-[#e5e7eb]"
+              className="bg-background-card dark:bg-background-card border border-border-light dark:border-border-dark text-text-primary dark:text-text-primary"
             >
               {LANGUAGE_OPTIONS.map((opt) => (
                 <Dropdown.Item
                   key={opt.value}
                   onClick={() => handleLanguageChange(opt.value)}
-                  className="text-[#1A1A1A] hover:bg-[#f5f5f5]"
+                  className="text-text-primary dark:text-text-primary hover:bg-background-hover dark:hover:bg-background-hover"
                 >
                   {opt.label}
                 </Dropdown.Item>
@@ -204,7 +211,7 @@ export default function Home() {
               </h1>
 
               <p
-                className="text-[#6b7280] font-light leading-relaxed mb-8 max-w-xl mx-auto"
+                className="text-text-secondary dark:text-text-secondary font-light leading-relaxed mb-8 max-w-xl mx-auto"
                 style={{ fontSize: 'clamp(16px, 2.2vw, 19px)' }}
               >
                 {t('heroSubtitle')}
@@ -240,14 +247,14 @@ export default function Home() {
                     >
                       {TAG_LABELS[f.tag]}
                     </span>
-                    <h3 className="font-montserrat-alt font-bold text-base text-[#1A1A1A] mb-2">{t(f.titleKey)}</h3>
-                    <p className="text-sm text-[#6b7280] font-light leading-relaxed">{t(f.descKey)}</p>
+                    <h3 className="font-montserrat-alt font-bold text-base text-text-primary dark:text-text-primary mb-2">{t(f.titleKey)}</h3>
+                    <p className="text-sm text-text-secondary dark:text-text-secondary font-light leading-relaxed">{t(f.descKey)}</p>
                     {f.chips.length > 0 && (
                       <div className="flex gap-1.5 flex-wrap mt-3">
                         {f.chips.map((chip) => (
                           <span
                             key={chip}
-                            className="text-[11px] font-medium bg-[#f5f5f5] text-[#3F3F3F] rounded-full px-2.5 py-1"
+                            className="text-[11px] font-medium bg-background-hover dark:bg-background-hover text-text-primary dark:text-text-primary rounded-full px-2.5 py-1"
                           >
                             {chip}
                           </span>
@@ -260,19 +267,21 @@ export default function Home() {
             </div>
           </section>
 
+          <ActivityCarouselSection sectionRef={(el) => (sectionRefs.current[1] = el)} />
+
           {/* SDG SECTION */}
           <section
-            ref={(el) => (sectionRefs.current[1] = el)}
+            ref={(el) => (sectionRefs.current[2] = el)}
             className="landing-animate-in is-visible px-4 py-16 sm:py-20"
           >
             <div className="max-w-5xl mx-auto text-center">
               <p className="text-[#9ca3af] text-xs font-bold tracking-[0.16em] uppercase font-montserrat-alt mb-3">
                 {t('sdgSectionLabel')}
               </p>
-              <h2 className="font-montserrat-alt font-bold text-2xl sm:text-3xl text-[#1A1A1A] mb-3">
+              <h2 className="font-montserrat-alt font-bold text-2xl sm:text-3xl text-text-primary dark:text-text-primary mb-3">
                 {t('sdgSectionTitle')}
               </h2>
-              <p className="text-sm text-[#6b7280] font-light mb-8 max-w-lg mx-auto leading-relaxed">
+              <p className="text-sm text-text-secondary dark:text-text-secondary font-light mb-8 max-w-lg mx-auto leading-relaxed">
                 {t('sdgSectionSub')}
               </p>
               <div className="flex flex-wrap justify-center gap-2">
@@ -293,7 +302,7 @@ export default function Home() {
 
           {/* MISSION STRIP */}
           <section
-            ref={(el) => (sectionRefs.current[2] = el)}
+            ref={(el) => (sectionRefs.current[3] = el)}
             className="landing-animate-in is-visible px-4 py-16 sm:py-20"
           >
             <div className="max-w-5xl mx-auto landing-mission-strip flex flex-col lg:flex-row items-start lg:items-center gap-10 lg:gap-14">
@@ -302,7 +311,7 @@ export default function Home() {
                   {t('missionLabel')}
                 </p>
                 <h2
-                  className="font-montserrat-alt font-black text-[#1A1A1A] leading-tight mb-4"
+                  className="font-montserrat-alt font-black text-text-primary dark:text-text-primary leading-tight mb-4"
                   style={{ fontSize: 'clamp(20px, 2.8vw, 28px)' }}
                 >
                   {t('missionQuoteLine1')}
@@ -311,22 +320,22 @@ export default function Home() {
                   <br />
                   <span className="text-[#009AA2]">{t('missionQuoteLine3')}</span>
                 </h2>
-                <p className="text-sm text-[#6b7280] font-light leading-relaxed max-w-xl">{t('missionSub')}</p>
+                <p className="text-sm text-text-secondary dark:text-text-secondary font-light leading-relaxed max-w-xl">{t('missionSub')}</p>
               </div>
               <div className="flex items-center gap-6 sm:gap-8 flex-wrap lg:flex-nowrap flex-shrink-0">
                 <div className="text-center">
                   <div className="font-montserrat-alt font-black text-4xl text-[#009AA2] leading-none">17</div>
-                  <div className="text-xs text-[#6b7280] mt-1.5 leading-tight">{t('statSdgs')}</div>
+                  <div className="text-xs text-text-secondary dark:text-text-secondary mt-1.5 leading-tight">{t('statSdgs')}</div>
                 </div>
-                <div className="w-px h-10 bg-[#e5e7eb]" />
+                <div className="w-px h-10 bg-border-light dark:bg-border-dark" />
                 <div className="text-center">
                   <div className="font-montserrat-alt font-black text-4xl text-[#F08602] leading-none">3</div>
-                  <div className="text-xs text-[#6b7280] mt-1.5 leading-tight">{t('statActivities')}</div>
+                  <div className="text-xs text-text-secondary dark:text-text-secondary mt-1.5 leading-tight">{t('statActivities')}</div>
                 </div>
-                <div className="w-px h-10 bg-[#e5e7eb]" />
+                <div className="w-px h-10 bg-border-light dark:bg-border-dark" />
                 <div className="text-center">
                   <div className="font-montserrat-alt font-black text-4xl text-[#51AC31] leading-none">∞</div>
-                  <div className="text-xs text-[#6b7280] mt-1.5 leading-tight">{t('statImpact')}</div>
+                  <div className="text-xs text-text-secondary dark:text-text-secondary mt-1.5 leading-tight">{t('statImpact')}</div>
                 </div>
               </div>
             </div>
@@ -334,17 +343,17 @@ export default function Home() {
 
           {/* CONTACT */}
           <section
-            ref={(el) => (sectionRefs.current[3] = el)}
+            ref={(el) => (sectionRefs.current[4] = el)}
             className="landing-animate-in is-visible px-4 py-16 sm:py-20"
           >
             <div className="max-w-2xl mx-auto">
               <p className="text-center text-[#9ca3af] text-xs font-bold tracking-[0.16em] uppercase font-montserrat-alt mb-3">
                 {t('contactLabel')}
               </p>
-              <h2 className="font-montserrat-alt font-bold text-2xl sm:text-3xl text-[#1A1A1A] mb-3 text-center">
+              <h2 className="font-montserrat-alt font-bold text-2xl sm:text-3xl text-text-primary dark:text-text-primary mb-3 text-center">
                 {t('contactTitle')}
               </h2>
-              <p className="text-sm text-[#6b7280] font-light mb-8 text-center leading-relaxed">
+              <p className="text-sm text-text-secondary dark:text-text-secondary font-light mb-8 text-center leading-relaxed">
                 {t('contactSub')}
               </p>
               <form
@@ -352,7 +361,7 @@ export default function Home() {
                 className="landing-feature-card space-y-4"
               >
                 <div>
-                  <label htmlFor="contact-name" className="block text-xs font-semibold text-[#6b7280] font-montserrat-alt mb-1.5">
+                  <label htmlFor="contact-name" className="block text-xs font-semibold text-text-secondary dark:text-text-secondary font-montserrat-alt mb-1.5">
                     {t('contactNameLabel')}
                   </label>
                   <input
@@ -362,11 +371,11 @@ export default function Home() {
                     onChange={(e) => setContactName(e.target.value)}
                     placeholder={t('contactNamePlaceholder')}
                     required
-                    className="w-full px-4 py-3 rounded-xl border-[1.5px] border-[#e5e7eb] bg-white text-[#1A1A1A] text-sm placeholder-[#9ca3af] font-light focus:border-[#009AA2] focus:outline-none focus:ring-2 focus:ring-[#009AA2]/20 transition-all"
+                    className="w-full px-4 py-3 rounded-xl border-[1.5px] border-border-light dark:border-border-dark bg-background-card dark:bg-background-hover text-text-primary dark:text-text-primary text-sm placeholder-text-tertiary dark:placeholder-text-tertiary font-light focus:border-[#009AA2] focus:outline-none focus:ring-2 focus:ring-[#009AA2]/20 transition-all"
                   />
                 </div>
                 <div>
-                  <label htmlFor="contact-email" className="block text-xs font-semibold text-[#6b7280] font-montserrat-alt mb-1.5">
+                  <label htmlFor="contact-email" className="block text-xs font-semibold text-text-secondary dark:text-text-secondary font-montserrat-alt mb-1.5">
                     {t('contactEmailLabel')}
                   </label>
                   <input
@@ -376,11 +385,11 @@ export default function Home() {
                     onChange={(e) => setContactEmail(e.target.value)}
                     placeholder={t('stayInTouchPlaceholder')}
                     required
-                    className="w-full px-4 py-3 rounded-xl border-[1.5px] border-[#e5e7eb] bg-white text-[#1A1A1A] text-sm placeholder-[#9ca3af] font-light focus:border-[#009AA2] focus:outline-none focus:ring-2 focus:ring-[#009AA2]/20 transition-all"
+                    className="w-full px-4 py-3 rounded-xl border-[1.5px] border-border-light dark:border-border-dark bg-background-card dark:bg-background-hover text-text-primary dark:text-text-primary text-sm placeholder-text-tertiary dark:placeholder-text-tertiary font-light focus:border-[#009AA2] focus:outline-none focus:ring-2 focus:ring-[#009AA2]/20 transition-all"
                   />
                 </div>
                 <div>
-                  <label htmlFor="contact-message" className="block text-xs font-semibold text-[#6b7280] font-montserrat-alt mb-1.5">
+                  <label htmlFor="contact-message" className="block text-xs font-semibold text-text-secondary dark:text-text-secondary font-montserrat-alt mb-1.5">
                     {t('contactMessageLabel')}
                   </label>
                   <textarea
@@ -390,7 +399,7 @@ export default function Home() {
                     placeholder={t('contactMessagePlaceholder')}
                     required
                     rows={4}
-                    className="w-full px-4 py-3 rounded-xl border-[1.5px] border-[#e5e7eb] bg-white text-[#1A1A1A] text-sm placeholder-[#9ca3af] font-light focus:border-[#009AA2] focus:outline-none focus:ring-2 focus:ring-[#009AA2]/20 transition-all resize-none"
+                    className="w-full px-4 py-3 rounded-xl border-[1.5px] border-border-light dark:border-border-dark bg-background-card dark:bg-background-hover text-text-primary dark:text-text-primary text-sm placeholder-text-tertiary dark:placeholder-text-tertiary font-light focus:border-[#009AA2] focus:outline-none focus:ring-2 focus:ring-[#009AA2]/20 transition-all resize-none"
                   />
                 </div>
                 {contactError && <p className="text-xs text-red-500">{contactError}</p>}
@@ -406,31 +415,53 @@ export default function Home() {
           </section>
 
           {/* FOOTER */}
-          <footer className="px-5 py-8 border-t border-[#e5e7eb] bg-white">
-            <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+          <footer className="px-5 py-8 border-t border-border-light dark:border-border-dark bg-background-card dark:bg-background-card">
+            <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6">
               <Image
-                src="/logo/1%20-%20Color%20on%20White%20-%20RGB.png"
+                src={logoSrc}
                 alt="Wanna Gonna"
                 width={90}
                 height={32}
                 className="h-7 w-auto object-contain opacity-80"
               />
-              <p className="text-sm text-[#9ca3af] text-center">{t('footerTagline')}</p>
-              <div className="flex gap-5 text-sm text-[#9ca3af]">
+              <p className="text-sm text-text-tertiary dark:text-text-tertiary text-center">{t('footerTagline')}</p>
+              <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-text-tertiary dark:text-text-tertiary">
+                <button
+                  type="button"
+                  onClick={toggleTheme}
+                  disabled={themeLoading}
+                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-border-light dark:border-border-dark bg-background-page dark:bg-background-page text-text-primary dark:text-text-primary hover:bg-background-hover dark:hover:bg-background-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+                >
+                  {theme === 'dark' ? <HiSun className="h-4 w-4 text-amber-500" /> : <HiMoon className="h-4 w-4 text-primary-500" />}
+                  <span className="text-xs font-semibold font-montserrat-alt">
+                    {theme === 'dark' ? 'Light' : 'Dark'}
+                  </span>
+                </button>
                 <a href="mailto:contact@wannagonna.org" className="hover:text-[#009AA2] transition-colors">
                   contact@wannagonna.org
                 </a>
                 <a
-                  href="https://app.wannagonna.org"
+                  href="https://www.linkedin.com/company/wannagonna/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hover:text-[#009AA2] transition-colors"
+                  aria-label="WannaGonna on LinkedIn"
+                  className="inline-flex items-center justify-center h-8 w-8 rounded-full border border-border-light dark:border-border-dark bg-background-page dark:bg-background-page text-text-primary dark:text-text-primary hover:text-[#009AA2] hover:border-[#009AA2]/40 transition-colors"
                 >
-                  app.wannagonna.org
+                  <FaLinkedinIn className="h-4 w-4" />
+                </a>
+                <a
+                  href="https://www.instagram.com/wannagonna_nonprofit"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="WannaGonna on Instagram"
+                  className="inline-flex items-center justify-center h-8 w-8 rounded-full border border-border-light dark:border-border-dark bg-background-page dark:bg-background-page text-text-primary dark:text-text-primary hover:text-[#009AA2] hover:border-[#009AA2]/40 transition-colors"
+                >
+                  <FaInstagram className="h-4 w-4" />
                 </a>
               </div>
             </div>
-            <p className="max-w-5xl mx-auto mt-6 pt-4 border-t border-[#e5e7eb] text-xs text-[#9ca3af] text-center">
+            <p className="max-w-5xl mx-auto mt-6 pt-4 border-t border-border-light dark:border-border-dark text-xs text-text-tertiary dark:text-text-tertiary text-center">
               {t('footerCopyright', { year: new Date().getFullYear() })}
             </p>
           </footer>
@@ -444,7 +475,7 @@ export default function Home() {
             onClose={() => {
               setContactToast((p) => ({ ...p, show: false }));
             }}
-            className="bg-white border border-[#e5e7eb] shadow-lg"
+            className="bg-background-card dark:bg-background-card border border-border-light dark:border-border-dark shadow-lg"
           >
             <div
               className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
@@ -455,7 +486,7 @@ export default function Home() {
             >
               {contactToast.type === 'success' ? '✓' : '!'}
             </div>
-            <div className="ml-3 text-[#1A1A1A] text-sm">{contactToast.message}</div>
+            <div className="ml-3 text-text-primary dark:text-text-primary text-sm">{contactToast.message}</div>
             <Toast.Toggle
               onClose={() => {
                 setContactToast((p) => ({ ...p, show: false }));

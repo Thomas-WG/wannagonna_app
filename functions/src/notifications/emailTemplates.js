@@ -4,6 +4,24 @@
  */
 
 /**
+ * Build absolute app URL for email links.
+ * Prefers configured env var, with production fallback.
+ * @param {string} path
+ * @return {string}
+ */
+function toAbsoluteAppUrl(path) {
+  const baseUrl =
+    process.env.WEB_APP_URL ||
+    process.env.APP_BASE_URL ||
+    process.env.NEXT_PUBLIC_APP_URL ||
+    "https://wannagonna.org";
+
+  const normalizedBase = baseUrl.replace(/\/+$/, "");
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  return `${normalizedBase}${normalizedPath}`;
+}
+
+/**
  * Generate a generic notification email (title + body, optional link).
  * @param {Object} params
  * @param {string} params.title - Email subject and heading
@@ -156,5 +174,236 @@ export function generateApplicationApprovalEmail({
     text: emailText,
     html: emailHtml,
   };
+}
+
+/**
+ * Build activity alert email content.
+ * @param {Object} params
+ * @param {string} params.displayName
+ * @param {Array<Object>} params.activities
+ * @param {"daily"|"weekly"} params.frequency
+ * @return {{subject: string, text: string, html: string}}
+ */
+export function buildActivityAlertEmail({displayName, activities, frequency}) {
+  const count = Array.isArray(activities) ? activities.length : 0;
+  const timeLabel = frequency === "daily" ? "today" : "this week";
+  const safeName = displayName || "there";
+  const subject =
+    `Your WannaGonna activity alert — ${count} new ${timeLabel}`;
+
+  // Match src/constant/designTokens.js activityType.*.500
+  // (Explore / ActivityCard)
+  const typeBadgeColor = (type) => {
+    if (type === "local") return "#10b981";
+    if (type === "event") return "#8b5cf6";
+    if (type === "online") return "#0ea5e9";
+    return "#64748b";
+  };
+
+  /**
+   * Escape HTML special chars for safe insertion in templates.
+   * @param {unknown} value
+   * @return {string}
+   */
+  const escapeHtml = (value) => String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+
+  /**
+   * Convert Firestore timestamp-like values to Date.
+   * @param {any} dateValue
+   * @return {Date|null}
+   */
+  const getDateFromFirestore = (dateValue) => {
+    if (!dateValue) return null;
+    try {
+      if (dateValue.seconds) return new Date(dateValue.seconds * 1000);
+      if (dateValue.toDate && typeof dateValue.toDate === "function") {
+        return dateValue.toDate();
+      }
+      if (dateValue instanceof Date) return dateValue;
+      return new Date(dateValue);
+    } catch (error) {
+      return null;
+    }
+  };
+
+  /**
+   * Normalize date to local day precision.
+   * @param {Date} date
+   * @return {Date|null}
+   */
+  const stripTime = (date) => {
+    if (!date) return null;
+    const d = date instanceof Date ? date : new Date(date);
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  };
+
+  /**
+   * Match ActivityCard date display behavior.
+   * @param {Object} activity
+   * @return {string|null}
+   */
+  const formatActivityDateRange = (activity) => {
+    const startDate = getDateFromFirestore(activity?.start_date);
+    if (!startDate) return null;
+
+    const endDate = getDateFromFirestore(activity?.end_date);
+    const lastUpdatedDate = getDateFromFirestore(activity?.updated_at);
+    const startDay = stripTime(startDate);
+    const endDay = endDate ? stripTime(endDate) : null;
+    const lastUpdatedDay = lastUpdatedDate ? stripTime(lastUpdatedDate) : null;
+    const today = stripTime(new Date());
+
+    const dateFormatter = new Intl.DateTimeFormat("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+    const startStr = dateFormatter.format(startDay);
+
+    if (activity?.status === "Closed") {
+      const endForDisplay = lastUpdatedDay || endDay || today;
+      return `${startStr} - ${dateFormatter.format(endForDisplay)}`;
+    }
+
+    if (endDay && startDay && endDay.getTime() === startDay.getTime()) {
+      return startStr;
+    }
+
+    if (endDay) {
+      return `${startStr} - ${dateFormatter.format(endDay)}`;
+    }
+
+    return startStr;
+  };
+
+  /**
+   * Match ActivityCard description preview behavior.
+   * @param {string} description
+   * @return {string}
+   */
+  const getDescriptionPreview = (description) => {
+    if (!description) return "";
+    const text = String(description).trim();
+    if (!text) return "";
+    const maxLength = 100;
+    if (text.length <= maxLength) return text;
+    return `${text.substring(0, maxLength).trim()}...`;
+  };
+
+  const textItems = (activities || []).map((activity) =>
+    (() => {
+      const link = toAbsoluteAppUrl(`/activities?activityId=${activity.id}`);
+      const dateLine = formatActivityDateRange(activity);
+      const timeLine = activity.start_time && activity.end_time ?
+        `${activity.start_time} – ${activity.end_time}` :
+        (activity.start_time || activity.end_time || "");
+      const dateTimeLine = [dateLine, timeLine].filter(Boolean).join(" · ");
+      const descriptionPreview = getDescriptionPreview(activity.description);
+
+      return `${activity.title || "Untitled activity"} — ` +
+      `${activity.organization_name || "Unknown organization"} ` +
+      `(${activity.type || "unknown"}, ${activity.country || "N/A"}) — ` +
+      `XP: ${activity.xp_reward || 0} — ` +
+      `${dateTimeLine ? `When: ${dateTimeLine} — ` : ""}` +
+      `${descriptionPreview ? `Description: ${descriptionPreview} — ` : ""}` +
+      `Link: ${link}`;
+    })(),
+  );
+  const text = [
+    `Hi ${safeName}, here are ${count} new activities ` +
+    `matching your alert criteria.`,
+    "",
+    ...textItems,
+    "",
+    "You can manage your alerts in your WannaGonna profile.",
+  ].join("\n");
+
+  const cardsHtml = (activities || []).map((activity) => {
+    const link = toAbsoluteAppUrl(`/activities?activityId=${activity.id}`);
+    const badgeColor = typeBadgeColor(activity.type);
+    const dateLine = formatActivityDateRange(activity);
+    const timeLine = activity.start_time && activity.end_time ?
+      `${activity.start_time} – ${activity.end_time}` :
+      (activity.start_time || activity.end_time || "");
+    const dateTimeLine = [dateLine, timeLine].filter(Boolean).join(" · ");
+    const descriptionPreview = getDescriptionPreview(activity.description);
+
+    return `<div style="border: 1px solid #E5E7EB;` +
+      ` border-radius: 10px; padding: 16px; margin-bottom: 14px;">` +
+      `<a href="${link}" style="display: inline-block;` +
+      ` margin-bottom: 10px; color: #009AA2;` +
+      ` font-family: 'Montserrat Alternates', Arial, sans-serif;` +
+      ` font-size: 18px; font-weight: 700; text-decoration: none;">` +
+      `${escapeHtml(activity.title || "Untitled activity")}</a>` +
+      `<div style="font-family: 'DM Sans', Arial, sans-serif;` +
+      ` color: #1A1A1A; font-size: 14px; margin-bottom: 8px;">` +
+      `${escapeHtml(
+          activity.organization_name || "Unknown organization",
+      )}</div>` +
+      `<span style="display: inline-block; background: ${badgeColor};` +
+      ` color: #FFFFFF; border-radius: 999px; padding: 4px 10px;` +
+      ` font-family: 'DM Sans', Arial, sans-serif; font-size: 12px;` +
+      ` margin-right: 8px; text-transform: uppercase;">` +
+      `${escapeHtml(activity.type || "online")}</span>` +
+      `<span style="font-family: 'DM Sans', Arial, sans-serif;` +
+      ` color: #1A1A1A; font-size: 13px; margin-right: 12px;">` +
+      `${escapeHtml(activity.country || "N/A")}</span>` +
+      `<span style="font-family: 'DM Sans', Arial, sans-serif;` +
+      ` color: #F08602; font-size: 13px; font-weight: 700;">` +
+      `XP: ${escapeHtml(activity.xp_reward || 0)}</span>` +
+      `${dateTimeLine ?
+        `<div style="font-family: 'DM Sans', Arial, sans-serif;` +
+      ` color: #4B5563; font-size: 13px; margin-top: 8px;">` +
+      `${escapeHtml(dateTimeLine)}</div>` : ""}` +
+      `${descriptionPreview ?
+        `<p style="font-family: 'DM Sans', Arial, sans-serif;` +
+      ` color: #6B7280; font-size: 13px; line-height: 1.45;` +
+      ` margin: 8px 0 0 0;">${escapeHtml(descriptionPreview)}</p>` : ""}` +
+      `</div>`;
+  }).join("");
+
+  const html =
+    `<div style="background: #F6F9FB; padding: 20px;">` +
+    `<div style="max-width: 600px; margin: 0 auto;` +
+    ` background: #FFFFFF; border-radius: 12px; overflow: hidden;` +
+    ` border: 1px solid #E5E7EB;">` +
+    `<div style="padding: 24px 24px 12px 24px;` +
+    ` border-bottom: 1px solid #EEF2F7;">` +
+    `<div style="font-family: 'Montserrat Alternates',` +
+    ` Arial, sans-serif; color: #009AA2; font-size: 28px;` +
+    ` font-weight: 700; letter-spacing: 0.2px;">` +
+    `WannaGonna</div>` +
+    `<div style="font-family: 'DM Sans', Arial, sans-serif;` +
+    ` color: #1A1A1A; font-size: 14px; margin-top: 4px;">` +
+    `Make a difference today.</div>` +
+    `</div>` +
+    `<div style="padding: 20px 24px;">` +
+    `<p style="margin: 0 0 16px 0;` +
+    ` font-family: 'DM Sans', Arial, sans-serif;` +
+    ` color: #1A1A1A; font-size: 15px;">` +
+    `Hi ${safeName}, here are ${count} new activities ` +
+    `matching your alert criteria.` +
+    `</p>` +
+    cardsHtml +
+    `</div>` +
+    `<div style="padding: 16px 24px 22px 24px;` +
+    ` border-top: 1px solid #EEF2F7;">` +
+    `<p style="margin: 0 0 8px 0;` +
+    ` font-family: 'DM Sans', Arial, sans-serif;` +
+    ` color: #CD1436; font-size: 12px;">` +
+    `You can manage your alerts in your WannaGonna profile.</p>` +
+    `<p style="margin: 0; font-family: 'DM Sans', Arial, sans-serif;` +
+    ` color: #1A1A1A; font-size: 12px;">` +
+    `© WannaGonna. All rights reserved.</p>` +
+    `</div>` +
+    `</div>` +
+    `</div>`;
+
+  return {subject, text, html};
 }
 

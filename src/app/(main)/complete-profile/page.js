@@ -4,6 +4,7 @@
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useTranslations } from 'next-intl';
 import { auth } from 'firebaseConfig';
 import { useRouter } from 'next/navigation';
 import { Button, Toast } from 'flowbite-react';
@@ -12,6 +13,11 @@ import { countries } from 'countries-list';
 import languages from '@cospired/i18n-iso-languages';
 import { updateMember, fetchMemberById } from '@/utils/crudMemberProfile';
 import { uploadProfilePicture } from '@/utils/storage';
+import {
+  isValidAvatarFileType,
+  isAvatarFileWithinSizeLimit,
+  MAX_AVATAR_UPLOAD_MB,
+} from '@/utils/avatarImageResize';
 import { isProfileComplete } from '@/utils/profileHelpers';
 import { grantBadgeToUser, userHasBadge } from '@/utils/crudBadges';
 import { profileSchema } from '@/utils/validation/profileSchema';
@@ -86,8 +92,11 @@ function cleanData(obj) {
   }, {});
 }
 
+const TOAST_MS = 3000;
+
 export default function CompleteProfilePage() {
   const router = useRouter();
+  const t = useTranslations('CompleteProfile');
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [selectedFile, setSelectedFile] = useState(null);
@@ -176,17 +185,37 @@ export default function CompleteProfilePage() {
     });
   }, [user?.uid, reset]);
 
+  const showErrorToast = (message) => {
+    setToastMessage(message);
+    setToastType('error');
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), TOAST_MS);
+  };
+
   const handleProfilePictureChange = async (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      try {
-        setSelectedFile(file);
-        const imageUrl = URL.createObjectURL(file);
-        setValue('profile_picture', imageUrl, { shouldValidate: true });
-        // Note: We'll revoke the blob URL after upload in onSubmit
-      } catch (error) {
-        console.error("Error handling profile picture:", error);
-      }
+    const input = e.target;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    if (!isValidAvatarFileType(file)) {
+      input.value = '';
+      showErrorToast(t('profilePictureInvalidType'));
+      return;
+    }
+
+    if (!isAvatarFileWithinSizeLimit(file)) {
+      input.value = '';
+      showErrorToast(t('profilePictureTooLarge', { maxMb: MAX_AVATAR_UPLOAD_MB }));
+      return;
+    }
+
+    try {
+      setSelectedFile(file);
+      const imageUrl = URL.createObjectURL(file);
+      setValue('profile_picture', imageUrl, { shouldValidate: true });
+    } catch (error) {
+      console.error('Error handling profile picture:', error);
+      input.value = '';
     }
   };
 
@@ -199,19 +228,17 @@ export default function CompleteProfilePage() {
         try {
           const downloadURL = await uploadProfilePicture(selectedFile, user.uid);
           finalProfileData.profile_picture = downloadURL;
-          // Update form value with Firebase URL
-          setValue('profile_picture', downloadURL, { shouldValidate: true });
-          
-          // Revoke the blob URL to free memory
-          const currentProfilePicture = watch('profile_picture');
-          if (currentProfilePicture && currentProfilePicture.startsWith('blob:')) {
-            URL.revokeObjectURL(currentProfilePicture);
+          const previousPicture = watch('profile_picture');
+          if (previousPicture && previousPicture.startsWith('blob:')) {
+            URL.revokeObjectURL(previousPicture);
           }
-          
-          // Clear selected file after successful upload
+          setValue('profile_picture', downloadURL, { shouldValidate: true });
+
           setSelectedFile(null);
         } catch (error) {
-          console.error("Error uploading profile picture:", error);
+          console.error('Error uploading profile picture:', error);
+          showErrorToast(t('error'));
+          return;
         }
       }
 
@@ -241,30 +268,20 @@ export default function CompleteProfilePage() {
         }
       }
 
-      // Show success toast
-      setToastMessage('Profile updated successfully!');
+      setToastMessage(t('success'));
       setToastType('success');
       setShowToast(true);
-
-      setTimeout(() => {
-        setShowToast(false);
-      }, 3000);
+      setTimeout(() => setShowToast(false), TOAST_MS);
     } catch (error) {
       console.error("Error updating profile:", error);
-      setToastMessage('Failed to update profile. Please try again.');
-      setToastType('error');
-      setShowToast(true);
-
-      setTimeout(() => {
-        setShowToast(false);
-      }, 3000);
+      showErrorToast(t('error'));
     }
   };
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-dvh">
-        <div className="text-text-primary dark:text-text-primary">Loading...</div>
+        <div className="text-text-primary dark:text-text-primary">{t('loadingProfile')}</div>
       </div>
     );
   }
@@ -311,7 +328,7 @@ export default function CompleteProfilePage() {
             className="w-full md:w-auto md:min-w-[200px]"
             disabled={isSubmitting}
           >
-            {isSubmitting ? 'Saving...' : 'Save Profile'}
+            {isSubmitting ? t('saveInProgress') : t('save')}
           </Button>
         </div>
       </form>

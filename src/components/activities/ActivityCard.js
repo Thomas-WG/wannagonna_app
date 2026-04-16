@@ -13,6 +13,7 @@ import { FaRegCircle } from 'react-icons/fa';
 import StatusUpdateModal from './StatusUpdateModal';
 import QRCodeModal from './QRCodeModal';
 import ActivityValidationModal from './ActivityValidationModal';
+import CloseActivityModal from './CloseActivityModal';
 import { updateActivityStatus } from '@/utils/crudActivities';
 import { categoryIcons } from '@/constant/categoryIcons';
 import { getSkillsForSelect } from '@/utils/crudSkills';
@@ -48,6 +49,9 @@ export default function ActivityCard({
   accept_applications_wg,
   updated_at,
   distance, // Distance in km when "Around Me" filter is active
+  showStatusBadge = true,
+  isClickable = true,
+  fallbackLogo = '/logo/1%20-%20Color%20on%20White%20-%20RGB.png',
 }) {
   const t = useTranslations('ActivityCard');
   const tManage = useTranslations('ManageActivities');
@@ -59,6 +63,7 @@ export default function ActivityCard({
   const [localStatus, setLocalStatus] = useState(status);
   const [showQRModal, setShowQRModal] = useState(false);
   const [showValidationModal, setShowValidationModal] = useState(false);
+  const [showCloseActivityModal, setShowCloseActivityModal] = useState(false);
   const [skillLabelsMap, setSkillLabelsMap] = useState({});
 
   const participantStatCount = useMemo(() => {
@@ -273,13 +278,18 @@ export default function ActivityCard({
   const frequency_label = get_frequency_label();
   const activityDateLine = formatActivityDateRange(start_date, end_date, localStatus, updated_at);
   const typeColorClass = getTypeColorClasses();
+  const logoSrc = organization_logo || fallbackLogo;
 
   // Handle status update
   const handleStatusUpdate = async (newStatus) => {
-    // If trying to close the activity, open validation modal instead
+    // If trying to close: events go directly to close modal, others go through validation first
     if (newStatus === 'Closed') {
       setShowStatusModal(false);
-      setShowValidationModal(true);
+      if (type === 'event') {
+        setShowCloseActivityModal(true);
+      } else {
+        setShowValidationModal(true);
+      }
       return;
     }
 
@@ -310,24 +320,23 @@ export default function ActivityCard({
   };
 
   // Handle validation modal close - check if activity should be closed
-  const handleValidationModalClose = async (shouldCloseActivity) => {
+  const handleValidationModalClose = (shouldCloseActivity) => {
     setShowValidationModal(false);
     
-    // If all applicants are processed, close the activity
+    // If all applicants are processed, continue to hours/impact close step
     if (shouldCloseActivity) {
-      try {
-        await updateActivityStatus(id, 'Closed');
-        setLocalStatus('Closed');
-        if (onStatusChange) {
-          onStatusChange(id, 'Closed');
-        }
-      } catch (error) {
-        console.error('Error closing activity:', error);
-        alert('Failed to close activity');
-      }
+      setShowCloseActivityModal(true);
     } else {
       // If not all processed, revert status to Open
       setLocalStatus('Open');
+    }
+  };
+
+  const handleCloseActivitySuccess = (activityId) => {
+    setShowCloseActivityModal(false);
+    setLocalStatus('Closed');
+    if (onStatusChange) {
+      onStatusChange(activityId || id, 'Closed');
     }
   };
 
@@ -342,8 +351,10 @@ export default function ActivityCard({
   return (
     <>
       <div
-        onClick={onClick}
-        className={`cursor-pointer w-full p-3 sm:p-4 bg-background-card dark:bg-background-card border-l-4 ${typeColorClass} border border-border-light dark:border-border-dark rounded-xl shadow-md hover:shadow-lg hover:bg-background-hover dark:hover:bg-background-hover hover:-translate-y-1 transition-all duration-300 transform flex flex-col h-full min-h-[280px]`}
+        onClick={isClickable ? onClick : undefined}
+        className={`w-full p-3 sm:p-4 bg-background-card dark:bg-background-card border-l-4 ${typeColorClass} border border-border-light dark:border-border-dark rounded-xl shadow-md transition-all duration-300 transform flex flex-col h-full min-h-[280px] ${
+          isClickable ? 'cursor-pointer hover:shadow-lg hover:bg-background-hover dark:hover:bg-background-hover hover:-translate-y-1' : ''
+        }`}
         role="button"
         aria-label={title}
       >
@@ -352,7 +363,7 @@ export default function ActivityCard({
           <div className='flex items-start justify-between gap-2'>
             <div className='flex items-center gap-2 min-w-0 flex-1'>
               <Image
-                src={organization_logo}
+                src={logoSrc}
                 alt={`${organization_name} logo`}
                 width={44}
                 height={44}
@@ -362,7 +373,7 @@ export default function ActivityCard({
             </div>
             <div className='flex items-center gap-1.5 flex-shrink-0'>
               {/* Status Badge */}
-              {localStatus && (() => {
+              {showStatusBadge && localStatus && (() => {
                 const statusConfig = getStatusConfig(localStatus);
                 const StatusIcon = statusConfig.icon;
                 const tooltipContent = canEditStatus 
@@ -589,6 +600,25 @@ export default function ActivityCard({
             status: localStatus
           }}
           onStatusChange={onStatusChange}
+        />
+      )}
+
+      {canEditStatus && (
+        <CloseActivityModal
+          isOpen={showCloseActivityModal}
+          onClose={() => setShowCloseActivityModal(false)}
+          activity={{
+            id,
+            title,
+            type,
+            status: localStatus,
+            impact_parameters: [],
+            start_date,
+            end_date,
+            start_time,
+            end_time,
+          }}
+          onSuccess={handleCloseActivitySuccess}
         />
       )}
     </>
