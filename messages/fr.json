@@ -108,7 +108,12 @@
         "resetPasswordEmailRequired": "Veuillez saisir votre adresse e-mail pour réinitialiser votre mot de passe.",
         "resetPasswordSuccess": "Si un compte existe avec cet e-mail, un lien de réinitialisation a été envoyé.",
         "resetPasswordError": "Nous n'avons pas pu envoyer l'e-mail de réinitialisation. Veuillez réessayer plus tard.",
-        "referralCodeMandatoryNote": "(Obligatoire pour les nouveaux comptes)"
+        "referralCodeMandatoryNote": "(Obligatoire pour les nouveaux comptes)",
+        "registrationInitPrimaryMessage": "Les bonnes choses prennent un moment.",
+        "registrationInitSecondaryMessage": "Nous préparons votre profil…",
+        "registrationInitTipLabel": "Le saviez-vous ?",
+        "registrationInitTipBody": "Complétez votre profil et configurez une alerte d'activité dans vos paramètres pour gagner vos premiers badges dès maintenant.",
+        "registrationInitLoadingA11y": "Chargement…"
     },
     "Sidebar": {
         "dashboard": "Tableau de bord",

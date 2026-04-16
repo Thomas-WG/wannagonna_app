@@ -33,6 +33,7 @@ import { validateReferralCode, generateUserCode } from '@/utils/referralCode';
 import { useGoogleSignIn } from '@/hooks/useGoogleSignIn';
 import EmailPasswordLogin from '@/components/auth/EmailPasswordLogin';
 import LanguageSelector from '@/components/auth/LanguageSelector';
+import RegistrationInitModal from '@/components/auth/RegistrationInitModal';
 
 /**
  * LoginPage - Renders the login UI, orchestrating authentication components.
@@ -57,6 +58,8 @@ export default function LoginPage() {
   const [guidelinesAccepted, setGuidelinesAccepted] = useState(false);
   const [createSubmitting, setCreateSubmitting] = useState(false);
   const createInFlightRef = useRef(false);
+  const [showRegistrationInitModal, setShowRegistrationInitModal] = useState(false);
+  const registrationInitStartedAtRef = useRef(0);
 
   // Use Google sign-in hook
   const { signInWithGoogle, isLoading: googleIsLoading, error: googleError, setError: setGoogleError } = useGoogleSignIn();
@@ -71,6 +74,7 @@ export default function LoginPage() {
   const [resetMessage, setResetMessage] = useState('');
   const [resetError, setResetError] = useState('');
   const [resetLoading, setResetLoading] = useState(false);
+  const REGISTRATION_INIT_MIN_MS = 1500;
 
   const t = useTranslations('Login');
 
@@ -200,6 +204,24 @@ export default function LoginPage() {
     }
   };
 
+  const startRegistrationInitModal = () => {
+    registrationInitStartedAtRef.current = Date.now();
+    setShowRegistrationInitModal(true);
+  };
+
+  const stopRegistrationInitModal = async () => {
+    if (!registrationInitStartedAtRef.current) {
+      return;
+    }
+    const elapsed = Date.now() - registrationInitStartedAtRef.current;
+    const remaining = Math.max(0, REGISTRATION_INIT_MIN_MS - elapsed);
+    if (remaining > 0) {
+      await new Promise((resolve) => setTimeout(resolve, remaining));
+    }
+    setShowRegistrationInitModal(false);
+    registrationInitStartedAtRef.current = 0;
+  };
+
   // Function to handle email/password login
   const handleEmailLogin = async (email, password) => {
     setHasInteracted(true);
@@ -235,6 +257,7 @@ export default function LoginPage() {
       return;
     }
 
+    startRegistrationInitModal();
     createInFlightRef.current = true;
     setCreateSubmitting(true);
     let createdAuthUser = null;
@@ -343,6 +366,7 @@ export default function LoginPage() {
         setCreateErrorMessage(error.message || 'An error occurred while creating your account. Please try again.');
       }
     } finally {
+      await stopRegistrationInitModal();
       createInFlightRef.current = false;
       setCreateSubmitting(false);
     }
@@ -350,30 +374,35 @@ export default function LoginPage() {
 
   // Render the login UI
   return (
-    <div className="min-h-dvh flex flex-col items-center justify-center">
-      <LanguageSelector 
-        options={languageOptions} 
-        onChangeLocale={handleLanguageChange}
-        t={t}
-      />
-      
-      {/* Logo */}
-      {logoUrl && (
-        <div className="mb-8 flex justify-center">
-          <Image 
-            src={logoUrl} 
-            alt="Wannagonna Logo" 
-            width={120} 
-            height={120} 
-            className="object-contain"
-            priority
-            quality={75}
-            sizes="(max-width: 640px) 100px, 120px"
-          />
-        </div>
-      )}
-      
-      <div className="bg-background-card dark:bg-background-card p-6 rounded-lg shadow-lg max-w-md w-full border border-border-light dark:border-border-dark">
+    <div>
+      <div
+        className="min-h-dvh flex flex-col items-center justify-center"
+        aria-hidden={showRegistrationInitModal}
+        inert={showRegistrationInitModal}
+      >
+        <LanguageSelector 
+          options={languageOptions} 
+          onChangeLocale={handleLanguageChange}
+          t={t}
+        />
+        
+        {/* Logo */}
+        {logoUrl && (
+          <div className="mb-8 flex justify-center">
+            <Image 
+              src={logoUrl} 
+              alt="Wannagonna Logo" 
+              width={120} 
+              height={120} 
+              className="object-contain"
+              priority
+              quality={75}
+              sizes="(max-width: 640px) 100px, 120px"
+            />
+          </div>
+        )}
+        
+        <div className="bg-background-card dark:bg-background-card p-6 rounded-lg shadow-lg max-w-md w-full border border-border-light dark:border-border-dark">
         {/* Tabs */}
         <div className="flex mb-6 border-b border-border-light dark:border-border-dark">
           <button
@@ -658,7 +687,10 @@ export default function LoginPage() {
                   return;
                 }
                 setHasInteracted(true);
-                signInWithGoogle(createReferralCode);
+                signInWithGoogle(createReferralCode, {
+                  onRegistrationStart: startRegistrationInitModal,
+                  onRegistrationEnd: stopRegistrationInitModal,
+                });
               }}
               disabled={isCreateActionPending || !canCreateAccount}
               className={`w-full max-w-xs mx-auto py-3 px-6 bg-background-card dark:bg-background-card border border-border-light dark:border-border-dark rounded-lg flex items-center justify-center gap-3 transition-colors duration-200 text-text-primary dark:text-text-primary text-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none ${
@@ -675,7 +707,9 @@ export default function LoginPage() {
             )}
           </>
         )}
+        </div>
       </div>
+      {showRegistrationInitModal && <RegistrationInitModal t={t} />}
     </div>
   );
 }

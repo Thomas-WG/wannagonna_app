@@ -42,13 +42,18 @@ export function useGoogleSignIn() {
    * Sign in with Google and handle new/returning user logic
    * @param {string} referralCode - Referral code (required for new users)
    */
-  const signInWithGoogle = async (referralCode = '') => {
+  const signInWithGoogle = async (referralCode = '', options = {}) => {
+    const { onRegistrationStart, onRegistrationEnd } = options;
+    let registrationLifecycleStarted = false;
+
     try {
       setIsLoading(true);
       setError('');
 
       // Proceed with Google sign-in first (referral code validation happens after, only for new users)
       const result = await signInWithPopup(auth, googleProvider);
+      onRegistrationStart?.();
+      registrationLifecycleStarted = true;
       const user = result.user;
 
       const userDocRef = doc(db, 'members', user.uid);
@@ -158,6 +163,9 @@ export function useGoogleSignIn() {
 
       setError(errorMessage);
     } finally {
+      if (registrationLifecycleStarted) {
+        await onRegistrationEnd?.();
+      }
       setIsLoading(false);
     }
   };

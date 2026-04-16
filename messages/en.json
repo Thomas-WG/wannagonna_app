@@ -107,7 +107,12 @@
         "resetPasswordEmailRequired": "Please enter your email to reset your password.",
         "resetPasswordSuccess": "If an account exists for this email, a password reset link has been sent.",
         "resetPasswordError": "We couldn't send the reset email. Please try again later.",
-        "referralCodeMandatoryNote": "(Mandatory for new accounts)"
+        "referralCodeMandatoryNote": "(Mandatory for new accounts)",
+        "registrationInitPrimaryMessage": "Good things take a second.",
+        "registrationInitSecondaryMessage": "We're preparing your profile…",
+        "registrationInitTipLabel": "Did you know?",
+        "registrationInitTipBody": "Complete your profile and set an activity alert in your settings to earn your first badges right away.",
+        "registrationInitLoadingA11y": "Loading…"
     },
     "Sidebar": {
         "dashboard": "Dashboard",
