@@ -364,6 +364,30 @@ export const onApplicationStatusChangedNotifyUser = onDocumentUpdated(
           "Your application has been rejected. " +
             "You can review the details on your dashboard.";
 
+        const lastStatusUpdatedBy = after.last_status_updated_by;
+        let isAcceptedOnline = false;
+        let onlineActivity = null;
+        if (afterStatus === "accepted" && lastStatusUpdatedBy) {
+          try {
+            const activityDoc = await db.collection("activities")
+                .doc(activityId)
+                .get();
+            if (activityDoc.exists) {
+              const activityData = activityDoc.data();
+              if (activityData?.type === "online") {
+                isAcceptedOnline = true;
+                onlineActivity = activityData;
+              }
+            }
+          } catch (activityLoadError) {
+            console.error(
+                "[onApplicationStatusChangedNotifyUser] Failed to load " +
+                "activity before notification send:",
+                activityLoadError,
+            );
+          }
+        }
+
         try {
           console.log(
               `[onApplicationStatusChangedNotifyUser] Sending ` +
@@ -375,6 +399,7 @@ export const onApplicationStatusChangedNotifyUser = onDocumentUpdated(
             title,
             body,
             link: "/dashboard",
+            skipEmail: isAcceptedOnline,
             metadata: {
               activity_id: activityId,
               application_id: applicationId,
@@ -408,139 +433,123 @@ export const onApplicationStatusChangedNotifyUser = onDocumentUpdated(
         }
 
         // Send Mailgun emails for approved online activities
-        const lastStatusUpdatedBy = after.last_status_updated_by;
         console.log("Checking email conditions:", {
           afterStatus,
           hasLastStatusUpdatedBy: !!lastStatusUpdatedBy,
           lastStatusUpdatedBy,
+          isAcceptedOnline,
           activityId,
           applicationId,
           updated_at: after.updated_at,
         });
 
-        if (afterStatus === "accepted" && lastStatusUpdatedBy) {
+        if (
+          afterStatus === "accepted" &&
+          lastStatusUpdatedBy &&
+          isAcceptedOnline
+        ) {
           console.log("Email conditions met, fetching activity...");
           try {
-            // Fetch activity to check if it's online
-            const activityDoc = await db.collection("activities")
-                .doc(activityId)
-                .get();
-
-            console.log("Activity document exists:", activityDoc.exists);
-
-            if (activityDoc.exists) {
-              const activity = activityDoc.data();
+            if (onlineActivity) {
+              const activity = onlineActivity;
               console.log("Activity data:", {
                 type: activity.type,
                 title: activity.title,
               });
+              console.log("Activity is online, fetching user emails...");
 
-              // Only send emails for online activities
-              if (activity.type === "online") {
-                console.log("Activity is online, fetching user emails...");
-
-                // Get participant email and name
-                let participantEmail = null;
-                let participantName = null;
-                try {
-                  const participantUser = await auth.getUser(userId);
-                  participantEmail = participantUser.email;
-                  participantName = participantUser.displayName ||
-                    participantUser.email?.split("@")[0] ||
-                    "the volunteer";
-                  console.log("Participant email retrieved:", participantEmail);
-                } catch (error) {
-                  console.error(
-                      "Failed to get participant email:",
-                      error,
-                  );
-                }
-
-                // Get NPO validator email and name
-                let validatorEmail = null;
-                let validatorName = null;
-                try {
-                  const validatorUser = await auth.getUser(
-                      lastStatusUpdatedBy,
-                  );
-                  validatorEmail = validatorUser.email;
-                  validatorName = validatorUser.displayName ||
-                    validatorUser.email?.split("@")[0] ||
-                    "the organization representative";
-                  console.log("Validator email retrieved:", validatorEmail);
-                } catch (error) {
-                  console.error(
-                      "Failed to get validator email:",
-                      error,
-                  );
-                }
-
-                // Build recipient list: users who have ACTIVITY.email enabled
-                const participantPrefs = (await db.collection("members")
-                    .doc(userId).get())
-                    .data()?.notification_preferences?.ACTIVITY;
-                const validatorPrefs = (await db.collection("members")
-                    .doc(lastStatusUpdatedBy).get())
-                    .data()?.notification_preferences?.ACTIVITY;
-                const recipientList = [];
-                if (participantEmail && participantPrefs?.email === true) {
-                  recipientList.push(participantEmail);
-                }
-                if (validatorEmail && validatorPrefs?.email === true) {
-                  recipientList.push(validatorEmail);
-                }
-
-                if (recipientList.length > 0) {
-                  console.log("Sending introduction email to recipients:", {
-                    recipientList,
-                  });
-
-                  const activityTitle = activity.title || "the activity";
-
-                  const email = generateApplicationApprovalEmail({
-                    activityTitle,
-                    participantName,
-                    participantEmail,
-                    validatorName,
-                    validatorEmail,
-                    npoResponse:
-                      after.npo_response ?? null,
-                    locale: "en", // TODO: Get from user preferences for i18n
-                  });
-
-                  await sendMailgunEmail({
-                    to: recipientList,
-                    subject: email.subject,
-                    text: email.text,
-                    html: email.html,
-                  });
-                } else {
-                  if (!participantEmail) {
-                    console.log(
-                        "Skipping email - participant email not available",
-                    );
-                  }
-                  if (!validatorEmail) {
-                    console.log(
-                        "Skipping email - validator email not available",
-                    );
-                  }
-                  if (recipientList.length === 0 && (participantEmail ||
-                    validatorEmail)) {
-                    console.log(
-                        "Skipping email - no recipient has ACTIVITY.email on",
-                    );
-                  }
-                }
-              } else {
-                console.log(
-                    "Activity is not online, skipping email. Type:",
-                    activity.type,
+              // Get participant email and name
+              let participantEmail = null;
+              let participantName = null;
+              try {
+                const participantUser = await auth.getUser(userId);
+                participantEmail = participantUser.email;
+                participantName = participantUser.displayName ||
+                  participantUser.email?.split("@")[0] ||
+                  "the volunteer";
+                console.log("Participant email retrieved:", participantEmail);
+              } catch (error) {
+                console.error(
+                    "Failed to get participant email:",
+                    error,
                 );
+              }
+
+              // Get NPO validator email and name
+              let validatorEmail = null;
+              let validatorName = null;
+              try {
+                const validatorUser = await auth.getUser(
+                    lastStatusUpdatedBy,
+                );
+                validatorEmail = validatorUser.email;
+                validatorName = validatorUser.displayName ||
+                  validatorUser.email?.split("@")[0] ||
+                  "the organization representative";
+                console.log("Validator email retrieved:", validatorEmail);
+              } catch (error) {
+                console.error(
+                    "Failed to get validator email:",
+                    error,
+                );
+              }
+
+              // For this special online acceptance flow, always email
+              // recipients regardless of user email notification settings.
+              const recipientList = [];
+              if (participantEmail) {
+                recipientList.push(participantEmail);
+              }
+              if (validatorEmail) {
+                recipientList.push(validatorEmail);
+              }
+
+              if (recipientList.length > 0) {
+                console.log("Sending introduction email to recipients:", {
+                  recipientList,
+                });
+
+                const activityTitle = activity.title || "the activity";
+
+                const email = generateApplicationApprovalEmail({
+                  activityTitle,
+                  participantName,
+                  participantEmail,
+                  validatorName,
+                  validatorEmail,
+                  npoResponse:
+                    after.npo_response ?? null,
+                  locale: "en", // TODO: Get from user preferences for i18n
+                });
+
+                await sendMailgunEmail({
+                  to: recipientList,
+                  subject: email.subject,
+                  text: email.text,
+                  html: email.html,
+                });
+              } else {
+                if (!participantEmail) {
+                  console.log(
+                      "Skipping email - participant email not available",
+                  );
+                }
+                if (!validatorEmail) {
+                  console.log(
+                      "Skipping email - validator email not available",
+                  );
+                }
+                if (recipientList.length === 0 && (participantEmail ||
+                  validatorEmail)) {
+                  console.log(
+                      "Skipping email - no valid recipient email found",
+                  );
+                }
               }
             } else {
               console.log(
-                  "Activity document does not exist for activityId:",
+                  "Expected online activity data " +
+                  "was not available for activityId:",
                   activityId,
               );
             }
@@ -556,6 +565,7 @@ export const onApplicationStatusChangedNotifyUser = onDocumentUpdated(
             isAccepted: afterStatus === "accepted",
             hasLastStatusUpdatedBy: !!lastStatusUpdatedBy,
             lastStatusUpdatedBy,
+            isAcceptedOnline,
           });
         }
       } catch (error) {
