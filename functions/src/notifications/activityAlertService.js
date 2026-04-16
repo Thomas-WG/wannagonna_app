@@ -114,11 +114,16 @@ export async function processActivityAlerts(frequency) {
       .get();
 
   if (activitiesSnap.empty) {
-    console.log(`[processActivityAlerts] No open ${frequency} activities found`);
+    console.log(
+        `[processActivityAlerts] No open ${frequency} activities found`,
+    );
     return;
   }
 
-  const activities = activitiesSnap.docs.map((doc) => ({id: doc.id, ...doc.data()}));
+  const activities = activitiesSnap.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+  }));
 
   const alertsSnap = await db.collectionGroup("alerts")
       .where("frequency", "==", frequency)
