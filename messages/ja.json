@@ -108,7 +108,12 @@
         "resetPasswordEmailRequired": "パスワードをリセットするにはメールアドレスを入力してください。",
         "resetPasswordSuccess": "このメールアドレスのアカウントが存在する場合、パスワードリセット用のリンクを送信しました。",
         "resetPasswordError": "リセット用メールを送信できませんでした。しばらくしてからもう一度お試しください。",
-        "referralCodeMandatoryNote": "（新規アカウントには必須です）"
+        "referralCodeMandatoryNote": "（新規アカウントには必須です）",
+        "registrationInitPrimaryMessage": "もう少しだけお待ちください。",
+        "registrationInitSecondaryMessage": "プロフィールを準備しています…",
+        "registrationInitTipLabel": "ご存知ですか？",
+        "registrationInitTipBody": "プロフィールを完成させ、設定でアクティビティアラートを設定すると、すぐに最初のバッジを獲得できます。",
+        "registrationInitLoadingA11y": "読み込み中…"
     },
     "Sidebar": {
         "dashboard": "ダッシュボード",

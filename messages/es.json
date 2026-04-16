@@ -108,7 +108,12 @@
         "resetPasswordEmailRequired": "Introduce tu correo electrónico para restablecer la contraseña.",
         "resetPasswordSuccess": "Si existe una cuenta con este correo, se ha enviado un enlace para restablecer la contraseña.",
         "resetPasswordError": "No pudimos enviar el correo de restablecimiento. Por favor, inténtalo de nuevo más tarde.",
-        "referralCodeMandatoryNote": "(Obligatorio para crear una cuenta nueva)"
+        "referralCodeMandatoryNote": "(Obligatorio para crear una cuenta nueva)",
+        "registrationInitPrimaryMessage": "Las cosas buenas toman un momento.",
+        "registrationInitSecondaryMessage": "Estamos preparando tu perfil…",
+        "registrationInitTipLabel": "¿Sabías que…?",
+        "registrationInitTipBody": "Completa tu perfil y configura una alerta de actividad en tu configuración para ganar tus primeras insignias de inmediato.",
+        "registrationInitLoadingA11y": "Cargando…"
     },
     "Sidebar": {
         "dashboard": "Panel de control",
