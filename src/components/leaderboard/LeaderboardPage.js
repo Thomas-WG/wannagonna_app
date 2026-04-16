@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useAuth } from '@/utils/auth/AuthContext';
 import { useLeaderboard } from '@/hooks/useLeaderboard';
 import { useLeaderboardDimensions } from '@/hooks/useLeaderboardDimensions';
+import PublicProfileModal from '@/components/profile/PublicProfileModal';
 import LeaderboardPanel from './LeaderboardPanel';
 import TabButton from './TabButton';
 import DropItem from './DropItem';
@@ -19,6 +20,8 @@ export default function LeaderboardPage() {
   const [continent, setContinent] = useState('europe');
   const [sdgOpen, setSdgOpen] = useState(false);
   const [contOpen, setContOpen] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState(null);
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
   const sdgRef = useRef(null);
   const contRef = useRef(null);
 
@@ -48,6 +51,12 @@ export default function LeaderboardPage() {
   const closeAll = () => {
     setSdgOpen(false);
     setContOpen(false);
+  };
+
+  const handleOpenProfile = (userId) => {
+    if (!userId) return;
+    setSelectedUserId(userId);
+    setProfileModalOpen(true);
   };
 
   // Reset sdg/continent when filtered lists change and current selection is no longer valid
@@ -250,12 +259,23 @@ export default function LeaderboardPage() {
             entries={entries}
             currentUserId={user?.uid}
             loading={loading}
+            onOpenProfile={handleOpenProfile}
           />
         </div>
 
         <p className="text-center text-[11.5px] text-text-tertiary dark:text-text-tertiary mt-4 leading-relaxed animate-[pageIn_0.45s_0.25s_ease_both]">
           {t('footer')}
         </p>
+
+        <PublicProfileModal
+          isOpen={profileModalOpen}
+          onClose={() => {
+            setProfileModalOpen(false);
+            setSelectedUserId(null);
+          }}
+          userId={selectedUserId}
+          isOwnProfile={selectedUserId === user?.uid}
+        />
       </div>
     </div>
   );

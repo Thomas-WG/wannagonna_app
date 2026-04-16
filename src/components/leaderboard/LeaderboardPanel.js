@@ -12,6 +12,7 @@ export default function LeaderboardPanel({
   currentUserId,
   loading,
   isDormant = false,
+  onOpenProfile,
 }) {
   const meetsThreshold = entries.length >= THRESHOLD;
   const top10 = entries.slice(0, 10);
@@ -54,6 +55,7 @@ export default function LeaderboardPanel({
           isMe={entry.user_id === currentUserId}
           isLast={i === top10.length - 1}
           topScore={topScore}
+          onOpenProfile={onOpenProfile}
         />
       ))}
       <MyRankBanner entries={entries} currentUserId={currentUserId} />

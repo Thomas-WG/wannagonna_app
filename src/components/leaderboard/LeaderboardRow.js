@@ -13,6 +13,7 @@ export default function LeaderboardRow({
   isMe,
   isLast,
   topScore,
+  onOpenProfile,
 }) {
   const t = useTranslations('Leaderboard');
   const medal = getRankDisplay(entry.current_rank);
@@ -20,6 +21,12 @@ export default function LeaderboardRow({
   const barPct = topScore > 0
     ? Math.round((entry.activity_score / topScore) * 100)
     : 0;
+  const canOpenProfile = Boolean(entry.user_id && onOpenProfile);
+  const openProfile = () => {
+    if (canOpenProfile) {
+      onOpenProfile(entry.user_id);
+    }
+  };
 
   return (
     <div
@@ -42,24 +49,36 @@ export default function LeaderboardRow({
         )}
       </div>
 
-      <Avatar
-        displayName={entry.display_name}
-        profilePicture={entry.profile_picture}
-        isChampion={entry.is_current_champion}
-      />
+      <button
+        type="button"
+        onClick={openProfile}
+        disabled={!canOpenProfile}
+        className="rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 disabled:cursor-default"
+        aria-label={`Open profile of ${entry.display_name || 'Anonymous'}`}
+      >
+        <Avatar
+          displayName={entry.display_name}
+          profilePicture={entry.profile_picture}
+          isChampion={entry.is_current_champion}
+        />
+      </button>
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5 mb-1">
-          <span
-            className={`font-heading text-[13px] overflow-hidden text-ellipsis whitespace-nowrap ${
+          <button
+            type="button"
+            onClick={openProfile}
+            disabled={!canOpenProfile}
+            className={`font-heading text-[13px] overflow-hidden text-ellipsis whitespace-nowrap text-left hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded-sm disabled:no-underline disabled:cursor-default ${
               isMe ? 'font-extrabold text-primary-600 dark:text-primary-400' : 'font-semibold text-text-primary dark:text-text-primary'
             }`}
+            aria-label={`Open profile of ${entry.display_name || 'Anonymous'}`}
           >
             {entry.display_name || 'Anonymous'}
             {isMe && (
               <span className="font-normal text-primary-600/75 dark:text-primary-400/75 text-[11px]"> · {t('you')}</span>
             )}
-          </span>
+          </button>
           {entry.is_current_champion && (
             <span className="text-[9px] font-bold uppercase tracking-widest font-heading text-[#F08602] bg-[#F08602]/10 border border-[#F08602]/30 py-0.5 px-1.5 rounded-full flex-shrink-0">
               Champion
