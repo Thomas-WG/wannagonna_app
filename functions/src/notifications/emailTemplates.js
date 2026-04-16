@@ -200,13 +200,117 @@ export function buildActivityAlertEmail({displayName, activities, frequency}) {
     return "#64748b";
   };
 
+  /**
+   * Escape HTML special chars for safe insertion in templates.
+   * @param {unknown} value
+   * @return {string}
+   */
+  const escapeHtml = (value) => String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+
+  /**
+   * Convert Firestore timestamp-like values to Date.
+   * @param {any} dateValue
+   * @return {Date|null}
+   */
+  const getDateFromFirestore = (dateValue) => {
+    if (!dateValue) return null;
+    try {
+      if (dateValue.seconds) return new Date(dateValue.seconds * 1000);
+      if (dateValue.toDate && typeof dateValue.toDate === "function") {
+        return dateValue.toDate();
+      }
+      if (dateValue instanceof Date) return dateValue;
+      return new Date(dateValue);
+    } catch (error) {
+      return null;
+    }
+  };
+
+  /**
+   * Normalize date to local day precision.
+   * @param {Date} date
+   * @return {Date|null}
+   */
+  const stripTime = (date) => {
+    if (!date) return null;
+    const d = date instanceof Date ? date : new Date(date);
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  };
+
+  /**
+   * Match ActivityCard date display behavior.
+   * @param {Object} activity
+   * @return {string|null}
+   */
+  const formatActivityDateRange = (activity) => {
+    const startDate = getDateFromFirestore(activity?.start_date);
+    if (!startDate) return null;
+
+    const endDate = getDateFromFirestore(activity?.end_date);
+    const lastUpdatedDate = getDateFromFirestore(activity?.updated_at);
+    const startDay = stripTime(startDate);
+    const endDay = endDate ? stripTime(endDate) : null;
+    const lastUpdatedDay = lastUpdatedDate ? stripTime(lastUpdatedDate) : null;
+    const today = stripTime(new Date());
+
+    const dateFormatter = new Intl.DateTimeFormat("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+    const startStr = dateFormatter.format(startDay);
+
+    if (activity?.status === "Closed") {
+      const endForDisplay = lastUpdatedDay || endDay || today;
+      return `${startStr} - ${dateFormatter.format(endForDisplay)}`;
+    }
+
+    if (endDay && startDay && endDay.getTime() === startDay.getTime()) {
+      return startStr;
+    }
+
+    if (endDay) {
+      return `${startStr} - ${dateFormatter.format(endDay)}`;
+    }
+
+    return startStr;
+  };
+
+  /**
+   * Match ActivityCard description preview behavior.
+   * @param {string} description
+   * @return {string}
+   */
+  const getDescriptionPreview = (description) => {
+    if (!description) return "";
+    const text = String(description).trim();
+    if (!text) return "";
+    const maxLength = 100;
+    if (text.length <= maxLength) return text;
+    return `${text.substring(0, maxLength).trim()}...`;
+  };
+
   const textItems = (activities || []).map((activity) =>
     (() => {
       const link = toAbsoluteAppUrl(`/activities?activityId=${activity.id}`);
+      const dateLine = formatActivityDateRange(activity);
+      const timeLine = activity.start_time && activity.end_time ?
+        `${activity.start_time} – ${activity.end_time}` :
+        (activity.start_time || activity.end_time || "");
+      const dateTimeLine = [dateLine, timeLine].filter(Boolean).join(" · ");
+      const descriptionPreview = getDescriptionPreview(activity.description);
+
       return `${activity.title || "Untitled activity"} — ` +
       `${activity.organization_name || "Unknown organization"} ` +
       `(${activity.type || "unknown"}, ${activity.country || "N/A"}) — ` +
       `XP: ${activity.xp_reward || 0} — ` +
+      `${dateTimeLine ? `When: ${dateTimeLine} — ` : ""}` +
+      `${descriptionPreview ? `Description: ${descriptionPreview} — ` : ""}` +
       `Link: ${link}`;
     })(),
   );
@@ -222,27 +326,40 @@ export function buildActivityAlertEmail({displayName, activities, frequency}) {
   const cardsHtml = (activities || []).map((activity) => {
     const link = toAbsoluteAppUrl(`/activities?activityId=${activity.id}`);
     const badgeColor = typeBadgeColor(activity.type);
+    const dateLine = formatActivityDateRange(activity);
+    const timeLine = activity.start_time && activity.end_time ?
+      `${activity.start_time} – ${activity.end_time}` :
+      (activity.start_time || activity.end_time || "");
+    const dateTimeLine = [dateLine, timeLine].filter(Boolean).join(" · ");
+    const descriptionPreview = getDescriptionPreview(activity.description);
+
     return `<div style="border: 1px solid #E5E7EB;` +
       ` border-radius: 10px; padding: 16px; margin-bottom: 14px;">` +
       `<a href="${link}" style="display: inline-block;` +
       ` margin-bottom: 10px; color: #009AA2;` +
       ` font-family: 'Montserrat Alternates', Arial, sans-serif;` +
       ` font-size: 18px; font-weight: 700; text-decoration: none;">` +
-      `${activity.title || "Untitled activity"}</a>` +
+      `${escapeHtml(activity.title || "Untitled activity")}</a>` +
       `<div style="font-family: 'DM Sans', Arial, sans-serif;` +
       ` color: #1A1A1A; font-size: 14px; margin-bottom: 8px;">` +
-      `${activity.organization_name || "Unknown organization"}</div>` +
+      `${escapeHtml(activity.organization_name || "Unknown organization")}</div>` +
       `<span style="display: inline-block; background: ${badgeColor};` +
       ` color: #FFFFFF; border-radius: 999px; padding: 4px 10px;` +
       ` font-family: 'DM Sans', Arial, sans-serif; font-size: 12px;` +
       ` margin-right: 8px; text-transform: uppercase;">` +
-      `${activity.type || "online"}</span>` +
+      `${escapeHtml(activity.type || "online")}</span>` +
       `<span style="font-family: 'DM Sans', Arial, sans-serif;` +
       ` color: #1A1A1A; font-size: 13px; margin-right: 12px;">` +
-      `${activity.country || "N/A"}</span>` +
+      `${escapeHtml(activity.country || "N/A")}</span>` +
       `<span style="font-family: 'DM Sans', Arial, sans-serif;` +
       ` color: #F08602; font-size: 13px; font-weight: 700;">` +
-      `XP: ${activity.xp_reward || 0}</span>` +
+      `XP: ${escapeHtml(activity.xp_reward || 0)}</span>` +
+      `${dateTimeLine ? `<div style="font-family: 'DM Sans', Arial, sans-serif;` +
+      ` color: #4B5563; font-size: 13px; margin-top: 8px;">` +
+      `${escapeHtml(dateTimeLine)}</div>` : ""}` +
+      `${descriptionPreview ? `<p style="font-family: 'DM Sans', Arial, sans-serif;` +
+      ` color: #6B7280; font-size: 13px; line-height: 1.45;` +
+      ` margin: 8px 0 0 0;">${escapeHtml(descriptionPreview)}</p>` : ""}` +
       `</div>`;
   }).join("");
 
