@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Modal, Button, Label, Textarea, Spinner } from 'flowbite-react';
-import { HiExternalLink } from 'react-icons/hi';
+import { HiExternalLink, HiLockClosed, HiCheckCircle } from 'react-icons/hi';
 import { useTranslations } from 'next-intl';
 import { useModal } from '@/utils/modal/useModal';
 
@@ -29,6 +29,11 @@ export default function ApplyActivityModal({
 }) {
   const t = useTranslations('Activities');
   const [applyMessage, setApplyMessage] = useState('');
+  const trimmedMessage = applyMessage.trim();
+  const minChars = 10;
+  const remainingChars = Math.max(0, minChars - trimmedMessage.length);
+  const meetsMinChars = trimmedMessage.length >= minChars;
+  const isApplyDisabled = isSubmitting || !meetsMinChars;
 
   // Handle modal close with message reset
   const handleClose = () => {
@@ -165,28 +170,62 @@ export default function ApplyActivityModal({
         )}
       </Modal.Body>
       <Modal.Footer className="bg-background-card dark:bg-background-card border-t-2 border-border-light dark:border-[#475569]">
-        <Button
-          onClick={handleSubmit}
-          disabled={isSubmitting || !applyMessage.trim() || applyMessage.length < 10}
-          className="w-full sm:w-auto bg-primary-500 hover:bg-primary-600 dark:bg-primary-600 dark:hover:bg-primary-700 text-white"
-        >
-          {isSubmitting ? (
-            <>
-              <Spinner size="sm" className="mr-2" />
-              {t('submitting')}
-            </>
-          ) : (
-            t('submitApplication')
+        <div className="w-full space-y-3">
+          {!isSubmitting && (
+            <div className="space-y-2">
+              <div
+                className={`w-full text-xs flex items-start gap-2 ${
+                  meetsMinChars
+                    ? 'text-semantic-success-600 dark:text-semantic-success-400'
+                    : 'text-semantic-error-600 dark:text-semantic-error-400'
+                }`}
+              >
+                {meetsMinChars ? (
+                  <HiCheckCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                ) : (
+                  <HiLockClosed className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                )}
+                <span className="leading-5">
+                  {meetsMinChars
+                    ? t('messageRequirementMet')
+                    : t('messageMinCharsHint', { count: remainingChars })}
+                </span>
+              </div>
+            </div>
           )}
-        </Button>
-        <Button
-          color="gray"
-          onClick={handleModalClose}
-          disabled={isSubmitting}
-          className="w-full sm:w-auto bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-300 dark:hover:bg-neutral-600"
-        >
-          {t('cancel')}
-        </Button>
+
+          <div className="w-full flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+            <Button
+              color="gray"
+              onClick={handleModalClose}
+              disabled={isSubmitting}
+              className="w-full sm:w-auto bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-200 hover:bg-neutral-300 dark:hover:bg-neutral-600"
+            >
+              {t('cancel')}
+            </Button>
+            <Button
+              onClick={handleSubmit}
+              disabled={isApplyDisabled}
+              className={`w-full sm:w-auto text-white transition-all ${
+                isApplyDisabled
+                  ? 'bg-primary-300 dark:bg-primary-900/50 opacity-60 saturate-50 shadow-none cursor-not-allowed'
+                  : 'bg-primary-500 hover:bg-primary-600 dark:bg-primary-600 dark:hover:bg-primary-700 shadow-md'
+              }`}
+            >
+              {isSubmitting ? (
+                <>
+                  <Spinner size="sm" className="mr-2" />
+                  {t('submitting')}
+                </>
+              ) : (
+                <>
+                  {isApplyDisabled && <HiLockClosed className="h-4 w-4 mr-2" />}
+                  {t('submitApplication')}
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
       </Modal.Footer>
     </Modal>
   );
