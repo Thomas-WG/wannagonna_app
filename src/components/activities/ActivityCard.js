@@ -13,6 +13,7 @@ import { FaRegCircle } from 'react-icons/fa';
 import StatusUpdateModal from './StatusUpdateModal';
 import QRCodeModal from './QRCodeModal';
 import ActivityValidationModal from './ActivityValidationModal';
+import CloseActivityModal from './CloseActivityModal';
 import { updateActivityStatus } from '@/utils/crudActivities';
 import { categoryIcons } from '@/constant/categoryIcons';
 import { getSkillsForSelect } from '@/utils/crudSkills';
@@ -62,6 +63,7 @@ export default function ActivityCard({
   const [localStatus, setLocalStatus] = useState(status);
   const [showQRModal, setShowQRModal] = useState(false);
   const [showValidationModal, setShowValidationModal] = useState(false);
+  const [showCloseActivityModal, setShowCloseActivityModal] = useState(false);
   const [skillLabelsMap, setSkillLabelsMap] = useState({});
 
   const participantStatCount = useMemo(() => {
@@ -280,10 +282,14 @@ export default function ActivityCard({
 
   // Handle status update
   const handleStatusUpdate = async (newStatus) => {
-    // If trying to close the activity, open validation modal instead
+    // If trying to close: events go directly to close modal, others go through validation first
     if (newStatus === 'Closed') {
       setShowStatusModal(false);
-      setShowValidationModal(true);
+      if (type === 'event') {
+        setShowCloseActivityModal(true);
+      } else {
+        setShowValidationModal(true);
+      }
       return;
     }
 
@@ -314,24 +320,23 @@ export default function ActivityCard({
   };
 
   // Handle validation modal close - check if activity should be closed
-  const handleValidationModalClose = async (shouldCloseActivity) => {
+  const handleValidationModalClose = (shouldCloseActivity) => {
     setShowValidationModal(false);
     
-    // If all applicants are processed, close the activity
+    // If all applicants are processed, continue to hours/impact close step
     if (shouldCloseActivity) {
-      try {
-        await updateActivityStatus(id, 'Closed');
-        setLocalStatus('Closed');
-        if (onStatusChange) {
-          onStatusChange(id, 'Closed');
-        }
-      } catch (error) {
-        console.error('Error closing activity:', error);
-        alert('Failed to close activity');
-      }
+      setShowCloseActivityModal(true);
     } else {
       // If not all processed, revert status to Open
       setLocalStatus('Open');
+    }
+  };
+
+  const handleCloseActivitySuccess = (activityId) => {
+    setShowCloseActivityModal(false);
+    setLocalStatus('Closed');
+    if (onStatusChange) {
+      onStatusChange(activityId || id, 'Closed');
     }
   };
 
@@ -595,6 +600,25 @@ export default function ActivityCard({
             status: localStatus
           }}
           onStatusChange={onStatusChange}
+        />
+      )}
+
+      {canEditStatus && (
+        <CloseActivityModal
+          isOpen={showCloseActivityModal}
+          onClose={() => setShowCloseActivityModal(false)}
+          activity={{
+            id,
+            title,
+            type,
+            status: localStatus,
+            impact_parameters: [],
+            start_date,
+            end_date,
+            start_time,
+            end_time,
+          }}
+          onSuccess={handleCloseActivitySuccess}
         />
       )}
     </>

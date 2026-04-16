@@ -56,6 +56,15 @@ export default function CloseActivityModal({ isOpen, onClose, activity, onSucces
   const [parameterValues, setParameterValues] = useState({});
   const [hoursPerParticipant, setHoursPerParticipant] = useState({});
 
+  const resetCloseFlowState = useCallback(() => {
+    setShowConfirm(false);
+  }, []);
+
+  const handleModalClose = useCallback(() => {
+    resetCloseFlowState();
+    onClose?.();
+  }, [onClose, resetCloseFlowState]);
+
   // Sync fullActivity when activity prop changes (e.g. switching activities without unmounting).
   // For events, fetchData returns early so fullActivity would otherwise stay stale.
   useEffect(() => {
@@ -143,8 +152,10 @@ export default function CloseActivityModal({ isOpen, onClose, activity, onSucces
   }, [fetchData]);
 
   useEffect(() => {
-    if (!isOpen) setShowConfirm(false);
-  }, [isOpen]);
+    if (!isOpen) {
+      resetCloseFlowState();
+    }
+  }, [isOpen, resetCloseFlowState]);
 
   useEffect(() => {
     if (!impactParameters.length || Object.keys(parameterValues).length > 0) return;
@@ -206,7 +217,7 @@ export default function CloseActivityModal({ isOpen, onClose, activity, onSucces
         user.uid
       );
       onSuccess?.(fullActivity?.id || activity.id);
-      onClose?.();
+      handleModalClose();
     } catch (err) {
       console.error('Error closing activity:', err);
       alert(t('errorClosingActivity') || err?.message || 'Failed to close activity');
@@ -227,7 +238,7 @@ export default function CloseActivityModal({ isOpen, onClose, activity, onSucces
   if (!activity) return null;
 
   return (
-    <Modal show={isOpen} onClose={onClose} size="md" className="z-50">
+    <Modal show={isOpen} onClose={handleModalClose} size="md" className="z-50">
       <Modal.Header>
         {t('closeActivity') || 'Close activity'}
       </Modal.Header>
@@ -372,7 +383,7 @@ export default function CloseActivityModal({ isOpen, onClose, activity, onSucces
       <Modal.Footer>
         <Button
           color="gray"
-          onClick={showConfirm ? () => setShowConfirm(false) : onClose}
+          onClick={showConfirm ? () => setShowConfirm(false) : handleModalClose}
           disabled={submitting}
           className="min-h-[44px] touch-manipulation"
         >
